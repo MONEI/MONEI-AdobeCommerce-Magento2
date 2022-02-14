@@ -1,4 +1,4 @@
-# Monei Module Monei Payment
+# MONEI Module Monei Payment
 
 ## Description
 Module for MONEI payment integration in Magento 2.
