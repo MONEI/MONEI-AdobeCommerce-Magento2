@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<!--
+  ~ @author Monei Team
+  ~ @copyright Copyright © Monei (https://monei.com)
+  -->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+  <preference for="Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface"
+      type="Monei\MoneiPayment\Model\Config\MoneiPaymentModuleConfig" />
+  <preference for="Monei\MoneiPayment\Api\Service\CreatePaymentInterface"
+              type="Monei\MoneiPayment\Service\CreatePayment" />
+  <preference for="Monei\MoneiPayment\Api\Service\GetPaymentInterface"
+              type="Monei\MoneiPayment\Service\GetPayment" />
+  <preference for="Monei\MoneiPayment\Api\Service\CancelPaymentInterface"
+              type="Monei\MoneiPayment\Service\CancelPayment" />
+  <preference for="Monei\MoneiPayment\Api\Service\RefundPaymentInterface"
+              type="Monei\MoneiPayment\Service\RefundPayment" />
+  <preference for="Monei\MoneiPayment\Api\Service\CapturePaymentInterface"
+              type="Monei\MoneiPayment\Service\CapturePayment" />
+  <preference for="Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface"
+              type="Monei\MoneiPayment\Service\GenerateInvoice" />
+  <preference for="Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface"
+      type="Monei\MoneiPayment\Service\SetOrderStatusAndState" />
+  <preference for="Magento\Sales\Controller\Adminhtml\Order\Creditmemo\Save"
+      type="Monei\MoneiPayment\Controller\Adminhtml\Order\Creditmemo\Save" />
+  <type name="Monei\MoneiPayment\Service\Logger\Handler">
+    <arguments>
+      <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+    </arguments>
+  </type>
+  <type name="Monei\MoneiPayment\Service\Logger">
+    <arguments>
+      <argument name="name" xsi:type="string">moneiMoneiLogger</argument>
+      <argument name="handlers" xsi:type="array">
+        <item name="system" xsi:type="object">Monei\MoneiPayment\Service\Logger\Handler</item>
+      </argument>
+    </arguments>
+  </type>
+  <type name="Magento\Framework\Console\CommandList">
+    <arguments>
+      <argument name="commands" xsi:type="array">
+        <item name="moneiCreatePayment" xsi:type="object">Monei\MoneiPayment\Command\CreatePaymentCommand</item>
+        <item name="moneiGetPayment" xsi:type="object">Monei\MoneiPayment\Command\GetPaymentCommand</item>
+        <item name="moneiCancelPayment" xsi:type="object">Monei\MoneiPayment\Command\CancelPaymentCommand</item>
+        <item name="moneiRefundPayment" xsi:type="object">Monei\MoneiPayment\Command\RefundPaymentCommand</item>
+      </argument>
+    </arguments>
+  </type>
+  <type name="Magento\Sales\Model\Service\CreditmemoService">
+    <plugin name="set_order_status_after_refund" type="Monei\MoneiPayment\Plugin\SetOrderStatusAfterRefund"/>
+  </type>
+  <virtualType name="MoneiPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
+    <arguments>
+      <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::CODE</argument>
+      <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
+      <argument name="infoBlockType" xsi:type="string">Monei\MoneiPayment\Block\Info\Monei</argument>
+      <argument name="valueHandlerPool" xsi:type="object">Magento\Payment\Gateway\Config\ValueHandlerPool</argument>
+      <argument name="commandPool" xsi:type="object">MoneiCommandPool</argument>
+    </arguments>
+  </virtualType>
+  <virtualType name="MoneiCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+    <arguments>
+      <argument name="commands" xsi:type="array">
+        <item name="capture" xsi:type="string">Monei\MoneiPayment\Gateway\Command\Capture</item>
+        <item name="refund" xsi:type="string">Monei\MoneiPayment\Gateway\Command\Refund</item>
+      </argument>
+    </arguments>
+  </virtualType>
+  <type name="Magento\Payment\Gateway\Config\Config">
+    <arguments>
+      <argument name="methodCode" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::CODE</argument>
+    </arguments>
+  </type>
+  <type name="Magento\Payment\Gateway\Config\ValueHandlerPool">
+    <arguments>
+      <argument name="handlers" xsi:type="array">
+        <item name="default" xsi:type="string">Magento\Payment\Gateway\Config\ConfigValueHandler</item>
+      </argument>
+    </arguments>
+  </type>
+  <type name="Magento\Payment\Gateway\Config\ConfigValueHandler">
+    <arguments>
+      <argument name="configInterface" xsi:type="object">Magento\Payment\Gateway\Config\Config</argument>
+    </arguments>
+  </type>
+</config>

@@ -1,0 +1,11 @@
+{
+    "pending_monei_orders": {
+        "column": {
+            "entity_id": true,
+            "order_increment_id": true
+        },
+        "constraint": {
+            "PRIMARY": true
+        }
+    }
+}

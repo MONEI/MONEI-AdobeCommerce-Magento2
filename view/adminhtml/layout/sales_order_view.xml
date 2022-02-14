@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!--
+  ~ @author Monei Team
+  ~ @copyright Copyright © Monei (https://monei.com)
+  -->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="admin-2columns-left"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="content">
+            <block class="Monei\MoneiPayment\Block\Adminhtml\Order\Cancel\Popup" name="cancel_popup"
+                template="Monei_MoneiPayment::order/view/cancel-popup.phtml"/>
+        </referenceBlock>
+    </body>
+</page>

@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!--
+  ~ @author Monei Team
+  ~ @copyright Copyright © Monei (https://monei.com)
+  -->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+  <default>
+    <payment>
+      <monei>
+        <active>0</active>
+        <mode>1</mode>
+        <test_url>https://api.monei.com/v1/</test_url>
+        <production_url>https://api.monei.com/v1/</production_url>
+        <title>Pay with MONEI</title>
+        <description>MONEI payment method</description>
+        <type_of_payment>1</type_of_payment>
+        <allowspecific>0</allowspecific>
+        <payment_action>Authorization</payment_action>
+        <model>MoneiPaymentFacade</model>
+        <order_status>pending_payment</order_status>
+        <confirmed_status>monei_succeeded</confirmed_status>
+        <pre_authorized_status>monei_authorized</pre_authorized_status>
+        <can_use_internal>1</can_use_internal>
+        <can_use_checkout>1</can_use_checkout>
+        <is_gateway>1</is_gateway>
+        <can_authorize>1</can_authorize>
+        <can_capture>1</can_capture>
+        <can_capture_partial>1</can_capture_partial>
+        <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+        <can_refund>1</can_refund>
+      </monei>
+    </payment>
+  </default>
+</config>
