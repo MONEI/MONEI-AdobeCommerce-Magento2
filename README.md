@@ -1,7 +1,7 @@
 # Monei Module Monei Payment
 
 ## Description
-Module for Monei payment integration in Magento 2.
+Module for MONEI payment integration in Magento 2.
 
 ## Versioning
 This package follows semver for versioning.
@@ -25,7 +25,7 @@ This package follows semver for versioning.
 `php magento/bin/magento setup:upgrade --keep-generated`
 
 ## Credits
-Supported and maintained by Monei Team.
+Supported and maintained by MONEI.
 
 ## Copyright
-Copyright (c) Monei S.L.
+Copyright (c) MONEI DIGITAL PAYMENTS S.L.
