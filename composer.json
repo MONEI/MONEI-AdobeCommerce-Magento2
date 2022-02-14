@@ -1,0 +1,43 @@
+{
+    "name": "monei/module-monei-payment",
+    "description": "Monei - Monei Payment",
+    "version": "130.0.0",
+    "type": "magento2-module",
+    "keywords": [
+        "monei",
+        "module",
+        "payment",
+        "monei"
+    ],
+    "homepage": "https://github.com/MONEI/MONEI-AdobeCommerce-Magento2",
+    "license": [
+        "proprietary"
+    ],
+    "authors": [
+        {
+            "name": "Monei",
+            "email": "info@monei.com",
+            "homepage": "https://monei.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^7.4.0",
+        "magento/framework": ">=103.0.3-p1 <103.0.4",
+        "magento/module-config": ">=101.2.3 <101.2.4"
+    },
+    "conflict": {
+        "magento/product-community-edition": "<2.4.3-p1 || >=2.4.4"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Monei\\MoneiPayment\\": ""
+        }
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
