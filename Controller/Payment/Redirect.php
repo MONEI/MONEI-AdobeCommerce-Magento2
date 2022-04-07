@@ -60,9 +60,12 @@ class Redirect implements ActionInterface
          */
         $order = $this->checkoutSession->getLastRealOrder();
         $data = [
-            "amount"   => $order->getGrandTotal() * 100,
-            "orderId"  => (string) $order->getIncrementId(),
-            "currency" => $order->getBaseCurrencyCode(),
+            "amount"            => $order->getGrandTotal() * 100,
+            "orderId"           => (string) $order->getIncrementId(),
+            "currency"          => $order->getBaseCurrencyCode(),
+            "customer"          => $this->getCustomerDetails($order),
+            "billingDetails"    => $this->getAddressDetails($order->getBillingAddress()),
+            "shippingDetails"   => $this->getAddressDetails($order->getShippingAddress()),
         ];
 
         $result = $this->createPayment->execute($data);
@@ -75,5 +78,71 @@ class Redirect implements ActionInterface
             'monei/payment/fail',
             ['orderId' => $order->getEntityId()]
         );
+    }
+
+    /**
+     * @param OrderInterface $order
+     *
+     * @return array|string[]
+     */
+    private function getCustomerDetails($order)
+    {
+        if (!$order->getEntityId()) {
+            return [];
+        }
+
+        return [
+            "email" => $order->getCustomerEmail(),
+            "name"  => $order->getCustomerFirstname() . ' ' . $order->getCustomerLastname(),
+            "phone" => $this->getCustomerPhone($order)
+        ];
+    }
+
+    /**
+     * @param OrderInterface $order
+     *
+     * @return string
+     */
+    private function getCustomerPhone($order)
+    {
+        if ($order->getBillingAddress()) {
+            return $order->getBillingAddress()->getTelephone();
+        }
+
+        return '';
+    }
+
+    /**
+     * @param \Magento\Sales\Model\Order\Address $address
+     *
+     * @return array|void
+     */
+    private function getAddressDetails($address)
+    {
+        if (!$address->getEntityId()) {
+            return [];
+        }
+
+        $streetAddress = $address->getStreet();
+        $moneiAddress = [
+            "name"      => $address->getFirstname() . ' ' . $address->getLastname(),
+            "email"     => $address->getEmail(),
+            "phone"     => $address->getTelephone(),
+            "company"   => ($address->getCompany() ?? ''),
+            "address"   => [
+                "country"   => $address->getCountryId(),
+                "city"      => $address->getCity(),
+                "line1"     => ($streetAddress[0] ?? $streetAddress),
+                "line2"     => ($streetAddress[1] ?? ''),
+                "zip"       => $address->getPostcode(),
+                "state"     => $address->getRegion(),
+            ]
+        ];
+
+        if (!$moneiAddress['company']) {
+            unset($moneiAddress['company']);
+        }
+
+        return $moneiAddress;
     }
 }

@@ -1,7 +1,7 @@
 {
     "name": "monei/module-monei-payment",
     "description": "Monei - Monei Payment",
-    "version": "130.0.0",
+    "version": "130.1.0",
     "type": "magento2-module",
     "keywords": [
         "monei",

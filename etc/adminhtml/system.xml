@@ -14,6 +14,13 @@
           <comment>Select 'Yes' if you want to enable this payment method. Otherwise 'No'.</comment>
           <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
         </field>
+        <field id="version" translate="label" type="label" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="1">
+          <label>Current Version</label>
+          <backend_model>Monei\MoneiPayment\Model\Config\Source\ModuleVersion</backend_model>
+          <depends>
+            <field id="active">1</field>
+          </depends>
+        </field>
         <field id="heading1" translate="label" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Webservice Settings:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
@@ -25,18 +32,6 @@
           <label>Mode</label>
           <comment>To define if we are going to connect with production or testing WS environment</comment>
           <source_model>Monei\MoneiPayment\Model\Config\Source\Mode</source_model>
-          <depends>
-            <field id="active">1</field>
-          </depends>
-        </field>
-        <field id="test_url" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
-          <label>Test Url</label>
-          <depends>
-            <field id="active">1</field>
-          </depends>
-        </field>
-        <field id="production_url" translate="label comment" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
-          <label>Production Url</label>
           <depends>
             <field id="active">1</field>
           </depends>

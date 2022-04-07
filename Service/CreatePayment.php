@@ -27,6 +27,9 @@ class CreatePayment extends AbstractService implements CreatePaymentInterface
         'amount',
         'currency',
         'orderId',
+        'customer',
+        'billingDetails',
+        'shippingDetails'
     ];
 
     /**
