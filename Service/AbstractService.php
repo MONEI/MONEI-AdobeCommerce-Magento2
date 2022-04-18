@@ -17,6 +17,7 @@ use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\Serialize\SerializerInterface;
+use Monei\MoneiPayment\Model\Config\Source\ModuleVersion;
 use Monei\MoneiPayment\Service\Logger;
 
 /**
@@ -54,13 +55,16 @@ abstract class AbstractService
      */
     protected $logger;
 
+    private ModuleVersion $moduleVersion;
+
     /**
      * @param ClientFactory                     $clientFactory
      * @param MoneiPaymentModuleConfigInterface $moduleConfig
      * @param StoreManagerInterface             $storeManager
      * @param UrlInterface                      $urlBuilder
      * @param SerializerInterface               $serializer
-     * @param Logger                   $logger
+     * @param Logger                            $logger
+     * @param ModuleVersion                     $moduleVersion
      */
     public function __construct(
         ClientFactory $clientFactory,
@@ -68,7 +72,8 @@ abstract class AbstractService
         StoreManagerInterface $storeManager,
         UrlInterface $urlBuilder,
         SerializerInterface $serializer,
-        Logger $logger
+        Logger $logger,
+        ModuleVersion $moduleVersion
     ) {
         $this->clientFactory = $clientFactory;
         $this->moduleConfig = $moduleConfig;
@@ -76,6 +81,7 @@ abstract class AbstractService
         $this->urlBuilder = $urlBuilder;
         $this->serializer = $serializer;
         $this->logger = $logger;
+        $this->moduleVersion = $moduleVersion;
     }
 
     /**
@@ -108,10 +114,25 @@ abstract class AbstractService
         return $this->moduleConfig->getProductionApiKey($currentStoreId);
     }
 
+    /**
+     * Get webservice API user agent with module version
+     * @return string
+     */
+    private function getUserAgent(): string
+    {
+        $moduleVersion = $this->moduleVersion->getModuleVersion();
+        if ($moduleVersion) {
+            return 'MONEI/Magento2/' . $moduleVersion;
+        }
+
+        return '';
+    }
+
     protected function getHeaders(): array
     {
         return [
             'Authorization' => $this->getApiKey(),
+            'User-Agent'    => $this->getUserAgent(),
             'Content-Type'  => 'application/json',
         ];
     }
