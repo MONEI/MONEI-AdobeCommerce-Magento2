@@ -143,8 +143,8 @@ class Redirect implements ActionInterface
             unset($moneiAddress['company']);
         }
 
-        if (!$moneiAddress['line2']) {
-            unset($moneiAddress['line2']);
+        if (!$moneiAddress['address']['line2']) {
+            unset($moneiAddress['address']['line2']);
         }
 
         return $moneiAddress;
