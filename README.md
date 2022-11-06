@@ -1,4 +1,4 @@
-# MONEI Module Monei Payment
+# MONEI Payments Adobe Commerce (Magento 2) module
 
 ## Description
 Module for MONEI payment integration in Magento 2.
