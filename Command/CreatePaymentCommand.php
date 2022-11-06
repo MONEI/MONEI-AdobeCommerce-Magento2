@@ -69,8 +69,8 @@ class CreatePaymentCommand extends Command
                 "address"   => [
                     "country"   => "ES",
                     "city"      => "Madrid",
-                    "line1"     => "Fake Street 1",
-                    "line2"     => "",
+                    "line1"     => "Fake Street",
+                    "line2"     => "1",
                     "zip"       => "28001",
                     "state"     => "Madrid",
                 ]
@@ -83,8 +83,8 @@ class CreatePaymentCommand extends Command
                 "address"   => [
                     "country"   => "ES",
                     "city"      => "Madrid",
-                    "line1"     => "Fake Street 1",
-                    "line2"     => "",
+                    "line1"     => "Fake Street",
+                    "line2"     => "1",
                     "zip"       => "28001",
                     "state"     => "Madrid",
                 ]
