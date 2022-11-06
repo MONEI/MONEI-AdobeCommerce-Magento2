@@ -143,7 +143,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
      */
     public function validateForCsrf(RequestInterface $request): ?bool
     {
-        $header = $this->serializer->unserialize($this->context->getRequest()->getHeader('Monei-Signature'));
+        $header = $this->context->getRequest()->getHeader('Monei-Signature');
         $body = $request->getParams();
         try {
             $this->verifySignature($body, $header);
