@@ -7,9 +7,9 @@ Module for MONEI payment integration inAdobe Commerce (Magento 2).
 This package follows semver for versioning.
 
 ## Minimum Compatibility
-- PHP: ^7.4.0
+- PHP: ^8.1.0
 
-- Magento: >=2.4.3 <2.4.4
+- Magento: >=2.4.5
 
 ## Installation Instructions
 #### You can install this package using composer by adding it to your composer file using following command:
