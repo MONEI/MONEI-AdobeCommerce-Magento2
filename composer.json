@@ -21,12 +21,12 @@
         }
     ],
     "require": {
-        "php": "^7.4.0",
-        "magento/framework": ">=103.0.3-p1 <103.0.4",
-        "magento/module-config": ">=101.2.3 <101.2.4"
+        "php": "^8.1.0",
+        "magento/framework": ">=103.0.4",
+        "magento/module-config": ">=101.2.4"
     },
     "conflict": {
-        "magento/product-community-edition": "<2.4.3-p1 || >=2.4.4"
+        "magento/product-community-edition": "<2.4.5"
     },
     "autoload": {
         "files": [
