@@ -14,7 +14,7 @@ This package follows semver for versioning.
 ## Installation Instructions
 #### You can install this package using composer by adding it to your composer file using following command:
 
-`composer require monei/module-monei-payment --update-with-all-dependencies`
+`composer require monei/module-monei-payment`
 
 #### Enable module 
 
@@ -22,7 +22,7 @@ This package follows semver for versioning.
 
 #### Finally, run setup upgrade to enable new modules:
 
-`php magento/bin/magento setup:upgrade --keep-generated`
+`php magento/bin/magento setup:upgrade`
 
 ## Credits
 Supported and maintained by MONEI.
