@@ -23,7 +23,7 @@ class Capture implements CommandInterface
     private $capturePaymentService;
 
     /**
-     * @param CapturePaymentInterface $subjectReader
+     * @param CapturePaymentInterface $capturePaymentService
      */
     public function __construct(
         CapturePaymentInterface $capturePaymentService
