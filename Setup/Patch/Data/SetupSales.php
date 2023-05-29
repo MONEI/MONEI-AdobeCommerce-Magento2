@@ -1,34 +1,39 @@
 <?php
 
   namespace Monei\MoneiPayment\Setup\Patch\Data;
+  use Magento\Framework\DB\Ddl\Table;
+  use Magento\Framework\Setup\Patch\NonTransactionableInterface;
+
   use Magento\Framework\Setup\ModuleDataSetupInterface;
   use Magento\Framework\Setup\Patch\DataPatchInterface;
   use Monei\MoneiPayment\Model\Payment\Monei;
+  use Magento\Sales\Setup\SalesSetup;
 
-  class SetupSales implements DataPatchInterface
+  class SetupSales implements DataPatchInterface, NonTransactionableInterface
   {
     /** @var ModuleDataSetupInterface */
-    private $moduleDataSetup;
+    private ModuleDataSetupInterface $moduleDataSetup;
 
-    /** @var EavSetupFactory */
-    private SalesSetupFactory $salesSetupFactory;
+    /** @var SalesSetup */
+    private SalesSetup $salesSetup;
 
     /**
      * @param ModuleDataSetupInterface $moduleDataSetup
-     * @param SalesSetupFactory $salesSetupFactory
+     * @param SalesSetup $salesSetup
      */
     public function __construct(
       ModuleDataSetupInterface $moduleDataSetup,
-      SalesSetupFactory $salesSetupFactory
-    ) {
+      SalesSetup               $salesSetup
+    )
+    {
       $this->moduleDataSetup = $moduleDataSetup;
-      $this->salesSetupFactory = $salesSetupFactory;
+      $this->salesSetup = $salesSetup;
     }
 
     /**
      * {@inheritdoc}
      */
-    public static function getDependencies()
+    public static function getDependencies(): array
     {
       return [];
     }
@@ -36,27 +41,26 @@
     /**
      * {@inheritdoc}
      */
-    public function getAliases()
+    public function getAliases(): array
     {
       return [];
     }
 
     /**
-     * {@inheritdoc}
+     * {}
      */
-    public static function getVersion()
+    public static function getVersion(): string
     {
-      return '1.0.0';
+      return '1.1.4';
     }
 
-    public function apply() {
-      $setup = $this->salesSetupFactory->create(['setup' => $this->moduleDataSetup]);
-
-      $salesSetup = $this->salesSetupFactory->create(['setup' => $setup]);
+    public function apply(): void
+    {
+      $this->moduleDataSetup->getConnection()->startSetup();
 
       $attributesInfo = [
         'label' => 'Monei payment Id',
-        'type' => Table::TYPE_TEXT,
+        'type' => 'text',
         'position' => 150,
         'visible' => true,
         'required' => false,
@@ -64,7 +68,7 @@
         'is_user_defined' => 1,
       ];
 
-      $salesSetup->addAttribute(
+      $this->salesSetup->addAttribute(
         'order',
         'monei_payment_id',
         $attributesInfo
@@ -82,8 +86,8 @@
       foreach ($statuses as $code => $info) {
         $data[] = ['status' => $code, 'label' => $info];
       }
-      $setup->getConnection()->insertArray(
-        $setup->getTable('sales_order_status'),
+      $this->moduleDataSetup->getConnection()->insertArray(
+        $this->moduleDataSetup->getTable('sales_order_status'),
         ['status', 'label'],
         $data
       );
@@ -107,10 +111,8 @@
         ],
       ];
 
-      $statesCode = [];
       foreach ($statuses as $stateCode => $status) {
         foreach ($status as $statusCode => $isDefault) {
-          $statesCode[] = $stateCode;
           $data[] = [
             'status' => $statusCode,
             'state' => $stateCode,
@@ -119,12 +121,12 @@
         }
       }
 
-      $setup->getConnection()->insertArray(
-        $setup->getTable('sales_order_status_state'),
+      $this->moduleDataSetup->getConnection()->insertArray(
+        $this->moduleDataSetup->getTable('sales_order_status_state'),
         ['status', 'state', 'is_default'],
         $data
       );
 
-      $setup->endSetup();
+      $this->moduleDataSetup->getConnection()->endSetup();
     }
   }
