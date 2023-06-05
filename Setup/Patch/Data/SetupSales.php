@@ -89,8 +89,8 @@
       }
       $this->moduleDataSetup->getConnection()->insertOnDuplicate(
         $this->moduleDataSetup->getTable('sales_order_status'),
-        ['status', 'label'],
-        $data
+        $data,
+        ['status', 'label']
       );
 
       $data = [];
@@ -126,8 +126,8 @@
 
       $this->moduleDataSetup->getConnection()->insertOnDuplicate(
         $this->moduleDataSetup->getTable('sales_order_status_state'),
-        ['status', 'state', 'is_default'],
-        $data
+        $data,
+        ['status', 'state', 'is_default']
       );
 
       $this->moduleDataSetup->getConnection()->endSetup();
