@@ -87,7 +87,7 @@
       foreach ($statuses as $code => $info) {
         $data[] = ['status' => $code, 'label' => $info];
       }
-      $this->moduleDataSetup->getConnection()->insertArray(
+      $this->moduleDataSetup->getConnection()->insertOnDuplicate(
         $this->moduleDataSetup->getTable('sales_order_status'),
         ['status', 'label'],
         $data
