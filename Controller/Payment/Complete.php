@@ -125,7 +125,7 @@ class Complete implements ActionInterface
                 $order = $this->orderFactory->create()->loadByIncrementId($data['orderId']);
                 $payment = $order->getPayment();
                 $payment->setLastTransId($data['id']);
-                $order->setStatus($this->moduleConfig->getConfirmedStatus())->setState(Order::STATE_PROCESSING);
+                $order->setStatus($this->moduleConfig->getConfirmedStatus())->setState(Order::STATE_NEW);
                 $order->setData('monei_payment_id', $data['id']);
                 $this->orderRepository->save($order);
                 return $this->resultRedirectFactory->setPath('checkout/onepage/success', ['_secure' => true]);
