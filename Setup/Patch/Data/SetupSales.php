@@ -6,6 +6,7 @@
 
   use Magento\Framework\Setup\ModuleDataSetupInterface;
   use Magento\Framework\Setup\Patch\DataPatchInterface;
+  use Magento\Sales\Model\Order;
   use Monei\MoneiPayment\Model\Payment\Monei;
   use Magento\Sales\Setup\SalesSetup;
 
@@ -51,7 +52,7 @@
      */
     public static function getVersion(): string
     {
-      return '1.1.4';
+      return '1.2.0';
     }
 
     public function apply(): void
@@ -94,21 +95,23 @@
 
       $data = [];
       $statuses = [
-        'pending_payment' => [
+        Order::STATE_PENDING_PAYMENT => [
           Monei::STATUS_MONEI_PENDING => false,
           Monei::STATUS_MONEI_AUTHORIZED => false,
         ],
-        'canceled' => [
+        Order::STATE_CANCELED => [
           Monei::STATUS_MONEI_EXPIRED => false,
           Monei::STATUS_MONEI_FAILED => false,
         ],
-        'processing' => [
-          Monei::STATUS_MONEI_SUCCEDED => false,
+        Order::STATE_PROCESSING => [
           Monei::STATUS_MONEI_PARTIALLY_REFUNDED => false,
         ],
-        'complete' => [
+        Order::STATE_COMPLETE => [
           Monei::STATUS_MONEI_REFUNDED => false,
         ],
+        Order::STATE_NEW => [
+          Monei::STATUS_MONEI_SUCCEDED => false,
+        ]
       ];
 
       foreach ($statuses as $stateCode => $status) {
