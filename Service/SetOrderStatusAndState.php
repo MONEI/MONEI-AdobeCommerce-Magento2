@@ -74,7 +74,7 @@ class SetOrderStatusAndState implements SetOrderStatusAndStateInterface
                 break;
             case Monei::ORDER_STATUS_SUCCEEDED:
                 $orderStatus = Monei::STATUS_MONEI_SUCCEDED;
-                $orderState = Order::STATE_PROCESSING;
+                $orderState = Order::STATE_NEW;
                 break;
             case Monei::ORDER_STATUS_PARTIALLY_REFUNDED:
                 $orderStatus = Monei::STATUS_MONEI_PARTIALLY_REFUNDED;
