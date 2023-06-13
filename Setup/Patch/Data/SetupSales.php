@@ -121,10 +121,6 @@
             'state' => $stateCode,
             'is_default' => $isDefault,
           ];
-          $this->moduleDataSetup->getConnection()->delete(
-            $this->moduleDataSetup->getTable('sales_order_status_state'),
-            ["state" => $stateCode]
-          );
         }
       }
 
