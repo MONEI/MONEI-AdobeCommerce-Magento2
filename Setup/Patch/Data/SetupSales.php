@@ -76,7 +76,7 @@
 
       $statuses = [
         Monei::STATUS_MONEI_PENDING => __('Monei - pending'),
-        Monei::STATUS_MONEI_AUTHORIZED => __('Monei - Preauthorized'),
+        Monei::STATUS_MONEI_AUTHORIZED => __('Monei - pre-authorized'),
         Monei::STATUS_MONEI_EXPIRED => __('Monei - expired'),
         Monei::STATUS_MONEI_FAILED => __('Monei - failed'),
         Monei::STATUS_MONEI_SUCCEDED => __('Monei - succeeded'),
