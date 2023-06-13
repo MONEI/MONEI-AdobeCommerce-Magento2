@@ -124,7 +124,7 @@
         }
       }
 
-      $this->moduleDataSetup->getConnection()->insertOnDuplicate(
+      $this->moduleDataSetup->getConnection()->insertArray(
         $this->moduleDataSetup->getTable('sales_order_status_state'),
         ['status', 'state', 'is_default'],
         $data
