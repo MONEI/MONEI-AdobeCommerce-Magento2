@@ -6,7 +6,6 @@
 
   use Magento\Framework\Setup\ModuleDataSetupInterface;
   use Magento\Framework\Setup\Patch\DataPatchInterface;
-  use Magento\Sales\Model\Order;
   use Monei\MoneiPayment\Model\Payment\Monei;
   use Magento\Sales\Setup\SalesSetup;
 
@@ -52,7 +51,7 @@
      */
     public static function getVersion(): string
     {
-      return '1.2.0';
+      return '1.1.4';
     }
 
     public function apply(): void
@@ -77,7 +76,7 @@
 
       $statuses = [
         Monei::STATUS_MONEI_PENDING => __('Monei - pending'),
-        Monei::STATUS_MONEI_AUTHORIZED => __('Monei - Preauthorized'),
+        Monei::STATUS_MONEI_AUTHORIZED => __('Monei - pre-authorized'),
         Monei::STATUS_MONEI_EXPIRED => __('Monei - expired'),
         Monei::STATUS_MONEI_FAILED => __('Monei - failed'),
         Monei::STATUS_MONEI_SUCCEDED => __('Monei - succeeded'),
@@ -87,31 +86,29 @@
       foreach ($statuses as $code => $info) {
         $data[] = ['status' => $code, 'label' => $info];
       }
-      $this->moduleDataSetup->getConnection()->insertOnDuplicate(
+      $this->moduleDataSetup->getConnection()->insertArray(
         $this->moduleDataSetup->getTable('sales_order_status'),
-        $data,
-        ['status', 'label']
+        ['status', 'label'],
+        $data
       );
 
       $data = [];
       $statuses = [
-        Order::STATE_PENDING_PAYMENT => [
+        'pending_payment' => [
           Monei::STATUS_MONEI_PENDING => false,
           Monei::STATUS_MONEI_AUTHORIZED => false,
         ],
-        Order::STATE_CANCELED => [
+        'canceled' => [
           Monei::STATUS_MONEI_EXPIRED => false,
           Monei::STATUS_MONEI_FAILED => false,
         ],
-        Order::STATE_PROCESSING => [
+        'processing' => [
+          Monei::STATUS_MONEI_SUCCEDED => false,
           Monei::STATUS_MONEI_PARTIALLY_REFUNDED => false,
         ],
-        Order::STATE_COMPLETE => [
+        'complete' => [
           Monei::STATUS_MONEI_REFUNDED => false,
         ],
-        Order::STATE_NEW => [
-          Monei::STATUS_MONEI_SUCCEDED => false,
-        ]
       ];
 
       foreach ($statuses as $stateCode => $status) {
@@ -121,17 +118,13 @@
             'state' => $stateCode,
             'is_default' => $isDefault,
           ];
-          $this->moduleDataSetup->getConnection()->delete(
-            $this->moduleDataSetup->getTable('sales_order_status_state'),
-            ["state" => $stateCode]
-          );
         }
       }
 
-      $this->moduleDataSetup->getConnection()->insertOnDuplicate(
+      $this->moduleDataSetup->getConnection()->insertArray(
         $this->moduleDataSetup->getTable('sales_order_status_state'),
-        $data,
-        ['status', 'state', 'is_default']
+        ['status', 'state', 'is_default'],
+        $data
       );
 
       $this->moduleDataSetup->getConnection()->endSetup();

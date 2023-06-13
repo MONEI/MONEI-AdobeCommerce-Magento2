@@ -79,7 +79,7 @@
         </field>
         <field id="confirmed_status" translate="label comment" type="select" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Confirmed Status</label>
-          <source_model>Magento\Sales\Model\Config\Source\Order\Status\NewStatus</source_model>
+          <source_model>Magento\Sales\Model\Config\Source\Order\Status\Processing</source_model>
           <comment>Selectable with all the processing order statuses</comment>
           <depends>
             <field id="active">1</field>
