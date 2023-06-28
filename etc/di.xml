@@ -60,6 +60,7 @@
   <virtualType name="MoneiCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
     <arguments>
       <argument name="commands" xsi:type="array">
+        <item name="initialize" xsi:type="string">Magento\Payment\Gateway\Command\NullCommand</item>
         <item name="capture" xsi:type="string">Monei\MoneiPayment\Gateway\Command\Capture</item>
         <item name="refund" xsi:type="string">Monei\MoneiPayment\Gateway\Command\Refund</item>
       </argument>
