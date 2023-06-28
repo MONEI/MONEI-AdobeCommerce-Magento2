@@ -23,6 +23,7 @@
         <can_use_internal>1</can_use_internal>
         <can_use_checkout>1</can_use_checkout>
         <is_gateway>1</is_gateway>
+        <can_initialize>1</can_initialize>
         <can_authorize>1</can_authorize>
         <can_capture>1</can_capture>
         <can_capture_partial>1</can_capture_partial>
