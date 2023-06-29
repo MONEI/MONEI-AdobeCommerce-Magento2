@@ -1,6 +1,6 @@
 {
     "name": "monei/module-monei-payment",
-    "version": "1.1.5",
+    "version": "1.1.6",
     "description": "MONEI Payments Adobe Commerce (Magento 2) module",
     "type": "magento2-module",
     "keywords": [
