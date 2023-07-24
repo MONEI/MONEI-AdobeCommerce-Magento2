@@ -51,7 +51,7 @@
      */
     public static function getVersion(): string
     {
-      return '1.1.8';
+      return '1.1.9';
     }
 
     public function apply(): void

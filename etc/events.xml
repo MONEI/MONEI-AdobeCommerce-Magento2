@@ -7,9 +7,6 @@
   <event name="sales_order_invoice_register">
     <observer name="set_monei_order_status_and_state_after_invoice" instance="Monei\MoneiPayment\Observer\SetOrderStatusAfterInvoice"/>
   </event>
-  <event name="checkout_onepage_controller_success_action">
-    <observer name="checkout_onepage_controller_success_action_sendmail" instance="Monei\MoneiPayment\Observer\SendMailOnOrderSuccess" />
-  </event>
 <!--  <event name="sales_order_creditmemo_refund">-->
 <!--    <observer name="set_monei_order_status_and_state_after_refund" instance="Monei\MoneiPayment\Observer\SetOrderStatusAfterRefund"/>-->
 <!--  </event>-->
