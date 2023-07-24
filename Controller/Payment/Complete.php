@@ -18,6 +18,7 @@ use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Magento\Sales\Model\Order;
+use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
 use Monei\MoneiPayment\Model\PendingOrderFactory;
 use Monei\MoneiPayment\Model\ResourceModel\PendingOrder as PendingOrderResource;
@@ -68,8 +69,14 @@ class Complete implements ActionInterface
     private $pendingOrderResource;
 
     /**
+     * @var OrderSender
+     */
+    protected $orderSender;
+
+    /**
      * @param Context $context
      * @param OrderRepositoryInterface $orderRepository
+     * @param OrderSender $orderSender
      * @param OrderInterfaceFactory $orderFactory
      * @param MoneiPaymentModuleConfigInterface $moduleConfig
      * @param GenerateInvoiceInterface $generateInvoiceService
@@ -78,6 +85,7 @@ class Complete implements ActionInterface
     public function __construct(
         Context $context,
         OrderRepositoryInterface $orderRepository,
+        OrderSender $orderSender,
         OrderInterfaceFactory $orderFactory,
         MoneiPaymentModuleConfigInterface $moduleConfig,
         GenerateInvoiceInterface $generateInvoiceService,
@@ -87,6 +95,7 @@ class Complete implements ActionInterface
     ) {
         $this->context = $context;
         $this->orderRepository = $orderRepository;
+        $this->orderSender = $orderSender;
         $this->orderFactory = $orderFactory;
         $this->moduleConfig = $moduleConfig;
         $this->generateInvoiceService = $generateInvoiceService;
@@ -128,6 +137,16 @@ class Complete implements ActionInterface
                 $order->setStatus($this->moduleConfig->getConfirmedStatus())->setState(Order::STATE_NEW);
                 $order->setData('monei_payment_id', $data['id']);
                 $this->orderRepository->save($order);
+
+                // send Order email
+                if ($order->getCanSendNewEmailFlag()) {
+                    try {
+                        $this->orderSender->send($order);
+                    } catch (\Exception $e) {
+                        $this->logger->critical($e);
+                    }
+                }
+
                 return $this->resultRedirectFactory->setPath('checkout/onepage/success', ['_secure' => true]);
 
             default:
