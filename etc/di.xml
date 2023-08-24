@@ -48,9 +48,6 @@
   <type name="Magento\Sales\Model\Service\CreditmemoService">
     <plugin name="set_order_status_after_refund" type="Monei\MoneiPayment\Plugin\SetOrderStatusAfterRefund"/>
   </type>
-  <type name="Magento\Sales\Model\Order\Email\Container\OrderIdentity">
-    <plugin name="change_is_enable_method" type="Monei\MoneiPayment\Plugin\Sales\Order\Email\Container\OrderIdentityPlugin"/>
-  </type>
   <virtualType name="MoneiPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
     <arguments>
       <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::CODE</argument>

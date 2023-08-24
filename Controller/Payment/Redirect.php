@@ -60,7 +60,7 @@ class Redirect implements ActionInterface
          */
         $order = $this->checkoutSession->getLastRealOrder();
         $data = [
-            "amount"            => $order->getGrandTotal() * 100,
+            "amount"            => $order->getBaseGrandTotal() * 100,
             "orderId"           => (string) $order->getIncrementId(),
             "currency"          => $order->getBaseCurrencyCode(),
             "customer"          => $this->getCustomerDetails($order),
