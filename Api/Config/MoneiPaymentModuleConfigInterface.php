@@ -30,6 +30,8 @@ interface MoneiPaymentModuleConfigInterface
 
     public const DESCRIPTION = 'payment/monei/description';
 
+    public const TYPE_OF_CONNECTION = 'payment/monei/type_of_connection';
+
     public const TYPE_OF_PAYMENT = 'payment/monei/type_of_payment';
 
     public const CONFIRMED_STATUS = 'payment/monei/confirmed_status';
@@ -107,10 +109,18 @@ interface MoneiPaymentModuleConfigInterface
     public function getDescription($storeId = null): string;
 
     /**
+     * Get type of connection
+     *
+     * @param null $storeId
+     * @return int
+     */
+    public function getTypeOfConnection($storeId = null): string;
+
+    /**
      * Get type of payment
      *
      * @param null $storeId
-     * @return string
+     * @return int
      */
     public function getTypeOfPayment($storeId = null): int;
 

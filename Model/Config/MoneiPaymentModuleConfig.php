@@ -131,6 +131,18 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
     /**
      * @inheritDoc
      */
+    public function getTypeOfConnection($storeId = null): string
+    {
+        return (string) $this->scopeConfig->getValue(
+            self::TYPE_OF_CONNECTION,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function getTypeOfPayment($storeId = null): int
     {
         return (int) $this->scopeConfig->getValue(

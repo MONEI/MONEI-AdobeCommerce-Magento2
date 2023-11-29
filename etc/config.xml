@@ -13,6 +13,7 @@
         <production_url>https://api.monei.com/v1/</production_url>
         <title>Pay with MONEI</title>
         <description>MONEI payment method</description>
+        <type_of_connection>redirect</type_of_connection>
         <type_of_payment>1</type_of_payment>
         <allowspecific>0</allowspecific>
         <payment_action>Authorization</payment_action>
