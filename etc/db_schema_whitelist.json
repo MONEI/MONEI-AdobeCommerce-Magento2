@@ -7,5 +7,10 @@
         "constraint": {
             "PRIMARY": true
         }
+    },
+    "quote": {
+        "column": {
+            "monei_payment_id": true
+        }
     }
 }

@@ -8,7 +8,7 @@
     <section id="payment">
       <resource>Monei_MoneiPayment::config</resource>
       <group id="monei" translate="label" sortOrder="100" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
-        <label>MONEI</label>
+        <label>MONEI CARD</label>
         <field id="active" translate="label comment" sortOrder="10" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Enable</label>
           <comment>Select 'Yes' if you want to enable this payment method. Otherwise 'No'.</comment>
@@ -55,21 +55,28 @@
             <field id="active">1</field>
           </depends>
         </field>
-        <field id="title" translate="label comment" type="text" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="type_of_connection" translate="label comment" sortOrder="90" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+          <label>Type of connection</label>
+          <source_model>Monei\MoneiPayment\Model\Config\Source\TypeOfConnection</source_model>
+          <depends>
+              <field id="active">1</field>
+          </depends>
+        </field>
+        <field id="title" translate="label comment" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Title</label>
           <comment>Text that will be displayed in checkout</comment>
           <depends>
             <field id="active">1</field>
           </depends>
         </field>
-        <field id="description" translate="label comment" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="description" translate="label comment" type="text" sortOrder="110" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Description</label>
           <comment>Small description that will be displayed in checkout (Under title)</comment>
           <depends>
             <field id="active">1</field>
           </depends>
         </field>
-        <field id="type_of_payment" translate="label comment" sortOrder="110" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="type_of_payment" translate="label comment" sortOrder="120" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Type of payment</label>
           <comment>If client wants to work with pre-authorized payments or not.</comment>
           <source_model>Monei\MoneiPayment\Model\Config\Source\TypeOfPayment</source_model>
@@ -77,7 +84,7 @@
             <field id="active">1</field>
           </depends>
         </field>
-        <field id="confirmed_status" translate="label comment" type="select" sortOrder="120" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="confirmed_status" translate="label comment" type="select" sortOrder="130" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Confirmed Status</label>
           <source_model>Magento\Sales\Model\Config\Source\Order\Status\Processing</source_model>
           <comment>Selectable with all the processing order statuses</comment>
@@ -85,7 +92,7 @@
             <field id="active">1</field>
           </depends>
         </field>
-        <field id="pre_authorized_status" translate="label comment" type="select" sortOrder="130" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="pre_authorized_status" translate="label comment" type="select" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Pre-authorized Status</label>
           <source_model>Monei\MoneiPayment\Model\Config\Source\PendingStatus</source_model>
           <comment>Selectable with all the pending order statuses</comment>
@@ -93,14 +100,14 @@
             <field id="active">1</field>
           </depends>
         </field>
-        <field id="allowspecific" translate="label comment" sortOrder="180" type="allowspecific" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="allowspecific" translate="label comment" sortOrder="150" type="allowspecific" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Payment from Applicable Countries</label>
           <source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
           <depends>
             <field id="active">1</field>
           </depends>
         </field>
-        <field id="specificcountry" translate="label comment" sortOrder="190" type="multiselect" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="specificcountry" translate="label comment" sortOrder="160" type="multiselect" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Payment from Specific Countries</label>
           <source_model>Magento\Directory\Model\Config\Source\Country</source_model>
           <can_be_empty>1</can_be_empty>
@@ -109,7 +116,7 @@
             <field id="allowspecific">1</field>
           </depends>
         </field>
-        <field id="sort_order" translate="label comment" sortOrder="160" type="text" showInDefault="1" showInWebsite="1">
+        <field id="sort_order" translate="label comment" sortOrder="170" type="text" showInDefault="1" showInWebsite="1">
           <label>Sort Order</label>
           <tooltip>In which order the payment method will be displayed in checkout</tooltip>
           <frontend_class>validate-number</frontend_class>
