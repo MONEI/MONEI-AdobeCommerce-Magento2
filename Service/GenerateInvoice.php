@@ -39,13 +39,11 @@ class GenerateInvoice implements GenerateInvoiceInterface
             return;
         }
 
-        // Check if this order has been locked by other request who is try to generate the invoice
         $isOrderLocked = $this->orderLockManager->isLocked($incrementId);
         if ($isOrderLocked || $this->isOrderAlreadyPaid($order)){
             return;
         }
 
-        // Lock this order for avoid duplicate invoiced
         $this->orderLockManager->lock($incrementId);
 
         $invoice = $order->prepareInvoice();
