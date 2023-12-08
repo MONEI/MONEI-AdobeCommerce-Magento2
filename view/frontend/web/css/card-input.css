@@ -2,6 +2,7 @@
     display: flex;
     align-items: flex-start;
     padding: 10px 0;
+    max-width: 500px;
 }
 #monei-insite-payment-form .card-field {
     flex: 1;

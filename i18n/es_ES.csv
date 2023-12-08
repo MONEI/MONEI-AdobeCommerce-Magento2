@@ -21,3 +21,4 @@
 "%1 should be numeric value","%1 debe ser un valor númerico"
 "Refund reason","Motivo de la devolución"
 "Pay with Monei","Pagar con MONEI"
+"An error occurred rendering the pay with card. Please try again later.","Ha ocurrido un error al renderizar el pago con tarjeta. Por favor, inténtelo de nuevo más tarde."

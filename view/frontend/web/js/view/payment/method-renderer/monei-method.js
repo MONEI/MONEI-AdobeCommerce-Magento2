@@ -193,9 +193,15 @@ define(
             /** Confirm the payment in monei */
             moneiTokenHandler: function (token) {
                 var self = this;
+                fullScreenLoader.startLoader();
                 return monei.confirmPayment({
                     paymentId: quote.getMoneiPaymentId(),
-                    paymentToken: token
+                    paymentToken: token,
+                    paymentMethod: {
+                        card: {
+                            cardholderName: quote.billingAddress().firstname + ' ' + quote.billingAddress().lastname
+                        }
+                    }
                 })
                     .then(function (result) {
                         if (self.failOrderStatus.includes(result.status)) {

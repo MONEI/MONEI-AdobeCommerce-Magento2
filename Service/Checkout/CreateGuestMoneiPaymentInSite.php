@@ -62,11 +62,14 @@ class CreateGuestMoneiPaymentInSite implements CreateGuestMoneiPaymentInSiteInte
             "shippingDetails" => $this->getAddressDetailsByQuoteAddress->execute($quote->getShippingAddress(), $email),
         ];
 
-        $result = $this->createPayment->execute($data);
-        $quote->setData(QuoteInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $result['id'] ?: '');
-        $this->quoteRepository->save($quote);
+        try{
+            $result = $this->createPayment->execute($data);
+            $quote->setData(QuoteInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $result['id'] ?: '');
+            $this->quoteRepository->save($quote);
 
-        return [$result];
+            return [$result];
+        }catch (\Exception $e){
+            throw new LocalizedException(__('An error occurred rendering the pay with card. Please try again later.'));
+        }
     }
-
 }
