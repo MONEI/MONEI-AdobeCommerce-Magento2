@@ -15,24 +15,28 @@
     <div class="payment-method-content">
         <div id="monei-insite-payment-form" afterRender="createMoneiPayment">
             <div class="checkout-monei-card-extra-fields-block">
-                <div class="field required" data-bind="css: {'_error': !cardHolderNameValid()}">
-                    <label for="monei-insite-cardholder-name" class="label">
-                        <span data-bind="i18n: 'Name of cardholder'"></span>
-                    </label>
-                    <div class="control">
-                        <input type="text" id="monei-insite-cardholder-name" name="monei-insite-cardholder-name" class="input-text" data-bind="attr: {'data-validate': JSON.stringify({'required':true})}, css: {'_error': !cardHolderNameValid()}" placeholder="John Doe" />
-                        <div class="field-error" data-bind="visible: !cardHolderNameValid(), i18n: 'This is a required field.'"></div>
+                <fieldset class="fieldset">
+                    <div class="field _required" data-bind="css: {'_error': !cardHolderNameValid()}">
+                        <label for="monei-insite-cardholder-name" class="label">
+                            <span data-bind="i18n: 'Name on card'"></span>
+                        </label>
+                        <div class="control">
+                            <input type="text" id="monei-insite-cardholder-name" name="monei-insite-cardholder-name" class="input-text" data-bind="attr: {'data-validate': JSON.stringify({'required':true})}, css: {'_error': !cardHolderNameValid()}" />
+                            <div class="field-error" data-bind="visible: !cardHolderNameValid(), i18n: 'This is a required field.'"></div>
+                        </div>
                     </div>
-                </div>
+                </fieldset>
             </div>
-            <div class="field required card-input">
-                <div class="card-field">
-                    <label for="monei-insite-card-input" class="label">
-                        <span data-bind="i18n: 'Card number'"></span>
-                    </label>
-                    <div id="monei-insite-card-input"></div>
-                    <div id="monei-insite-card-error"></div>
-                </div>
+            <div class="checkout-monei-card-input-card">
+                <fieldset class="fieldset">
+                    <div class="field _required card-field">
+                        <label for="monei-insite-card-input" class="label">
+                            <span data-bind="i18n: 'Card number'"></span>
+                        </label>
+                        <div id="monei-insite-card-input"></div>
+                        <div id="monei-insite-card-error"></div>
+                    </div>
+                </fieldset>
             </div>
         </div>
         <!-- ko foreach: getRegion('messages') -->

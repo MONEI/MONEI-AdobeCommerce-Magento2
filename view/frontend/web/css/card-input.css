@@ -3,8 +3,8 @@
     padding: 10px 0;
     max-width: 500px;
 }
-#monei-insite-payment-form .field.required {
-    padding: 10px 0;
+#monei-insite-payment-form .field._required label{
+    font-weight: 400;
 }
 #monei-insite-payment-form .card-input {
     display: flex;
@@ -24,7 +24,6 @@
     font-size: 14px;
     height: 36px;
     line-height: 1.42857143;
-    padding: 0 9px;
     vertical-align: baseline;
     width: 100%;
     box-sizing: border-box;
