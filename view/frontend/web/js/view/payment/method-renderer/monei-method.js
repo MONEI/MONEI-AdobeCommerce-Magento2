@@ -28,11 +28,13 @@ define(
             },
             redirectAfterPlaceOrder: true,
             cardInput: null,
+            idCardHolderInput: 'monei-insite-cardholder-name',
             idCardInput: 'monei-insite-card-input',
             idCardError: 'monei-insite-card-error',
             cancelOrderUrl: window.checkoutConfig.payment.moneiMonei.cancelOrderUrl,
             failOrderUrl: window.checkoutConfig.payment.moneiMonei.failOrderUrl,
             failOrderStatus: window.checkoutConfig.payment.moneiMonei.failOrderStatus,
+            cardHolderNameValid: ko.observable(true),
 
             initialize: function () {
                 this._super();
@@ -150,7 +152,7 @@ define(
                 //Disable the button of place order
                 this.isPlaceOrderActionAllowed(false);
 
-                if (additionalValidators.validate()) {
+                if (this.validate() && additionalValidators.validate()) {
 
                     monei.createToken(this.cardInput).then(function (result) {
                         if (result.error) {
@@ -171,6 +173,26 @@ define(
 
                     return false;
                 }
+
+                this.isPlaceOrderActionAllowed(true);
+
+                return false;
+            },
+
+            validate: function (){
+
+                var cardHolderName = $('#'+this.idCardHolderInput).val();
+
+                if (cardHolderName === '' || cardHolderName === undefined) {
+                    this.cardHolderNameValid(false);
+
+                    return false;
+                }
+
+                this.cardHolderNameValid(true);
+                quote.setMoneiCardholderName(cardHolderName);
+
+                return true;
             },
 
             // Create pending order in Magento
@@ -199,7 +221,7 @@ define(
                     paymentToken: token,
                     paymentMethod: {
                         card: {
-                            cardholderName: quote.billingAddress().firstname + ' ' + quote.billingAddress().lastname
+                            cardholderName: quote.getMoneiCardholderName()
                         }
                     }
                 })

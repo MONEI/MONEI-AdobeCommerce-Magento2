@@ -12,6 +12,7 @@ define([
 
         moneiPaymentId: ko.observable(null),
         moneiCardToken: ko.observable(null),
+        moneiCardholderName: ko.observable(null),
 
         /**
          * Get monei payment id
@@ -37,6 +38,19 @@ define([
          */
         setMoneiCardToken: function (val) {
             this.moneiCardToken(val);
+        },
+
+        /**
+         * Get monei cardholder name
+         */
+        getMoneiCardholderName: function () {
+            return this.moneiCardholderName();
+        },
+        /**
+         * Set monei cardholder name
+         */
+        setMoneiCardholderName: function (val) {
+            this.moneiCardholderName(val);
         },
     };
 
