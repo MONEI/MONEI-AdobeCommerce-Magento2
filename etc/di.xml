@@ -8,6 +8,8 @@
       type="Monei\MoneiPayment\Model\Config\MoneiPaymentModuleConfig" />
   <preference for="Monei\MoneiPayment\Api\Service\CreatePaymentInterface"
               type="Monei\MoneiPayment\Service\CreatePayment" />
+  <preference for="Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentInSiteInterface"  type="Monei\MoneiPayment\Service\Checkout\CreateLoggedMoneiPaymentInSite" />
+  <preference for="Monei\MoneiPayment\Api\Service\Checkout\CreateGuestMoneiPaymentInSiteInterface"  type="Monei\MoneiPayment\Service\Checkout\CreateGuestMoneiPaymentInSite" />
   <preference for="Monei\MoneiPayment\Api\Service\GetPaymentInterface"
               type="Monei\MoneiPayment\Service\GetPayment" />
   <preference for="Monei\MoneiPayment\Api\Service\CancelPaymentInterface"
@@ -22,7 +24,9 @@
       type="Monei\MoneiPayment\Service\SetOrderStatusAndState" />
   <preference for="Magento\Sales\Controller\Adminhtml\Order\Creditmemo\Save"
       type="Monei\MoneiPayment\Controller\Adminhtml\Order\Creditmemo\Save" />
-  <type name="Monei\MoneiPayment\Service\Logger\Handler">
+  <preference for="Monei\MoneiPayment\Api\OrderLockManagerInterface" type="Monei\MoneiPayment\Model\OrderLockManager"/>
+
+    <type name="Monei\MoneiPayment\Service\Logger\Handler">
     <arguments>
       <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
     </arguments>
