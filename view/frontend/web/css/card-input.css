@@ -14,7 +14,7 @@
     flex: 1;
 }
 #monei-insite-cardholder-name {
-    height: 36px;
+    height: 32px;
 }
 #monei-insite-card-input {
     background: #fff;
@@ -22,9 +22,10 @@
     border: 1px solid #c2c2c2;
     border-radius: 1px;
     font-size: 14px;
-    height: 36px;
+    height: 32px;
     line-height: 1.42857143;
     vertical-align: baseline;
+    padding: 0 9px;
     width: 100%;
     box-sizing: border-box;
 }

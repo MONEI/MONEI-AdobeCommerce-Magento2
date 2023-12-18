@@ -112,7 +112,7 @@ interface MoneiPaymentModuleConfigInterface
      * Get type of connection
      *
      * @param null $storeId
-     * @return int
+     * @return string
      */
     public function getTypeOfConnection($storeId = null): string;
 

@@ -113,9 +113,20 @@ define(
                 var self = this;
                 this.container = document.getElementById(this.idCardInput);
                 this.errorText = document.getElementById(this.idCardError);
+                var style = {
+                    base: {
+                        'height': '30px',
+                        'padding': '0',
+                        'font-size': '14px'
+                    },
+                    input: {
+                        'height': '30px',
+                    }
+                };
                 // Create an instance of the Card Input using payment_id.
                 this.cardInput = monei.CardInput({
                     paymentId: paymentId,
+                    style: style,
                     onChange: function (event) {
                         // Handle real-time validation errors.
                         if (event.isTouched && event.error) {
