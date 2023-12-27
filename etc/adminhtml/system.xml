@@ -62,6 +62,14 @@
             <field id="active">1</field>
           </depends>
         </field>
+        <field id="is_enabled_tokenization" translate="label comment" sortOrder="95" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+          <label>Enable tokenization</label>
+          <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+          <depends>
+            <field id="active">1</field>
+            <field id="type_of_connection">insite</field>
+          </depends>
+        </field>
         <field id="title" translate="label comment" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Title</label>
           <comment>Text that will be displayed in checkout</comment>

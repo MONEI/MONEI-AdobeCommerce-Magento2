@@ -10,10 +10,12 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Service;
 
 use Magento\Sales\Api\Data\OrderInterface;
+use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
 use Monei\MoneiPayment\Api\OrderLockManagerInterface;
 use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
 use Magento\Framework\DB\TransactionFactory;
 use Magento\Sales\Api\Data\OrderInterfaceFactory;
+use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 
 /**
  * Generate invoice for order service class
@@ -23,7 +25,8 @@ class GenerateInvoice implements GenerateInvoiceInterface
     public function __construct(
         private readonly OrderInterfaceFactory $orderFactory,
         private readonly TransactionFactory $transactionFactory,
-        private readonly OrderLockManagerInterface $orderLockManager
+        private readonly OrderLockManagerInterface $orderLockManager,
+        private readonly CreateVaultPayment $createVaultPayment
     ) {
     }
 
@@ -56,6 +59,12 @@ class GenerateInvoice implements GenerateInvoiceInterface
         if($payment){
             $payment->setLastTransId($data['id']);
             $payment->setCreatedInvoice($invoice);
+            if ($order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION)) {
+                $this->createVaultPayment->execute(
+                    $data['id'],
+                    $payment
+                );
+            }
         }
         $this->transactionFactory->create()->addObject($invoice)->addObject($invoice->getOrder())->save();
 

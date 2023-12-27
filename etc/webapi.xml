@@ -21,4 +21,24 @@
             <parameter name="cartId" force="true">%cart_id%</parameter>
         </data>
     </route>
+    <!-- Logged User -->
+    <route url="/V1/checkout/createmoneipaymentvault" method="POST">
+        <service class="Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentVaultInterface" method="execute"/>
+        <resources>
+            <resource ref="self" />
+        </resources>
+        <data>
+            <parameter name="cartId" force="true">%cart_id%</parameter>
+        </data>
+    </route>
+    <!-- Logged User -->
+    <route url="/V1/checkout/savemoneitokenization" method="POST">
+        <service class="Monei\MoneiPayment\Api\Service\Checkout\SaveTokenizationInterface" method="execute"/>
+        <resources>
+            <resource ref="self" />
+        </resources>
+        <data>
+            <parameter name="cartId" force="true">%cart_id%</parameter>
+        </data>
+    </route>
 </routes>

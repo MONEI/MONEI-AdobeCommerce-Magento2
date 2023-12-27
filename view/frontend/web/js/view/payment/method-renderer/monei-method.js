@@ -17,9 +17,10 @@ define(
         'Magento_Checkout/js/action/redirect-on-success',
         'Magento_Ui/js/model/messageList',
         'mage/url',
-        'Magento_Checkout/js/model/full-screen-loader'
+        'Magento_Checkout/js/model/full-screen-loader',
+        'Magento_Vault/js/view/payment/vault-enabler'
     ],
-    function (ko, $, Component, setPaymentMethodAction, additionalValidators, storage, customer, quote, urlBuilder, monei, redirectOnSuccessAction, globalMessageList, url, fullScreenLoader) {
+    function (ko, $, Component, setPaymentMethodAction, additionalValidators, storage, customer, quote, urlBuilder, monei, redirectOnSuccessAction, globalMessageList, url, fullScreenLoader, VaultEnabler) {
         'use strict';
 
         return Component.extend({
@@ -31,19 +32,91 @@ define(
             idCardHolderInput: 'monei-insite-cardholder-name',
             idCardInput: 'monei-insite-card-input',
             idCardError: 'monei-insite-card-error',
-            cancelOrderUrl: window.checkoutConfig.payment.moneiMonei.cancelOrderUrl,
-            failOrderUrl: window.checkoutConfig.payment.moneiMonei.failOrderUrl,
-            failOrderStatus: window.checkoutConfig.payment.moneiMonei.failOrderStatus,
+            isEnabledTokenization: false,
+            cancelOrderUrl: '',
+            failOrderUrl:'',
+            failOrderStatus: '',
             cardHolderNameValid: ko.observable(true),
+            checkedVault: ko.observable(false),
 
             initialize: function () {
                 this._super();
 
+                this.initMoneiPaymentVariables();
+                this.initMoneiTemplate();
+                this.initMoneiObservable();
+
+                this.vaultEnabler = new VaultEnabler();
+                this.vaultEnabler.setPaymentCode(this.getVaultCode());
+
+                return this;
+            },
+
+            initMoneiPaymentVariables: function(){
+                this.isEnabledTokenization = window.checkoutConfig.payment[this.getCode()].isEnabledTokenization;
+                this.cancelOrderUrl = window.checkoutConfig.payment[this.getCode()].cancelOrderUrl;
+                this.failOrderUrl = window.checkoutConfig.payment[this.getCode()].failOrderUrl;
+                this.failOrderStatus = window.checkoutConfig.payment[this.getCode()].failOrderStatus;
+            },
+
+            initMoneiTemplate: function(){
                 this.showCustomTemplate = ko.observable(false);
 
-                if (window.checkoutConfig.payment.moneiMonei.typeOfConnection === 'insite') {
+                if (window.checkoutConfig.payment[this.getCode()].typeOfConnection === 'insite') {
                     this.showCustomTemplate(true);
                 }
+            },
+
+            initMoneiObservable: function(){
+                var self = this,
+                    serviceUrl = urlBuilder.createUrl('/checkout/savemoneitokenization',{})
+
+                this.checkedVault.subscribe(function (val) {
+                    fullScreenLoader.startLoader();
+
+                    var payload,
+                        isVaultChecked = val ? 1 : 0;
+
+                    payload = {
+                        cartId: quote.getQuoteId(),
+                        isVaultChecked: isVaultChecked
+                    };
+
+                    storage.post(
+                        serviceUrl,
+                        JSON.stringify(payload)
+                    ).done(
+                        function () {
+                            fullScreenLoader.stopLoader();
+                            quote.setMoneiVaultChecked(val);
+                        }
+                    ).fail(
+                        function (response) {
+                            self.checkedVault(quote.getMoneiVaultChecked() ?? false);
+
+                            var error = JSON.parse(response.responseText);
+                            globalMessageList.addErrorMessage({
+                                message: error.message
+                            });
+                            fullScreenLoader.stopLoader();
+                        }
+                    );
+                });
+                return this;
+            },
+
+            /**
+             * @returns {Object}
+             */
+            getData: function () {
+                var data = {
+                    'method': this.getCode(),
+                    'additional_data': {}
+                };
+
+                this.vaultEnabler.visitAdditionalData(data);
+
+                return data;
             },
 
             /**
@@ -230,6 +303,7 @@ define(
                 return monei.confirmPayment({
                     paymentId: quote.getMoneiPaymentId(),
                     paymentToken: token,
+                    generatePaymentToken: !!quote.getMoneiVaultChecked(),
                     paymentMethod: {
                         card: {
                             cardholderName: quote.getMoneiCardholderName()
@@ -282,6 +356,20 @@ define(
              */
             redirectToFailOrder: function (status) {
                 window.location.replace(url.build(this.failOrderUrl+'?status='+status));
+            },
+
+            /**
+             * Show checkbox to save token card
+             */
+            isVaultEnabled: function () {
+                return this.isEnabledTokenization && customer.isLoggedIn();
+            },
+
+            /**
+             * Get vault payment code
+             */
+            getVaultCode: function () {
+                return window.checkoutConfig.payment[this.getCode()].ccVaultCode;
             }
         });
     });

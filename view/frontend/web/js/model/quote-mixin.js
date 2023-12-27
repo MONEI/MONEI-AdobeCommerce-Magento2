@@ -13,6 +13,7 @@ define([
         moneiPaymentId: ko.observable(null),
         moneiCardToken: ko.observable(null),
         moneiCardholderName: ko.observable(null),
+        moneiVaultChecked: ko.observable(null),
 
         /**
          * Get monei payment id
@@ -51,6 +52,19 @@ define([
          */
         setMoneiCardholderName: function (val) {
             this.moneiCardholderName(val);
+        },
+
+        /**
+         * Get monei vault checked
+         */
+        getMoneiVaultChecked: function () {
+            return this.moneiVaultChecked();
+        },
+        /**
+         * Set monei vault checked
+         */
+        setMoneiVaultChecked: function (val) {
+            this.moneiVaultChecked(val);
         },
     };
 

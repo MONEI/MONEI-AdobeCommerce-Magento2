@@ -14,6 +14,7 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use Monei\MoneiPayment\Block\Monei\Customer\CardRenderer;
 use Monei\MoneiPayment\Model\Payment\Monei;
 
 /**
@@ -34,7 +35,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
     {
         return [
             'payment' => [
-                'moneiMonei' => [
+                Monei::CODE => [
                     'redirectUrl' => $this->urlBuilder->getUrl('monei/payment/redirect'),
                     'cancelOrderUrl' => $this->urlBuilder->getUrl('monei/payment/cancel'),
                     'failOrderUrl' => $this->urlBuilder->getUrl('monei/payment/faillastorderbystatus'),
@@ -44,8 +45,23 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                         Monei::ORDER_STATUS_CANCELED,
                         Monei::ORDER_STATUS_FAILED,
                     ],
+                    'isEnabledTokenization' => $this->moneiPaymentConfig->isEnabledTokenization($this->getStoreId()),
+                    'ccVaultCode' => Monei::CC_VAULT,
                 ],
             ],
+            'vault' => [
+                Monei::CC_VAULT => [
+                    'card_icons' => CardRenderer::ICON_TYPE_BY_BRAND,
+                    'redirectUrl' => $this->urlBuilder->getUrl('monei/payment/redirect'),
+                    'cancelOrderUrl' => $this->urlBuilder->getUrl('monei/payment/cancel'),
+                    'failOrderUrl' => $this->urlBuilder->getUrl('monei/payment/faillastorderbystatus'),
+                    'failOrderStatus' => [
+                        Monei::ORDER_STATUS_EXPIRED,
+                        Monei::ORDER_STATUS_CANCELED,
+                        Monei::ORDER_STATUS_FAILED,
+                    ],
+                ],
+            ]
         ];
     }
 

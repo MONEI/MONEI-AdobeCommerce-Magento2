@@ -38,6 +38,17 @@
                     </div>
                 </fieldset>
             </div>
+
+            <!-- ko if: (isVaultEnabled())-->
+            <div class="field choice">
+                <input type="checkbox"
+                       class="checkbox"
+                       data-bind="checked: checkedVault, attr: {'id': getCode() + '_enable_vault', 'name': getCode() + '_enable_vault'}"/>
+                <label class="label" data-bind="attr: {'for': getCode() + '_enable_vault'}">
+                    <span><!-- ko i18n: 'Save payment information to my account for future purchases?'--><!-- /ko --></span>
+                </label>
+            </div>
+            <!-- /ko -->
         </div>
         <!-- ko foreach: getRegion('messages') -->
         <!-- ko template: getTemplate() --><!-- /ko -->
