@@ -24,7 +24,7 @@
 "An error occurred rendering the pay with card. Please try again later.","Ha ocurrido un error al renderizar el pago con tarjeta. Por favor, inténtelo de nuevo más tarde."
 "Name on card","Nombre del titular de la tarjeta"
 "Card number","Número de tarjeta"
-"Save payment information to my account for future purchases?","¿Guardar información del pago en mi cuenta para futuras compras?"
+"Save payment information to my account for future purchases","Guardar información del pago en mi cuenta para futuras compras"
 "An error occurred trying save the card.","Un error ocurrió al intentar guardar la tarjeta."
 "ending in %1","terminando en %1"
 "expires","expira"

@@ -7,6 +7,7 @@ define([
     'ko',
     'jquery',
     'Magento_Checkout/js/model/quote',
+    'Magento_Checkout/js/checkout-data',
     'Magento_Vault/js/view/payment/method-renderer/vault',
     'Magento_Checkout/js/model/payment/additional-validators',
     'Magento_Checkout/js/model/full-screen-loader',
@@ -20,6 +21,7 @@ define([
     ko,
     $,
     quote,
+    checkoutData,
     VaultComponent,
     additionalValidators,
     fullScreenLoader,
@@ -41,6 +43,9 @@ define([
             this._super();
 
             this.initMoneiPaymentVariables();
+            if (!checkoutData.getSelectedPaymentMethod() || this.getId() === checkoutData.getSelectedPaymentMethod()) {
+                this.selectPaymentMethod();
+            }
 
             return this;
         },
