@@ -46,7 +46,9 @@ class Monei
 
     public const CODE = 'monei';
 
-    public const CC_VAULT = 'monei_cc_vault';
+    public const CARD_CODE = 'monei_card';
+
+    public const CC_VAULT_CODE = 'monei_cc_vault';
 
     public const VAULT_TYPE = 'card';
 }

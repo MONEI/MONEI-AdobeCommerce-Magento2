@@ -14,7 +14,7 @@
   <type name="Magento\Vault\Model\Ui\TokensConfigProvider">
       <arguments>
           <argument name="tokenUiComponentProviders" xsi:type="array">
-              <item name="monei" xsi:type="object">Monei\MoneiPayment\Model\Ui\Card\TokenUiComponentProvider</item>
+              <item name="monei_card" xsi:type="object">Monei\MoneiPayment\Model\Ui\Card\TokenUiComponentProvider</item>
           </argument>
       </arguments>
   </type>

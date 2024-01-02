@@ -30,7 +30,7 @@ class CardRenderer extends AbstractCardRenderer
 
     public function canRender(PaymentTokenInterface $token)
     {
-        return $token->getPaymentMethodCode() === Monei::CODE;
+        return $token->getPaymentMethodCode() === Monei::CARD_CODE;
     }
 
     public function getNumberLast4Digits()

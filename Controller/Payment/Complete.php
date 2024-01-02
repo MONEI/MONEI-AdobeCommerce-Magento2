@@ -126,10 +126,11 @@ class Complete implements ActionInterface
                 if($payment){
                     $payment->setLastTransId($data['id']);
                     if ($order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION)) {
-                        $this->createVaultPayment->execute(
+                        $vaultCreated = $this->createVaultPayment->execute(
                             $data['id'],
                             $payment
                         );
+                        $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, $vaultCreated);
                     }
                 }
 

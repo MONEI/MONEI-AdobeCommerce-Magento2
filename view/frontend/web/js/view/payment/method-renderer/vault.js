@@ -38,6 +38,10 @@ define([
         defaults: {
             template: 'Monei_MoneiPayment/payment/monei-card-vault'
         },
+        cancelOrderUrl: '',
+        failOrderUrl:'',
+        failOrderStatus: '',
+        methodCardCode: '',
 
         initialize: function () {
             this._super();
@@ -54,6 +58,7 @@ define([
             this.cancelOrderUrl = window.checkoutConfig.vault[this.getCode()].cancelOrderUrl;
             this.failOrderUrl = window.checkoutConfig.vault[this.getCode()].failOrderUrl;
             this.failOrderStatus = window.checkoutConfig.vault[this.getCode()].failOrderStatus;
+            this.methodCardCode = window.checkoutConfig.vault[this.getCode()].methodCardCode;
         },
 
         /**
@@ -62,7 +67,7 @@ define([
         getData: function () {
             var data = this._super();
 
-            data['method'] = 'monei';
+            data['method'] = this.methodCardCode;
 
             return data;
         },
