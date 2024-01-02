@@ -32,6 +32,8 @@ interface MoneiPaymentModuleConfigInterface
 
     public const TYPE_OF_CONNECTION = 'payment/monei/type_of_connection';
 
+    public const IS_ENABLED_TOKENIZATION = 'payment/monei/is_enabled_tokenization';
+
     public const TYPE_OF_PAYMENT = 'payment/monei/type_of_payment';
 
     public const CONFIRMED_STATUS = 'payment/monei/confirmed_status';
@@ -111,10 +113,18 @@ interface MoneiPaymentModuleConfigInterface
     /**
      * Get type of connection
      *
-     * @param null $storeId
+     * @param int|null $storeId
      * @return string
      */
-    public function getTypeOfConnection($storeId = null): string;
+    public function getTypeOfConnection(int $storeId = null): string;
+
+    /**
+     * Is enable tokenization
+     *
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function isEnabledTokenization(int $storeId = null): bool;
 
     /**
      * Get type of payment

@@ -40,7 +40,7 @@ define(
                 paymentData = quote.paymentMethod();
 
             paymentData = filterTemplateData(paymentData);
-            
+
             if (paymentData.hasOwnProperty('title')) {
                 delete paymentData['title'];
             }
@@ -75,7 +75,7 @@ define(
                 serviceUrl, JSON.stringify(payload)
             ).done(
                 function () {
-                    let url = window.checkoutConfig.payment.moneiMonei.redirectUrl;
+                    let url = window.checkoutConfig.payment.monei.redirectUrl;
                     console.log('continue to monei again');
                     console.log(url);
                     $.mage.redirect(url);

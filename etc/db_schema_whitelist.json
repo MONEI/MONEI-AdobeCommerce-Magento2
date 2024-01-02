@@ -10,7 +10,13 @@
     },
     "quote": {
         "column": {
-            "monei_payment_id": true
+            "monei_payment_id": true,
+            "save_monei_tokenization": true
+        }
+    },
+    "sales_order": {
+        "column": {
+            "save_monei_tokenization": true
         }
     }
 }
