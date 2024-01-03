@@ -1,0 +1,42 @@
+#monei-insite-payment-form {
+    display: block;
+    padding: 10px 0;
+    max-width: 500px;
+}
+#monei-insite-payment-form .field._required label{
+    font-weight: 400;
+}
+#monei-insite-payment-form .card-input {
+    display: flex;
+    align-items: flex-start;
+}
+#monei-insite-payment-form .card-field {
+    flex: 1;
+}
+#monei-insite-cardholder-name {
+    height: 32px;
+}
+#monei-insite-card-input {
+    background: #fff;
+    background-clip: padding-box;
+    border: 1px solid #c2c2c2;
+    border-radius: 1px;
+    font-size: 14px;
+    height: 32px;
+    line-height: 1.42857143;
+    vertical-align: baseline;
+    padding: 0 9px;
+    width: 100%;
+    box-sizing: border-box;
+}
+#monei-insite-card-input.is-focused {
+    box-shadow: 0 0 3px 1px #00699d;
+}
+#monei-insite-card-input.is-invalid {
+    border-color: #ed8380;
+}
+#monei-insite-card-error {
+    color: #e02b27;
+    margin-top: 7px;
+    font-size: 1.2rem;
+}

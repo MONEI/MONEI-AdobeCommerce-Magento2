@@ -45,4 +45,10 @@ class Monei
     public const STATUS_MONEI_REFUNDED = 'monei_refunded';
 
     public const CODE = 'monei';
+
+    public const CARD_CODE = 'monei_card';
+
+    public const CC_VAULT_CODE = 'monei_cc_vault';
+
+    public const VAULT_TYPE = 'card';
 }

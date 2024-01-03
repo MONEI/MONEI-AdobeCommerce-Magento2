@@ -11,9 +11,8 @@
         <mode>1</mode>
         <test_url>https://api.monei.com/v1/</test_url>
         <production_url>https://api.monei.com/v1/</production_url>
-        <title>Pay with MONEI</title>
+        <title>Pay with other payment methods</title>
         <description>MONEI payment method</description>
-        <type_of_payment>1</type_of_payment>
         <allowspecific>0</allowspecific>
         <payment_action>Authorization</payment_action>
         <model>MoneiPaymentFacade</model>
@@ -31,6 +30,31 @@
         <can_refund>1</can_refund>
         <order_place_redirect_url>1</order_place_redirect_url>
       </monei>
+      <monei_card>
+        <active>0</active>
+        <model>MoneiCardPaymentFacade</model>
+        <title>Pay with card</title>
+        <is_enabled_tokenization>0</is_enabled_tokenization>
+        <allowspecific>0</allowspecific>
+        <can_use_internal>1</can_use_internal>
+        <can_use_checkout>1</can_use_checkout>
+        <is_gateway>1</is_gateway>
+        <can_initialize>1</can_initialize>
+        <can_authorize>1</can_authorize>
+        <can_capture>1</can_capture>
+        <can_capture_partial>1</can_capture_partial>
+        <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+        <can_refund>1</can_refund>
+        <can_authorize_vault>1</can_authorize_vault>
+        <can_capture_vault>1</can_capture_vault>
+        <order_place_redirect_url>1</order_place_redirect_url>
+      </monei_card>
+      <monei_cc_vault>
+        <active>1</active>
+        <model>MoneiCardVaultFacade</model>
+        <title>Stored Cards (Monei)</title>
+        <can_use_internal>0</can_use_internal>
+      </monei_cc_vault>
     </payment>
   </default>
 </config>
