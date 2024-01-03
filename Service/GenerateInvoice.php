@@ -60,10 +60,11 @@ class GenerateInvoice implements GenerateInvoiceInterface
             $payment->setLastTransId($data['id']);
             $payment->setCreatedInvoice($invoice);
             if ($order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION)) {
-                $this->createVaultPayment->execute(
+                $vaultCreated = $this->createVaultPayment->execute(
                     $data['id'],
                     $payment
                 );
+                $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, $vaultCreated);
             }
         }
         $this->transactionFactory->create()->addObject($invoice)->addObject($invoice->getOrder())->save();

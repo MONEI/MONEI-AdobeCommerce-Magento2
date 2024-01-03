@@ -18,18 +18,9 @@ use Magento\Store\Model\ScopeInterface;
  */
 class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
 {
-    /**
-     * @var ScopeConfigInterface
-     */
-    private $scopeConfig;
-
-    /**
-     * @param ScopeConfigInterface $scopeConfig
-     */
     public function __construct(
-        ScopeConfigInterface $scopeConfig
+        private readonly ScopeConfigInterface $scopeConfig
     ) {
-        $this->scopeConfig = $scopeConfig;
     }
 
     /**
@@ -123,30 +114,6 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
     {
         return (string) $this->scopeConfig->getValue(
             self::DESCRIPTION,
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getTypeOfConnection(int $storeId = null): string
-    {
-        return (string) $this->scopeConfig->getValue(
-            self::TYPE_OF_CONNECTION,
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function isEnabledTokenization(int $storeId = null): bool
-    {
-        return (bool) $this->scopeConfig->getValue(
-            self::IS_ENABLED_TOKENIZATION,
             ScopeInterface::SCOPE_STORE,
             $storeId
         );

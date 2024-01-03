@@ -23,8 +23,11 @@ class CreateVaultPayment
     {
     }
 
-    public function execute(string $moneiPaymentId, OrderPaymentInterface &$payment): void
+    public function execute(string $moneiPaymentId, OrderPaymentInterface &$payment): bool
     {
+        if($payment->getMethod() !== Monei::CARD_CODE){
+            return false;
+        }
         $moneiPayment = $this->getPayment->execute($moneiPaymentId);
         $paymentToken = $this->paymentTokenFactory->create();
         $detailsCard = $moneiPayment['paymentMethod']['card'];
@@ -44,5 +47,7 @@ class CreateVaultPayment
             )
         );
         $payment->getExtensionAttributes()?->setVaultPaymentToken($paymentToken);
+
+        return true;
     }
 }

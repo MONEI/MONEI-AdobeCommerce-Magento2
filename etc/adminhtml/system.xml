@@ -9,113 +9,84 @@
       <resource>Monei_MoneiPayment::config</resource>
       <group id="monei" translate="label" sortOrder="100" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
         <label>MONEI</label>
-        <field id="active" translate="label comment" sortOrder="10" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
-          <label>Enable</label>
-          <comment>Select 'Yes' if you want to enable this payment method. Otherwise 'No'.</comment>
-          <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-        </field>
-        <field id="version" translate="label" type="label" sortOrder="15" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="version" translate="label" type="label" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Current Version</label>
           <backend_model>Monei\MoneiPayment\Model\Config\Source\ModuleVersion</backend_model>
-          <depends>
-            <field id="active">1</field>
-          </depends>
         </field>
         <field id="heading1" translate="label" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Webservice Settings:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
-          <depends>
-            <field id="active">1</field>
-          </depends>
         </field>
         <field id="mode" translate="label comment" sortOrder="30" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Mode</label>
           <comment>To define if we are going to connect with production or testing WS environment</comment>
           <source_model>Monei\MoneiPayment\Model\Config\Source\Mode</source_model>
-          <depends>
-            <field id="active">1</field>
-          </depends>
         </field>
-        <field id="test_api_key" translate="label comment" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="test_api_key" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Test Api Key</label>
-          <depends>
-            <field id="active">1</field>
-          </depends>
         </field>
-        <field id="production_api_key" translate="label comment" type="text" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="production_api_key" translate="label comment" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Production Api Key</label>
-          <depends>
-            <field id="active">1</field>
-          </depends>
         </field>
-        <field id="heading2" translate="label" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
-          <label>General Settings:</label>
+        <field id="heading2" translate="label" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+          <label>Basic settings:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
-          <depends>
-            <field id="active">1</field>
-          </depends>
         </field>
-        <field id="type_of_connection" translate="label comment" sortOrder="90" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
-          <label>Type of connection</label>
-          <source_model>Monei\MoneiPayment\Model\Config\Source\TypeOfConnection</source_model>
-          <depends>
-            <field id="active">1</field>
-          </depends>
+        <field id="type_of_payment" translate="label comment" sortOrder="70" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Type of payment</label>
+            <comment>If client wants to work with pre-authorized payments or not.</comment>
+            <source_model>Monei\MoneiPayment\Model\Config\Source\TypeOfPayment</source_model>
+            <depends>
+                <field id="active">1</field>
+            </depends>
+          </field>
+        <field id="confirmed_status" translate="label comment" type="select" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Confirmed Status</label>
+            <source_model>Magento\Sales\Model\Config\Source\Order\Status\Processing</source_model>
+              <comment>Selectable with all the processing order statuses</comment>
+            <depends>
+                <field id="active">1</field>
+            </depends>
         </field>
-        <field id="is_enabled_tokenization" translate="label comment" sortOrder="95" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
-          <label>Enable tokenization</label>
-          <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-          <depends>
-            <field id="active">1</field>
-            <field id="type_of_connection">insite</field>
-          </depends>
+        <field id="pre_authorized_status" translate="label comment" type="select" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Pre-authorized Status</label>
+            <source_model>Monei\MoneiPayment\Model\Config\Source\PendingStatus</source_model>
+            <comment>Selectable with all the pending order statuses</comment>
+            <depends>
+                <field id="active">1</field>
+            </depends>
         </field>
-        <field id="title" translate="label comment" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="heading3" translate="label" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
+          <label>Monei Redirect:</label>
+          <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
+        </field>
+        <field id="active" translate="label comment" sortOrder="110" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Enable</label>
+            <comment>Select 'Yes' if you want to enable this payment method. Otherwise 'No'.</comment>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+        </field>
+        <field id="title" translate="label comment" type="text" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Title</label>
           <comment>Text that will be displayed in checkout</comment>
           <depends>
             <field id="active">1</field>
           </depends>
         </field>
-        <field id="description" translate="label comment" type="text" sortOrder="110" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="description" translate="label comment" type="text" sortOrder="150" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Description</label>
           <comment>Small description that will be displayed in checkout (Under title)</comment>
           <depends>
             <field id="active">1</field>
           </depends>
         </field>
-        <field id="type_of_payment" translate="label comment" sortOrder="120" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
-          <label>Type of payment</label>
-          <comment>If client wants to work with pre-authorized payments or not.</comment>
-          <source_model>Monei\MoneiPayment\Model\Config\Source\TypeOfPayment</source_model>
-          <depends>
-            <field id="active">1</field>
-          </depends>
-        </field>
-        <field id="confirmed_status" translate="label comment" type="select" sortOrder="130" showInDefault="1" showInWebsite="1" showInStore="1">
-          <label>Confirmed Status</label>
-          <source_model>Magento\Sales\Model\Config\Source\Order\Status\Processing</source_model>
-          <comment>Selectable with all the processing order statuses</comment>
-          <depends>
-            <field id="active">1</field>
-          </depends>
-        </field>
-        <field id="pre_authorized_status" translate="label comment" type="select" sortOrder="140" showInDefault="1" showInWebsite="1" showInStore="1">
-          <label>Pre-authorized Status</label>
-          <source_model>Monei\MoneiPayment\Model\Config\Source\PendingStatus</source_model>
-          <comment>Selectable with all the pending order statuses</comment>
-          <depends>
-            <field id="active">1</field>
-          </depends>
-        </field>
-        <field id="allowspecific" translate="label comment" sortOrder="150" type="allowspecific" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="allowspecific" translate="label comment" sortOrder="160" type="allowspecific" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Payment from Applicable Countries</label>
           <source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
           <depends>
             <field id="active">1</field>
           </depends>
         </field>
-        <field id="specificcountry" translate="label comment" sortOrder="160" type="multiselect" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="specificcountry" translate="label comment" sortOrder="170" type="multiselect" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Payment from Specific Countries</label>
           <source_model>Magento\Directory\Model\Config\Source\Country</source_model>
           <can_be_empty>1</can_be_empty>
@@ -124,7 +95,7 @@
             <field id="allowspecific">1</field>
           </depends>
         </field>
-        <field id="sort_order" translate="label comment" sortOrder="170" type="text" showInDefault="1" showInWebsite="1">
+        <field id="sort_order" translate="label comment" sortOrder="180" type="text" showInDefault="1" showInWebsite="1">
           <label>Sort Order</label>
           <tooltip>In which order the payment method will be displayed in checkout</tooltip>
           <frontend_class>validate-number</frontend_class>
@@ -132,6 +103,61 @@
             <field id="active">1</field>
           </depends>
         </field>
+        <!-- CARD INSITE -->
+        <field id="heading4" translate="label" sortOrder="190" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Monei Card Insite:</label>
+            <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
+        </field>
+        <field id="active_card_insite" translate="label comment" sortOrder="200" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Enable</label>
+            <comment>Select 'Yes' if you want to enable this payment method. Otherwise 'No'.</comment>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <config_path>payment/monei_card/active</config_path>
+        </field>
+        <field id="is_enabled_tokenization" translate="label comment" sortOrder="210" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Enable tokenization</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <config_path>payment/monei_card/is_enabled_tokenization</config_path>
+            <depends>
+                <field id="active_card_insite">1</field>
+            </depends>
+        </field>
+        <field id="title_card_insite" translate="label comment" type="text" sortOrder="220" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Title</label>
+            <comment>Text that will be displayed in checkout</comment>
+            <config_path>payment/monei_card/title</config_path>
+            <depends>
+                <field id="active_card_insite">1</field>
+            </depends>
+        </field>
+        <field id="allowspecific_card_insite" translate="label comment" sortOrder="230" type="allowspecific" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Payment from Applicable Countries</label>
+            <source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
+            <config_path>payment/monei_card/allowspecific</config_path>
+            <depends>
+                <field id="active_card_insite">1</field>
+            </depends>
+        </field>
+        <field id="specificcountry_card_insite" translate="label comment" sortOrder="240" type="multiselect" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Payment from Specific Countries</label>
+            <source_model>Magento\Directory\Model\Config\Source\Country</source_model>
+            <config_path>payment/monei_card/specificcountry</config_path>
+            <can_be_empty>1</can_be_empty>
+            <depends>
+                <field id="active_card_insite">1</field>
+                <field id="allowspecific_card_insite">1</field>
+            </depends>
+        </field>
+        <field id="sort_order_card_insite" translate="label comment" sortOrder="250" type="text" showInDefault="1" showInWebsite="1">
+            <label>Sort Order</label>
+            <tooltip>In which order the payment method will be displayed in checkout</tooltip>
+            <config_path>payment/monei_card/sort_order</config_path>
+            <frontend_class>validate-number</frontend_class>
+            <depends>
+                <field id="active_card_insite">1</field>
+            </depends>
+        </field>
+        <!-- -->
       </group>
     </section>
   </system>
