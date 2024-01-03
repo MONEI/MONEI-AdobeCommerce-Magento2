@@ -11,7 +11,7 @@
         <mode>1</mode>
         <test_url>https://api.monei.com/v1/</test_url>
         <production_url>https://api.monei.com/v1/</production_url>
-        <title>Pay with another payment methods</title>
+        <title>Pay with other payment methods</title>
         <description>MONEI payment method</description>
         <allowspecific>0</allowspecific>
         <payment_action>Authorization</payment_action>
