@@ -18,18 +18,9 @@ use Magento\Store\Model\ScopeInterface;
  */
 class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
 {
-    /**
-     * @var ScopeConfigInterface
-     */
-    private $scopeConfig;
-
-    /**
-     * @param ScopeConfigInterface $scopeConfig
-     */
     public function __construct(
-        ScopeConfigInterface $scopeConfig
+        private readonly ScopeConfigInterface $scopeConfig
     ) {
-        $this->scopeConfig = $scopeConfig;
     }
 
     /**

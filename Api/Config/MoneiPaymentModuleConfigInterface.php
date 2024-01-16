@@ -110,7 +110,7 @@ interface MoneiPaymentModuleConfigInterface
      * Get type of payment
      *
      * @param null $storeId
-     * @return string
+     * @return int
      */
     public function getTypeOfPayment($storeId = null): int;
 

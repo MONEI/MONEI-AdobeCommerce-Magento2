@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Controller\Payment;
 
 use Exception;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
@@ -32,78 +33,18 @@ use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
  */
 class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
 {
-    /**
-     * @var SerializerInterface
-     */
-    private $serializer;
-
-    /**
-     * @var MoneiPaymentModuleConfigInterface
-     */
-    private $moduleConfig;
-
-    /**
-     * @var Logger
-     */
-    private $logger;
-    /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-
-    /**
-     * @var GenerateInvoiceInterface
-     */
-    private $generateInvoiceService;
-
-    /**
-     * @var SetOrderStatusAndStateInterface
-     */
-    private $setOrderStatusAndStateService;
-
-    /**
-     * @var Context
-     */
-    private $context;
-
-    /**
-     * @var MagentoRedirect
-     */
-    private $resultRedirectFactory;
-
-    /**
-     * @var string
-     */
     private string $errorMessage = '';
 
-    /**
-     * @param Context $context
-     * @param SerializerInterface $serializer
-     * @param MoneiPaymentModuleConfigInterface $moduleConfig
-     * @param Logger $logger
-     * @param StoreManagerInterface $storeManager
-     * @param GenerateInvoiceInterface $generateInvoiceService
-     * @param SetOrderStatusAndStateInterface $setOrderStatusAndStateService
-     * @param MagentoRedirect $resultRedirectFactory
-     */
     public function __construct(
-        Context $context,
-        SerializerInterface $serializer,
-        MoneiPaymentModuleConfigInterface $moduleConfig,
-        Logger $logger,
-        StoreManagerInterface $storeManager,
-        GenerateInvoiceInterface $generateInvoiceService,
-        SetOrderStatusAndStateInterface $setOrderStatusAndStateService,
-        MagentoRedirect $resultRedirectFactory
+        private readonly Context $context,
+        private readonly SerializerInterface $serializer,
+        private readonly MoneiPaymentModuleConfigInterface $moduleConfig,
+        private readonly Logger $logger,
+        private readonly StoreManagerInterface $storeManager,
+        private readonly GenerateInvoiceInterface $generateInvoiceService,
+        private readonly SetOrderStatusAndStateInterface $setOrderStatusAndStateService,
+        private readonly MagentoRedirect $resultRedirectFactory
     ) {
-        $this->context = $context;
-        $this->serializer = $serializer;
-        $this->moduleConfig = $moduleConfig;
-        $this->logger = $logger;
-        $this->storeManager = $storeManager;
-        $this->generateInvoiceService = $generateInvoiceService;
-        $this->setOrderStatusAndStateService = $setOrderStatusAndStateService;
-        $this->resultRedirectFactory = $resultRedirectFactory;
     }
 
     /**
@@ -111,15 +52,16 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
      */
     public function execute()
     {
-        $body = $this->context->getRequest()->getParams();
-        if (isset($body['orderId']) && isset($body['status'])) {
+        $content = $this->context->getRequest()->getContent();
+        $body = $this->serializer->unserialize($content);
+        if (isset($body['orderId'], $body['status'])) {
             if ($body['status'] === Monei::ORDER_STATUS_SUCCEEDED) {
                 $this->generateInvoiceService->execute($body);
             }
             $this->setOrderStatusAndStateService->execute($body);
         } else {
             $this->logger->critical('Callback request failed.');
-            $this->logger->critical('Request body: ' . $this->serializer->serialize($body));
+            $this->logger->critical('Request body: ' . $content);
         }
 
         return $this->resultRedirectFactory->setPath('/');
@@ -143,8 +85,15 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
      */
     public function validateForCsrf(RequestInterface $request): ?bool
     {
-        $header = $this->context->getRequest()->getHeader('Monei-Signature');
-        $body = $request->getParams();
+        $header = $request->getHeader('MONEI-Signature');
+        if(!is_array($header)){
+            $header = $this->splitMoneiSignature((string)$header);
+        }
+        $body = $request->getContent();
+        $this->logger->debug('Callback request received.');
+        $this->logger->debug('Header:' . $this->serializer->serialize($header));
+        $this->logger->debug('Body:' . $body);
+
         try {
             $this->verifySignature($body, $header);
         } catch (Exception $e) {
@@ -161,13 +110,12 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     /**
      * Verifies signature from header
      *
-     * @param array $body
+     * @param string $body
      * @param array $header
      * @throws LocalizedException
      */
-    private function verifySignature(array $body, array $header): void
+    private function verifySignature(string $body, array $header): void
     {
-        $body = str_replace('\/', '/', $this->serializer->serialize($body));
         $hmac = hash_hmac('SHA256', $header['t'] . '.' . $body, $this->getApiKey());
 
         if ($hmac !== $header['v1']) {
@@ -179,6 +127,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
      * Get webservice API key(test or production)
      *
      * @return string
+     * @throws NoSuchEntityException
      */
     private function getApiKey(): string
     {
@@ -188,5 +137,14 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         }
 
         return $this->moduleConfig->getProductionApiKey($currentStoreId);
+    }
+
+    private function splitMoneiSignature(string $signature): array
+    {
+        return array_reduce(explode(',', $signature), function ($result, $part) {
+            [$key, $value] = explode('=', $part);
+            $result[$key] = $value;
+            return $result;
+        }, []);
     }
 }

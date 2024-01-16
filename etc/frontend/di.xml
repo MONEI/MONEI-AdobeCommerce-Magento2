@@ -11,4 +11,11 @@
       </argument>
     </arguments>
   </type>
+  <type name="Magento\Vault\Model\Ui\TokensConfigProvider">
+      <arguments>
+          <argument name="tokenUiComponentProviders" xsi:type="array">
+              <item name="monei_card" xsi:type="object">Monei\MoneiPayment\Model\Ui\Card\TokenUiComponentProvider</item>
+          </argument>
+      </arguments>
+  </type>
 </config>

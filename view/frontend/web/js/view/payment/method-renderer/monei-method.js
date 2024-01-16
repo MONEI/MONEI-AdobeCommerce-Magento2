@@ -13,10 +13,10 @@ define(
 
         return Component.extend({
             defaults: {
-                template: 'Monei_MoneiPayment/payment/monei'
+                template: 'Monei_MoneiPayment/payment/monei',
             },
 
-            /** Redirect to monei */
+            /** Redirect to monei when the type of connection is "redirect" */
             continueToMonei: function () {
                 if (additionalValidators.validate()) {
                     setPaymentMethodAction(this.messageContainer);
@@ -24,5 +24,4 @@ define(
                 }
             },
         });
-    }
-);
+    });

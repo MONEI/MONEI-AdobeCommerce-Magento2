@@ -4,6 +4,9 @@
   ~ @copyright Copyright © Monei (https://monei.com)
   -->
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <css src="Monei_MoneiPayment::css/card-input.css" />
+    </head>
     <body>
         <referenceBlock name="checkout.root">
             <arguments>
@@ -25,6 +28,15 @@
                                                                     <item name="component" xsi:type="string">Monei_MoneiPayment/js/view/payment/monei</item>
                                                                     <item name="methods" xsi:type="array">
                                                                         <item name="monei" xsi:type="array">
+                                                                            <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
+                                                                        </item>
+                                                                    </item>
+                                                                </item>
+                                                                <item name="monei-card-payment"
+                                                                      xsi:type="array">
+                                                                    <item name="component" xsi:type="string">Monei_MoneiPayment/js/view/payment/monei-card</item>
+                                                                    <item name="methods" xsi:type="array">
+                                                                        <item name="monei_card" xsi:type="array">
                                                                             <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
                                                                         </item>
                                                                     </item>
