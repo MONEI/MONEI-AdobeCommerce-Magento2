@@ -55,6 +55,21 @@
         <title>Stored Cards (Monei)</title>
         <can_use_internal>0</can_use_internal>
       </monei_cc_vault>
+      <monei_bizum>
+          <active>0</active>
+          <model>MoneiBizumPaymentFacade</model>
+          <title>Bizum</title>
+          <allowspecific>0</allowspecific>
+          <can_use_internal>1</can_use_internal>
+          <can_use_checkout>1</can_use_checkout>
+          <is_gateway>1</is_gateway>
+          <can_initialize>1</can_initialize>
+          <can_authorize>1</can_authorize>
+          <can_capture>1</can_capture>
+          <can_capture_partial>1</can_capture_partial>
+          <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+          <can_refund>1</can_refund>
+      </monei_bizum>
     </payment>
   </default>
 </config>

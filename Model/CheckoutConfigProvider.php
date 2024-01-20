@@ -57,6 +57,16 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                     'isEnabledTokenization' => $this->moneiCardPaymentConfig->isEnabledTokenization($this->getStoreId()),
                     'ccVaultCode' => Monei::CC_VAULT_CODE,
                 ],
+                Monei::BIZUM_CODE => [
+                    'redirectUrl' => $this->urlBuilder->getUrl('monei/payment/redirect'),
+                    'cancelOrderUrl' => $this->urlBuilder->getUrl('monei/payment/cancel'),
+                    'failOrderUrl' => $this->urlBuilder->getUrl('monei/payment/faillastorderbystatus'),
+                    'failOrderStatus' => [
+                        Monei::ORDER_STATUS_EXPIRED,
+                        Monei::ORDER_STATUS_CANCELED,
+                        Monei::ORDER_STATUS_FAILED,
+                    ],
+                ],
             ],
             'vault' => [
                 Monei::CC_VAULT_CODE => [

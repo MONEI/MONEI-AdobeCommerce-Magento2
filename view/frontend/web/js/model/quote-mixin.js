@@ -10,22 +10,53 @@ define([
 
     var extender = {
 
-        moneiPaymentId: ko.observable(null),
+        moneiCardPaymentId: ko.observable(null),
+        moneiVaultPaymentId: ko.observable(null),
+        moneiBizumPaymentId: ko.observable(null),
         moneiCardToken: ko.observable(null),
+        moneiBizumToken: ko.observable(null),
         moneiCardholderName: ko.observable(null),
         moneiVaultChecked: ko.observable(null),
 
         /**
-         * Get monei payment id
+         * Get monei card payment id
          */
-        getMoneiPaymentId: function () {
-            return this.moneiPaymentId();
+        getMoneiCardPaymentId: function () {
+            return this.moneiCardPaymentId();
         },
         /**
-         * Set monei payment id
+         * Set monei card payment id
          */
-        setMoneiPaymentId: function (val) {
-            this.moneiPaymentId(val);
+        setMoneiCardPaymentId: function (val) {
+            this.moneiCardPaymentId(val);
+        },
+
+        /**
+         * Get monei vault payment id
+         */
+        getMoneiVaultPaymentId: function () {
+            return this.moneiVaultPaymentId();
+        },
+
+        /**
+         * Set monei vault payment id
+         */
+        setMoneiVaultPaymentId: function (val) {
+            this.moneiVaultPaymentId(val);
+        },
+
+        /**
+         * Get monei bizum payment id
+         */
+        getMoneiBizumPaymentId: function () {
+            return this.moneiBizumPaymentId();
+        },
+
+        /**
+         * Set monei bizum payment id
+         */
+        setMoneiBizumPaymentId: function (val) {
+            this.moneiBizumPaymentId(val);
         },
 
         /**
@@ -39,6 +70,19 @@ define([
          */
         setMoneiCardToken: function (val) {
             this.moneiCardToken(val);
+        },
+
+        /**
+         * Get monei bizum token
+         */
+        getMoneiBizumToken: function () {
+            return this.moneiBizumToken();
+        },
+        /**
+         * Set monei bizum token
+         */
+        setMoneiBizumToken: function (val) {
+            this.moneiBizumToken(val);
         },
 
         /**

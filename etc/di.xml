@@ -9,6 +9,8 @@
                 type="Monei\MoneiPayment\Model\Config\MoneiPaymentModuleConfig"/>
     <preference for="Monei\MoneiPayment\Api\Config\MoneiCardPaymentModuleConfigInterface"
                 type="Monei\MoneiPayment\Model\Config\MoneiCardPaymentModuleConfig"/>
+    <preference for="Monei\MoneiPayment\Api\Config\MoneiBizumPaymentModuleConfigInterface"
+                type="Monei\MoneiPayment\Model\Config\MoneiBizumPaymentModuleConfig"/>
     <preference for="Monei\MoneiPayment\Api\Service\CreatePaymentInterface"
                 type="Monei\MoneiPayment\Service\CreatePayment"/>
     <preference for="Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentInSiteInterface"
@@ -155,4 +157,33 @@
         </arguments>
     </virtualType>
     <!-- End vault payment configuration  -->
+
+    <!-- Configuration for Monei Bizum payment -->
+    <virtualType name="MoneiBizumPaymentValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">MoneiBizumPaymentValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="MoneiBizumPaymentValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">MoneiBizumPaymentConfig</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="MoneiBizumPaymentConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::BIZUM_CODE</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="MoneiBizumPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::BIZUM_CODE</argument>
+            <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
+            <argument name="infoBlockType" xsi:type="string">Monei\MoneiPayment\Block\Info\Monei</argument>
+            <argument name="valueHandlerPool" xsi:type="object">MoneiBizumPaymentValueHandlerPool</argument>
+            <argument name="commandPool" xsi:type="object">MoneiCommandPool</argument>
+        </arguments>
+    </virtualType>
+    <!-- End monei bizum payment configuration  -->
 </config>

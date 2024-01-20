@@ -135,7 +135,7 @@ define(
                     ).done(
                         function (response) {
                             response = response.shift();
-                            quote.setMoneiPaymentId(response.id);
+                            quote.setMoneiCardPaymentId(response.id);
                             self.renderCard(response.id);
                             self.isPlaceOrderActionAllowed(true);
                             fullScreenLoader.stopLoader();
@@ -222,7 +222,7 @@ define(
                         }
                     }).catch(function (error) {
                         self.container.classList.add('is-invalid');
-                        self.errorText.innerText = result.error;
+                        self.errorText.innerText = error.message;
                         //Enable the button of place order
                         self.isPlaceOrderActionAllowed(true);
                     });
@@ -273,7 +273,7 @@ define(
                 var self = this;
                 fullScreenLoader.startLoader();
                 return monei.confirmPayment({
-                    paymentId: quote.getMoneiPaymentId(),
+                    paymentId: quote.getMoneiCardPaymentId(),
                     paymentToken: token,
                     generatePaymentToken: !!quote.getMoneiVaultChecked(),
                     paymentMethod: {
@@ -309,7 +309,7 @@ define(
              */
             selectPaymentMethod: function () {
                 var selectPaymentMethod = this._super();
-                if(this.item.method === 'monei' && this.showCustomTemplate()){
+                if(this.item.method === 'monei_card'){
                     this.createMoneiPayment();
                 }
 

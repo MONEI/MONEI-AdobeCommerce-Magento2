@@ -51,4 +51,6 @@ class Monei
     public const CC_VAULT_CODE = 'monei_cc_vault';
 
     public const VAULT_TYPE = 'card';
+
+    public const BIZUM_CODE = 'monei_bizum';
 }

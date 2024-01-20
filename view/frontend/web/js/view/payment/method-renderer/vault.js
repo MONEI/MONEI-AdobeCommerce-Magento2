@@ -167,7 +167,7 @@ define([
                 JSON.stringify(payload)
             ).done(function (response) {
                 response = response.shift();
-                quote.setMoneiPaymentId(response.id);
+                quote.setMoneiVaultPaymentId(response.id);
                 self.getPlaceOrderDeferredObject().done(
                     function () {
                         self.afterPlaceOrder(response.paymentToken);
@@ -193,7 +193,7 @@ define([
             var self = this;
             fullScreenLoader.startLoader();
             return monei.confirmPayment({
-                paymentId: quote.getMoneiPaymentId(),
+                paymentId: quote.getMoneiVaultPaymentId(),
                 paymentToken: token
             }).then(function (result) {
                 if (self.failOrderStatus.includes(result.status)) {

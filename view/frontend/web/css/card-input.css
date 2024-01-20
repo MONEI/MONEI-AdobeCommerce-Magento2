@@ -1,16 +1,16 @@
-#monei-insite-payment-form {
+#monei-card-insite-payment-form {
     display: block;
     padding: 10px 0;
     max-width: 500px;
 }
-#monei-insite-payment-form .field._required label{
+#monei-card-insite-payment-form .field._required label{
     font-weight: 400;
 }
-#monei-insite-payment-form .card-input {
+#monei-card-insite-payment-form .card-input {
     display: flex;
     align-items: flex-start;
 }
-#monei-insite-payment-form .card-field {
+#monei-card-insite-payment-form .card-field {
     flex: 1;
 }
 #monei-insite-cardholder-name {

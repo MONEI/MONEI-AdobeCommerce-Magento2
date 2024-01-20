@@ -158,6 +158,53 @@
             </depends>
         </field>
         <!-- -->
+        <!-- BIZUM INSITE -->
+        <field id="heading5" translate="label" sortOrder="260" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Monei Bizum Insite:</label>
+            <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
+        </field>
+        <field id="active_bizum_insite" translate="label comment" sortOrder="270" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Enable</label>
+            <comment>Select 'Yes' if you want to enable this payment method. Otherwise 'No'.</comment>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <config_path>payment/monei_bizum/active</config_path>
+        </field>
+        <field id="title_bizum_insite" translate="label comment" type="text" sortOrder="280" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Title</label>
+            <comment>Text that will be displayed in checkout</comment>
+            <config_path>payment/monei_bizum/title</config_path>
+            <depends>
+                <field id="active_bizum_insite">1</field>
+            </depends>
+        </field>
+        <field id="allowspecific_bizum_insite" translate="label comment" sortOrder="290" type="allowspecific" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Payment from Applicable Countries</label>
+            <source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
+            <config_path>payment/monei_bizum/allowspecific</config_path>
+            <depends>
+                <field id="active_bizum_insite">1</field>
+            </depends>
+        </field>
+        <field id="specificcountry_bizum_insite" translate="label comment" sortOrder="300" type="multiselect" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Payment from Specific Countries</label>
+            <source_model>Magento\Directory\Model\Config\Source\Country</source_model>
+            <config_path>payment/monei_bizum/specificcountry</config_path>
+            <can_be_empty>1</can_be_empty>
+            <depends>
+                <field id="active_bizum_insite">1</field>
+                <field id="allowspecific_bizum_insite">1</field>
+            </depends>
+        </field>
+        <field id="sort_order_bizum_insite" translate="label comment" sortOrder="310" type="text" showInDefault="1" showInWebsite="1">
+            <label>Sort Order</label>
+            <tooltip>In which order the payment method will be displayed in checkout</tooltip>
+            <config_path>payment/monei_bizum/sort_order</config_path>
+            <frontend_class>validate-number</frontend_class>
+            <depends>
+                <field id="active_bizum_insite">1</field>
+            </depends>
+        </field>
+        <!-- -->
       </group>
     </section>
   </system>
