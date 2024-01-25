@@ -14,8 +14,8 @@ define(
         'use strict';
         rendererList.push(
             {
-                type: 'monei',
-                component: 'Monei_MoneiPayment/js/view/payment/method-renderer/monei-method'
+                type: 'monei_google_apple',
+                component: 'Monei_MoneiPayment/js/view/payment/method-renderer/monei-google-apple-method'
             }
         );
         return Component.extend({});

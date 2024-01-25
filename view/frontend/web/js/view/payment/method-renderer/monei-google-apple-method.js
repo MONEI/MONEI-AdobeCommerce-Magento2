@@ -4,6 +4,7 @@
  */
 define(
     [
+        'ko',
         'jquery',
         'Monei_MoneiPayment/js/view/payment/method-renderer/monei-insite',
         'moneijs',
@@ -11,23 +12,26 @@ define(
         'Magento_Ui/js/model/messageList',
         'Magento_Checkout/js/model/full-screen-loader'
     ],
-    function ($, Component, monei, redirectOnSuccessAction, globalMessageList, fullScreenLoader) {
+    function (ko, $, Component, monei, redirectOnSuccessAction, globalMessageList, fullScreenLoader) {
         'use strict';
 
         return Component.extend({
             defaults: {
-                template: 'Monei_MoneiPayment/payment/monei-bizum-insite',
+                template: 'Monei_MoneiPayment/payment/monei-google-apple-insite',
             },
             redirectAfterPlaceOrder: true,
-            bizumContainer: null,
-            idBizumContainer: 'monei_bizum_insite_container',
+            googleAppleContainer: null,
+            idGoogleAppleContainer: 'monei_google_apple_insite_container',
             failOrderStatus: '',
+            applePaySupported: '',
             accountId: '',
+            paymentMethodTitle: ko.observable(''),
 
             initialize: function () {
                 this._super();
 
                 this.initMoneiPaymentVariables();
+                this.checkPaymentMethods();
 
                 return this;
             },
@@ -37,29 +41,41 @@ define(
                 this.failOrderUrl = window.checkoutConfig.payment[this.getCode()].failOrderUrl;
                 this.failOrderStatus = window.checkoutConfig.payment[this.getCode()].failOrderStatus;
                 this.accountId = window.checkoutConfig.payment[this.getCode()].accountId;
+                this.applePaySupported = !!window.ApplePaySession?.canMakePayments();
+                this.paymentMethodTitle(window.checkoutConfig.payment[this.getCode()].googleTitle);
+            },
+
+            checkPaymentMethods: function(){
+                monei.api.getPaymentMethods({accountId: this.accountId}).then(result => this.setTitle(result))
+            },
+
+            setTitle: function(result){
+                if(result.paymentMethods.includes('applePay') && this.applePaySupported){
+                    this.paymentMethodTitle(window.checkoutConfig.payment[this.getCode()].appleTitle);
+                }
             },
 
             createMoneiPayment: function(){
-                if ($.trim($('#' + this.idBizumContainer).html()) === '') {
+                if ($.trim($('#' + this.idGoogleAppleContainer).html()) === '') {
                     fullScreenLoader.startLoader();
                     this.isPlaceOrderActionAllowed(false);
-                    this.renderBizum();
+                    this.renderGoogleApple();
                     fullScreenLoader.stopLoader();
                 }
             },
 
-            /** Render the bizum */
-            renderBizum: function(){
+            /** Render the google apple */
+            renderGoogleApple: function(){
                 var self = this;
-                this.container = document.getElementById(this.idBizumContainer);
+                this.container = document.getElementById(this.idGoogleAppleContainer);
                 var style = {
                     base: {
                         'height': '45px'
                     }
                 };
 
-                // Create an instance of the Bizum using payment_id.
-                this.bizumContainer = monei.Bizum({
+                // Create an instance of the Google and Apple using payment_id.
+                this.googleAppleContainer = monei.PaymentRequest({
                     accountId: this.accountId,
                     style: style,
                     onLoad: function () {
@@ -84,7 +100,7 @@ define(
                     }
                 });
 
-                this.bizumContainer.render(this.container);
+                this.googleAppleContainer.render(this.container);
             },
 
             /** Confirm the payment in monei */
@@ -101,10 +117,10 @@ define(
                                 message: result.statusMessage
                             });
                             self.redirectToFailOrder(result.status);
-                        }else if (result.nextAction && (result.nextAction.mustRedirect ||  result.nextAction.type === 'COMPLETE')) {
+                        }else if (result.nextAction && result.nextAction.type === 'COMPLETE') {
                             setTimeout(function(){
                                 window.location.assign(result.nextAction.redirectUrl);
-                            } , 4000);
+                            } ,4000);
                         }else if(self.redirectAfterPlaceOrder) {
                             redirectOnSuccessAction.execute();
                         }
@@ -115,6 +131,6 @@ define(
                         });
                         self.redirectToCancelOrder();
                     });
-            }
+            },
         });
     });

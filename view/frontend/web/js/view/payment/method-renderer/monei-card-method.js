@@ -6,8 +6,7 @@ define(
     [
         'ko',
         'jquery',
-        'Magento_Checkout/js/view/payment/default',
-        'Monei_MoneiPayment/js/action/set-payment-method',
+        'Monei_MoneiPayment/js/view/payment/method-renderer/monei-insite',
         'Magento_Checkout/js/model/payment/additional-validators',
         'mage/storage',
         'Magento_Customer/js/model/customer',
@@ -16,11 +15,10 @@ define(
         'moneijs',
         'Magento_Checkout/js/action/redirect-on-success',
         'Magento_Ui/js/model/messageList',
-        'mage/url',
         'Magento_Checkout/js/model/full-screen-loader',
         'Magento_Vault/js/view/payment/vault-enabler'
     ],
-    function (ko, $, Component, setPaymentMethodAction, additionalValidators, storage, customer, quote, urlBuilder, monei, redirectOnSuccessAction, globalMessageList, url, fullScreenLoader, VaultEnabler) {
+    function (ko, $, Component, additionalValidators, storage, customer, quote, urlBuilder, monei, redirectOnSuccessAction, globalMessageList, fullScreenLoader, VaultEnabler) {
         'use strict';
 
         return Component.extend({
@@ -33,9 +31,8 @@ define(
             idCardInput: 'monei-insite-card-input',
             idCardError: 'monei-insite-card-error',
             isEnabledTokenization: false,
-            cancelOrderUrl: '',
-            failOrderUrl:'',
             failOrderStatus: '',
+            accountId: '',
             cardHolderNameValid: ko.observable(true),
             checkedVault: ko.observable(false),
 
@@ -56,6 +53,7 @@ define(
                 this.cancelOrderUrl = window.checkoutConfig.payment[this.getCode()].cancelOrderUrl;
                 this.failOrderUrl = window.checkoutConfig.payment[this.getCode()].failOrderUrl;
                 this.failOrderStatus = window.checkoutConfig.payment[this.getCode()].failOrderStatus;
+                this.accountId = window.checkoutConfig.payment[this.getCode()].accountId;
             },
 
             initMoneiObservable: function(){
@@ -111,50 +109,15 @@ define(
                 if ($.trim($('#' + this.idCardInput).html()) === '') {
                     fullScreenLoader.startLoader();
                     this.isPlaceOrderActionAllowed(false);
-                    var self = this,
-                        serviceUrl,
-                        payload,
-                        email;
 
-                    if (customer.isLoggedIn()) {
-                        serviceUrl = urlBuilder.createUrl("/checkout/createmoneipaymentinsite", {});
-                        email = '';
-                    } else {
-                        serviceUrl = urlBuilder.createUrl("/guest-checkout/:cartId/createmoneipaymentinsite", {cartId: quote.getQuoteId()});
-                        email = quote.guestEmail;
-                    }
+                    this.renderCard();
 
-                    payload = {
-                        cartId: quote.getQuoteId(),
-                        email: email
-                    };
-
-                    storage.post(
-                        serviceUrl,
-                        JSON.stringify(payload)
-                    ).done(
-                        function (response) {
-                            response = response.shift();
-                            quote.setMoneiCardPaymentId(response.id);
-                            self.renderCard(response.id);
-                            self.isPlaceOrderActionAllowed(true);
-                            fullScreenLoader.stopLoader();
-                        }
-                    ).fail(
-                        function (response) {
-                            var error = JSON.parse(response.responseText);
-
-                            globalMessageList.addErrorMessage({
-                                message: error.message
-                            });
-                            fullScreenLoader.stopLoader();
-                        }
-                    );
+                    fullScreenLoader.stopLoader();
                 }
             },
 
             /** Render the card input */
-            renderCard: function(paymentId){
+            renderCard: function(){
                 var self = this;
                 this.container = document.getElementById(this.idCardInput);
                 this.errorText = document.getElementById(this.idCardError);
@@ -170,7 +133,8 @@ define(
                 };
                 // Create an instance of the Card Input using payment_id.
                 this.cardInput = monei.CardInput({
-                    paymentId: paymentId,
+                    // paymentId: paymentId,
+                    accountId: this.accountId,
                     style: style,
                     onChange: function (event) {
                         // Handle real-time validation errors.
@@ -217,8 +181,7 @@ define(
                             self.errorText.innerText = result.error;
                             self.isPlaceOrderActionAllowed(true);
                         } else {
-                            quote.setMoneiCardToken(result.token);
-                            self.createOrderInMagento();
+                            self.createOrderInMagento(result.token);
                         }
                     }).catch(function (error) {
                         self.container.classList.add('is-invalid');
@@ -251,29 +214,12 @@ define(
                 return true;
             },
 
-            // Create pending order in Magento
-            createOrderInMagento: function(){
-                var self = this;
-                this.getPlaceOrderDeferredObject()
-                    .done(
-                        function () {
-                            self.afterPlaceOrder();
-                        }
-                    );
-
-                return true;
-            },
-
-            afterPlaceOrder: function () {
-                this.moneiTokenHandler(quote.getMoneiCardToken());
-            },
-
             /** Confirm the payment in monei */
-            moneiTokenHandler: function (token) {
+            moneiTokenHandler: function (paymentId, token) {
                 var self = this;
                 fullScreenLoader.startLoader();
                 return monei.confirmPayment({
-                    paymentId: quote.getMoneiCardPaymentId(),
+                    paymentId: paymentId,
                     paymentToken: token,
                     generatePaymentToken: !!quote.getMoneiVaultChecked(),
                     paymentMethod: {
@@ -281,53 +227,25 @@ define(
                             cardholderName: quote.getMoneiCardholderName()
                         }
                     }
-                })
-                    .then(function (result) {
-                        if (self.failOrderStatus.includes(result.status)) {
-                            globalMessageList.addErrorMessage({
-                                message: result.statusMessage
-                            });
-                            self.redirectToFailOrder(result.status);
-                        }else if (result.nextAction && result.nextAction.type === 'COMPLETE') {
-                            setTimeout(function(){
-                                window.location.assign(result.nextAction.redirectUrl);
-                            } , 4000);
-                        }else if(self.redirectAfterPlaceOrder) {
-                            redirectOnSuccessAction.execute();
-                        }
-                    })
-                    .catch(function (error) {
+                }).then(function (result) {
+                    if (self.failOrderStatus.includes(result.status)) {
                         globalMessageList.addErrorMessage({
-                            message: error.message
+                            message: result.statusMessage
                         });
-                        self.redirectToCancelOrder();
+                        self.redirectToFailOrder(result.status);
+                    }else if (result.nextAction && result.nextAction.type === 'COMPLETE') {
+                        setTimeout(function(){
+                            window.location.assign(result.nextAction.redirectUrl);
+                        } , 4000);
+                    }else if(self.redirectAfterPlaceOrder) {
+                        redirectOnSuccessAction.execute();
+                    }
+                }).catch(function (error) {
+                    globalMessageList.addErrorMessage({
+                        message: error.message
                     });
-            },
-
-            /**
-             * @return {Boolean}
-             */
-            selectPaymentMethod: function () {
-                var selectPaymentMethod = this._super();
-                if(this.item.method === 'monei_card'){
-                    this.createMoneiPayment();
-                }
-
-                return selectPaymentMethod;
-            },
-
-            /**
-             * Redirect to success page.
-             */
-            redirectToCancelOrder: function () {
-                window.location.replace(url.build(this.cancelOrderUrl));
-            },
-
-            /**
-             * Redirect to fail page.
-             */
-            redirectToFailOrder: function (status) {
-                window.location.replace(url.build(this.failOrderUrl+'?status='+status));
+                    self.redirectToCancelOrder();
+                });
             },
 
             /**

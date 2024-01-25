@@ -14,6 +14,8 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Monei\MoneiPayment\Api\Config\MoneiCardPaymentModuleConfigInterface;
+use Monei\MoneiPayment\Api\Config\MoneiGoogleApplePaymentModuleConfigInterface;
+use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Block\Monei\Customer\CardRenderer;
 use Monei\MoneiPayment\Model\Payment\Monei;
 
@@ -25,7 +27,9 @@ class CheckoutConfigProvider implements ConfigProviderInterface
 
     public function __construct(
         private readonly UrlInterface                          $urlBuilder,
+        private readonly MoneiPaymentModuleConfigInterface $moneiPaymentConfig,
         private readonly MoneiCardPaymentModuleConfigInterface $moneiCardPaymentConfig,
+        private readonly MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentConfig,
         private readonly StoreManagerInterface                 $storeManager,
     )
     {
@@ -54,6 +58,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                         Monei::ORDER_STATUS_CANCELED,
                         Monei::ORDER_STATUS_FAILED,
                     ],
+                    'accountId' => $this->moneiPaymentConfig->getAccountId($this->getStoreId()),
                     'isEnabledTokenization' => $this->moneiCardPaymentConfig->isEnabledTokenization($this->getStoreId()),
                     'ccVaultCode' => Monei::CC_VAULT_CODE,
                 ],
@@ -66,6 +71,20 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                         Monei::ORDER_STATUS_CANCELED,
                         Monei::ORDER_STATUS_FAILED,
                     ],
+                    'accountId' => $this->moneiPaymentConfig->getAccountId($this->getStoreId()),
+                ],
+                Monei::GOOGLE_APPLE_CODE => [
+                    'googleTitle' => $this->moneiGoogleApplePaymentConfig->getGoogleTitle($this->getStoreId()),
+                    'appleTitle' => $this->moneiGoogleApplePaymentConfig->getAppleTitle($this->getStoreId()),
+                    'redirectUrl' => $this->urlBuilder->getUrl('monei/payment/redirect'),
+                    'cancelOrderUrl' => $this->urlBuilder->getUrl('monei/payment/cancel'),
+                    'failOrderUrl' => $this->urlBuilder->getUrl('monei/payment/faillastorderbystatus'),
+                    'failOrderStatus' => [
+                        Monei::ORDER_STATUS_EXPIRED,
+                        Monei::ORDER_STATUS_CANCELED,
+                        Monei::ORDER_STATUS_FAILED,
+                    ],
+                    'accountId' => $this->moneiPaymentConfig->getAccountId($this->getStoreId()),
                 ],
             ],
             'vault' => [
@@ -80,6 +99,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                         Monei::ORDER_STATUS_FAILED,
                     ],
                     'methodCardCode' => Monei::CARD_CODE,
+                    'accountId' => $this->moneiPaymentConfig->getAccountId($this->getStoreId()),
                 ],
             ]
         ];
