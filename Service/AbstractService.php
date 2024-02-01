@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service;
 
+use Magento\Framework\Exception\NoSuchEntityException;
 use Monei\MoneiPayment\Model\Config\Source\Mode;
 use GuzzleHttp\ClientFactory;
 use GuzzleHttp\Client;
@@ -87,11 +88,13 @@ abstract class AbstractService
     /**
      * Get webservice API url(test or production)
      *
+     * @param int|null $storeId
      * @return string
+     * @throws NoSuchEntityException
      */
-    protected function getApiUrl(): string
+    protected function getApiUrl(int $storeId = null): string
     {
-        $currentStoreId = $this->storeManager->getStore()->getId();
+        $currentStoreId = $storeId ?: $this->storeManager->getStore()->getId();
         if ($this->moduleConfig->getMode($currentStoreId) === Mode::MODE_TEST) {
             return $this->moduleConfig->getTestUrl($currentStoreId);
         }
@@ -102,11 +105,13 @@ abstract class AbstractService
     /**
      * Get webservice API key(test or production)
      *
+     * @param int|null $storeId
      * @return string
+     * @throws NoSuchEntityException
      */
-    private function getApiKey(): string
+    private function getApiKey(int $storeId = null): string
     {
-        $currentStoreId = $this->storeManager->getStore()->getId();
+        $currentStoreId = $storeId ?: $this->storeManager->getStore()->getId();
         if ($this->moduleConfig->getMode($currentStoreId) === Mode::MODE_TEST) {
             return $this->moduleConfig->getTestApiKey($currentStoreId);
         }
@@ -128,10 +133,15 @@ abstract class AbstractService
         return '';
     }
 
-    protected function getHeaders(): array
+    /**
+     * @param int|null $storeId
+     * @return array
+     * @throws NoSuchEntityException
+     */
+    protected function getHeaders(int $storeId = null): array
     {
         return [
-            'Authorization' => $this->getApiKey(),
+            'Authorization' => $this->getApiKey($storeId),
             'User-Agent'    => $this->getUserAgent(),
             'Content-Type'  => 'application/json',
         ];
@@ -140,15 +150,15 @@ abstract class AbstractService
     /**
      * Creates client with base URI
      *
+     * @param int|null $storeId
      * @return Client
+     * @throws NoSuchEntityException
      */
-    public function createClient(): Client
+    public function createClient(int $storeId = null): Client
     {
-        $client = $this->clientFactory->create(['config' => [
-            'base_uri' => $this->getApiUrl()
+        return $this->clientFactory->create(['config' => [
+            'base_uri' => $this->getApiUrl($storeId)
         ]]);
-
-        return $client;
     }
 
     /**

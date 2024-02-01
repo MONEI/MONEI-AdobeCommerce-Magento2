@@ -61,11 +61,13 @@ class RefundPayment extends AbstractService implements RefundPaymentInterface
         $this->logger->debug('------------------- END REFUND PAYMENT REQUEST ------------------');
         $this->logger->debug('');
 
-        $client = $this->createClient();
+        $storeId = $data['storeId'] ?? null;
+
+        $client = $this->createClient($storeId);
         $response = $client->post(
             'payments/' . $data['paymentId'] . '/' . self::METHOD,
             [
-                'headers' => $this->getHeaders(),
+                'headers' => $this->getHeaders($storeId),
                 'json' => $requestBody,
             ]
         );
