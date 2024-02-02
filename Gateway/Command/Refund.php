@@ -41,7 +41,8 @@ class Refund implements CommandInterface
         $data = [
             'paymentId' =>$order->getData('monei_payment_id'),
             'amount' => $commandSubject['amount'] * 100,
-            'refundReason' => $payment->getCreditmemo()->getData('refund_reason')
+            'refundReason' => $payment->getCreditmemo()->getData('refund_reason'),
+            'storeId' => (int) $order->getStoreId(),
         ];
 
         $this->refundPaymentService->execute($data);
