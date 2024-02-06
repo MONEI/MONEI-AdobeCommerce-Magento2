@@ -20,6 +20,15 @@ define(
             cancelOrderUrl: '',
             failOrderUrl:'',
 
+            initialize: function () {
+                this._super();
+
+                this.cancelOrderUrl = window.checkoutConfig.payment[this.getCode()].cancelOrderUrl;
+                this.failOrderUrl = window.checkoutConfig.payment[this.getCode()].failOrderUrl;
+
+                return this;
+            },
+
             // Create pending order in Magento
             createOrderInMagento: function(token){
                 var self = this,

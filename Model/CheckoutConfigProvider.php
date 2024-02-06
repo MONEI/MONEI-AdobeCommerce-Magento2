@@ -71,7 +71,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                         Monei::ORDER_STATUS_CANCELED,
                         Monei::ORDER_STATUS_FAILED,
                     ],
-                    'accountId' => $this->moneiPaymentConfig->getAccountId($this->getStoreId()),
+                    'accountId' => $this->moneiPaymentConfig->getAccountId($this->getStoreId())
                 ],
                 Monei::GOOGLE_APPLE_CODE => [
                     'googleTitle' => $this->moneiGoogleApplePaymentConfig->getGoogleTitle($this->getStoreId()),
@@ -84,7 +84,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                         Monei::ORDER_STATUS_CANCELED,
                         Monei::ORDER_STATUS_FAILED,
                     ],
-                    'accountId' => $this->moneiPaymentConfig->getAccountId($this->getStoreId()),
+                    'accountId' => $this->moneiPaymentConfig->getAccountId($this->getStoreId())
                 ],
             ],
             'vault' => [
@@ -98,8 +98,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                         Monei::ORDER_STATUS_CANCELED,
                         Monei::ORDER_STATUS_FAILED,
                     ],
-                    'methodCardCode' => Monei::CARD_CODE,
-                    'accountId' => $this->moneiPaymentConfig->getAccountId($this->getStoreId()),
+                    'methodCardCode' => Monei::CARD_CODE
                 ],
             ]
         ];

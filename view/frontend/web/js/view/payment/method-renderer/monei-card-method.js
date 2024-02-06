@@ -50,8 +50,6 @@ define(
 
             initMoneiPaymentVariables: function(){
                 this.isEnabledTokenization = window.checkoutConfig.payment[this.getCode()].isEnabledTokenization;
-                this.cancelOrderUrl = window.checkoutConfig.payment[this.getCode()].cancelOrderUrl;
-                this.failOrderUrl = window.checkoutConfig.payment[this.getCode()].failOrderUrl;
                 this.failOrderStatus = window.checkoutConfig.payment[this.getCode()].failOrderStatus;
                 this.accountId = window.checkoutConfig.payment[this.getCode()].accountId;
             },

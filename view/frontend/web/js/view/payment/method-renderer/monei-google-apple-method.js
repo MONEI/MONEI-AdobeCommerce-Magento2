@@ -8,11 +8,12 @@ define(
         'jquery',
         'Monei_MoneiPayment/js/view/payment/method-renderer/monei-insite',
         'moneijs',
+        'Magento_Checkout/js/model/quote',
         'Magento_Checkout/js/action/redirect-on-success',
         'Magento_Ui/js/model/messageList',
         'Magento_Checkout/js/model/full-screen-loader'
     ],
-    function (ko, $, Component, monei, redirectOnSuccessAction, globalMessageList, fullScreenLoader) {
+    function (ko, $, Component, monei, quote, redirectOnSuccessAction, globalMessageList, fullScreenLoader) {
         'use strict';
 
         return Component.extend({
@@ -26,6 +27,7 @@ define(
             applePaySupported: '',
             accountId: '',
             paymentMethodTitle: ko.observable(''),
+            baseGrandTotal: quote.totals().base_grand_total,
 
             initialize: function () {
                 this._super();
@@ -37,8 +39,6 @@ define(
             },
 
             initMoneiPaymentVariables: function(){
-                this.cancelOrderUrl = window.checkoutConfig.payment[this.getCode()].cancelOrderUrl;
-                this.failOrderUrl = window.checkoutConfig.payment[this.getCode()].failOrderUrl;
                 this.failOrderStatus = window.checkoutConfig.payment[this.getCode()].failOrderStatus;
                 this.accountId = window.checkoutConfig.payment[this.getCode()].accountId;
                 this.applePaySupported = !!window.ApplePaySession?.canMakePayments();
@@ -60,6 +60,13 @@ define(
                     fullScreenLoader.startLoader();
                     this.isPlaceOrderActionAllowed(false);
                     this.renderGoogleApple();
+                    quote.totals.subscribe(function (totals) {
+                        if(this.baseGrandTotal !== totals.base_grand_total){
+                            this.baseGrandTotal = totals.base_grand_total;
+                            this.googleAppleContainer.close()
+                            this.renderGoogleApple();
+                        }
+                    }.bind(this));
                     fullScreenLoader.stopLoader();
                 }
             },
@@ -77,6 +84,8 @@ define(
                 // Create an instance of the Google and Apple using payment_id.
                 this.googleAppleContainer = monei.PaymentRequest({
                     accountId: this.accountId,
+                    amount: (quote.totals().base_grand_total)*100,
+                    currency: quote.totals().base_currency_code,
                     style: style,
                     onLoad: function () {
                         self.isPlaceOrderActionAllowed(true);
