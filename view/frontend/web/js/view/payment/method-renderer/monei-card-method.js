@@ -182,8 +182,7 @@ define(
                             self.createOrderInMagento(result.token);
                         }
                     }).catch(function (error) {
-                        self.container.classList.add('is-invalid');
-                        self.errorText.innerText = error.message;
+                        console.log(error);
                         //Enable the button of place order
                         self.isPlaceOrderActionAllowed(true);
                     });
@@ -239,9 +238,7 @@ define(
                         redirectOnSuccessAction.execute();
                     }
                 }).catch(function (error) {
-                    globalMessageList.addErrorMessage({
-                        message: error.message
-                    });
+                    console.log(error);
                     self.redirectToCancelOrder();
                 });
             },

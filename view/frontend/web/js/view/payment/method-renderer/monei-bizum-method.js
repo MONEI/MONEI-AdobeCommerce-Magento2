@@ -65,9 +65,7 @@ define(
                     },
                     onSubmit(result) {
                         if (result.error) {
-                            globalMessageList.addErrorMessage({
-                                message: result.error
-                            });
+                            console.log(result.error);
                             self.isPlaceOrderActionAllowed(true);
                         } else {
                             // Confirm payment using the token.
@@ -75,9 +73,7 @@ define(
                         }
                     },
                     onError(error) {
-                        globalMessageList.addErrorMessage({
-                            message: error.message
-                        });
+                        console.log(error);
                         self.isPlaceOrderActionAllowed(false);
                     }
                 });

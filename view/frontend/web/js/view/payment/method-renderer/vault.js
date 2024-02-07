@@ -208,9 +208,7 @@ define([
                     redirectOnSuccessAction.execute();
                 }
             }).catch(function (error) {
-                globalMessageList.addErrorMessage({
-                    message: error.message
-                });
+                console.log(error);
                 self.redirectToCancelOrder();
             });
         },
