@@ -10,36 +10,8 @@ define([
 
     var extender = {
 
-        moneiPaymentId: ko.observable(null),
-        moneiCardToken: ko.observable(null),
         moneiCardholderName: ko.observable(null),
         moneiVaultChecked: ko.observable(null),
-
-        /**
-         * Get monei payment id
-         */
-        getMoneiPaymentId: function () {
-            return this.moneiPaymentId();
-        },
-        /**
-         * Set monei payment id
-         */
-        setMoneiPaymentId: function (val) {
-            this.moneiPaymentId(val);
-        },
-
-        /**
-         * Get monei card token
-         */
-        getMoneiCardToken: function () {
-            return this.moneiCardToken();
-        },
-        /**
-         * Set monei card token
-         */
-        setMoneiCardToken: function (val) {
-            this.moneiCardToken(val);
-        },
 
         /**
          * Get monei cardholder name
