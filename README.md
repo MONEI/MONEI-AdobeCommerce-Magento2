@@ -1,4 +1,4 @@
-# MONEI Payments Adobe Commerce (Magento 2) module
+# MONEI Payments Adobe Commerce (Magento 2) Official Module
 
 ## Description
 To accept payments through [MONEI](https://monei.com) in your Adobe Commerce (Magento 2) store you simply need to install and configure MONEI Adobe Commerce Extension.
