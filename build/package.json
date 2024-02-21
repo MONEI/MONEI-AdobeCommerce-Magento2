@@ -23,7 +23,8 @@
     "plugins": {
       "@release-it/bumper": {
         "out": [
-          "../composer.json"
+          "../composer.json",
+          "../etc/module.xml"
         ]
       }
     },
