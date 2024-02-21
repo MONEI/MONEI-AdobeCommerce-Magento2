@@ -24,6 +24,7 @@
         </field>
         <field id="account_id" translate="label comment" sortOrder="35" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Account Id</label>
+          <validate>required-entry</validate>
         </field>
         <field id="test_api_key" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Test Api Key</label>
