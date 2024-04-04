@@ -22,12 +22,21 @@ use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
  */
 class GenerateInvoice implements GenerateInvoiceInterface
 {
+    private OrderInterfaceFactory $orderFactory;
+    private TransactionFactory $transactionFactory;
+    private OrderLockManagerInterface $orderLockManager;
+    private CreateVaultPayment $createVaultPayment;
+
     public function __construct(
-        private readonly OrderInterfaceFactory $orderFactory,
-        private readonly TransactionFactory $transactionFactory,
-        private readonly OrderLockManagerInterface $orderLockManager,
-        private readonly CreateVaultPayment $createVaultPayment
+        OrderInterfaceFactory $orderFactory,
+        TransactionFactory $transactionFactory,
+        OrderLockManagerInterface $orderLockManager,
+        CreateVaultPayment $createVaultPayment
     ) {
+        $this->createVaultPayment = $createVaultPayment;
+        $this->orderLockManager = $orderLockManager;
+        $this->transactionFactory = $transactionFactory;
+        $this->orderFactory = $orderFactory;
     }
 
     /**
@@ -49,7 +58,9 @@ class GenerateInvoice implements GenerateInvoiceInterface
 
         $this->orderLockManager->lock($incrementId);
         $payment = $order->getPayment();
-        $payment?->setLastTransId($data['id']);
+        if ($payment) {
+            $payment->setLastTransId($data['id']);
+        }
         $invoice = $order->prepareInvoice();
         if(!$invoice->getAllItems()){
             return;

@@ -24,14 +24,27 @@ use Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote;
  */
 class CreateLoggedMoneiPaymentVault implements CreateLoggedMoneiPaymentVaultInterface
 {
+    private CartRepositoryInterface $quoteRepository;
+    private Session $checkoutSession;
+    private GetCustomerDetailsByQuote $getCustomerDetailsByQuote;
+    private GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress;
+    private PaymentTokenManagementInterface $tokenManagement;
+    private CreatePayment $createPayment;
+
     public function __construct(
-        private readonly CartRepositoryInterface         $quoteRepository,
-        private readonly Session                         $checkoutSession,
-        private readonly GetCustomerDetailsByQuote       $getCustomerDetailsByQuote,
-        private readonly GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress,
-        private readonly PaymentTokenManagementInterface $tokenManagement,
-        private readonly CreatePayment                   $createPayment)
+        CartRepositoryInterface         $quoteRepository,
+        Session                         $checkoutSession,
+        GetCustomerDetailsByQuote       $getCustomerDetailsByQuote,
+        GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress,
+        PaymentTokenManagementInterface $tokenManagement,
+        CreatePayment                   $createPayment)
     {
+        $this->createPayment = $createPayment;
+        $this->tokenManagement = $tokenManagement;
+        $this->getAddressDetailsByQuoteAddress = $getAddressDetailsByQuoteAddress;
+        $this->getCustomerDetailsByQuote = $getCustomerDetailsByQuote;
+        $this->checkoutSession = $checkoutSession;
+        $this->quoteRepository = $quoteRepository;
     }
 
     /**
