@@ -22,6 +22,8 @@ interface MoneiPaymentModuleConfigInterface
 
     public const PRODUCTION_URL = 'payment/monei/production_url';
 
+    public const ACCOUNT_ID = 'payment/monei/account_id';
+
     public const TEST_API_KEY = 'payment/monei/test_api_key';
 
     public const PRODUCTION_API_KEY = 'payment/monei/production_api_key';
@@ -73,6 +75,14 @@ interface MoneiPaymentModuleConfigInterface
      * @return string
      */
     public function getProductionUrl($storeId = null): string;
+
+    /**
+     * Get account id
+     *
+     * @param int|null $storeId
+     * @return string
+     */
+    public function getAccountId(int $storeId = null): string;
 
     /**
      * Get test API key

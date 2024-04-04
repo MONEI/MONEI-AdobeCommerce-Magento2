@@ -22,6 +22,10 @@
           <comment>To define if we are going to connect with production or testing WS environment</comment>
           <source_model>Monei\MoneiPayment\Model\Config\Source\Mode</source_model>
         </field>
+        <field id="account_id" translate="label comment" sortOrder="35" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
+          <label>Account Id</label>
+          <validate>required-entry</validate>
+        </field>
         <field id="test_api_key" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Test Api Key</label>
         </field>
@@ -155,6 +159,113 @@
             <frontend_class>validate-number</frontend_class>
             <depends>
                 <field id="active_card_insite">1</field>
+            </depends>
+        </field>
+        <!-- -->
+        <!-- BIZUM INSITE -->
+        <field id="heading5" translate="label" sortOrder="260" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Monei Bizum Insite:</label>
+            <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
+        </field>
+        <field id="active_bizum_insite" translate="label comment" sortOrder="270" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Enable</label>
+            <comment>Select 'Yes' if you want to enable this payment method. Otherwise 'No'.</comment>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <config_path>payment/monei_bizum/active</config_path>
+        </field>
+        <field id="title_bizum_insite" translate="label comment" type="text" sortOrder="280" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Title</label>
+            <comment>Text that will be displayed in checkout</comment>
+            <config_path>payment/monei_bizum/title</config_path>
+            <depends>
+                <field id="active_bizum_insite">1</field>
+            </depends>
+        </field>
+        <field id="allowspecific_bizum_insite" translate="label comment" sortOrder="290" type="allowspecific" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Payment from Applicable Countries</label>
+            <source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
+            <config_path>payment/monei_bizum/allowspecific</config_path>
+            <depends>
+                <field id="active_bizum_insite">1</field>
+            </depends>
+        </field>
+        <field id="specificcountry_bizum_insite" translate="label comment" sortOrder="300" type="multiselect" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Payment from Specific Countries</label>
+            <source_model>Magento\Directory\Model\Config\Source\Country</source_model>
+            <config_path>payment/monei_bizum/specificcountry</config_path>
+            <can_be_empty>1</can_be_empty>
+            <depends>
+                <field id="active_bizum_insite">1</field>
+                <field id="allowspecific_bizum_insite">1</field>
+            </depends>
+        </field>
+        <field id="sort_order_bizum_insite" translate="label comment" sortOrder="310" type="text" showInDefault="1" showInWebsite="1">
+            <label>Sort Order</label>
+            <tooltip>In which order the payment method will be displayed in checkout</tooltip>
+            <config_path>payment/monei_bizum/sort_order</config_path>
+            <frontend_class>validate-number</frontend_class>
+            <depends>
+                <field id="active_bizum_insite">1</field>
+            </depends>
+        </field>
+        <!-- -->
+        <!-- GOOGLE APPLE INSITE -->
+        <field id="heading6" translate="label" sortOrder="320" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Monei Google and Apple Pay Insite:</label>
+            <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
+        </field>
+        <field id="active_google_apple_insite" translate="label comment" sortOrder="330" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Enable</label>
+            <comment>Select 'Yes' if you want to enable this payment method. Otherwise 'No'.</comment>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <config_path>payment/monei_google_apple/active</config_path>
+        </field>
+        <field id="notification1" translate="label" sortOrder="335" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Enable Apple Pay</label>
+            <comment><![CDATA[It's required register your domain in "MONEI Dashboard" to use Apple Pay - More info <a href="https://dashboard.monei.com/settings/payment-methods" target="_blank" rel="noopener noreferrer">here</a>]]></comment>
+            <frontend_model>Monei\MoneiPayment\Block\System\Config\Form\Field\Notice</frontend_model>
+        </field>
+        <field id="title_google_insite" translate="label comment" type="text" sortOrder="340" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Title Google Pay</label>
+            <comment>Text that will be displayed in checkout for Google Pay</comment>
+            <config_path>payment/monei_google_apple/title_google_insite</config_path>
+            <depends>
+                <field id="active_google_apple_insite">1</field>
+            </depends>
+        </field>
+        <field id="title_apple_insite" translate="label comment" type="text" sortOrder="345" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Title Apple Pay</label>
+            <comment>Text that will be displayed in checkout for Apple Pay</comment>
+            <config_path>payment/monei_google_apple/title_apple_insite</config_path>
+            <depends>
+                <field id="active_google_apple_insite">1</field>
+            </depends>
+        </field>
+        <field id="allowspecific_google_apple_insite" translate="label comment" sortOrder="350" type="allowspecific" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Payment from Applicable Countries</label>
+            <source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
+            <config_path>payment/monei_google_apple/allowspecific</config_path>
+            <depends>
+                <field id="active_google_apple_insite">1</field>
+            </depends>
+        </field>
+        <field id="specificcountry_google_apple_insite" translate="label comment" sortOrder="360" type="multiselect" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Payment from Specific Countries</label>
+            <source_model>Magento\Directory\Model\Config\Source\Country</source_model>
+            <config_path>payment/monei_google_apple/specificcountry</config_path>
+            <can_be_empty>1</can_be_empty>
+            <depends>
+                <field id="active_google_apple_insite">1</field>
+                <field id="allowspecific_google_apple_insite">1</field>
+            </depends>
+        </field>
+        <field id="sort_order_google_apple_insite" translate="label comment" sortOrder="370" type="text" showInDefault="1" showInWebsite="1">
+            <label>Sort Order</label>
+            <tooltip>In which order the payment method will be displayed in checkout</tooltip>
+            <config_path>payment/monei_google_apple/sort_order</config_path>
+            <frontend_class>validate-number</frontend_class>
+            <depends>
+                <field id="active_google_apple_insite">1</field>
             </depends>
         </field>
         <!-- -->

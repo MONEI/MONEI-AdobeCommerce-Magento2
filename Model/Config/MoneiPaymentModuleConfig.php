@@ -74,6 +74,18 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
     /**
      * @inheritDoc
      */
+    public function getAccountId(int $storeId = null): string
+    {
+        return (string) $this->scopeConfig->getValue(
+            self::ACCOUNT_ID,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function getTestApiKey($storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(

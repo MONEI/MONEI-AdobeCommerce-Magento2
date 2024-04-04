@@ -6,6 +6,8 @@
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <head>
         <css src="Monei_MoneiPayment::css/card-input.css" />
+        <css src="Monei_MoneiPayment::css/bizum.css" />
+        <css src="Monei_MoneiPayment::css/google-apple.css" />
     </head>
     <body>
         <referenceBlock name="checkout.root">
@@ -25,7 +27,7 @@
                                                             <item name="children" xsi:type="array">
                                                                 <item name="monei-payments"
                                                                       xsi:type="array">
-                                                                    <item name="component" xsi:type="string">Monei_MoneiPayment/js/view/payment/monei</item>
+                                                                    <item name="component" xsi:type="string">Monei_MoneiPayment/js/view/payment/monei-redirect</item>
                                                                     <item name="methods" xsi:type="array">
                                                                         <item name="monei" xsi:type="array">
                                                                             <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
@@ -37,6 +39,24 @@
                                                                     <item name="component" xsi:type="string">Monei_MoneiPayment/js/view/payment/monei-card</item>
                                                                     <item name="methods" xsi:type="array">
                                                                         <item name="monei_card" xsi:type="array">
+                                                                            <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
+                                                                        </item>
+                                                                    </item>
+                                                                </item>
+                                                                <item name="monei-bizum-payment"
+                                                                      xsi:type="array">
+                                                                    <item name="component" xsi:type="string">Monei_MoneiPayment/js/view/payment/monei-bizum</item>
+                                                                    <item name="methods" xsi:type="array">
+                                                                        <item name="monei_bizum" xsi:type="array">
+                                                                            <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
+                                                                        </item>
+                                                                    </item>
+                                                                </item>
+                                                                <item name="monei-google-apple-payment"
+                                                                      xsi:type="array">
+                                                                    <item name="component" xsi:type="string">Monei_MoneiPayment/js/view/payment/monei-google-apple</item>
+                                                                    <item name="methods" xsi:type="array">
+                                                                        <item name="monei_google_apple" xsi:type="array">
                                                                             <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
                                                                         </item>
                                                                     </item>

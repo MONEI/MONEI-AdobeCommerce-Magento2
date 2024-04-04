@@ -13,7 +13,7 @@ define(
 
         return Component.extend({
             defaults: {
-                template: 'Monei_MoneiPayment/payment/monei',
+                template: 'Monei_MoneiPayment/payment/monei-redirect',
             },
 
             /** Redirect to monei when the type of connection is "redirect" */

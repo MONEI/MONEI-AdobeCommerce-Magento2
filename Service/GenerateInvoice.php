@@ -48,16 +48,15 @@ class GenerateInvoice implements GenerateInvoiceInterface
         }
 
         $this->orderLockManager->lock($incrementId);
-
+        $payment = $order->getPayment();
+        $payment?->setLastTransId($data['id']);
         $invoice = $order->prepareInvoice();
         if(!$invoice->getAllItems()){
             return;
         }
         $invoice->register()->capture();
         $order->addRelatedObject($invoice);
-        $payment = $order->getPayment();
         if($payment){
-            $payment->setLastTransId($data['id']);
             $payment->setCreatedInvoice($invoice);
             if ($order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION)) {
                 $vaultCreated = $this->createVaultPayment->execute(

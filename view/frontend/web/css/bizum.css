@@ -1,0 +1,9 @@
+#monei-bizum-insite-payment-form {
+    width: 225px;
+}
+
+@media only screen and (max-width: 768px) {
+    #monei-bizum-insite-payment-form {
+        width: 100%;
+    }
+}

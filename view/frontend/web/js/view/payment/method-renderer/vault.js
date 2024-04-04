@@ -167,10 +167,9 @@ define([
                 JSON.stringify(payload)
             ).done(function (response) {
                 response = response.shift();
-                quote.setMoneiPaymentId(response.id);
                 self.getPlaceOrderDeferredObject().done(
                     function () {
-                        self.afterPlaceOrder(response.paymentToken);
+                        self.afterPlaceOrder(response.id, response.paymentToken);
                     }
                 );
             }).fail(function (response) {
@@ -185,15 +184,15 @@ define([
             return true;
         },
 
-        afterPlaceOrder: function (token) {
-            this.moneiTokenHandler(token);
+        afterPlaceOrder: function (paymentId, token) {
+            this.moneiTokenHandler(paymentId, token);
         },
 
-        moneiTokenHandler: function (token) {
+        moneiTokenHandler: function (paymentId, token) {
             var self = this;
             fullScreenLoader.startLoader();
             return monei.confirmPayment({
-                paymentId: quote.getMoneiPaymentId(),
+                paymentId: paymentId,
                 paymentToken: token
             }).then(function (result) {
                 if (self.failOrderStatus.includes(result.status)) {
@@ -209,9 +208,7 @@ define([
                     redirectOnSuccessAction.execute();
                 }
             }).catch(function (error) {
-                globalMessageList.addErrorMessage({
-                    message: error.message
-                });
+                console.log(error);
                 self.redirectToCancelOrder();
             });
         },

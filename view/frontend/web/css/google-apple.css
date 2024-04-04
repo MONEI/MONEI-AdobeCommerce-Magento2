@@ -1,0 +1,9 @@
+#monei-google-apple-insite-payment-form {
+    width: 130px;
+}
+
+@media only screen and (max-width: 768px) {
+    #monei-google-apple-insite-payment-form {
+        width: 100%;
+    }
+}
