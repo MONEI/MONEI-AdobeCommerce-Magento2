@@ -27,7 +27,7 @@ define([
             this.apiKey = window.checkoutConfig.moneiApiKey;
             if(!this.accountId || !this.apiKey) {
                 globalMessageList.addErrorMessage({
-                    message: $.mage.__('Monei payment method is not available. Please, check your Monei configuration.')
+                    message: $.mage.__('Monei payment methods are not available. Please, check your Monei configuration.')
                 });
             }
         }
