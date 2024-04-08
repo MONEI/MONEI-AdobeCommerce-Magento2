@@ -49,6 +49,8 @@ class CheckoutConfigProvider implements ConfigProviderInterface
     public function getConfig(): array
     {
         return [
+            'moneiAccountId' => $this->moneiPaymentConfig->getAccountId($this->getStoreId()),
+            'moneiApiKey' => $this->moneiPaymentConfig->getApiKey($this->getStoreId()),
             'payment' => [
                 Monei::CODE => [
                     'redirectUrl' => $this->urlBuilder->getUrl('monei/payment/redirect'),

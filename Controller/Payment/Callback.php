@@ -148,11 +148,8 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     private function getApiKey(): string
     {
         $currentStoreId = $this->storeManager->getStore()->getId();
-        if ($this->moduleConfig->getMode($currentStoreId) === Mode::MODE_TEST) {
-            return $this->moduleConfig->getTestApiKey($currentStoreId);
-        }
 
-        return $this->moduleConfig->getProductionApiKey($currentStoreId);
+        return $this->moduleConfig->getApiKey($currentStoreId);
     }
 
     private function splitMoneiSignature(string $signature): array

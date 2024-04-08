@@ -95,11 +95,8 @@ abstract class AbstractService
     protected function getApiUrl(int $storeId = null): string
     {
         $currentStoreId = $storeId ?: $this->storeManager->getStore()->getId();
-        if ($this->moduleConfig->getMode($currentStoreId) === Mode::MODE_TEST) {
-            return $this->moduleConfig->getTestUrl($currentStoreId);
-        }
 
-        return $this->moduleConfig->getProductionUrl($currentStoreId);
+        return $this->moduleConfig->getUrl($currentStoreId);
     }
 
     /**
@@ -112,11 +109,8 @@ abstract class AbstractService
     private function getApiKey(int $storeId = null): string
     {
         $currentStoreId = $storeId ?: $this->storeManager->getStore()->getId();
-        if ($this->moduleConfig->getMode($currentStoreId) === Mode::MODE_TEST) {
-            return $this->moduleConfig->getTestApiKey($currentStoreId);
-        }
 
-        return $this->moduleConfig->getProductionApiKey($currentStoreId);
+        return $this->moduleConfig->getApiKey($currentStoreId);
     }
 
     /**

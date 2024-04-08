@@ -34,6 +34,7 @@ define(
             failOrderStatus: '',
             accountId: '',
             cardHolderNameValid: ko.observable(true),
+            errorMessageCardHolderName: ko.observable(''),
             checkedVault: ko.observable(false),
 
             initialize: function () {
@@ -196,19 +197,29 @@ define(
             },
 
             validate: function (){
-
                 var cardHolderName = $('#'+this.idCardHolderInput).val();
+                this.validateCardHolderName(cardHolderName);
+                quote.setMoneiCardholderName(cardHolderName);
 
+                return true;
+            },
+
+            validateCardHolderName: function (cardHolderName) {
                 if (cardHolderName === '' || cardHolderName === undefined) {
+                    this.errorMessageCardHolderName($.mage.__('Please enter the name on the card.'));
                     this.cardHolderNameValid(false);
 
                     return false;
                 }
+                var regExp = /^[A-Za-zÀ-ú ]{5,50}$/;
+                if (!regExp.test(cardHolderName)) {
+                    // Mostrar un mensaje de error si no cumple
+                    this.errorMessageCardHolderName($.mage.__('Please enter the name exactly as it appears on the card.'));
+                    this.cardHolderNameValid(false);
+                    return false;
+                }
 
                 this.cardHolderNameValid(true);
-                quote.setMoneiCardholderName(cardHolderName);
-
-                return true;
             },
 
             /** Confirm the payment in monei */
