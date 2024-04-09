@@ -74,6 +74,7 @@ class Complete implements ActionInterface
      * @var OrderSender
      */
     protected $orderSender;
+    private CreateVaultPayment $createVaultPayment;
 
     /**
      * @param Context $context
@@ -97,8 +98,9 @@ class Complete implements ActionInterface
         MagentoRedirect $resultRedirectFactory,
         PendingOrderFactory $pendingOrderFactory,
         PendingOrderResource $pendingOrderResource,
-        private readonly CreateVaultPayment $createVaultPayment
+        CreateVaultPayment $createVaultPayment
     ) {
+        $this->createVaultPayment = $createVaultPayment;
         $this->context = $context;
         $this->orderRepository = $orderRepository;
         $this->orderSender = $orderSender;

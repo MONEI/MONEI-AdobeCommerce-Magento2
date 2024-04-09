@@ -65,6 +65,9 @@
     <type name="Magento\Sales\Model\Service\CreditmemoService">
         <plugin name="set_order_status_after_refund" type="Monei\MoneiPayment\Plugin\SetOrderStatusAfterRefund"/>
     </type>
+    <type name="Magento\Checkout\Model\ShippingInformationManagement">
+        <plugin name="Monei\MoneiPayment\Plugin\ShippingInformationManagement" type="Monei\MoneiPayment\Plugin\ShippingInformationManagement"/>
+    </type>
     <virtualType name="MoneiPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
         <arguments>
             <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::CODE</argument>

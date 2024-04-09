@@ -131,7 +131,9 @@ define(
                         }
                     })
                     .catch(function (error) {
-                        console.log(error);
+                        globalMessageList.addErrorMessage({
+                            message: error.message
+                        });
                         self.redirectToCancelOrder();
                     });
             },

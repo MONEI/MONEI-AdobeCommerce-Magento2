@@ -26,14 +26,27 @@ use Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote;
 class CreateGuestMoneiPaymentInSite implements CreateGuestMoneiPaymentInSiteInterface
 {
 
+    private CartRepositoryInterface $quoteRepository;
+    private Session $checkoutSession;
+    private MaskedQuoteIdToQuoteIdInterface $maskedQuoteIdToQuoteId;
+    private GetCustomerDetailsByQuote $getCustomerDetailsByQuote;
+    private GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress;
+    private CreatePayment $createPayment;
+
     public function __construct(
-        private readonly CartRepositoryInterface         $quoteRepository,
-        private readonly Session                         $checkoutSession,
-        private readonly MaskedQuoteIdToQuoteIdInterface $maskedQuoteIdToQuoteId,
-        private readonly GetCustomerDetailsByQuote       $getCustomerDetailsByQuote,
-        private readonly GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress,
-        private readonly CreatePayment                   $createPayment)
+        CartRepositoryInterface         $quoteRepository,
+        Session                         $checkoutSession,
+        MaskedQuoteIdToQuoteIdInterface $maskedQuoteIdToQuoteId,
+        GetCustomerDetailsByQuote       $getCustomerDetailsByQuote,
+        GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress,
+        CreatePayment                   $createPayment)
     {
+        $this->createPayment = $createPayment;
+        $this->getAddressDetailsByQuoteAddress = $getAddressDetailsByQuoteAddress;
+        $this->getCustomerDetailsByQuote = $getCustomerDetailsByQuote;
+        $this->maskedQuoteIdToQuoteId = $maskedQuoteIdToQuoteId;
+        $this->checkoutSession = $checkoutSession;
+        $this->quoteRepository = $quoteRepository;
     }
 
     /**

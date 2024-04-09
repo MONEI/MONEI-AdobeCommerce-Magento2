@@ -14,9 +14,13 @@ use Monei\MoneiPayment\Api\OrderLockManagerInterface;
 
 class OrderLockManager implements OrderLockManagerInterface
 {
+    private LockManagerInterface $lockManager;
+
     public function __construct(
-        private readonly LockManagerInterface $lockManager
-    ) {}
+        LockManagerInterface $lockManager
+    ) {
+        $this->lockManager = $lockManager;
+    }
 
     public function lock(string $incrementId): bool
     {
