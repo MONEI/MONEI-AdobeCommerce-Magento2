@@ -16,11 +16,16 @@ use Monei\MoneiPayment\Model\Payment\Monei;
 
 class CreateVaultPayment
 {
+    private PaymentTokenFactoryInterface $paymentTokenFactory;
+    private GetPaymentInterface $getPayment;
+
     public function __construct(
-        private readonly PaymentTokenFactoryInterface $paymentTokenFactory,
-        private readonly GetPaymentInterface          $getPayment
+        PaymentTokenFactoryInterface $paymentTokenFactory,
+        GetPaymentInterface          $getPayment
     )
     {
+        $this->getPayment = $getPayment;
+        $this->paymentTokenFactory = $paymentTokenFactory;
     }
 
     public function execute(string $moneiPaymentId, OrderPaymentInterface &$payment): bool
@@ -46,7 +51,9 @@ class CreateVaultPayment
                 ]
             )
         );
-        $payment->getExtensionAttributes()?->setVaultPaymentToken($paymentToken);
+        if ($payment->getExtensionAttributes()) {
+            $payment->getExtensionAttributes()->setVaultPaymentToken($paymentToken);
+        }
 
         return true;
     }

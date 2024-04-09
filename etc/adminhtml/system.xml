@@ -22,15 +22,33 @@
           <comment>To define if we are going to connect with production or testing WS environment</comment>
           <source_model>Monei\MoneiPayment\Model\Config\Source\Mode</source_model>
         </field>
-        <field id="account_id" translate="label comment" sortOrder="35" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
-          <label>Account Id</label>
+        <field id="test_account_id" translate="label comment" sortOrder="35" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
+          <label>Test Account Id</label>
           <validate>required-entry</validate>
+          <depends>
+            <field id="mode">1</field>
+          </depends>
+        </field>
+        <field id="production_account_id" translate="label comment" sortOrder="35" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
+          <label>Production Account Id</label>
+          <validate>required-entry</validate>
+          <depends>
+            <field id="mode">2</field>
+          </depends>
         </field>
         <field id="test_api_key" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Test Api Key</label>
+          <validate>required-entry</validate>
+          <depends>
+              <field id="mode">1</field>
+          </depends>
         </field>
-        <field id="production_api_key" translate="label comment" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="production_api_key" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Production Api Key</label>
+          <validate>required-entry</validate>
+          <depends>
+              <field id="mode">2</field>
+          </depends>
         </field>
         <field id="heading2" translate="label" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Basic settings:</label>

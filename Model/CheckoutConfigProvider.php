@@ -25,19 +25,32 @@ use Monei\MoneiPayment\Model\Payment\Monei;
 class CheckoutConfigProvider implements ConfigProviderInterface
 {
 
+    private UrlInterface $urlBuilder;
+    private MoneiPaymentModuleConfigInterface $moneiPaymentConfig;
+    private MoneiCardPaymentModuleConfigInterface $moneiCardPaymentConfig;
+    private MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentConfig;
+    private StoreManagerInterface $storeManager;
+
     public function __construct(
-        private readonly UrlInterface                          $urlBuilder,
-        private readonly MoneiPaymentModuleConfigInterface $moneiPaymentConfig,
-        private readonly MoneiCardPaymentModuleConfigInterface $moneiCardPaymentConfig,
-        private readonly MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentConfig,
-        private readonly StoreManagerInterface                 $storeManager,
+        UrlInterface                          $urlBuilder,
+        MoneiPaymentModuleConfigInterface $moneiPaymentConfig,
+        MoneiCardPaymentModuleConfigInterface $moneiCardPaymentConfig,
+        MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentConfig,
+        StoreManagerInterface                 $storeManager
     )
     {
+        $this->moneiGoogleApplePaymentConfig = $moneiGoogleApplePaymentConfig;
+        $this->moneiCardPaymentConfig = $moneiCardPaymentConfig;
+        $this->moneiPaymentConfig = $moneiPaymentConfig;
+        $this->urlBuilder = $urlBuilder;
+        $this->storeManager = $storeManager;
     }
 
     public function getConfig(): array
     {
         return [
+            'moneiAccountId' => $this->moneiPaymentConfig->getAccountId($this->getStoreId()),
+            'moneiApiKey' => $this->moneiPaymentConfig->getApiKey($this->getStoreId()),
             'payment' => [
                 Monei::CODE => [
                     'redirectUrl' => $this->urlBuilder->getUrl('monei/payment/redirect'),

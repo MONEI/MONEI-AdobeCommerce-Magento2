@@ -34,17 +34,33 @@ use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
 class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
 {
     private string $errorMessage = '';
+    private Context $context;
+    private SerializerInterface $serializer;
+    private MoneiPaymentModuleConfigInterface $moduleConfig;
+    private Logger $logger;
+    private StoreManagerInterface $storeManager;
+    private GenerateInvoiceInterface $generateInvoiceService;
+    private SetOrderStatusAndStateInterface $setOrderStatusAndStateService;
+    private MagentoRedirect $resultRedirectFactory;
 
     public function __construct(
-        private readonly Context $context,
-        private readonly SerializerInterface $serializer,
-        private readonly MoneiPaymentModuleConfigInterface $moduleConfig,
-        private readonly Logger $logger,
-        private readonly StoreManagerInterface $storeManager,
-        private readonly GenerateInvoiceInterface $generateInvoiceService,
-        private readonly SetOrderStatusAndStateInterface $setOrderStatusAndStateService,
-        private readonly MagentoRedirect $resultRedirectFactory
+        Context $context,
+        SerializerInterface $serializer,
+        MoneiPaymentModuleConfigInterface $moduleConfig,
+        Logger $logger,
+        StoreManagerInterface $storeManager,
+        GenerateInvoiceInterface $generateInvoiceService,
+        SetOrderStatusAndStateInterface $setOrderStatusAndStateService,
+        MagentoRedirect $resultRedirectFactory
     ) {
+        $this->resultRedirectFactory = $resultRedirectFactory;
+        $this->setOrderStatusAndStateService = $setOrderStatusAndStateService;
+        $this->generateInvoiceService = $generateInvoiceService;
+        $this->storeManager = $storeManager;
+        $this->logger = $logger;
+        $this->moduleConfig = $moduleConfig;
+        $this->serializer = $serializer;
+        $this->context = $context;
     }
 
     /**
@@ -132,11 +148,8 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     private function getApiKey(): string
     {
         $currentStoreId = $this->storeManager->getStore()->getId();
-        if ($this->moduleConfig->getMode($currentStoreId) === Mode::MODE_TEST) {
-            return $this->moduleConfig->getTestApiKey($currentStoreId);
-        }
 
-        return $this->moduleConfig->getProductionApiKey($currentStoreId);
+        return $this->moduleConfig->getApiKey($currentStoreId);
     }
 
     private function splitMoneiSignature(string $signature): array

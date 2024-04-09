@@ -2,3 +2,11 @@
 node_modules
 .DS_Store
 .composer.lock
+
+# Yarn
+/build/.yarn/*
+!/build/.yarn/patches
+!/build/.yarn/plugins
+!/build/.yarn/releases
+!/build/.yarn/sdks
+!/build/.yarn/versions

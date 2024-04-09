@@ -18,9 +18,12 @@ use Magento\Store\Model\ScopeInterface;
  */
 class MoneiGoogleApplePaymentModuleConfig implements MoneiGoogleApplePaymentModuleConfigInterface
 {
+    private ScopeConfigInterface $scopeConfig;
+
     public function __construct(
-        private readonly ScopeConfigInterface $scopeConfig
+        ScopeConfigInterface $scopeConfig
     ) {
+        $this->scopeConfig = $scopeConfig;
     }
 
     /**

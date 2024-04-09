@@ -1,14 +1,12 @@
-# MONEI Payments Adobe Commerce (Magento 2) module
+# MONEI Payments Adobe Commerce (Magento 2) Official Module
 
 ## Description
-Module for MONEI payment integration inAdobe Commerce (Magento 2).
+To accept payments through [MONEI](https://monei.com) in your Adobe Commerce (Magento 2) store you simply need to install and configure MONEI Adobe Commerce Extension.
 
-## Versioning
-This package follows semver for versioning.
+## [Live Demo](https://magento2-demo.monei.com/)
 
 ## Minimum Compatibility
 - PHP: ^8.1.0
-
 - Magento: >=2.4.5
 
 ## Installation Instructions
@@ -24,8 +22,5 @@ This package follows semver for versioning.
 
 `php magento/bin/magento setup:upgrade`
 
-## Credits
-Supported and maintained by MONEI.
+For more information, please refer to the [official documentation](https://docs.monei.com/docs/e-commerce/adobe-commerce/).
 
-## Copyright
-Copyright (c) MONEI DIGITAL PAYMENTS S.L.

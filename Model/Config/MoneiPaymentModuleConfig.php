@@ -12,15 +12,19 @@ namespace Monei\MoneiPayment\Model\Config;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\ScopeInterface;
+use Monei\MoneiPayment\Model\Config\Source\Mode;
 
 /**
  * Get Monei payment method configuration class.
  */
 class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
 {
+    private ScopeConfigInterface $scopeConfig;
+
     public function __construct(
-        private readonly ScopeConfigInterface $scopeConfig
+        ScopeConfigInterface $scopeConfig
     ) {
+        $this->scopeConfig = $scopeConfig;
     }
 
     /**
@@ -45,6 +49,16 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
             ScopeInterface::SCOPE_STORE,
             $storeId
         );
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getUrl($storeId = null): string
+    {
+        return $this->getMode($storeId) === Mode::MODE_TEST
+            ? $this->getTestUrl($storeId)
+            : $this->getProductionUrl($storeId);
     }
 
     /**
@@ -76,11 +90,43 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      */
     public function getAccountId(int $storeId = null): string
     {
+        return $this->getMode($storeId) === Mode::MODE_TEST
+            ? $this->getTestAccountId($storeId)
+            : $this->getProductionAccountId($storeId);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getTestAccountId(int $storeId = null): string
+    {
         return (string) $this->scopeConfig->getValue(
-            self::ACCOUNT_ID,
+            self::TEST_ACCOUNT_ID,
             ScopeInterface::SCOPE_STORE,
             $storeId
         );
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getProductionAccountId(int $storeId = null): string
+    {
+        return (string) $this->scopeConfig->getValue(
+            self::PRODUCTION_ACCOUNT_ID,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getApiKey($storeId = null): string
+    {
+        return $this->getMode($storeId) === Mode::MODE_TEST
+            ? $this->getTestApiKey($storeId)
+            : $this->getProductionApiKey($storeId);
     }
 
     /**

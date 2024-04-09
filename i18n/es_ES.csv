@@ -29,3 +29,6 @@
 "ending in %1","terminando en %1"
 "expires","expira"
 "It is not possible to make the payment with the saved card.","No es posible realizar el pago con la tarjeta guardada."
+"Please enter the name on the card.","Introduzca el nombre que figura en la tarjeta."
+"Please enter the name exactly as it appears on the card.","Introduzca el nombre tal y como aparece en la tarjeta."
+"Monei payment methods are not available. Please, check your Monei configuration.","Los métodos de pago Monei no están disponibles. Por favor, compruebe su configuración de Monei."
