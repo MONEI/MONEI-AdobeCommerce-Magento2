@@ -11,8 +11,8 @@
   },
   "release-it": {
     "git": {
-      "tagName": "${version}",
-      "commitMessage": "chore: release v${version}"
+      "tagName": "php47-${version}",
+      "commitMessage": "chore: release php47-v${version}"
     },
     "github": {
       "release": true
