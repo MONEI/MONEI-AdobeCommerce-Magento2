@@ -21,14 +21,19 @@ use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
  */
 class FailLastOrderByStatus extends Fail
 {
+    private Context $context;
+    private Session $checkoutSession;
+
     public function __construct(
-        private readonly Context $context,
-        private readonly Session $checkoutSession,
+        Context $context,
+        Session $checkoutSession,
         OrderInterfaceFactory $orderFactory,
         SetOrderStatusAndStateInterface $setOrderStatusAndStateService,
         ManagerInterface $messageManager,
         MagentoRedirect $resultRedirectFactory
     ) {
+        $this->checkoutSession = $checkoutSession;
+        $this->context = $context;
         parent::__construct($context, $checkoutSession, $orderFactory, $setOrderStatusAndStateService, $messageManager, $resultRedirectFactory);
 
     }

@@ -22,7 +22,7 @@
                         </label>
                         <div class="control">
                             <input type="text" id="monei-insite-cardholder-name" name="monei-insite-cardholder-name" class="input-text" data-bind="attr: {'data-validate': JSON.stringify({'required':true})}, css: {'_error': !cardHolderNameValid()}" />
-                            <div class="field-error" data-bind="visible: !cardHolderNameValid(), i18n: 'This is a required field.'"></div>
+                            <div class="field-error" data-bind="visible: !cardHolderNameValid(), i18n: errorMessageCardHolderName()"></div>
                         </div>
                     </div>
                 </fieldset>

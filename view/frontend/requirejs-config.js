@@ -13,6 +13,9 @@ var config = {
         mixins: {
             'Magento_Checkout/js/model/quote': {
                 'Monei_MoneiPayment/js/model/quote-mixin': true
+            },
+            'Magento_Checkout/js/view/payment': {
+                'Monei_MoneiPayment/js/view/payment-mixin': true
             }
         }
     }

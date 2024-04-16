@@ -23,12 +23,14 @@ class GetCustomerDetailsByQuote
         $address = $quote->getShippingAddress() ?: $quote->getBillingAddress();
 
         $customerName = $quote->getCustomerFirstname() . ' ' . $quote->getCustomerLastname();
+        $addressEmail = $address ? $address->getEmail() : '';
+        $addressCustomerName = $address ? $address->getFirstname() . ' ' . $address->getLastname() : '';
         return [
-            "email" => $email ?: ($quote->getCustomerEmail() ?? $address?->getEmail()),
+            "email" => $email ?: ($quote->getCustomerEmail() ?? $addressEmail),
             "name"  => !empty(trim($customerName))
                 ? $customerName
-                : $address?->getFirstname() . ' ' . $address?->getLastname(),
-            "phone" => $address?->getTelephone() ?: ''
+                : $addressCustomerName,
+            "phone" => $address ? $address->getTelephone() : ''
         ];
     }
 }

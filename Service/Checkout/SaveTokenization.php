@@ -17,10 +17,15 @@ use Monei\MoneiPayment\Api\Service\Checkout\SaveTokenizationInterface;
 
 class SaveTokenization implements SaveTokenizationInterface
 {
+    private CartRepositoryInterface $quoteRepository;
+    private Session $checkoutSession;
+
     public function __construct(
-        private readonly CartRepositoryInterface $quoteRepository,
-        private readonly Session                 $checkoutSession)
+        CartRepositoryInterface $quoteRepository,
+        Session                 $checkoutSession)
     {
+        $this->checkoutSession = $checkoutSession;
+        $this->quoteRepository = $quoteRepository;
     }
 
     /**
@@ -38,7 +43,7 @@ class SaveTokenization implements SaveTokenizationInterface
             $this->quoteRepository->save($quote);
 
             return [];
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             throw new LocalizedException(__('An error occurred trying save the card.'));
         }
     }
