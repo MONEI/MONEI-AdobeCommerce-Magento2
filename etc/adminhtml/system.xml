@@ -135,6 +135,7 @@
             <comment>Select 'Yes' if you want to enable this payment method. Otherwise 'No'.</comment>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <config_path>payment/monei_card/active</config_path>
+            <backend_model>Monei\MoneiPayment\Model\Config\Backend\EnableCard</backend_model>
         </field>
         <field id="is_enabled_tokenization" translate="label comment" sortOrder="210" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Enable tokenization</label>
@@ -190,6 +191,7 @@
             <comment>Select 'Yes' if you want to enable this payment method. Otherwise 'No'.</comment>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <config_path>payment/monei_bizum/active</config_path>
+            <backend_model>Monei\MoneiPayment\Model\Config\Backend\EnableBizum</backend_model>
         </field>
         <field id="title_bizum_insite" translate="label comment" type="text" sortOrder="280" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Title</label>
@@ -237,6 +239,7 @@
             <comment>Select 'Yes' if you want to enable this payment method. Otherwise 'No'.</comment>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <config_path>payment/monei_google_apple/active</config_path>
+            <backend_model>Monei\MoneiPayment\Model\Config\Backend\EnableGoogleApplePay</backend_model>
         </field>
         <field id="notification1" translate="label" sortOrder="335" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Enable Apple Pay</label>

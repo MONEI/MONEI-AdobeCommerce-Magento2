@@ -24,6 +24,7 @@
     <preference for="Monei\MoneiPayment\Api\Service\Checkout\SaveTokenizationInterface"
                 type="Monei\MoneiPayment\Service\Checkout\SaveTokenization"/>
     <preference for="Monei\MoneiPayment\Api\Service\GetPaymentInterface" type="Monei\MoneiPayment\Service\GetPayment"/>
+    <preference for="Monei\MoneiPayment\Api\Service\GetPaymentMethodsInterface" type="Monei\MoneiPayment\Service\GetPaymentMethods"/>
     <preference for="Monei\MoneiPayment\Api\Service\CancelPaymentInterface"
                 type="Monei\MoneiPayment\Service\CancelPayment"/>
     <preference for="Monei\MoneiPayment\Api\Service\RefundPaymentInterface"
