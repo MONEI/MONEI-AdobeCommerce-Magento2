@@ -37,7 +37,7 @@ class GetPaymentMethods extends AbstractService implements GetPaymentMethodsInte
         $this->logger->debug('');
 
         $response = $client->get(
-            self::METHOD . '?accountId=' . $accountId.'&asas1axda12as',
+            self::METHOD . '?accountId=' . $accountId . '&' . time(),
             [
                 'headers' => $this->getHeaders(),
             ]
