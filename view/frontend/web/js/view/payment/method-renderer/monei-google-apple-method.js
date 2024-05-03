@@ -7,13 +7,14 @@ define(
         'ko',
         'jquery',
         'Monei_MoneiPayment/js/view/payment/method-renderer/monei-insite',
+        'Magento_Checkout/js/model/payment/additional-validators',
         'moneijs',
         'Magento_Checkout/js/model/quote',
         'Magento_Checkout/js/action/redirect-on-success',
         'Magento_Ui/js/model/messageList',
         'Magento_Checkout/js/model/full-screen-loader'
     ],
-    function (ko, $, Component, monei, quote, redirectOnSuccessAction, globalMessageList, fullScreenLoader) {
+    function (ko, $, Component, additionalValidators, monei, quote, redirectOnSuccessAction, globalMessageList, fullScreenLoader) {
         'use strict';
 
         return Component.extend({
@@ -26,6 +27,8 @@ define(
             failOrderStatus: '',
             applePaySupported: '',
             accountId: '',
+            isEnabledGooglePay: ko.observable(false),
+            isEnabledApplePay: ko.observable(false),
             paymentMethodTitle: ko.observable(''),
             baseGrandTotal: quote.totals().base_grand_total,
 
@@ -43,10 +46,19 @@ define(
                 this.accountId = window.checkoutConfig.payment[this.getCode()].accountId;
                 this.applePaySupported = !!window.ApplePaySession?.canMakePayments();
                 this.paymentMethodTitle(window.checkoutConfig.payment[this.getCode()].googleTitle);
+                this.isEnabledGooglePay(window.checkoutConfig.payment[this.getCode()].isEnabledGooglePay);
+                this.isEnabledApplePay(window.checkoutConfig.payment[this.getCode()].isEnabledApplePay);
             },
 
             checkPaymentMethods: function(){
                 monei.api.getPaymentMethods({accountId: this.accountId}).then(result => this.setTitle(result))
+            },
+
+            isMethodVisible: function () {
+                if(this.applePaySupported){
+                    return this.isEnabledApplePay();
+                }
+                return this.isEnabledGooglePay();
             },
 
             setTitle: function(result){
@@ -89,6 +101,9 @@ define(
                     style: style,
                     onLoad: function () {
                         self.isPlaceOrderActionAllowed(true);
+                    },
+                    onBeforeOpen: function () {
+                        return additionalValidators.validate();
                     },
                     onSubmit(result) {
                         if (result.error) {

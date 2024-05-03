@@ -37,14 +37,14 @@ abstract class AbstractService
     protected $moduleConfig;
 
     /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-
-    /**
      * @var UrlInterface
      */
     private $urlBuilder;
+
+    /**
+     * @var StoreManagerInterface
+     */
+    protected $storeManager;
 
     /**
      * @var SerializerInterface
