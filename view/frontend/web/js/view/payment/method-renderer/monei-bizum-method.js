@@ -6,12 +6,13 @@ define(
     [
         'jquery',
         'Monei_MoneiPayment/js/view/payment/method-renderer/monei-insite',
+        'Magento_Checkout/js/model/payment/additional-validators',
         'moneijs',
         'Magento_Checkout/js/action/redirect-on-success',
         'Magento_Ui/js/model/messageList',
         'Magento_Checkout/js/model/full-screen-loader'
     ],
-    function ($, Component, monei, redirectOnSuccessAction, globalMessageList, fullScreenLoader) {
+    function ($, Component, additionalValidators, monei, redirectOnSuccessAction, globalMessageList, fullScreenLoader) {
         'use strict';
 
         return Component.extend({
@@ -62,6 +63,10 @@ define(
                     style: style,
                     onLoad: function () {
                         self.isPlaceOrderActionAllowed(true);
+                    },
+                    onBeforeOpen: function () {
+                        return additionalValidators.validate();
+
                     },
                     onSubmit(result) {
                         if (result.error) {
