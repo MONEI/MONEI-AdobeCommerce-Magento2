@@ -55,4 +55,21 @@ class Monei
     public const BIZUM_CODE = 'monei_bizum';
 
     public const GOOGLE_APPLE_CODE = 'monei_google_apple';
+
+    public const PAYMENT_METHODS_MONEI = [
+        Monei::CODE,
+        Monei::CARD_CODE,
+        Monei::CC_VAULT_CODE,
+        Monei::BIZUM_CODE,
+        Monei::GOOGLE_APPLE_CODE
+    ];
+
+    public const MONEI_GOOGLE_CODE = 'googlePay';
+    public const MONEI_APPLE_CODE = 'applePay';
+
+    public const MAPPER_MAGENTO_MONEI_PAYMENT_CODE = [
+        Monei::BIZUM_CODE => ['bizum'],
+        Monei::GOOGLE_APPLE_CODE => [self::MONEI_GOOGLE_CODE, self::MONEI_APPLE_CODE],
+        Monei::CARD_CODE => ['card']
+    ];
 }

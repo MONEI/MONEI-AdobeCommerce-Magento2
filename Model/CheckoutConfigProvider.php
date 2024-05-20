@@ -18,6 +18,8 @@ use Monei\MoneiPayment\Api\Config\MoneiGoogleApplePaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Block\Monei\Customer\CardRenderer;
 use Monei\MoneiPayment\Model\Payment\Monei;
+use Monei\MoneiPayment\Service\Shared\IsEnabledApplePayInMoneiAccount;
+use Monei\MoneiPayment\Service\Shared\IsEnabledGooglePayInMoneiAccount;
 
 /**
  * Provides config data for payment.
@@ -30,17 +32,23 @@ class CheckoutConfigProvider implements ConfigProviderInterface
     private MoneiCardPaymentModuleConfigInterface $moneiCardPaymentConfig;
     private MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentConfig;
     private StoreManagerInterface $storeManager;
+    private IsEnabledGooglePayInMoneiAccount $isEnabledGooglePayInMoneiAccount;
+    private IsEnabledApplePayInMoneiAccount $isEnabledApplePayInMoneiAccount;
 
     public function __construct(
         UrlInterface                          $urlBuilder,
         MoneiPaymentModuleConfigInterface $moneiPaymentConfig,
         MoneiCardPaymentModuleConfigInterface $moneiCardPaymentConfig,
         MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentConfig,
+        IsEnabledGooglePayInMoneiAccount $isEnabledGooglePayInMoneiAccount,
+        IsEnabledApplePayInMoneiAccount $isEnabledApplePayInMoneiAccount,
         StoreManagerInterface                 $storeManager
     )
     {
         $this->moneiGoogleApplePaymentConfig = $moneiGoogleApplePaymentConfig;
         $this->moneiCardPaymentConfig = $moneiCardPaymentConfig;
+        $this->isEnabledGooglePayInMoneiAccount = $isEnabledGooglePayInMoneiAccount;
+        $this->isEnabledApplePayInMoneiAccount = $isEnabledApplePayInMoneiAccount;
         $this->moneiPaymentConfig = $moneiPaymentConfig;
         $this->urlBuilder = $urlBuilder;
         $this->storeManager = $storeManager;
@@ -87,6 +95,8 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                     'accountId' => $this->moneiPaymentConfig->getAccountId($this->getStoreId())
                 ],
                 Monei::GOOGLE_APPLE_CODE => [
+                    'isEnabledGooglePay' => $this->isEnabledGooglePayInMoneiAccount->execute(),
+                    'isEnabledApplePay' => $this->isEnabledApplePayInMoneiAccount->execute(),
                     'googleTitle' => $this->moneiGoogleApplePaymentConfig->getGoogleTitle($this->getStoreId()),
                     'appleTitle' => $this->moneiGoogleApplePaymentConfig->getAppleTitle($this->getStoreId()),
                     'redirectUrl' => $this->urlBuilder->getUrl('monei/payment/redirect'),
