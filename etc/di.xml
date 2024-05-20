@@ -221,4 +221,33 @@
         </arguments>
     </virtualType>
     <!-- End Monei Google and Apple payment configuration  -->
+
+    <!-- Configuration for Monei Multibanco redirect payment -->
+    <virtualType name="MoneiMultibancoRedirectPaymentValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">MoneiMultibancoRedirectPaymentValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="MoneiMultibancoRedirectPaymentValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">MoneiMultibancoRedirectPaymentConfig</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="MoneiMultibancoRedirectPaymentConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::MULTIBANCO_REDIRECT_CODE</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="MoneiMultibancoRedirectPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::MULTIBANCO_REDIRECT_CODE</argument>
+            <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
+            <argument name="infoBlockType" xsi:type="string">Monei\MoneiPayment\Block\Info\Monei</argument>
+            <argument name="valueHandlerPool" xsi:type="object">MoneiMultibancoRedirectPaymentValueHandlerPool</argument>
+            <argument name="commandPool" xsi:type="object">MoneiCommandPool</argument>
+        </arguments>
+    </virtualType>
+    <!-- End Monei Multibanco redirect payment configuration  -->
 </config>
