@@ -56,20 +56,33 @@ class Monei
 
     public const GOOGLE_APPLE_CODE = 'monei_google_apple';
 
+    public const MULTIBANCO_REDIRECT_CODE = 'monei_multibanco_redirect';
+
+    public const MBWAY_REDIRECT_CODE = 'monei_mbway_redirect';
+
     public const PAYMENT_METHODS_MONEI = [
-        Monei::CODE,
-        Monei::CARD_CODE,
-        Monei::CC_VAULT_CODE,
-        Monei::BIZUM_CODE,
-        Monei::GOOGLE_APPLE_CODE
+        self::CODE,
+        self::CARD_CODE,
+        self::CC_VAULT_CODE,
+        self::BIZUM_CODE,
+        self::GOOGLE_APPLE_CODE,
+        self::MULTIBANCO_REDIRECT_CODE,
+        self::MBWAY_REDIRECT_CODE
     ];
 
     public const MONEI_GOOGLE_CODE = 'googlePay';
     public const MONEI_APPLE_CODE = 'applePay';
 
     public const MAPPER_MAGENTO_MONEI_PAYMENT_CODE = [
-        Monei::BIZUM_CODE => ['bizum'],
-        Monei::GOOGLE_APPLE_CODE => [self::MONEI_GOOGLE_CODE, self::MONEI_APPLE_CODE],
-        Monei::CARD_CODE => ['card']
+        self::BIZUM_CODE => ['bizum'],
+        self::GOOGLE_APPLE_CODE => [self::MONEI_GOOGLE_CODE, self::MONEI_APPLE_CODE],
+        self::CARD_CODE => ['card'],
+        self::MULTIBANCO_REDIRECT_CODE => ['multibanco'],
+        self::MBWAY_REDIRECT_CODE => ['mbway']
+    ];
+
+    public const MAPPER_MAGENTO_MONEI_PAYMENT_CODE_REDIRECT = [
+        self::MULTIBANCO_REDIRECT_CODE => ['multibanco'],
+        self::MBWAY_REDIRECT_CODE => ['mbway']
     ];
 }

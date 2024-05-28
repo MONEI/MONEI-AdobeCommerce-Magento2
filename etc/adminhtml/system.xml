@@ -290,6 +290,86 @@
             </depends>
         </field>
         <!-- -->
+          <!-- MULTIBANCO REDIRECT -->
+          <field id="heading7" translate="label" sortOrder="380" showInDefault="1" showInWebsite="1" showInStore="1">
+              <label>Multibanco Redirect:</label>
+              <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
+          </field>
+          <field id="active_multibanco_redirect" translate="label comment" sortOrder="390" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+              <label>Enable</label>
+              <comment>Select 'Yes' if you want to enable this payment method. Otherwise 'No'.</comment>
+              <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+              <config_path>payment/monei_multibanco_redirect/active</config_path>
+              <backend_model>Monei\MoneiPayment\Model\Config\Backend\EnableMultibanco</backend_model>
+          </field>
+          <field id="allowspecific_multibanco_redirect" translate="label comment" sortOrder="400" type="allowspecific" showInDefault="1" showInWebsite="1" showInStore="1">
+              <label>Payment from Applicable Countries</label>
+              <source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
+              <config_path>payment/monei_multibanco_redirect/allowspecific</config_path>
+              <depends>
+                  <field id="active_multibanco_redirect">1</field>
+              </depends>
+          </field>
+          <field id="specificcountry_multibanco_redirect" translate="label comment" sortOrder="410" type="multiselect" showInDefault="1" showInWebsite="1" showInStore="1">
+              <label>Payment from Specific Countries</label>
+              <source_model>Magento\Directory\Model\Config\Source\Country</source_model>
+              <config_path>payment/monei_multibanco_redirect/specificcountry</config_path>
+              <can_be_empty>1</can_be_empty>
+              <depends>
+                  <field id="active_multibanco_redirect">1</field>
+                  <field id="allowspecific_multibanco_redirect">1</field>
+              </depends>
+          </field>
+          <field id="sort_order_multibanco_redirect" translate="label comment" sortOrder="420" type="text" showInDefault="1" showInWebsite="1">
+              <label>Sort Order</label>
+              <tooltip>In which order the payment method will be displayed in checkout</tooltip>
+              <config_path>payment/monei_multibanco_redirect/sort_order</config_path>
+              <frontend_class>validate-number</frontend_class>
+              <depends>
+                  <field id="active_multibanco_redirect">1</field>
+              </depends>
+          </field>
+          <!-- -->
+          <!-- MBWAY REDIRECT -->
+          <field id="heading8" translate="label" sortOrder="430" showInDefault="1" showInWebsite="1" showInStore="1">
+              <label>MBWay Redirect:</label>
+              <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
+          </field>
+          <field id="active_mbway_redirect" translate="label comment" sortOrder="440" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+              <label>Enable</label>
+              <comment>Select 'Yes' if you want to enable this payment method. Otherwise 'No'.</comment>
+              <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+              <config_path>payment/monei_mbway_redirect/active</config_path>
+              <backend_model>Monei\MoneiPayment\Model\Config\Backend\EnableMBWay</backend_model>
+          </field>
+          <field id="allowspecific_mbway_redirect" translate="label comment" sortOrder="450" type="allowspecific" showInDefault="1" showInWebsite="1" showInStore="1">
+              <label>Payment from Applicable Countries</label>
+              <source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
+              <config_path>payment/monei_mbway_redirect/allowspecific</config_path>
+              <depends>
+                  <field id="active_mbway_redirect">1</field>
+              </depends>
+          </field>
+          <field id="specificcountry_mbway_redirect" translate="label comment" sortOrder="460" type="multiselect" showInDefault="1" showInWebsite="1" showInStore="1">
+              <label>Payment from Specific Countries</label>
+              <source_model>Magento\Directory\Model\Config\Source\Country</source_model>
+              <config_path>payment/monei_mbway_redirect/specificcountry</config_path>
+              <can_be_empty>1</can_be_empty>
+              <depends>
+                  <field id="active_mbway_redirect">1</field>
+                  <field id="allowspecific_mbway_redirect">1</field>
+              </depends>
+          </field>
+          <field id="sort_order_mbway_redirect" translate="label comment" sortOrder="470" type="text" showInDefault="1" showInWebsite="1">
+              <label>Sort Order</label>
+              <tooltip>In which order the payment method will be displayed in checkout</tooltip>
+              <config_path>payment/monei_mbway_redirect/sort_order</config_path>
+              <frontend_class>validate-number</frontend_class>
+              <depends>
+                  <field id="active_mbway_redirect">1</field>
+              </depends>
+          </field>
+          <!-- -->
       </group>
     </section>
   </system>
