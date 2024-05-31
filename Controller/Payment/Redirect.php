@@ -14,6 +14,7 @@ use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
 use Magento\Framework\App\ActionInterface;
 use Magento\Framework\Controller\Result\Redirect as MagentoRedirect;
 use Magento\Sales\Api\Data\OrderInterface;
+use Monei\MoneiPayment\Service\Shared\GetMoneiPaymentCodesByMagentoPaymentCodeRedirect;
 
 /**
  * Monei payment redirect controller
@@ -36,6 +37,11 @@ class Redirect implements ActionInterface
     private $resultRedirectFactory;
 
     /**
+     * @var GetMoneiPaymentCodesByMagentoPaymentCodeRedirect
+     */
+    private $getMoneiPaymentCodesByMagentoPaymentCodeRedirect;
+
+    /**
      * @param Session $checkoutSession
      * @param CreatePaymentInterface $createPayment
      * @param MagentoRedirect $resultRedirectFactory
@@ -43,11 +49,13 @@ class Redirect implements ActionInterface
     public function __construct(
         Session $checkoutSession,
         CreatePaymentInterface $createPayment,
-        MagentoRedirect $resultRedirectFactory
+        MagentoRedirect $resultRedirectFactory,
+        GetMoneiPaymentCodesByMagentoPaymentCodeRedirect $getMoneiPaymentCodesByMagentoPaymentCodeRedirect
     ) {
         $this->checkoutSession = $checkoutSession;
         $this->createPayment = $createPayment;
         $this->resultRedirectFactory = $resultRedirectFactory;
+        $this->getMoneiPaymentCodesByMagentoPaymentCodeRedirect = $getMoneiPaymentCodesByMagentoPaymentCodeRedirect;
     }
 
     /**
@@ -59,14 +67,20 @@ class Redirect implements ActionInterface
          * @var $order OrderInterface
          */
         $order = $this->checkoutSession->getLastRealOrder();
+
         $data = [
             "amount"            => $order->getBaseGrandTotal() * 100,
             "orderId"           => (string) $order->getIncrementId(),
             "currency"          => $order->getBaseCurrencyCode(),
             "customer"          => $this->getCustomerDetails($order),
             "billingDetails"    => $this->getAddressDetails($order->getBillingAddress()),
-            "shippingDetails"   => $this->getAddressDetails($order->getShippingAddress()),
+            "shippingDetails"   => $this->getAddressDetails($order->getShippingAddress())
         ];
+
+        $allowedPaymentMethods =  $this->getAllowedPaymentMethods($order);
+        if($allowedPaymentMethods){
+            $data['allowedPaymentMethods'] = $allowedPaymentMethods;
+        }
 
         $result = $this->createPayment->execute($data);
         if (!isset($result['error']) && isset($result['nextAction']['redirectUrl'])) {
@@ -148,5 +162,15 @@ class Redirect implements ActionInterface
         }
 
         return $moneiAddress;
+    }
+
+    private function getAllowedPaymentMethods(OrderInterface $order): array
+    {
+        $payment = $order->getPayment();
+        $paymentCode = $payment ? $payment->getMethod() : null;
+
+        return $paymentCode
+            ? $this->getMoneiPaymentCodesByMagentoPaymentCodeRedirect->execute($paymentCode)
+            : [];
     }
 }
