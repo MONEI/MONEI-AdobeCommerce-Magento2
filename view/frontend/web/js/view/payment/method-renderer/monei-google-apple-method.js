@@ -54,6 +54,13 @@ define(
                 monei.api.getPaymentMethods({accountId: this.accountId}).then(result => this.setTitle(result))
             },
 
+            getPaymentCode: function () {
+                if(this.applePaySupported){
+                    return 'monei_apple_pay';
+                }
+                return 'monei_google_pay';
+            },
+
             isMethodVisible: function () {
                 if(this.applePaySupported){
                     return this.isEnabledApplePay();
