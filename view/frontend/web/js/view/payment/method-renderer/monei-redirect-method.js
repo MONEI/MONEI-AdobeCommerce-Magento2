@@ -23,5 +23,9 @@ define(
                     return false;
                 }
             },
+
+            getPaymentCode: function () {
+                return 'method_'+this.getCode();
+            },
         });
     });

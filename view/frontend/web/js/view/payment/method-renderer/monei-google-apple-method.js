@@ -56,9 +56,9 @@ define(
 
             getPaymentCode: function () {
                 if(this.applePaySupported){
-                    return 'monei_apple_pay';
+                    return 'method_monei_apple_pay';
                 }
-                return 'monei_google_pay';
+                return 'method_monei_google_pay';
             },
 
             isMethodVisible: function () {
