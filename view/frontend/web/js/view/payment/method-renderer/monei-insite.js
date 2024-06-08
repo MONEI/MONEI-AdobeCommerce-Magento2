@@ -104,5 +104,9 @@ define(
             redirectToFailOrder: function (status) {
                 window.location.replace(url.build(this.failOrderUrl+'?status='+status));
             },
+
+            getPaymentCode: function () {
+                return 'method_'+this.getCode();
+            },
         });
     });
