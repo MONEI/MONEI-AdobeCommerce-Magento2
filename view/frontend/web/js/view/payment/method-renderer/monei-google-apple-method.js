@@ -72,6 +72,9 @@ define(
                 if(result.paymentMethods.includes('applePay') && this.applePaySupported){
                     this.paymentMethodTitle(window.checkoutConfig.payment[this.getCode()].appleTitle);
                 }
+                if(window.checkoutConfig.isMoneiTestMode){
+                    this.paymentMethodTitle(this.paymentMethodTitle() + ' ' + $.mage.__('(Test Mode)'));
+                }
             },
 
             createMoneiPayment: function(){
