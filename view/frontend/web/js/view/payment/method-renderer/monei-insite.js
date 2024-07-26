@@ -5,6 +5,7 @@
 define(
     [
         'Magento_Checkout/js/view/payment/default',
+        'jquery',
         'mage/storage',
         'Magento_Customer/js/model/customer',
         'Magento_Checkout/js/model/quote',
@@ -13,7 +14,7 @@ define(
         'mage/url',
         'Magento_Checkout/js/model/full-screen-loader'
     ],
-    function (Component, storage, customer, quote, urlBuilder, globalMessageList, url, fullScreenLoader) {
+    function (Component, $, storage, customer, quote, urlBuilder, globalMessageList, url, fullScreenLoader) {
         'use strict';
 
         return Component.extend({
@@ -107,6 +108,15 @@ define(
 
             getPaymentCode: function () {
                 return 'method_'+this.getCode();
+            },
+
+            getTitle: function () {
+                var title = this._super();
+                if(window.checkoutConfig.isMoneiTestMode){
+                    title = title + ' ' + $.mage.__('(Test Mode)');
+                }
+
+                return title;
             },
         });
     });

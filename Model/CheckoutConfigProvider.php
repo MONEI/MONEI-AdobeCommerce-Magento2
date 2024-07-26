@@ -17,6 +17,7 @@ use Monei\MoneiPayment\Api\Config\MoneiCardPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Config\MoneiGoogleApplePaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Block\Monei\Customer\CardRenderer;
+use Monei\MoneiPayment\Model\Config\Source\Mode;
 use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Service\Shared\IsEnabledApplePayInMoneiAccount;
 use Monei\MoneiPayment\Service\Shared\IsEnabledGooglePayInMoneiAccount;
@@ -59,6 +60,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
         return [
             'moneiAccountId' => $this->moneiPaymentConfig->getAccountId($this->getStoreId()),
             'moneiApiKey' => $this->moneiPaymentConfig->getApiKey($this->getStoreId()),
+            'isMoneiTestMode' => $this->moneiPaymentConfig->getMode($this->getStoreId()) === Mode::MODE_TEST,
             'payment' => [
                 Monei::CODE => [
                     'redirectUrl' => $this->urlBuilder->getUrl('monei/payment/redirect'),
