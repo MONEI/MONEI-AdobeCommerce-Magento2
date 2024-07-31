@@ -20,7 +20,7 @@ class EnableCard extends Enable
      */
     public function beforeSave(): EnableCard
     {
-        if (!$this->isPaymentAvailable() && $this->getValue()) {
+        if ($this->getValue() && !$this->isPaymentAvailable()) {
             $this->setValue("0");
             // phpcs:disable
             $this->messageManager->addNoticeMessage(
