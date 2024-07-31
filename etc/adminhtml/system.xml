@@ -55,6 +55,10 @@
         <field id="heading2" translate="label" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Basic settings:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
+            <depends>
+                <field id="test_api_key"></field>
+                <field id="production_api_key"></field>
+            </depends>
         </field>
         <field id="type_of_payment" translate="label comment" sortOrder="70" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Type of payment</label>
