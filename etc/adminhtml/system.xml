@@ -25,6 +25,7 @@
         <field id="test_account_id" translate="label comment" sortOrder="35" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Test Account Id</label>
           <validate>required-entry</validate>
+          <backend_model>Monei\MoneiPayment\Model\Config\Backend\AccountId</backend_model>
           <depends>
             <field id="mode">1</field>
           </depends>
@@ -32,6 +33,7 @@
         <field id="production_account_id" translate="label comment" sortOrder="35" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Production Account Id</label>
           <validate>required-entry</validate>
+          <backend_model>Monei\MoneiPayment\Model\Config\Backend\AccountId</backend_model>
           <depends>
             <field id="mode">2</field>
           </depends>
@@ -58,25 +60,16 @@
             <label>Type of payment</label>
             <comment>If client wants to work with pre-authorized payments or not.</comment>
             <source_model>Monei\MoneiPayment\Model\Config\Source\TypeOfPayment</source_model>
-            <depends>
-                <field id="active">1</field>
-            </depends>
           </field>
         <field id="confirmed_status" translate="label comment" type="select" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Confirmed Status</label>
             <source_model>Magento\Sales\Model\Config\Source\Order\Status\Processing</source_model>
               <comment>Selectable with all the processing order statuses</comment>
-            <depends>
-                <field id="active">1</field>
-            </depends>
         </field>
         <field id="pre_authorized_status" translate="label comment" type="select" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Pre-authorized Status</label>
             <source_model>Monei\MoneiPayment\Model\Config\Source\PendingStatus</source_model>
             <comment>Selectable with all the pending order statuses</comment>
-            <depends>
-                <field id="active">1</field>
-            </depends>
         </field>
         <field id="heading3" translate="label" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Monei Redirect:</label>
