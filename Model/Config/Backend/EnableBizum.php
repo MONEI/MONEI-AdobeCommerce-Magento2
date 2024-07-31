@@ -20,7 +20,7 @@ class EnableBizum extends Enable
      */
     public function beforeSave(): EnableBizum
     {
-        if (!$this->isPaymentAvailable() && $this->getValue()) {
+        if ($this->getValue() && !$this->isPaymentAvailable()) {
             $this->setValue("0");
             // phpcs:disable
             $this->messageManager->addNoticeMessage(
