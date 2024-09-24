@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service;
 
+use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
 use Magento\Sales\Api\Data\OrderInterfaceFactory;
@@ -31,15 +32,22 @@ class SetOrderStatusAndState implements SetOrderStatusAndStateInterface
     private $orderRepository;
 
     /**
+     * @var MoneiPaymentModuleConfigInterface
+     */
+    private $moduleConfig;
+
+    /**
      * @param OrderInterfaceFactory    $orderFactory
      * @param OrderRepositoryInterface $orderRepository
      */
     public function __construct(
         OrderInterfaceFactory $orderFactory,
-        OrderRepositoryInterface $orderRepository
+        OrderRepositoryInterface $orderRepository,
+        MoneiPaymentModuleConfigInterface $moduleConfig
     ) {
         $this->orderFactory = $orderFactory;
         $this->orderRepository = $orderRepository;
+        $this->moduleConfig = $moduleConfig;
     }
 
     /**
@@ -47,6 +55,7 @@ class SetOrderStatusAndState implements SetOrderStatusAndStateInterface
      */
     public function execute(array $data): bool
     {
+        /** @var OrderInterface $order */
         $order = $this->orderFactory->create()->loadByIncrementId($data['orderId']);
         $oldOrderStatus = $order->getStatus();
         $status = $data['status'] ?? null;
@@ -73,7 +82,8 @@ class SetOrderStatusAndState implements SetOrderStatusAndStateInterface
                 $orderState = Order::STATE_CANCELED;
                 break;
             case Monei::ORDER_STATUS_SUCCEEDED:
-                $orderStatus = Monei::STATUS_MONEI_SUCCEDED;
+                $orderStatus = $this->moduleConfig->getConfirmedStatus($order->getStoreId())
+                    ?? Monei::STATUS_MONEI_SUCCEDED;
                 $orderState = Order::STATE_PROCESSING;
                 break;
             case Monei::ORDER_STATUS_PARTIALLY_REFUNDED:
