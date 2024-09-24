@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Observer;
 
+use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
@@ -26,12 +27,18 @@ class SetOrderStatusAfterInvoice implements ObserverInterface
     private $orderRepository;
 
     /**
+     * @var MoneiPaymentModuleConfigInterface
+     */
+    private $moduleConfig;
+    /**
      * @param OrderRepositoryInterface $orderRepository
      */
     public function __construct(
-        OrderRepositoryInterface $orderRepository
+        OrderRepositoryInterface $orderRepository,
+        MoneiPaymentModuleConfigInterface $moduleConfig
     ) {
         $this->orderRepository = $orderRepository;
+        $this->moduleConfig = $moduleConfig;
     }
 
     /**
@@ -42,7 +49,8 @@ class SetOrderStatusAfterInvoice implements ObserverInterface
         $order = $observer->getOrder();
         $invoice = $observer->getInvoice();
         if ($order->getData('monei_payment_id') !== null && $invoice->getIsPaid() === true) {
-            $orderStatus = Monei::STATUS_MONEI_SUCCEDED;
+            $orderStatus = $this->moduleConfig->getConfirmedStatus($order->getStoreId())
+                ?? Monei::STATUS_MONEI_SUCCEDED;
             $orderState = Order::STATE_PROCESSING;
             $order->setStatus($orderStatus)->setState($orderState);
             $this->orderRepository->save($order);
