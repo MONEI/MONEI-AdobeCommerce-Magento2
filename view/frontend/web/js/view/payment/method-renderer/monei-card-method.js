@@ -211,7 +211,7 @@ define(
 
                     return false;
                 }
-                var regExp = /^[A-Za-zÀ-ú ]{5,50}$/;
+                var regExp = /^[A-Za-zÀ-ú- ]{5,50}$/;
                 if (!regExp.test(cardHolderName)) {
                     // Mostrar un mensaje de error si no cumple
                     this.errorMessageCardHolderName($.mage.__('Please enter the name exactly as it appears on the card.'));
