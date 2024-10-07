@@ -32,7 +32,9 @@ define(
             idCardError: 'monei-insite-card-error',
             isEnabledTokenization: false,
             failOrderStatus: '',
+            language: 'en',
             accountId: '',
+            jsonStyle: JSON.parse('{"base":{"height":"30px","padding":"0","font-size":"14px"},"input":{"height":"30px"}}'),
             cardHolderNameValid: ko.observable(true),
             errorMessageCardHolderName: ko.observable(''),
             checkedVault: ko.observable(false),
@@ -50,9 +52,11 @@ define(
             },
 
             initMoneiPaymentVariables: function(){
+                this.language = window.checkoutConfig.moneiLanguage ?? this.language;
                 this.isEnabledTokenization = window.checkoutConfig.payment[this.getCode()].isEnabledTokenization;
                 this.failOrderStatus = window.checkoutConfig.payment[this.getCode()].failOrderStatus;
                 this.accountId = window.checkoutConfig.payment[this.getCode()].accountId;
+                this.jsonStyle = window.checkoutConfig.payment[this.getCode()].jsonStyle ?? this.jsonStyle;
             },
 
             initMoneiObservable: function(){
@@ -120,21 +124,12 @@ define(
                 var self = this;
                 this.container = document.getElementById(this.idCardInput);
                 this.errorText = document.getElementById(this.idCardError);
-                var style = {
-                    base: {
-                        'height': '30px',
-                        'padding': '0',
-                        'font-size': '14px'
-                    },
-                    input: {
-                        'height': '30px',
-                    }
-                };
                 // Create an instance of the Card Input using payment_id.
                 this.cardInput = monei.CardInput({
                     // paymentId: paymentId,
                     accountId: this.accountId,
-                    style: style,
+                    language: this.language,
+                    style: this.jsonStyle,
                     onChange: function (event) {
                         // Handle real-time validation errors.
                         if (event.isTouched && event.error) {

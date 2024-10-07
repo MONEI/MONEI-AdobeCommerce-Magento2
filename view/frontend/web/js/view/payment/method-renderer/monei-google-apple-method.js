@@ -26,7 +26,9 @@ define(
             idGoogleAppleContainer: 'monei_google_apple_insite_container',
             failOrderStatus: '',
             applePaySupported: '',
+            language: 'en',
             accountId: '',
+            jsonStyle: JSON.parse('{"base":{"height":"45px"}}'),
             isEnabledGooglePay: ko.observable(false),
             isEnabledApplePay: ko.observable(false),
             paymentMethodTitle: ko.observable(''),
@@ -42,8 +44,10 @@ define(
             },
 
             initMoneiPaymentVariables: function(){
+                this.language = window.checkoutConfig.moneiLanguage ?? this.language;
                 this.failOrderStatus = window.checkoutConfig.payment[this.getCode()].failOrderStatus;
                 this.accountId = window.checkoutConfig.payment[this.getCode()].accountId;
+                this.jsonStyle = window.checkoutConfig.payment[this.getCode()].jsonStyle ?? this.jsonStyle;
                 this.applePaySupported = !!window.ApplePaySession?.canMakePayments();
                 this.paymentMethodTitle(window.checkoutConfig.payment[this.getCode()].googleTitle);
                 this.isEnabledGooglePay(window.checkoutConfig.payment[this.getCode()].isEnabledGooglePay);
@@ -97,18 +101,14 @@ define(
             renderGoogleApple: function(){
                 var self = this;
                 this.container = document.getElementById(this.idGoogleAppleContainer);
-                var style = {
-                    base: {
-                        'height': '45px'
-                    }
-                };
 
                 // Create an instance of the Google and Apple using payment_id.
                 this.googleAppleContainer = monei.PaymentRequest({
                     accountId: this.accountId,
                     amount: (quote.totals().base_grand_total)*100,
                     currency: quote.totals().base_currency_code,
-                    style: style,
+                    language: this.language,
+                    style: this.jsonStyle,
                     onLoad: function () {
                         self.isPlaceOrderActionAllowed(true);
                     },
