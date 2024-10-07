@@ -193,10 +193,9 @@ define(
 
             validate: function (){
                 var cardHolderName = $('#'+this.idCardHolderInput).val();
-                this.validateCardHolderName(cardHolderName);
                 quote.setMoneiCardholderName(cardHolderName);
 
-                return true;
+                return this.validateCardHolderName(cardHolderName);
             },
 
             validateCardHolderName: function (cardHolderName) {
@@ -215,6 +214,8 @@ define(
                 }
 
                 this.cardHolderNameValid(true);
+
+                return true;
             },
 
             /** Confirm the payment in monei */
