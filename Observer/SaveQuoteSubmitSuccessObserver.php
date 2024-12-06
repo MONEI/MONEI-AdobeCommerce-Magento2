@@ -16,30 +16,19 @@ use Magento\Quote\Model\Quote;
 use Magento\Sales\Model\Order;
 use Monei\MoneiPayment\Model\Payment\Monei;
 
-class SaveOrderBeforeSalesModelQuoteObserver implements ObserverInterface
+class SaveQuoteSubmitSuccessObserver implements ObserverInterface
 {
-    private Copy $objectCopyService;
-
-    public function __construct(Copy $objectCopyService)
-    {
-        $this->objectCopyService = $objectCopyService;
-    }
-
     /**
      * @param Observer $observer
-     * @return SaveOrderBeforeSalesModelQuoteObserver
+     * @return SaveQuoteSubmitSuccessObserver
      */
-    public function execute(Observer $observer): SaveOrderBeforeSalesModelQuoteObserver
+    public function execute(Observer $observer): SaveQuoteSubmitSuccessObserver
     {
         /* @var Order $order */
         $order = $observer->getEvent()->getData('order');
-        /* @var Quote $quote */
-        $quote = $observer->getEvent()->getData('quote');
-
-        $this->objectCopyService->copyFieldsetToTarget('sales_convert_quote', 'to_order', $quote, $order);
 
         if (in_array($order->getPayment()->getMethod(), Monei::PAYMENT_METHODS_MONEI)) {
-            $order->setCanSendNewEmailFlag(false);
+            $order->setCanSendNewEmailFlag(true);
         }
 
         return $this;
