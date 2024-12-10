@@ -15,6 +15,13 @@ use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 
 class Monei extends Info
 {
+    private const INFO_PAY_ALLOWED = [
+        'method',
+        'last4',
+        'brand',
+        'phoneNumber',
+    ];
+
     /**
      * Monei template
      *
@@ -81,5 +88,10 @@ class Monei extends Info
         }
 
         return null;
+    }
+
+    public function getInfoPayAllowed(): array
+    {
+        return self::INFO_PAY_ALLOWED;
     }
 }
