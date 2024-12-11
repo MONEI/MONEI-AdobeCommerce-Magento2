@@ -52,6 +52,10 @@
               <field id="mode">2</field>
           </depends>
         </field>
+        <field id="language" translate="label comment" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+          <label>Language</label>
+          <source_model>Monei\MoneiPayment\Model\Config\Source\Language</source_model>
+        </field>
         <field id="heading2" translate="label" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Basic settings:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
@@ -173,6 +177,14 @@
                 <field id="active_card_insite">1</field>
             </depends>
         </field>
+        <field id="json_style_card_insite" translate="label comment" sortOrder="251" type="textarea" showInDefault="1" showInWebsite="1">
+            <label>Json style</label>
+            <comment><![CDATA[Custom json style for the card component. View more info <a href="https://docs.monei.com/docs/monei-js/reference/#cardinput-style-object" target="_blank" rel="noopener noreferrer">here</a>]]></comment>
+            <config_path>payment/monei_card/json_style</config_path>
+            <depends>
+                <field id="active_card_insite">1</field>
+            </depends>
+        </field>
         <!-- -->
         <!-- BIZUM INSITE -->
         <field id="heading5" translate="label" sortOrder="260" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -220,6 +232,14 @@
             <depends>
                 <field id="active_bizum_insite">1</field>
             </depends>
+        </field>
+        <field id="json_style_bizum_insite" translate="label comment" sortOrder="311" type="textarea" showInDefault="1" showInWebsite="1">
+              <label>Json style</label>
+              <comment><![CDATA[Custom json style for the bizum component. View more info <a href="https://docs.monei.com/docs/monei-js/reference/#bizum-options" target="_blank" rel="noopener noreferrer">here</a>]]></comment>
+              <config_path>payment/monei_bizum/json_style</config_path>
+              <depends>
+                  <field id="active_bizum_insite">1</field>
+              </depends>
         </field>
         <!-- -->
         <!-- GOOGLE APPLE INSITE -->
@@ -281,6 +301,14 @@
             <depends>
                 <field id="active_google_apple_insite">1</field>
             </depends>
+        </field>
+        <field id="json_style_google_apple_insite" translate="label comment" sortOrder="371" type="textarea" showInDefault="1" showInWebsite="1">
+              <label>Json style</label>
+              <comment><![CDATA[Custom json style for the google and apple component. View more info <a href="https://docs.monei.com/docs/monei-js/reference/#paymentrequest-options" target="_blank" rel="noopener noreferrer">here</a>]]></comment>
+              <config_path>payment/monei_google_apple/json_style</config_path>
+              <depends>
+                  <field id="active_google_apple_insite">1</field>
+              </depends>
         </field>
         <!-- -->
           <!-- MULTIBANCO REDIRECT -->

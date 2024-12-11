@@ -97,4 +97,18 @@ class MoneiCardPaymentModuleConfig implements MoneiCardPaymentModuleConfigInterf
             $storeId
         );
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function getJsonStyle(int $storeId = null): array
+    {
+        $result = (string) $this->scopeConfig->getValue(
+            self::JSON_STYLE,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+
+        return $result ? json_decode($result, true) : [];
+    }
 }

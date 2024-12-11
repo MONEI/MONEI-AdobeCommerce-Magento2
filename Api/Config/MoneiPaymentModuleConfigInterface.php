@@ -30,6 +30,8 @@ interface MoneiPaymentModuleConfigInterface
 
     public const PRODUCTION_API_KEY = 'payment/monei/production_api_key';
 
+    public const LANGUAGE = 'payment/monei/language';
+
     public const TITLE = 'payment/monei/title';
 
     public const DESCRIPTION = 'payment/monei/description';
@@ -134,6 +136,14 @@ interface MoneiPaymentModuleConfigInterface
      * @return string
      */
     public function getProductionApiKey($storeId = null): string;
+
+    /**
+     * Get language
+     *
+     * @param int|null $storeId
+     * @return string
+     */
+    public function getLanguage(int $storeId = null): string;
 
     /**
      * Get payment method title
