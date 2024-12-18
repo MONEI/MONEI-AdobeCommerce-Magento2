@@ -23,7 +23,9 @@ define(
             bizumContainer: null,
             idBizumContainer: 'monei_bizum_insite_container',
             failOrderStatus: '',
+            language: 'en',
             accountId: '',
+            jsonStyle: JSON.parse('{"base":{"height":"45px"}}'),
 
             initialize: function () {
                 this._super();
@@ -34,8 +36,10 @@ define(
             },
 
             initMoneiPaymentVariables: function(){
+                this.language = window.checkoutConfig.moneiLanguage ?? this.language;
                 this.failOrderStatus = window.checkoutConfig.payment[this.getCode()].failOrderStatus;
                 this.accountId = window.checkoutConfig.payment[this.getCode()].accountId;
+                this.jsonStyle = window.checkoutConfig.payment[this.getCode()].jsonStyle ?? this.jsonStyle;
             },
 
             createMoneiPayment: function(){
@@ -51,16 +55,12 @@ define(
             renderBizum: function(){
                 var self = this;
                 this.container = document.getElementById(this.idBizumContainer);
-                var style = {
-                    base: {
-                        'height': '45px'
-                    }
-                };
 
                 // Create an instance of the Bizum using payment_id.
                 this.bizumContainer = monei.Bizum({
                     accountId: this.accountId,
-                    style: style,
+                    language: this.language,
+                    style: this.jsonStyle,
                     onLoad: function () {
                         self.isPlaceOrderActionAllowed(true);
                     },

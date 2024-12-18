@@ -4,6 +4,7 @@ node_modules
 .composer.lock
 
 # Yarn
+/build/.pnp.*
 /build/.yarn/*
 !/build/.yarn/patches
 !/build/.yarn/plugins
