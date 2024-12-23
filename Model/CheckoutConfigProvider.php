@@ -13,11 +13,13 @@ use Magento\Checkout\Model\ConfigProviderInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Model\StoreManagerInterface;
+use Monei\MoneiPayment\Api\Config\AllMoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Config\MoneiBizumPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Config\MoneiCardPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Config\MoneiGoogleApplePaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Block\Monei\Customer\CardRenderer;
+use Monei\MoneiPayment\Model\Config\AllMoneiPaymentModuleConfig;
 use Monei\MoneiPayment\Model\Config\Source\Mode;
 use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Service\Shared\IsEnabledApplePayInMoneiAccount;
@@ -40,6 +42,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
 
     public function __construct(
         UrlInterface                          $urlBuilder,
+        AllMoneiPaymentModuleConfigInterface $allMoneiPaymentModuleConfig,
         MoneiPaymentModuleConfigInterface $moneiPaymentConfig,
         MoneiCardPaymentModuleConfigInterface $moneiCardPaymentConfig,
         MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentConfig,
@@ -49,6 +52,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
         StoreManagerInterface                 $storeManager
     )
     {
+        $this->allMoneiPaymentModuleConfig = $allMoneiPaymentModuleConfig;
         $this->moneiGoogleApplePaymentConfig = $moneiGoogleApplePaymentConfig;
         $this->moneiBizumPaymentModuleConfig = $moneiBizumPaymentModuleConfig;
         $this->moneiCardPaymentConfig = $moneiCardPaymentConfig;
@@ -65,6 +69,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
         return [
             'moneiAccountId' => $this->moneiPaymentConfig->getAccountId($storeId),
             'moneiApiKey' => $this->moneiPaymentConfig->getApiKey($storeId),
+            'moneiPaymentIsEnabled' => $this->allMoneiPaymentModuleConfig->isAnyPaymentEnabled($storeId),
             'isMoneiTestMode' => $this->moneiPaymentConfig->getMode($storeId) === Mode::MODE_TEST,
             'moneiLanguage' => $this->moneiPaymentConfig->getLanguage($storeId),
             'payment' => [

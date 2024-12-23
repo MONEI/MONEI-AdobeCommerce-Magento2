@@ -5,6 +5,8 @@
   -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="Monei\MoneiPayment\Api\Config\AllMoneiPaymentModuleConfigInterface"
+                type="Monei\MoneiPayment\Model\Config\AllMoneiPaymentModuleConfig"/>
     <preference for="Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface"
                 type="Monei\MoneiPayment\Model\Config\MoneiPaymentModuleConfig"/>
     <preference for="Monei\MoneiPayment\Api\Config\MoneiCardPaymentModuleConfigInterface"

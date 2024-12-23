@@ -12,6 +12,7 @@ define([
 
         accountId: '',
         apiKey: '',
+        isEnabled: false,
 
         initialize: function () {
             this._super();
@@ -25,7 +26,8 @@ define([
         showErrorMessages: function () {
             this.accountId = window.checkoutConfig.moneiAccountId;
             this.apiKey = window.checkoutConfig.moneiApiKey;
-            if(!this.accountId || !this.apiKey) {
+            this.isEnabled = window.checkoutConfig.moneiPaymentIsEnabled;
+            if(this.isEnabled && (!this.accountId || !this.apiKey)) {
                 globalMessageList.addErrorMessage({
                     message: $.mage.__('Monei payment methods are not available. Please, check your Monei configuration.')
                 });
