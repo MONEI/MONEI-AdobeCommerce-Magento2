@@ -156,6 +156,18 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
     /**
      * @inheritDoc
      */
+    public function getLanguage(int $storeId = null): string
+    {
+        return (string) $this->scopeConfig->getValue(
+            self::LANGUAGE,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function getTitle($storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(

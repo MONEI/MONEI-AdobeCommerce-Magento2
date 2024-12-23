@@ -156,7 +156,7 @@ class Complete implements ActionInterface
                 $this->orderRepository->save($order);
 
                 // send Order email
-                if ($order->getCanSendNewEmailFlag()) {
+                if ($order->getCanSendNewEmailFlag() && !$order->getEmailSent()) {
                     try {
                         $this->orderSender->send($order);
                     } catch (\Exception $e) {

@@ -5,10 +5,11 @@
 define(
     [
         'Magento_Checkout/js/view/payment/default',
+        'jquery',
         'Monei_MoneiPayment/js/action/set-payment-method',
         'Magento_Checkout/js/model/payment/additional-validators'
     ],
-    function (Component, setPaymentMethodAction, additionalValidators) {
+    function (Component, $, setPaymentMethodAction, additionalValidators) {
         'use strict';
 
         return Component.extend({
@@ -22,6 +23,19 @@ define(
                     setPaymentMethodAction(this.messageContainer);
                     return false;
                 }
+            },
+
+            getPaymentCode: function () {
+                return 'method_'+this.getCode();
+            },
+
+            getTitle: function () {
+                var title = this._super();
+                if(window.checkoutConfig.isMoneiTestMode){
+                    title = title + ' ' + $.mage.__('(Test Mode)');
+                }
+
+                return title;
             },
         });
     });

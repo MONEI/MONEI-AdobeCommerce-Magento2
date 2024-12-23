@@ -1,0 +1,6 @@
+.payment-method.monei-payment-methods .payment-method-title label{
+    display: inline-flex;
+}
+.payment-method.monei-payment-methods .payment-method-title label span:first-child {
+    padding-right: 10px;
+}

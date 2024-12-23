@@ -5,7 +5,10 @@
   -->
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <head>
+        <css src="Monei_MoneiPayment::css/monei-payment.css" />
         <css src="Monei_MoneiPayment::css/card-input.css" />
+        <css src="Monei_MoneiPayment::css/mbway.css" />
+        <css src="Monei_MoneiPayment::css/multibanco.css" />
         <css src="Monei_MoneiPayment::css/bizum.css" />
         <css src="Monei_MoneiPayment::css/google-apple.css" />
     </head>
@@ -57,6 +60,24 @@
                                                                     <item name="component" xsi:type="string">Monei_MoneiPayment/js/view/payment/monei-google-apple</item>
                                                                     <item name="methods" xsi:type="array">
                                                                         <item name="monei_google_apple" xsi:type="array">
+                                                                            <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
+                                                                        </item>
+                                                                    </item>
+                                                                </item>
+                                                                <item name="monei-multibanco-redirect-payment"
+                                                                      xsi:type="array">
+                                                                    <item name="component" xsi:type="string">Monei_MoneiPayment/js/view/payment/monei-multibanco-redirect</item>
+                                                                    <item name="methods" xsi:type="array">
+                                                                        <item name="monei_multibanco_redirect" xsi:type="array">
+                                                                            <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
+                                                                        </item>
+                                                                    </item>
+                                                                </item>
+                                                                <item name="monei-mbway-redirect-payment"
+                                                                      xsi:type="array">
+                                                                    <item name="component" xsi:type="string">Monei_MoneiPayment/js/view/payment/monei-mbway-redirect</item>
+                                                                    <item name="methods" xsi:type="array">
+                                                                        <item name="monei_mbway_redirect" xsi:type="array">
                                                                             <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
                                                                         </item>
                                                                     </item>

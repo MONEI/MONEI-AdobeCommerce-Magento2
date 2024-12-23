@@ -24,6 +24,8 @@ interface MoneiBizumPaymentModuleConfigInterface
 
     public const SORT_ORDER = 'payment/monei_bizum/sort_order';
 
+    public const JSON_STYLE = 'payment/monei_bizum/json_style';
+
     /**
      * Check if payment method is enabled
      *
@@ -63,4 +65,12 @@ interface MoneiBizumPaymentModuleConfigInterface
      * @return int
      */
     public function getSortOrder(int $storeId = null): int;
+
+    /**
+     * Get json style for payment method
+     *
+     * @param int|null $storeId
+     * @return array
+     */
+    public function getJsonStyle(int $storeId = null): array;
 }

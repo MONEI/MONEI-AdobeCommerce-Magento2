@@ -25,6 +25,7 @@
         <field id="test_account_id" translate="label comment" sortOrder="35" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Test Account Id</label>
           <validate>required-entry</validate>
+          <backend_model>Monei\MoneiPayment\Model\Config\Backend\AccountId</backend_model>
           <depends>
             <field id="mode">1</field>
           </depends>
@@ -32,6 +33,7 @@
         <field id="production_account_id" translate="label comment" sortOrder="35" type="text" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Production Account Id</label>
           <validate>required-entry</validate>
+          <backend_model>Monei\MoneiPayment\Model\Config\Backend\AccountId</backend_model>
           <depends>
             <field id="mode">2</field>
           </depends>
@@ -50,6 +52,10 @@
               <field id="mode">2</field>
           </depends>
         </field>
+        <field id="language" translate="label comment" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+          <label>Language</label>
+          <source_model>Monei\MoneiPayment\Model\Config\Source\Language</source_model>
+        </field>
         <field id="heading2" translate="label" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Basic settings:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
@@ -58,25 +64,16 @@
             <label>Type of payment</label>
             <comment>If client wants to work with pre-authorized payments or not.</comment>
             <source_model>Monei\MoneiPayment\Model\Config\Source\TypeOfPayment</source_model>
-            <depends>
-                <field id="active">1</field>
-            </depends>
           </field>
         <field id="confirmed_status" translate="label comment" type="select" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Confirmed Status</label>
             <source_model>Magento\Sales\Model\Config\Source\Order\Status\Processing</source_model>
               <comment>Selectable with all the processing order statuses</comment>
-            <depends>
-                <field id="active">1</field>
-            </depends>
         </field>
         <field id="pre_authorized_status" translate="label comment" type="select" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Pre-authorized Status</label>
             <source_model>Monei\MoneiPayment\Model\Config\Source\PendingStatus</source_model>
             <comment>Selectable with all the pending order statuses</comment>
-            <depends>
-                <field id="active">1</field>
-            </depends>
         </field>
         <field id="heading3" translate="label" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Monei Redirect:</label>
@@ -180,6 +177,14 @@
                 <field id="active_card_insite">1</field>
             </depends>
         </field>
+        <field id="json_style_card_insite" translate="label comment" sortOrder="251" type="textarea" showInDefault="1" showInWebsite="1">
+            <label>Json style</label>
+            <comment><![CDATA[Custom json style for the card component. View more info <a href="https://docs.monei.com/docs/monei-js/reference/#cardinput-style-object" target="_blank" rel="noopener noreferrer">here</a>]]></comment>
+            <config_path>payment/monei_card/json_style</config_path>
+            <depends>
+                <field id="active_card_insite">1</field>
+            </depends>
+        </field>
         <!-- -->
         <!-- BIZUM INSITE -->
         <field id="heading5" translate="label" sortOrder="260" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -227,6 +232,14 @@
             <depends>
                 <field id="active_bizum_insite">1</field>
             </depends>
+        </field>
+        <field id="json_style_bizum_insite" translate="label comment" sortOrder="311" type="textarea" showInDefault="1" showInWebsite="1">
+              <label>Json style</label>
+              <comment><![CDATA[Custom json style for the bizum component. View more info <a href="https://docs.monei.com/docs/monei-js/reference/#bizum-options" target="_blank" rel="noopener noreferrer">here</a>]]></comment>
+              <config_path>payment/monei_bizum/json_style</config_path>
+              <depends>
+                  <field id="active_bizum_insite">1</field>
+              </depends>
         </field>
         <!-- -->
         <!-- GOOGLE APPLE INSITE -->
@@ -289,7 +302,95 @@
                 <field id="active_google_apple_insite">1</field>
             </depends>
         </field>
+        <field id="json_style_google_apple_insite" translate="label comment" sortOrder="371" type="textarea" showInDefault="1" showInWebsite="1">
+              <label>Json style</label>
+              <comment><![CDATA[Custom json style for the google and apple component. View more info <a href="https://docs.monei.com/docs/monei-js/reference/#paymentrequest-options" target="_blank" rel="noopener noreferrer">here</a>]]></comment>
+              <config_path>payment/monei_google_apple/json_style</config_path>
+              <depends>
+                  <field id="active_google_apple_insite">1</field>
+              </depends>
+        </field>
         <!-- -->
+          <!-- MULTIBANCO REDIRECT -->
+          <field id="heading7" translate="label" sortOrder="380" showInDefault="1" showInWebsite="1" showInStore="1">
+              <label>Multibanco Redirect:</label>
+              <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
+          </field>
+          <field id="active_multibanco_redirect" translate="label comment" sortOrder="390" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+              <label>Enable</label>
+              <comment>Select 'Yes' if you want to enable this payment method. Otherwise 'No'.</comment>
+              <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+              <config_path>payment/monei_multibanco_redirect/active</config_path>
+              <backend_model>Monei\MoneiPayment\Model\Config\Backend\EnableMultibanco</backend_model>
+          </field>
+          <field id="allowspecific_multibanco_redirect" translate="label comment" sortOrder="400" type="allowspecific" showInDefault="1" showInWebsite="1" showInStore="1">
+              <label>Payment from Applicable Countries</label>
+              <source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
+              <config_path>payment/monei_multibanco_redirect/allowspecific</config_path>
+              <depends>
+                  <field id="active_multibanco_redirect">1</field>
+              </depends>
+          </field>
+          <field id="specificcountry_multibanco_redirect" translate="label comment" sortOrder="410" type="multiselect" showInDefault="1" showInWebsite="1" showInStore="1">
+              <label>Payment from Specific Countries</label>
+              <source_model>Magento\Directory\Model\Config\Source\Country</source_model>
+              <config_path>payment/monei_multibanco_redirect/specificcountry</config_path>
+              <can_be_empty>1</can_be_empty>
+              <depends>
+                  <field id="active_multibanco_redirect">1</field>
+                  <field id="allowspecific_multibanco_redirect">1</field>
+              </depends>
+          </field>
+          <field id="sort_order_multibanco_redirect" translate="label comment" sortOrder="420" type="text" showInDefault="1" showInWebsite="1">
+              <label>Sort Order</label>
+              <tooltip>In which order the payment method will be displayed in checkout</tooltip>
+              <config_path>payment/monei_multibanco_redirect/sort_order</config_path>
+              <frontend_class>validate-number</frontend_class>
+              <depends>
+                  <field id="active_multibanco_redirect">1</field>
+              </depends>
+          </field>
+          <!-- -->
+          <!-- MBWAY REDIRECT -->
+          <field id="heading8" translate="label" sortOrder="430" showInDefault="1" showInWebsite="1" showInStore="1">
+              <label>MBWay Redirect:</label>
+              <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
+          </field>
+          <field id="active_mbway_redirect" translate="label comment" sortOrder="440" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+              <label>Enable</label>
+              <comment>Select 'Yes' if you want to enable this payment method. Otherwise 'No'.</comment>
+              <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+              <config_path>payment/monei_mbway_redirect/active</config_path>
+              <backend_model>Monei\MoneiPayment\Model\Config\Backend\EnableMBWay</backend_model>
+          </field>
+          <field id="allowspecific_mbway_redirect" translate="label comment" sortOrder="450" type="allowspecific" showInDefault="1" showInWebsite="1" showInStore="1">
+              <label>Payment from Applicable Countries</label>
+              <source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
+              <config_path>payment/monei_mbway_redirect/allowspecific</config_path>
+              <depends>
+                  <field id="active_mbway_redirect">1</field>
+              </depends>
+          </field>
+          <field id="specificcountry_mbway_redirect" translate="label comment" sortOrder="460" type="multiselect" showInDefault="1" showInWebsite="1" showInStore="1">
+              <label>Payment from Specific Countries</label>
+              <source_model>Magento\Directory\Model\Config\Source\Country</source_model>
+              <config_path>payment/monei_mbway_redirect/specificcountry</config_path>
+              <can_be_empty>1</can_be_empty>
+              <depends>
+                  <field id="active_mbway_redirect">1</field>
+                  <field id="allowspecific_mbway_redirect">1</field>
+              </depends>
+          </field>
+          <field id="sort_order_mbway_redirect" translate="label comment" sortOrder="470" type="text" showInDefault="1" showInWebsite="1">
+              <label>Sort Order</label>
+              <tooltip>In which order the payment method will be displayed in checkout</tooltip>
+              <config_path>payment/monei_mbway_redirect/sort_order</config_path>
+              <frontend_class>validate-number</frontend_class>
+              <depends>
+                  <field id="active_mbway_redirect">1</field>
+              </depends>
+          </field>
+          <!-- -->
       </group>
     </section>
   </system>
