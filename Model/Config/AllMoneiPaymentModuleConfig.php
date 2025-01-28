@@ -27,7 +27,7 @@ class AllMoneiPaymentModuleConfig implements AllMoneiPaymentModuleConfigInterfac
         MoneiPaymentModuleConfigInterface $moneiPaymentModuleConfig,
         MoneiCardPaymentModuleConfigInterface $moneiCardPaymentModuleConfig,
         MoneiBizumPaymentModuleConfigInterface $moneiBizumPaymentModuleConfig,
-        MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentModuleConfig,
+        MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentModuleConfig
     ) {
 
         $this->moneiPaymentModuleConfig = $moneiPaymentModuleConfig;
