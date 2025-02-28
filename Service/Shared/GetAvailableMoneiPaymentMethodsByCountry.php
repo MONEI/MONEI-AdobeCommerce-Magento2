@@ -24,8 +24,10 @@ class GetAvailableMoneiPaymentMethodsByCountry
         $allPaymentMethods = $this->getAvailableMoneiPaymentMethods->execute();
         $metadataPaymentMethods = $this->getAvailableMoneiPaymentMethods->getMetadataPaymentMethods();
         foreach ($allPaymentMethods as $index => $paymentMethod) {
-            if (isset($metadataPaymentMethods[$paymentMethod])
-                && isset($metadataPaymentMethods[$paymentMethod]['countries'])) {
+            if (
+                isset($metadataPaymentMethods[$paymentMethod])
+                && isset($metadataPaymentMethods[$paymentMethod]['countries'])
+            ) {
                 $countriesAvailable = $metadataPaymentMethods[$paymentMethod]['countries'];
                 if (!in_array($countryId, $countriesAvailable, true)) {
                     unset($allPaymentMethods[$index]);

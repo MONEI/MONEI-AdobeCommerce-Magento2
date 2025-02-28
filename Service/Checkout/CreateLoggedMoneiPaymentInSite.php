@@ -30,11 +30,11 @@ class CreateLoggedMoneiPaymentInSite implements CreateLoggedMoneiPaymentInSiteIn
     private CreatePayment $createPayment;
 
     public function __construct(
-        CartRepositoryInterface         $quoteRepository,
-        Session                         $checkoutSession,
-        GetCustomerDetailsByQuote       $getCustomerDetailsByQuote,
+        CartRepositoryInterface $quoteRepository,
+        Session $checkoutSession,
+        GetCustomerDetailsByQuote $getCustomerDetailsByQuote,
         GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress,
-        CreatePayment                   $createPayment
+        CreatePayment $createPayment
     ) {
         $this->createPayment = $createPayment;
         $this->getAddressDetailsByQuoteAddress = $getAddressDetailsByQuoteAddress;

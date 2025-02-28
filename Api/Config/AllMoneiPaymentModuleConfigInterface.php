@@ -14,7 +14,6 @@ namespace Monei\MoneiPayment\Api\Config;
  */
 interface AllMoneiPaymentModuleConfigInterface
 {
-
     /**
      * Check if any payment methods is enabled
      *

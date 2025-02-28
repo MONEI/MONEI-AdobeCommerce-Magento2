@@ -18,7 +18,6 @@ use Monei\MoneiPayment\Model\Payment\Monei;
  */
 class CardRenderer extends AbstractCardRenderer
 {
-
     public const ICON_TYPE_BY_BRAND = [
         'visa' => 'VI',
         'mastercard' => 'MC',

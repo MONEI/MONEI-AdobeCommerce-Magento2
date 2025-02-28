@@ -26,6 +26,20 @@ For more information, please refer to the [official documentation](https://docs.
 
 ## Development
 
+### Docker Setup
+
+This module includes a Docker setup for local development with PHP 8.3. To use Docker:
+
+```bash
+# Start the Docker containers
+docker-compose up -d
+
+# Execute commands in the PHP container
+docker-compose exec php bash
+```
+
+For detailed Docker setup instructions, see the [Docker README](docker/README.md).
+
 ### Code Quality Tools
 
 This module includes code quality tools to ensure code standards are maintained. The following tools are available:
@@ -54,9 +68,6 @@ composer lint
 # Fix coding standards automatically
 composer fix
 
-# Run PHPStan static analysis
-composer phpstan
-
 # Run PHP-CS-Fixer check
 composer cs-check
 
@@ -68,11 +79,20 @@ composer phpcs
 
 # Run PHP_CodeSniffer auto-fix
 composer phpcbf
+
+# Check for critical security issues
+./scripts/check-critical.sh
 ```
 
 The code quality tools check for:
 - PHP syntax errors
 - PSR-12 and Magento 2 coding standards
 - Proper code style and formatting
-- Potential bugs and issues
+- Potential security vulnerabilities
+- Critical issues and bugs
+- Missing PHPDoc comments (handled by PHP_CodeSniffer)
+
+### Developer Documentation
+
+For detailed information about common issues, coding standards, and best practices, see the [Developer Documentation](docs/DEVELOPMENT.md).
 

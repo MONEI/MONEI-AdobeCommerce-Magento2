@@ -17,7 +17,6 @@ use Monei\MoneiPayment\Model\Payment\Monei;
 
 class TokenUiComponentProvider implements TokenUiComponentProviderInterface
 {
-
     private TokenUiComponentInterfaceFactory $componentFactory;
 
     public function __construct(

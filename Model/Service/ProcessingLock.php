@@ -23,7 +23,7 @@ class ProcessingLock
 {
     // Lock prefix for Monei payment processing
     private const LOCK_PREFIX = 'monei_payment_processing_';
-    
+
     // Lock timeout in seconds (5 minutes)
     private const LOCK_TIMEOUT = 300;
 
@@ -31,7 +31,7 @@ class ProcessingLock
      * @var LockManagerInterface
      */
     private $lockManager;
-    
+
     /**
      * @var Logger
      */
@@ -59,10 +59,10 @@ class ProcessingLock
     public function acquireLock(string $orderId, string $paymentId): bool
     {
         $lockName = $this->getLockName($orderId, $paymentId);
-        
+
         try {
             $locked = $this->lockManager->lock($lockName, self::LOCK_TIMEOUT);
-            
+
             if (!$locked) {
                 $this->logger->info(sprintf(
                     'Could not acquire lock for order %s and payment %s - already being processed.',
@@ -70,7 +70,7 @@ class ProcessingLock
                     $paymentId
                 ));
             }
-            
+
             return $locked;
         } catch (\Exception $e) {
             $this->logger->error(sprintf(
@@ -92,7 +92,7 @@ class ProcessingLock
     public function releaseLock(string $orderId, string $paymentId): bool
     {
         $lockName = $this->getLockName($orderId, $paymentId);
-        
+
         try {
             return $this->lockManager->unlock($lockName);
         } catch (\Exception $e) {

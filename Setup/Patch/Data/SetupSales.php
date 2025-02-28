@@ -4,7 +4,6 @@
 
   use Magento\Framework\DB\Ddl\Table;
   use Magento\Framework\Setup\Patch\NonTransactionableInterface;
-
   use Magento\Framework\Setup\ModuleDataSetupInterface;
   use Magento\Framework\Setup\Patch\DataPatchInterface;
   use Monei\MoneiPayment\Model\Payment\Monei;
@@ -24,7 +23,7 @@ class SetupSales implements DataPatchInterface, NonTransactionableInterface
      */
     public function __construct(
         ModuleDataSetupInterface $moduleDataSetup,
-        SalesSetup               $salesSetup
+        SalesSetup $salesSetup
     ) {
         $this->moduleDataSetup = $moduleDataSetup;
         $this->salesSetup = $salesSetup;

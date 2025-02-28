@@ -21,7 +21,7 @@ class CreateVaultPayment
 
     public function __construct(
         PaymentTokenFactoryInterface $paymentTokenFactory,
-        GetPaymentInterface          $getPayment
+        GetPaymentInterface $getPayment
     ) {
         $this->getPayment = $getPayment;
         $this->paymentTokenFactory = $paymentTokenFactory;

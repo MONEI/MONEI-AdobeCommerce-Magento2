@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
@@ -21,11 +22,11 @@ $refundReasons = $refundReasonsViewModel->getData();
             <span class="title"><?= $escaper->escapeHtml(__('Payment &amp; Shipping Method')) ?></span>
         </div>
         <div class="admin__page-section-content">
-            <?php if (!$_order->getIsVirtual()): ?>
+            <?php if (!$_order->getIsVirtual()) : ?>
             <div class="admin__page-section-item order-payment-method">
-                <?php else: ?>
+            <?php else : ?>
                 <div class="admin__page-section-item order-payment-method order-payment-method-virtual">
-                    <?php endif; ?>
+            <?php endif; ?>
 
                     <?php /* Billing Address */ ?>
                     <div class="admin__page-section-item-title">
@@ -42,7 +43,7 @@ $refundReasons = $refundReasonsViewModel->getData();
                     </div>
                 </div>
 
-                <?php if (!$_order->getIsVirtual()): ?>
+                <?php if (!$_order->getIsVirtual()) : ?>
                     <div class="admin__page-section-item order-shipping-address">
                         <?php /* Shipping Address */ ?>
                         <div class="admin__page-section-item-title">
@@ -53,15 +54,15 @@ $refundReasons = $refundReasonsViewModel->getData();
                             <div class="shipping-description-content">
                                 <?= $escaper->escapeHtml(__('Total Shipping Charges')) ?>:
 
-                                <?php if ($this->helper(\Magento\Tax\Helper\Data::class)->displaySalesPriceInclTax($block->getSource()->getStoreId())): ?>
+                                <?php if ($this->helper(\Magento\Tax\Helper\Data::class)->displaySalesPriceInclTax($block->getSource()->getStoreId())) : ?>
                                     <?php $_excl = $block->displayShippingPriceInclTax($_order); ?>
-                                <?php else: ?>
+                                <?php else : ?>
                                     <?php $_excl = $block->displayPriceAttribute('shipping_amount', false, ' '); ?>
                                 <?php endif; ?>
                                 <?php $_incl = $block->displayShippingPriceInclTax($_order); ?>
 
                                 <?= /* @noEscape */ $_excl ?>
-                                <?php if ($this->helper(\Magento\Tax\Helper\Data::class)->displaySalesBothPrices($block->getSource()->getStoreId()) && $_incl != $_excl): ?>
+                                <?php if ($this->helper(\Magento\Tax\Helper\Data::class)->displaySalesBothPrices($block->getSource()->getStoreId()) && $_incl != $_excl) : ?>
                                     (<?= $escaper->escapeHtml(__('Incl. Tax')) ?> <?= /* @noEscape */ $_incl ?>)
                                 <?php endif; ?>
                             </div>
@@ -69,14 +70,14 @@ $refundReasons = $refundReasonsViewModel->getData();
                     </div>
                 <?php endif; ?>
             </div>
-            <?php if ($_order->getData('monei_payment_id') !== null): ?>
+            <?php if ($_order->getData('monei_payment_id') !== null) : ?>
             <div>
                 <label for="refund_reason" class="admin__field-label">
                     <?= $escaper->escapeHtml(__('Refund reason')) ?>
                 </label>
                 <div class="admin__field-control">
                     <select name="creditmemo[refund_reason]" id="refund_reason" class="admin__control-select">
-                        <?php foreach ($refundReasons as $reason): ?>
+                        <?php foreach ($refundReasons as $reason) : ?>
                             <option value="<?= $reason['value'] ?>">
                                 <?= $reason['label'] ?>
                             </option>

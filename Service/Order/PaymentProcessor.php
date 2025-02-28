@@ -35,52 +35,52 @@ class PaymentProcessor
      * @var ProcessingLock
      */
     private $processingLock;
-    
+
     /**
      * @var OrderRepositoryInterface
      */
     private $orderRepository;
-    
+
     /**
      * @var OrderInterfaceFactory
      */
     private $orderFactory;
-    
+
     /**
      * @var MoneiPaymentModuleConfigInterface
      */
     private $moduleConfig;
-    
+
     /**
      * @var GenerateInvoiceInterface
      */
     private $generateInvoiceService;
-    
+
     /**
      * @var SetOrderStatusAndStateInterface
      */
     private $setOrderStatusAndStateService;
-    
+
     /**
      * @var PendingOrderFactory
      */
     private $pendingOrderFactory;
-    
+
     /**
      * @var PendingOrderResource
      */
     private $pendingOrderResource;
-    
+
     /**
      * @var OrderSender
      */
     private $orderSender;
-    
+
     /**
      * @var CreateVaultPayment
      */
     private $createVaultPayment;
-    
+
     /**
      * @var Logger
      */
@@ -143,7 +143,7 @@ class PaymentProcessor
         $orderId = $paymentData['orderId'];
         $paymentId = $paymentData['id'];
         $status = $paymentData['status'];
-        
+
         $this->logger->info(sprintf(
             'Processing payment for order %s, payment %s, status %s from %s',
             $orderId,
@@ -164,12 +164,12 @@ class PaymentProcessor
         try {
             /** @var Order $order */
             $order = $this->orderFactory->create()->loadByIncrementId($orderId);
-            
+
             if (!$order->getId()) {
                 $this->logger->error(sprintf('Order %s not found', $orderId));
                 return false;
             }
-            
+
             // Check for idempotency - if this payment has already been processed, don't process it again
             $existingPaymentId = $order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID);
             if ($existingPaymentId === $paymentId) {
@@ -178,7 +178,7 @@ class PaymentProcessor
                     $paymentId,
                     $orderId
                 ));
-                
+
                 // If the existing payment has the same status, we don't need to process it again
                 if ($this->hasOrderCorrectStatus($order, $status)) {
                     return true;
@@ -189,10 +189,10 @@ class PaymentProcessor
             switch ($status) {
                 case Monei::ORDER_STATUS_AUTHORIZED:
                     return $this->processAuthorizedPayment($order, $paymentData);
-                
+
                 case Monei::ORDER_STATUS_SUCCEEDED:
                     return $this->processSucceededPayment($order, $paymentData);
-                
+
                 default:
                     $this->logger->info(sprintf(
                         'Unhandled payment status %s for order %s',
@@ -227,15 +227,15 @@ class PaymentProcessor
         if ($this->hasOrderCorrectStatus($order, Monei::ORDER_STATUS_AUTHORIZED)) {
             return true;
         }
-        
+
         $payment = $order->getPayment();
         if (!$payment) {
             $this->logger->error(sprintf('No payment found for order %s', $order->getIncrementId()));
             return false;
         }
-        
+
         $payment->setLastTransId($paymentData['id']);
-        
+
         if ($order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION)) {
             $vaultCreated = $this->createVaultPayment->execute(
                 $paymentData['id'],
@@ -247,7 +247,7 @@ class PaymentProcessor
         $order->setStatus($this->moduleConfig->getPreAuthorizedStatus())
             ->setState(Order::STATE_PENDING_PAYMENT);
         $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $paymentData['id']);
-        
+
         try {
             $pendingOrder = $this->pendingOrderFactory->create()->setOrderIncrementId($paymentData['orderId']);
             $this->pendingOrderResource->save($pendingOrder);
@@ -276,11 +276,11 @@ class PaymentProcessor
         if ($this->hasOrderCorrectStatus($order, Monei::ORDER_STATUS_SUCCEEDED)) {
             return true;
         }
-        
+
         try {
             // Generate invoice if it doesn't exist
             $this->generateInvoiceService->execute($paymentData);
-            
+
             $order->setStatus($this->moduleConfig->getConfirmedStatus())
                 ->setState(Order::STATE_NEW);
             $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $paymentData['id']);
@@ -298,7 +298,7 @@ class PaymentProcessor
                     ));
                 }
             }
-            
+
             return true;
         } catch (\Exception $e) {
             $this->logger->error(sprintf(
@@ -322,11 +322,11 @@ class PaymentProcessor
         switch ($paymentStatus) {
             case Monei::ORDER_STATUS_AUTHORIZED:
                 return $order->getState() === Order::STATE_PENDING_PAYMENT;
-                
+
             case Monei::ORDER_STATUS_SUCCEEDED:
                 return $order->getStatus() === $this->moduleConfig->getConfirmedStatus() &&
                        $order->getState() === Order::STATE_NEW;
-                
+
             default:
                 return false;
         }

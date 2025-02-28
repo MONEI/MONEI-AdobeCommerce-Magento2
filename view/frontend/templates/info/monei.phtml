@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
@@ -12,15 +13,15 @@ $paymentInfo = $block->getPaymentInfo();
 $infoCard = '';
 ?>
 <?= $escaper->escapeHtml($paymentTitle) ?>
-<?php if (is_array($paymentInfo)): ?>
-    <?php foreach ($paymentInfo as $payKey => $payValue): ?>
-        <?php if (in_array($payKey, $block->getInfoPayAllowed(), true)): ?>
-            <?php if ($payKey === 'last4'): ?>
-                <?php $infoCard = $infoCard . '···· '. $payValue; ?>
+<?php if (is_array($paymentInfo)) : ?>
+    <?php foreach ($paymentInfo as $payKey => $payValue) : ?>
+        <?php if (in_array($payKey, $block->getInfoPayAllowed(), true)) : ?>
+            <?php if ($payKey === 'last4') : ?>
+                <?php $infoCard = $infoCard . '···· ' . $payValue; ?>
                 <?php continue; ?>
             <?php endif; ?>
-            <?php if ($payKey === 'brand'): ?>
-                <?php $infoCard = ucfirst($payValue) . ' '. $infoCard; ?>
+            <?php if ($payKey === 'brand') : ?>
+                <?php $infoCard = ucfirst($payValue) . ' ' . $infoCard; ?>
                 <?php continue; ?>
             <?php endif; ?>
             <div class="admin__page-section-item-content">
@@ -28,7 +29,7 @@ $infoCard = '';
             </div>
         <?php endif; ?>
     <?php endforeach; ?>
-    <?php if ($infoCard): ?>
+    <?php if ($infoCard) : ?>
         <div class="admin__page-section-item-content">
             <span class="payment_details"><?= $escaper->escapeHtml($infoCard) ?></span>
         </div>

@@ -13,7 +13,6 @@ use Magento\Quote\Api\Data\CartInterface;
 
 class GetCustomerDetailsByQuote
 {
-
     public function execute(CartInterface $quote, string $email = null): array
     {
         if (!$quote->getEntityId()) {

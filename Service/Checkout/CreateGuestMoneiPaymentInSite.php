@@ -25,7 +25,6 @@ use Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote;
  */
 class CreateGuestMoneiPaymentInSite implements CreateGuestMoneiPaymentInSiteInterface
 {
-
     private CartRepositoryInterface $quoteRepository;
     private Session $checkoutSession;
     private MaskedQuoteIdToQuoteIdInterface $maskedQuoteIdToQuoteId;
@@ -34,12 +33,12 @@ class CreateGuestMoneiPaymentInSite implements CreateGuestMoneiPaymentInSiteInte
     private CreatePayment $createPayment;
 
     public function __construct(
-        CartRepositoryInterface         $quoteRepository,
-        Session                         $checkoutSession,
+        CartRepositoryInterface $quoteRepository,
+        Session $checkoutSession,
         MaskedQuoteIdToQuoteIdInterface $maskedQuoteIdToQuoteId,
-        GetCustomerDetailsByQuote       $getCustomerDetailsByQuote,
+        GetCustomerDetailsByQuote $getCustomerDetailsByQuote,
         GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress,
-        CreatePayment                   $createPayment
+        CreatePayment $createPayment
     ) {
         $this->createPayment = $createPayment;
         $this->getAddressDetailsByQuoteAddress = $getAddressDetailsByQuoteAddress;

@@ -19,13 +19,12 @@ use Monei\MoneiPayment\Service\Shared\GetMoneiPaymentCodesByMagentoPaymentCode;
 
 class ShippingInformationManagement
 {
-
     private MoneiPaymentModuleConfigInterface $moneiPaymentModuleConfig;
     private GetAvailableMoneiPaymentMethodsByCountry $getAvailableMoneiPaymentMethodsByCountry;
     private GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode;
 
     public function __construct(
-        MoneiPaymentModuleConfigInterface        $moneiPaymentModuleConfig,
+        MoneiPaymentModuleConfigInterface $moneiPaymentModuleConfig,
         GetAvailableMoneiPaymentMethodsByCountry $getAvailableMoneiPaymentMethodsByCountry,
         GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode
     ) {
@@ -39,9 +38,9 @@ class ShippingInformationManagement
      */
     public function aroundSaveAddressInformation(
         MagentoShippingInformationManagement $subject,
-        callable                             $proceed,
+        callable $proceed,
         $cartId,
-        ShippingInformationInterface         $addressInformation
+        ShippingInformationInterface $addressInformation
     ) {
         $paymentDetails = $proceed($cartId, $addressInformation);
 

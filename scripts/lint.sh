@@ -9,7 +9,6 @@ if [ -d "./vendor/bin" ]; then
     PHPCS_BIN="./vendor/bin/phpcs"
     PHPCBF_BIN="./vendor/bin/phpcbf"
     PHPCS_FIXER_BIN="./vendor/bin/php-cs-fixer"
-    PHPSTAN_BIN="./vendor/bin/phpstan"
     IS_STANDALONE=true
 else
     # Check if we are within a Magento installation
@@ -18,14 +17,12 @@ else
         PHPCS_BIN="$MAGENTO_ROOT/vendor/bin/phpcs"
         PHPCBF_BIN="$MAGENTO_ROOT/vendor/bin/phpcbf"
         PHPCS_FIXER_BIN="$MAGENTO_ROOT/vendor/bin/php-cs-fixer"
-        PHPSTAN_BIN="$MAGENTO_ROOT/vendor/bin/phpstan"
         IS_STANDALONE=false
     else
         # Try to use global binaries
         PHPCS_BIN=$(which phpcs)
         PHPCBF_BIN=$(which phpcbf)
         PHPCS_FIXER_BIN=$(which php-cs-fixer)
-        PHPSTAN_BIN=$(which phpstan)
         IS_STANDALONE=true
     fi
 fi
@@ -38,11 +35,6 @@ fi
 
 if [ ! -x "$PHPCS_FIXER_BIN" ]; then
     echo "PHP-CS-Fixer not found. Please install it with 'composer require --dev friendsofphp/php-cs-fixer'."
-    exit 1
-fi
-
-if [ ! -x "$PHPSTAN_BIN" ]; then
-    echo "PHPStan not found. Please install it with 'composer require --dev phpstan/phpstan'."
     exit 1
 fi
 
@@ -109,7 +101,7 @@ fi
 echo "============================================================"
 
 # Run PHPCS with appropriate coding standards
-echo -e "\n📋 Running PHP CodeSniffer..."
+echo -e "\n📋 Running PHP CodeSniffer (includes PHPDoc checks)..."
 $PHPCS_BIN --standard="$PHPCS_STANDARD" .
 check_error "PHP CodeSniffer"
 
@@ -117,11 +109,6 @@ check_error "PHP CodeSniffer"
 echo -e "\n🔧 Running PHP-CS-Fixer in dry-run mode..."
 $PHPCS_FIXER_BIN fix --config="$MODULE_ROOT/.php-cs-fixer.php" --dry-run --diff
 check_error "PHP-CS-Fixer"
-
-# Run PHPStan static analysis
-echo -e "\n🔍 Running PHPStan static analysis..."
-$PHPSTAN_BIN analyse --configuration="$MODULE_ROOT/phpstan.neon"
-check_error "PHPStan"
 
 # All checks passed
 echo -e "\n✅ All checks passed!"

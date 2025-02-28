@@ -39,7 +39,7 @@ class Refund implements CommandInterface
         $payment = $commandSubject['payment']->getPayment();
         $order = $payment->getOrder();
         $data = [
-            'paymentId' =>$order->getData('monei_payment_id'),
+            'paymentId' => $order->getData('monei_payment_id'),
             'amount' => $commandSubject['amount'] * 100,
             'refundReason' => $payment->getCreditmemo()->getData('refund_reason'),
             'storeId' => (int) $order->getStoreId(),

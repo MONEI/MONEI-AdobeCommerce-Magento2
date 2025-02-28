@@ -46,16 +46,16 @@ class Enable extends Value
      * @param array $data
      */
     public function __construct(
-        GetAvailableMoneiPaymentMethods          $getAvailableMoneiPaymentMethods,
+        GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods,
         GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode,
-        Context                                  $context,
-        Registry                                 $registry,
-        ScopeConfigInterface                     $config,
-        TypeListInterface                        $cacheTypeList,
-        ManagerInterface                         $messageManager,
-        AbstractResource                         $resource = null,
-        AbstractDb                               $resourceCollection = null,
-        array                                    $data = []
+        Context $context,
+        Registry $registry,
+        ScopeConfigInterface $config,
+        TypeListInterface $cacheTypeList,
+        ManagerInterface $messageManager,
+        AbstractResource $resource = null,
+        AbstractDb $resourceCollection = null,
+        array $data = []
     ) {
         parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);
         $this->getAvailableMoneiPaymentMethods = $getAvailableMoneiPaymentMethods;

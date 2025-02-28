@@ -30,7 +30,6 @@ use Monei\MoneiPayment\Service\Shared\IsEnabledGooglePayInMoneiAccount;
  */
 class CheckoutConfigProvider implements ConfigProviderInterface
 {
-
     private UrlInterface $urlBuilder;
     private MoneiPaymentModuleConfigInterface $moneiPaymentConfig;
     private MoneiCardPaymentModuleConfigInterface $moneiCardPaymentConfig;

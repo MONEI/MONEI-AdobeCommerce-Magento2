@@ -32,12 +32,12 @@ class CreateLoggedMoneiPaymentVault implements CreateLoggedMoneiPaymentVaultInte
     private CreatePayment $createPayment;
 
     public function __construct(
-        CartRepositoryInterface         $quoteRepository,
-        Session                         $checkoutSession,
-        GetCustomerDetailsByQuote       $getCustomerDetailsByQuote,
+        CartRepositoryInterface $quoteRepository,
+        Session $checkoutSession,
+        GetCustomerDetailsByQuote $getCustomerDetailsByQuote,
         GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress,
         PaymentTokenManagementInterface $tokenManagement,
-        CreatePayment                   $createPayment
+        CreatePayment $createPayment
     ) {
         $this->createPayment = $createPayment;
         $this->tokenManagement = $tokenManagement;

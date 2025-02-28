@@ -42,7 +42,7 @@ class Language implements OptionSourceInterface
         foreach (self::LANGUAGES as $key => $value) {
             $options[] = ['label' => __($value), 'value' => $key];
         }
-        
+
         return $options;
     }
 }

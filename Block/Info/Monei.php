@@ -35,8 +35,8 @@ class Monei extends Info
 
     public function __construct(
         GetPaymentInterface $paymentService,
-        Template\Context    $context,
-        array               $data = []
+        Template\Context $context,
+        array $data = []
     ) {
         parent::__construct($context, $data);
         $this->paymentService = $paymentService;

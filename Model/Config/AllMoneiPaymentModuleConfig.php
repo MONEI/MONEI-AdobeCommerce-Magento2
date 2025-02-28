@@ -17,7 +17,6 @@ use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 
 class AllMoneiPaymentModuleConfig implements AllMoneiPaymentModuleConfigInterface
 {
-
     private MoneiPaymentModuleConfigInterface $moneiPaymentModuleConfig;
     private MoneiCardPaymentModuleConfigInterface $moneiCardPaymentModuleConfig;
     private MoneiBizumPaymentModuleConfigInterface $moneiBizumPaymentModuleConfig;
