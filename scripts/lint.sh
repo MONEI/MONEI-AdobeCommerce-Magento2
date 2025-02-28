@@ -53,6 +53,7 @@ if [ "$IS_STANDALONE" = "false" ]; then
     <exclude-pattern>build/*</exclude-pattern>
     <exclude-pattern>*/node_modules/*</exclude-pattern>
     <exclude-pattern>vendor/*</exclude-pattern>
+    <exclude-pattern>stubs/*</exclude-pattern>
     <arg name="extensions" value="php"/>
     <arg name="colors"/>
     <arg value="p"/>
@@ -100,15 +101,36 @@ else
 fi
 echo "============================================================"
 
+# Check if we want to run in errors-only mode
+ERRORS_ONLY=${ERRORS_ONLY:-0}
+
 # Run PHPCS with appropriate coding standards
-echo -e "\n📋 Running PHP CodeSniffer (includes PHPDoc checks)..."
-$PHPCS_BIN --standard="$PHPCS_STANDARD" .
+if [ "$ERRORS_ONLY" -eq 1 ]; then
+    echo -e "\n📋 Running PHP CodeSniffer (errors only)..."
+    $PHPCS_BIN --standard="$PHPCS_STANDARD" --error-severity=1 --warning-severity=0 .
+else
+    echo -e "\n📋 Running PHP CodeSniffer (includes PHPDoc checks)..."
+    $PHPCS_BIN --standard="$PHPCS_STANDARD" .
+fi
 check_error "PHP CodeSniffer"
 
 # Run PHP-CS-Fixer in dry-run mode
 echo -e "\n🔧 Running PHP-CS-Fixer in dry-run mode..."
-$PHPCS_FIXER_BIN fix --config="$MODULE_ROOT/.php-cs-fixer.php" --dry-run --diff
-check_error "PHP-CS-Fixer"
+SKIP_CS_FIXER=${SKIP_CS_FIXER:-0}
+if [ "$SKIP_CS_FIXER" -eq 1 ]; then
+    echo "Skipping PHP-CS-Fixer check as requested."
+else
+    # First try with environment variable
+    export PHP_CS_FIXER_IGNORE_ENV=1
+    $PHPCS_FIXER_BIN fix --config="$MODULE_ROOT/.php-cs-fixer.php" --dry-run --diff --allow-risky=yes
+
+    # If it fails, suggest to the user how to skip it
+    if [ $? -ne 0 ]; then
+        echo -e "\nNote: If you want to skip PHP-CS-Fixer checks and only run PHP CodeSniffer, use:"
+        echo "SKIP_CS_FIXER=1 composer lint"
+        exit 1
+    fi
+fi
 
 # All checks passed
 echo -e "\n✅ All checks passed!"

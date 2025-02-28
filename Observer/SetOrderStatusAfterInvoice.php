@@ -9,12 +9,12 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Observer;
 
-use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
-use Monei\MoneiPayment\Model\Payment\Monei;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
+use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use Monei\MoneiPayment\Model\Payment\Monei;
 
 /**
  * Set status and state for Monei order after invoice generation.

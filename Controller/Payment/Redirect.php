@@ -10,10 +10,10 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Controller\Payment;
 
 use Magento\Checkout\Model\Session;
-use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
 use Magento\Framework\App\ActionInterface;
 use Magento\Framework\Controller\Result\Redirect as MagentoRedirect;
 use Magento\Sales\Api\Data\OrderInterface;
+use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
 use Monei\MoneiPayment\Service\Shared\GetMoneiPaymentCodesByMagentoPaymentCodeRedirect;
 
 /**
@@ -69,12 +69,12 @@ class Redirect implements ActionInterface
         $order = $this->checkoutSession->getLastRealOrder();
 
         $data = [
-            "amount"            => $order->getBaseGrandTotal() * 100,
-            "orderId"           => (string) $order->getIncrementId(),
-            "currency"          => $order->getBaseCurrencyCode(),
-            "customer"          => $this->getCustomerDetails($order),
-            "billingDetails"    => $this->getAddressDetails($order->getBillingAddress()),
-            "shippingDetails"   => $this->getAddressDetails($order->getShippingAddress())
+            'amount'            => $order->getBaseGrandTotal() * 100,
+            'orderId'           => (string) $order->getIncrementId(),
+            'currency'          => $order->getBaseCurrencyCode(),
+            'customer'          => $this->getCustomerDetails($order),
+            'billingDetails'    => $this->getAddressDetails($order->getBillingAddress()),
+            'shippingDetails'   => $this->getAddressDetails($order->getShippingAddress())
         ];
 
         $allowedPaymentMethods =  $this->getAllowedPaymentMethods($order);
@@ -106,9 +106,9 @@ class Redirect implements ActionInterface
         }
 
         return [
-            "email" => $order->getCustomerEmail(),
-            "name"  => $order->getCustomerFirstname() . ' ' . $order->getCustomerLastname(),
-            "phone" => $this->getCustomerPhone($order)
+            'email' => $order->getCustomerEmail(),
+            'name'  => $order->getCustomerFirstname() . ' ' . $order->getCustomerLastname(),
+            'phone' => $this->getCustomerPhone($order)
         ];
     }
 
@@ -139,17 +139,17 @@ class Redirect implements ActionInterface
 
         $streetAddress = $address->getStreet();
         $moneiAddress = [
-            "name"      => $address->getFirstname() . ' ' . $address->getLastname(),
-            "email"     => $address->getEmail(),
-            "phone"     => $address->getTelephone(),
-            "company"   => ($address->getCompany() ?? ''),
-            "address"   => [
-                "country"   => $address->getCountryId(),
-                "city"      => $address->getCity(),
-                "line1"     => ($streetAddress[0] ?? $streetAddress),
-                "line2"     => ($streetAddress[1] ?? ''),
-                "zip"       => $address->getPostcode(),
-                "state"     => $address->getRegion(),
+            'name'      => $address->getFirstname() . ' ' . $address->getLastname(),
+            'email'     => $address->getEmail(),
+            'phone'     => $address->getTelephone(),
+            'company'   => ($address->getCompany() ?? ''),
+            'address'   => [
+                'country'   => $address->getCountryId(),
+                'city'      => $address->getCity(),
+                'line1'     => ($streetAddress[0] ?? $streetAddress),
+                'line2'     => ($streetAddress[1] ?? ''),
+                'zip'       => $address->getPostcode(),
+                'state'     => $address->getRegion(),
             ]
         ];
 

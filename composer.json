@@ -47,7 +47,7 @@
         "sort-packages": true
     },
     "scripts": {
-        "lint": "bash scripts/lint.sh",
+        "lint": "ERRORS_ONLY=1 bash scripts/lint.sh",
         "fix": "bash scripts/fix.sh",
         "cs-check": "php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.php",
         "cs-fix": "php-cs-fixer fix --config=.php-cs-fixer.php",

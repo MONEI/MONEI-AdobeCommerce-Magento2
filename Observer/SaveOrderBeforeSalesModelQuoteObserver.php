@@ -38,7 +38,7 @@ class SaveOrderBeforeSalesModelQuoteObserver implements ObserverInterface
 
         $this->objectCopyService->copyFieldsetToTarget('sales_convert_quote', 'to_order', $quote, $order);
 
-        if (in_array($order->getPayment()->getMethod(), Monei::PAYMENT_METHODS_MONEI)) {
+        if (\in_array($order->getPayment()->getMethod(), Monei::PAYMENT_METHODS_MONEI, true)) {
             $order->setCanSendNewEmailFlag(false);
         }
 

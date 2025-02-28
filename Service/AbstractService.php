@@ -9,17 +9,15 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service;
 
-use Magento\Framework\Exception\NoSuchEntityException;
-use Monei\MoneiPayment\Model\Config\Source\Mode;
-use GuzzleHttp\ClientFactory;
 use GuzzleHttp\Client;
+use GuzzleHttp\ClientFactory;
 use Magento\Framework\Exception\LocalizedException;
-use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Model\StoreManagerInterface;
-use Magento\Framework\Serialize\SerializerInterface;
+use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Model\Config\Source\ModuleVersion;
-use Monei\MoneiPayment\Service\Logger;
 
 /**
  * Monei WS service abstract class.
@@ -27,19 +25,9 @@ use Monei\MoneiPayment\Service\Logger;
 abstract class AbstractService
 {
     /**
-     * @var ClientFactory
-     */
-    private $clientFactory;
-
-    /**
      * @var MoneiPaymentModuleConfigInterface
      */
     protected $moduleConfig;
-
-    /**
-     * @var UrlInterface
-     */
-    private $urlBuilder;
 
     /**
      * @var StoreManagerInterface
@@ -55,6 +43,15 @@ abstract class AbstractService
      * @var Logger
      */
     protected $logger;
+    /**
+     * @var ClientFactory
+     */
+    private $clientFactory;
+
+    /**
+     * @var UrlInterface
+     */
+    private $urlBuilder;
 
     private ModuleVersion $moduleVersion;
 
@@ -86,6 +83,20 @@ abstract class AbstractService
     }
 
     /**
+     * Creates client with base URI
+     *
+     * @param int|null $storeId
+     * @return Client
+     * @throws NoSuchEntityException
+     */
+    public function createClient(int $storeId = null): Client
+    {
+        return $this->clientFactory->create(['config' => [
+            'base_uri' => $this->getApiUrl($storeId)
+        ]]);
+    }
+
+    /**
      * Get webservice API url(test or production)
      *
      * @param int|null $storeId
@@ -97,6 +108,47 @@ abstract class AbstractService
         $currentStoreId = $storeId ?: $this->storeManager->getStore()->getId();
 
         return $this->moduleConfig->getUrl($currentStoreId);
+    }
+
+    /**
+     * @param int|null $storeId
+     * @return array
+     * @throws NoSuchEntityException
+     */
+    protected function getHeaders(int $storeId = null): array
+    {
+        return [
+            'Authorization' => $this->getApiKey($storeId),
+            'User-Agent'    => $this->getUserAgent(),
+            'Content-Type'  => 'application/json',
+        ];
+    }
+
+    /**
+     * Throws exception about missing required argument.
+     *
+     * @param string $parameter
+     *
+     * @throws LocalizedException
+     */
+    protected function throwRequiredArgumentException(string $parameter): void
+    {
+        throw new LocalizedException(__('Required parameter is missing %1', $parameter));
+    }
+
+    /**
+     * Get array of URLs for WS request
+     *
+     * @return array
+     */
+    protected function getUrls(): array
+    {
+        return [
+            'completeUrl' => $this->urlBuilder->getUrl('monei/payment/complete'),
+            'callbackUrl' => $this->urlBuilder->getUrl('monei/payment/callback/'),
+            'cancelUrl' => $this->urlBuilder->getUrl('monei/payment/cancel'),
+            'failUrl' => $this->urlBuilder->getUrl('monei/payment/fail'),
+        ];
     }
 
     /**
@@ -125,60 +177,5 @@ abstract class AbstractService
         }
 
         return '';
-    }
-
-    /**
-     * @param int|null $storeId
-     * @return array
-     * @throws NoSuchEntityException
-     */
-    protected function getHeaders(int $storeId = null): array
-    {
-        return [
-            'Authorization' => $this->getApiKey($storeId),
-            'User-Agent'    => $this->getUserAgent(),
-            'Content-Type'  => 'application/json',
-        ];
-    }
-
-    /**
-     * Creates client with base URI
-     *
-     * @param int|null $storeId
-     * @return Client
-     * @throws NoSuchEntityException
-     */
-    public function createClient(int $storeId = null): Client
-    {
-        return $this->clientFactory->create(['config' => [
-            'base_uri' => $this->getApiUrl($storeId)
-        ]]);
-    }
-
-    /**
-     * Throws exception about missing required argument.
-     *
-     * @param string $parameter
-     *
-     * @throws LocalizedException
-     */
-    protected function throwRequiredArgumentException(string $parameter): void
-    {
-        throw new LocalizedException(__('Required parameter is missing %1', $parameter));
-    }
-
-    /**
-     * Get array of URLs for WS request
-     *
-     * @return array
-     */
-    protected function getUrls(): array
-    {
-        return [
-            'completeUrl' => $this->urlBuilder->getUrl('monei/payment/complete'),
-            'callbackUrl' => $this->urlBuilder->getUrl('monei/payment/callback/'),
-            'cancelUrl' => $this->urlBuilder->getUrl('monei/payment/cancel'),
-            'failUrl' => $this->urlBuilder->getUrl('monei/payment/fail'),
-        ];
     }
 }

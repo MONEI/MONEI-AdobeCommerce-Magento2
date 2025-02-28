@@ -9,6 +9,7 @@ $finder = PhpCsFixer\Finder::create()
         'vendor',
         '.git',
         '.idea',
+        'stubs',
     ]);
 
 $config = new PhpCsFixer\Config();

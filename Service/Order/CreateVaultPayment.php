@@ -40,7 +40,7 @@ class CreateVaultPayment
         $paymentToken->setType(Monei::VAULT_TYPE);
         $paymentToken->setExpiresAt(date('Y-m-d h:i:s', strtotime('+1 month', $detailsCard['expiration'])));
         $paymentToken->setTokenDetails(
-            \json_encode(
+            json_encode(
                 [
                     'type' => $detailsCard['type'] ?? '',
                     'brand' => $detailsCard['brand'] ?? '',

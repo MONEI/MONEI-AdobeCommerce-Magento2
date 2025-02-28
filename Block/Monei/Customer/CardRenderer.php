@@ -49,7 +49,6 @@ class CardRenderer extends AbstractCardRenderer
         return $this->getIconForType($this->getPaymentIcon($brand))['url'];
     }
 
-
     public function getIconHeight()
     {
         $brand = $this->getTokenDetails()['brand'];

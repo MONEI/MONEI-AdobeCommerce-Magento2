@@ -27,8 +27,8 @@ use Monei\MoneiPayment\Service\Shared\GetMoneiPaymentCodesByMagentoPaymentCode;
  */
 class Enable extends Value
 {
-    private GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode;
     protected ManagerInterface $messageManager;
+    private GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode;
     private GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods;
 
     /**

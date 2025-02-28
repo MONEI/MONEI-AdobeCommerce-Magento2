@@ -21,10 +21,11 @@ class EnableGoogleApplePay extends Enable
     public function beforeSave(): EnableGoogleApplePay
     {
         if ($this->getValue() && !$this->isPaymentAvailable()) {
-            $this->setValue("0");
+            $this->setValue('0');
             // phpcs:disable
             $this->messageManager->addNoticeMessage(
-                __("Google Pay and Apple Pay payment methods are not available in your Monei account. Enable at least one of them in your Monei account to use it."));
+                __('Google Pay and Apple Pay payment methods are not available in your Monei account. Enable at least one of them in your Monei account to use it.')
+            );
             // phpcs:enable
         }
 
@@ -40,7 +41,7 @@ class EnableGoogleApplePay extends Enable
         $moneiPaymentCodes = $this->getMoneiPaymentCodesByMagentoPaymentCode(self::PAYMENT_METHOD_CODE);
 
         foreach ($moneiPaymentCodes as $moneiPaymentCode) {
-            if (in_array($moneiPaymentCode, $availablePaymentMethods, true)) {
+            if (\in_array($moneiPaymentCode, $availablePaymentMethods, true)) {
                 return true;
             }
         }

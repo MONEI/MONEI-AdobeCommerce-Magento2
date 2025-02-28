@@ -62,7 +62,7 @@ composer install
 #### Code Quality Tools
 
 ```bash
-# Run all code quality checks
+# Run all code quality checks (runs in errors-only mode by default)
 composer lint
 
 # Fix coding standards automatically
@@ -91,6 +91,20 @@ The code quality tools check for:
 - Potential security vulnerabilities
 - Critical issues and bugs
 - Missing PHPDoc comments (handled by PHP_CodeSniffer)
+
+#### Environment Variables
+
+The following environment variables can be used with the linting and fixing scripts:
+
+```bash
+# Skip PHP-CS-Fixer checks when running the lint script
+SKIP_CS_FIXER=1 composer lint
+
+# Run fix script with only CS Fixer (skips PHP_CodeSniffer)
+FIX_CS_ONLY=1 composer fix
+```
+
+Note: The lint script already runs in errors-only mode by default (ignores warnings).
 
 ### Developer Documentation
 

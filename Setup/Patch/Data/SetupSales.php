@@ -1,13 +1,14 @@
 <?php
 
-  namespace Monei\MoneiPayment\Setup\Patch\Data;
+declare(strict_types=1);
 
-  use Magento\Framework\DB\Ddl\Table;
-  use Magento\Framework\Setup\Patch\NonTransactionableInterface;
-  use Magento\Framework\Setup\ModuleDataSetupInterface;
-  use Magento\Framework\Setup\Patch\DataPatchInterface;
-  use Monei\MoneiPayment\Model\Payment\Monei;
-  use Magento\Sales\Setup\SalesSetup;
+namespace Monei\MoneiPayment\Setup\Patch\Data;
+
+use Magento\Framework\Setup\ModuleDataSetupInterface;
+use Magento\Framework\Setup\Patch\DataPatchInterface;
+use Magento\Framework\Setup\Patch\NonTransactionableInterface;
+use Magento\Sales\Setup\SalesSetup;
+use Monei\MoneiPayment\Model\Payment\Monei;
 
 class SetupSales implements DataPatchInterface, NonTransactionableInterface
 {

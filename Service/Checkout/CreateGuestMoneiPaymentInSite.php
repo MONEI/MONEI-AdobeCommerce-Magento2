@@ -66,12 +66,12 @@ class CreateGuestMoneiPaymentInSite implements CreateGuestMoneiPaymentInSiteInte
         $this->quoteRepository->save($quote);
 
         $data = [
-            "amount" => $quote->getBaseGrandTotal() * 100,
-            "currency" => $quote->getBaseCurrencyCode(),
-            "orderId" => $quote->getReservedOrderId(),
-            "customer" => $this->getCustomerDetailsByQuote->execute($quote, $email),
-            "billingDetails" => $this->getAddressDetailsByQuoteAddress->execute($quote->getBillingAddress(), $email),
-            "shippingDetails" => $this->getAddressDetailsByQuoteAddress->execute($quote->getShippingAddress(), $email),
+            'amount' => $quote->getBaseGrandTotal() * 100,
+            'currency' => $quote->getBaseCurrencyCode(),
+            'orderId' => $quote->getReservedOrderId(),
+            'customer' => $this->getCustomerDetailsByQuote->execute($quote, $email),
+            'billingDetails' => $this->getAddressDetailsByQuoteAddress->execute($quote->getBillingAddress(), $email),
+            'shippingDetails' => $this->getAddressDetailsByQuoteAddress->execute($quote->getShippingAddress(), $email),
         ];
 
         try {

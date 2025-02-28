@@ -18,7 +18,6 @@ class GetAvailableMoneiPaymentMethodsByCountry
         $this->getAvailableMoneiPaymentMethods = $getAvailableMoneiPaymentMethods;
     }
 
-
     public function execute(string $countryId): array
     {
         $allPaymentMethods = $this->getAvailableMoneiPaymentMethods->execute();
@@ -28,7 +27,7 @@ class GetAvailableMoneiPaymentMethodsByCountry
                 && isset($metadataPaymentMethods[$paymentMethod]['countries'])
             ) {
                 $countriesAvailable = $metadataPaymentMethods[$paymentMethod]['countries'];
-                if (!in_array($countryId, $countriesAvailable, true)) {
+                if (!\in_array($countryId, $countriesAvailable, true)) {
                     unset($allPaymentMethods[$index]);
                 }
             }

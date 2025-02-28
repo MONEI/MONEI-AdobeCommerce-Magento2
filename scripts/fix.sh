@@ -53,6 +53,7 @@ if [ "$IS_STANDALONE" = "false" ]; then
     <exclude-pattern>build/*</exclude-pattern>
     <exclude-pattern>*/node_modules/*</exclude-pattern>
     <exclude-pattern>vendor/*</exclude-pattern>
+    <exclude-pattern>stubs/*</exclude-pattern>
     <arg name="extensions" value="php"/>
     <arg name="colors"/>
     <arg value="p"/>
@@ -92,13 +93,45 @@ else
 fi
 echo "============================================================"
 
+# Check if we want to run only PHP-CS-Fixer
+FIX_CS_ONLY=${FIX_CS_ONLY:-0}
+
+if [ "$FIX_CS_ONLY" -eq 1 ]; then
+    echo -e "\n🔧 Running only PHP-CS-Fixer..."
+    # Set environment variable to ignore PHP version requirements
+    export PHP_CS_FIXER_IGNORE_ENV=1
+    $PHPCS_FIXER_BIN fix --config="$MODULE_ROOT/.php-cs-fixer.php" --allow-risky=yes
+
+    if [ $? -ne 0 ]; then
+        echo -e "\nError: PHP-CS-Fixer failed."
+        exit 1
+    fi
+
+    echo -e "\n✅ PHP-CS-Fixer completed successfully!"
+    exit 0
+fi
+
 # Run PHPCBF to fix coding standard violations
 echo -e "\n🔧 Running PHP Code Beautifier and Fixer..."
 $PHPCBF_BIN --standard="$PHPCS_STANDARD" .
 
 # Run PHP-CS-Fixer to fix code style issues
 echo -e "\n🔧 Running PHP-CS-Fixer..."
-$PHPCS_FIXER_BIN fix --config="$MODULE_ROOT/.php-cs-fixer.php"
+SKIP_CS_FIXER=${SKIP_CS_FIXER:-0}
+if [ "$SKIP_CS_FIXER" -eq 1 ]; then
+    echo "Skipping PHP-CS-Fixer as requested."
+else
+    # First try with environment variable
+    export PHP_CS_FIXER_IGNORE_ENV=1
+    $PHPCS_FIXER_BIN fix --config="$MODULE_ROOT/.php-cs-fixer.php" --allow-risky=yes
+
+    # If it fails, suggest to the user how to skip it
+    if [ $? -ne 0 ]; then
+        echo -e "\nNote: If you want to skip PHP-CS-Fixer and only run PHP Code Beautifier, use:"
+        echo "SKIP_CS_FIXER=1 composer fix"
+        exit 1
+    fi
+fi
 
 echo -e "\n✅ Fix completed! Run ./scripts/lint.sh to verify the changes."
 exit 0

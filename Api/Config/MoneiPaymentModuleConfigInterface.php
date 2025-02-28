@@ -112,7 +112,6 @@ interface MoneiPaymentModuleConfigInterface
      */
     public function getProductionAccountId(int $storeId = null): string;
 
-
     /**
      * Get test API key
      *

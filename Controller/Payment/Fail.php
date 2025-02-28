@@ -23,14 +23,13 @@ use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
 class Fail implements ActionInterface
 {
     /**
-     * @var Session
-     */
-    private $checkoutSession;
-
-    /**
      * @var OrderInterfaceFactory
      */
     protected $orderFactory;
+    /**
+     * @var Session
+     */
+    private $checkoutSession;
 
     /**
      * @var SetOrderStatusAndStateInterface

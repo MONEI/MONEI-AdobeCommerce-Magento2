@@ -283,5 +283,27 @@
     <!-- End Monei MBWay redirect payment configuration  -->
 
     <!-- Configure LockManager for MySQL implementation -->
-    <preference for="Magento\Framework\Lock\LockManagerInterface" type="Magento\Framework\Lock\Backend\Database"/>
+    <type name="Magento\Framework\Lock\LockManagerInterface">
+        <arguments>
+            <argument name="lockManagerType" xsi:type="string">db</argument>
+        </arguments>
+    </type>
+
+    <!-- ProcessingLock service configuration -->
+    <type name="Monei\MoneiPayment\Model\Service\ProcessingLock">
+        <arguments>
+            <argument name="lockManager" xsi:type="object">Magento\Framework\Lock\LockManagerInterface</argument>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+        </arguments>
+    </type>
+
+    <!-- OrderProcessor service configuration -->
+    <type name="Monei\MoneiPayment\Model\Service\OrderProcessor">
+        <arguments>
+            <argument name="orderLockManager" xsi:type="object">Monei\MoneiPayment\Api\OrderLockManagerInterface</argument>
+            <argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
+            <argument name="transactionFactory" xsi:type="object">Magento\Framework\DB\TransactionFactory</argument>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+        </arguments>
+    </type>
 </config>

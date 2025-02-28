@@ -10,12 +10,6 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Controller\Payment;
 
 use Exception;
-use Magento\Framework\Exception\NoSuchEntityException;
-use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
-use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
-use Monei\MoneiPayment\Model\Payment\Monei;
-use Monei\MoneiPayment\Service\Logger;
-use Monei\MoneiPayment\Model\Config\Source\Mode;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\CsrfAwareActionInterface;
@@ -26,9 +20,14 @@ use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Controller\Result\Redirect as MagentoRedirect;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Store\Model\StoreManagerInterface;
+use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
 use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
+use Monei\MoneiPayment\Model\Payment\Monei;
+use Monei\MoneiPayment\Service\Logger;
 use Monei\MoneiPayment\Service\Order\PaymentProcessor;
 
 /**
@@ -158,7 +157,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
             $processed = $this->paymentProcessor->processPayment($body, self::SOURCE);
 
             if (!$processed) {
-                $this->logger->info(sprintf(
+                $this->logger->info(\sprintf(
                     'Payment processing was not completed for order %s, status %s',
                     $body['orderId'],
                     $body['status']
@@ -194,7 +193,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     public function validateForCsrf(RequestInterface $request): ?bool
     {
         $header = $request->getHeader('MONEI-Signature');
-        if (!is_array($header)) {
+        if (!\is_array($header)) {
             $header = $this->splitMoneiSignature((string) $header);
         }
         $body = $request->getContent();

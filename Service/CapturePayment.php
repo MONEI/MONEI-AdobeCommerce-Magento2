@@ -9,9 +9,9 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service;
 
-use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
 use Exception;
 use Magento\Framework\Exception\LocalizedException;
+use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
 
 /**
  * Monei capture payment REST integration service class.

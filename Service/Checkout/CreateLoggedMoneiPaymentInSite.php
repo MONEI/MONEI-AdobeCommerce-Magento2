@@ -58,12 +58,12 @@ class CreateLoggedMoneiPaymentInSite implements CreateLoggedMoneiPaymentInSiteIn
         $this->quoteRepository->save($quote);
 
         $data = [
-            "amount" => $quote->getBaseGrandTotal() * 100,
-            "currency" => $quote->getBaseCurrencyCode(),
-            "orderId" => $quote->getReservedOrderId(),
-            "customer" => $this->getCustomerDetailsByQuote->execute($quote),
-            "billingDetails" => $this->getAddressDetailsByQuoteAddress->execute($quote->getBillingAddress()),
-            "shippingDetails" => $this->getAddressDetailsByQuoteAddress->execute($quote->getShippingAddress()),
+            'amount' => $quote->getBaseGrandTotal() * 100,
+            'currency' => $quote->getBaseCurrencyCode(),
+            'orderId' => $quote->getReservedOrderId(),
+            'customer' => $this->getCustomerDetailsByQuote->execute($quote),
+            'billingDetails' => $this->getAddressDetailsByQuoteAddress->execute($quote->getBillingAddress()),
+            'shippingDetails' => $this->getAddressDetailsByQuoteAddress->execute($quote->getShippingAddress()),
         ];
 
         try {

@@ -9,23 +9,20 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Controller\Payment;
 
-use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
-use Monei\MoneiPayment\Model\Payment\Monei;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\ActionInterface;
 use Magento\Framework\Controller\Result\Redirect as MagentoRedirect;
 use Magento\Sales\Api\Data\OrderInterfaceFactory;
-use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
-use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
-use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
+use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
+use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Model\PendingOrderFactory;
 use Monei\MoneiPayment\Model\ResourceModel\PendingOrder as PendingOrderResource;
+use Monei\MoneiPayment\Service\Logger;
 use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 use Monei\MoneiPayment\Service\Order\PaymentProcessor;
-use Monei\MoneiPayment\Service\Logger;
 
 /**
  * Monei payment complete controller
@@ -36,6 +33,11 @@ class Complete implements ActionInterface
      * Controller source identifier
      */
     private const SOURCE = 'complete';
+
+    /**
+     * @var OrderSender
+     */
+    protected $orderSender;
 
     /**
      * @var OrderRepositoryInterface
@@ -76,11 +78,6 @@ class Complete implements ActionInterface
      * @var PendingOrderResource
      */
     private $pendingOrderResource;
-
-    /**
-     * @var OrderSender
-     */
-    protected $orderSender;
 
     /**
      * @var CreateVaultPayment

@@ -24,7 +24,7 @@ class Notice extends AbstractBlock implements
      */
     public function render(AbstractElement $element): string
     {
-        return sprintf(
+        return \sprintf(
             '<tr class="notice" id="row_%s"><td class="label"><label for="%s">%s</label></td><td class="value"><div class="message message-warning">%s</div></td></tr>',
             $element->getHtmlId(),
             $element->getHtmlId(),

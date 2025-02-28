@@ -9,9 +9,9 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service;
 
-use Monei\MoneiPayment\Api\Service\CancelPaymentInterface;
-use Magento\Framework\Exception\LocalizedException;
 use Exception;
+use Magento\Framework\Exception\LocalizedException;
+use Monei\MoneiPayment\Api\Service\CancelPaymentInterface;
 
 /**
  * Monei cancel payment REST integration service class.
@@ -91,7 +91,7 @@ class CancelPayment extends AbstractService implements CancelPaymentInterface
             if (!isset($data[$argument]) || null === $data[$argument]) {
                 $this->throwRequiredArgumentException($argument);
             }
-            if ($argument === 'cancellationReason' && !in_array($data[$argument], $this->cancellationReasons)) {
+            if ($argument === 'cancellationReason' && !\in_array($data[$argument], $this->cancellationReasons, true)) {
                 throw new LocalizedException(
                     __(
                         '%1 doesn\'t match any allowed reasons %2',

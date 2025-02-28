@@ -84,7 +84,7 @@ class ShippingInformationManagement
     private function isPaymentMethodAllowed(array $moneiPaymentCodes, array $availableMoneiPaymentMethodsByCountry): bool
     {
         foreach ($moneiPaymentCodes as $moneiPaymentCode) {
-            if (in_array($moneiPaymentCode, $availableMoneiPaymentMethodsByCountry, true)) {
+            if (\in_array($moneiPaymentCode, $availableMoneiPaymentMethodsByCountry, true)) {
                 return true;
             }
         }
@@ -95,7 +95,7 @@ class ShippingInformationManagement
     {
         $paymentMethods = $paymentDetails->getPaymentMethods();
         $filteredPaymentMethods = array_filter($paymentMethods, function ($paymentMethod) {
-            return !in_array($paymentMethod->getCode(), Monei::PAYMENT_METHODS_MONEI, true);
+            return !\in_array($paymentMethod->getCode(), Monei::PAYMENT_METHODS_MONEI, true);
         });
         $paymentDetails->setPaymentMethods($filteredPaymentMethods);
         return $paymentDetails;

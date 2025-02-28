@@ -9,10 +9,6 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Model\Service;
 
-use Magento\Framework\App\ResourceConnection;
-use Magento\Framework\Exception\AlreadyExistsException;
-use Magento\Framework\Flag\FlagResource;
-use Magento\Framework\FlagFactory;
 use Magento\Framework\Lock\LockManagerInterface;
 use Monei\MoneiPayment\Service\Logger;
 
@@ -50,6 +46,48 @@ class ProcessingLock
     }
 
     /**
+     * Execute a callback function with a lock to prevent race conditions
+     * This method ensures the lock is always released, even if an exception occurs
+     *
+     * @param string $orderId Order increment ID
+     * @param string $paymentId Monei payment ID
+     * @param callable $callback Function to execute while holding the lock
+     * @return mixed The result of the callback function, or false if lock couldn't be acquired
+     */
+    public function executeWithLock(string $orderId, string $paymentId, callable $callback)
+    {
+        $lockName = $this->getLockName($orderId, $paymentId);
+
+        try {
+            $locked = $this->lockManager->lock($lockName, self::LOCK_TIMEOUT);
+
+            if (!$locked) {
+                $this->logger->info(\sprintf(
+                    'Could not acquire lock for order %s and payment %s - already being processed.',
+                    $orderId,
+                    $paymentId
+                ));
+                return false;
+            }
+
+            try {
+                // Execute the callback while holding the lock
+                return $callback();
+            } finally {
+                // Always release the lock, even if an exception occurred in the callback
+                $this->releaseLock($orderId, $paymentId);
+            }
+        } catch (\Exception $e) {
+            $this->logger->error(\sprintf(
+                'Error in lock management for order %s: %s',
+                $orderId,
+                $e->getMessage()
+            ));
+            return false;
+        }
+    }
+
+    /**
      * Acquire a lock for processing an order payment
      *
      * @param string $orderId Order increment ID
@@ -64,7 +102,7 @@ class ProcessingLock
             $locked = $this->lockManager->lock($lockName, self::LOCK_TIMEOUT);
 
             if (!$locked) {
-                $this->logger->info(sprintf(
+                $this->logger->info(\sprintf(
                     'Could not acquire lock for order %s and payment %s - already being processed.',
                     $orderId,
                     $paymentId
@@ -73,7 +111,7 @@ class ProcessingLock
 
             return $locked;
         } catch (\Exception $e) {
-            $this->logger->error(sprintf(
+            $this->logger->error(\sprintf(
                 'Error acquiring lock for order %s: %s',
                 $orderId,
                 $e->getMessage()
@@ -96,7 +134,7 @@ class ProcessingLock
         try {
             return $this->lockManager->unlock($lockName);
         } catch (\Exception $e) {
-            $this->logger->error(sprintf(
+            $this->logger->error(\sprintf(
                 'Error releasing lock for order %s: %s',
                 $orderId,
                 $e->getMessage()
