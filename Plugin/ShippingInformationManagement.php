@@ -28,8 +28,7 @@ class ShippingInformationManagement
         MoneiPaymentModuleConfigInterface        $moneiPaymentModuleConfig,
         GetAvailableMoneiPaymentMethodsByCountry $getAvailableMoneiPaymentMethodsByCountry,
         GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode
-    )
-    {
+    ) {
         $this->moneiPaymentModuleConfig = $moneiPaymentModuleConfig;
         $this->getAvailableMoneiPaymentMethodsByCountry = $getAvailableMoneiPaymentMethodsByCountry;
         $this->getMoneiPaymentCodesByMagentoPaymentCode = $getMoneiPaymentCodesByMagentoPaymentCode;
@@ -41,10 +40,9 @@ class ShippingInformationManagement
     public function aroundSaveAddressInformation(
         MagentoShippingInformationManagement $subject,
         callable                             $proceed,
-                                             $cartId,
+        $cartId,
         ShippingInformationInterface         $addressInformation
-    )
-    {
+    ) {
         $paymentDetails = $proceed($cartId, $addressInformation);
 
         return $this->filterPaymentMethods($paymentDetails, $addressInformation);
@@ -53,8 +51,7 @@ class ShippingInformationManagement
     private function filterPaymentMethods(
         PaymentDetailsInterface $paymentDetails,
         ShippingInformationInterface $addressInformation
-    ): PaymentDetailsInterface
-    {
+    ): PaymentDetailsInterface {
         $accountId = $this->moneiPaymentModuleConfig->getAccountId();
         $apiKey = $this->moneiPaymentModuleConfig->getApiKey();
 

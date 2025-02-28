@@ -22,8 +22,7 @@ class TokenUiComponentProvider implements TokenUiComponentProviderInterface
 
     public function __construct(
         TokenUiComponentInterfaceFactory $componentFactory
-    )
-    {
+    ) {
         $this->componentFactory = $componentFactory;
     }
 

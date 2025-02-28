@@ -1,7 +1,7 @@
 <?php
 /** @var \Monei\MoneiPayment\Block\Adminhtml\Order\Cancel\Popup $block */
 ?>
-<?php if ($block->isOrderPlacedWithMonei()) : ?>
+<?php if ($block->isOrderPlacedWithMonei()): ?>
     <div id="cancel-monei-order" style="display: none">
         <div>
             <?= __('Are you sure you want to cancel this order?') ?>

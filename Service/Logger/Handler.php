@@ -13,9 +13,6 @@ use Monei\MoneiPayment\Service\Logger;
 use Magento\Framework\Logger\Handler\Base;
 use Monolog\Logger as MonologLogger;
 
-/**
- * Class Handler.
- */
 class Handler extends Base
 {
     /**

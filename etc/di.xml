@@ -281,4 +281,7 @@
         </arguments>
     </virtualType>
     <!-- End Monei MBWay redirect payment configuration  -->
+
+    <!-- Configure LockManager for MySQL implementation -->
+    <preference for="Magento\Framework\Lock\LockManagerInterface" type="Magento\Framework\Lock\Backend\Database"/>
 </config>

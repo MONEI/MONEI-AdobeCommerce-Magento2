@@ -37,8 +37,8 @@ class CreateLoggedMoneiPaymentVault implements CreateLoggedMoneiPaymentVaultInte
         GetCustomerDetailsByQuote       $getCustomerDetailsByQuote,
         GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress,
         PaymentTokenManagementInterface $tokenManagement,
-        CreatePayment                   $createPayment)
-    {
+        CreatePayment                   $createPayment
+    ) {
         $this->createPayment = $createPayment;
         $this->tokenManagement = $tokenManagement;
         $this->getAddressDetailsByQuoteAddress = $getAddressDetailsByQuoteAddress;
@@ -76,14 +76,14 @@ class CreateLoggedMoneiPaymentVault implements CreateLoggedMoneiPaymentVaultInte
             "shippingDetails" => $this->getAddressDetailsByQuoteAddress->execute($quote->getShippingAddress()),
         ];
 
-        try{
+        try {
             $result = $this->createPayment->execute($data);
             $quote->setData(QuoteInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $result['id'] ?: '');
             $this->quoteRepository->save($quote);
 
             $result['paymentToken'] = $paymentToken->getGatewayToken();
             return [$result];
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             throw new LocalizedException(__('An error occurred rendering the pay with card. Please try again later.'));
         }
     }

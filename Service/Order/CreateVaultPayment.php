@@ -22,15 +22,14 @@ class CreateVaultPayment
     public function __construct(
         PaymentTokenFactoryInterface $paymentTokenFactory,
         GetPaymentInterface          $getPayment
-    )
-    {
+    ) {
         $this->getPayment = $getPayment;
         $this->paymentTokenFactory = $paymentTokenFactory;
     }
 
     public function execute(string $moneiPaymentId, OrderPaymentInterface &$payment): bool
     {
-        if($payment->getMethod() !== Monei::CARD_CODE){
+        if ($payment->getMethod() !== Monei::CARD_CODE) {
             return false;
         }
         $moneiPayment = $this->getPayment->execute($moneiPaymentId);

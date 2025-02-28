@@ -35,7 +35,6 @@ class FailLastOrderByStatus extends Fail
         $this->checkoutSession = $checkoutSession;
         $this->context = $context;
         parent::__construct($context, $checkoutSession, $orderFactory, $setOrderStatusAndStateService, $messageManager, $resultRedirectFactory);
-
     }
 
     /**

@@ -78,7 +78,7 @@ class Redirect implements ActionInterface
         ];
 
         $allowedPaymentMethods =  $this->getAllowedPaymentMethods($order);
-        if($allowedPaymentMethods){
+        if ($allowedPaymentMethods) {
             $data['allowedPaymentMethods'] = $allowedPaymentMethods;
         }
 

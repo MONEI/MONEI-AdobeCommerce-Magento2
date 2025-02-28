@@ -30,8 +30,8 @@ class AccountId extends Value
         TypeListInterface    $cacheTypeList,
         AbstractResource     $resource = null,
         AbstractDb           $resourceCollection = null,
-        array                $data = [])
-    {
+        array                $data = []
+    ) {
         parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);
         $this->registryAccountId = $registryAccountId;
     }

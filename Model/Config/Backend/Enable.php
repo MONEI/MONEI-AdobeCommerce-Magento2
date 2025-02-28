@@ -55,8 +55,8 @@ class Enable extends Value
         ManagerInterface                         $messageManager,
         AbstractResource                         $resource = null,
         AbstractDb                               $resourceCollection = null,
-        array                                    $data = [])
-    {
+        array                                    $data = []
+    ) {
         parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);
         $this->getAvailableMoneiPaymentMethods = $getAvailableMoneiPaymentMethods;
         $this->getMoneiPaymentCodesByMagentoPaymentCode = $getMoneiPaymentCodesByMagentoPaymentCode;

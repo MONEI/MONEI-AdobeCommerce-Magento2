@@ -35,8 +35,8 @@ class GetPaymentMethods extends AbstractService implements GetPaymentMethodsInte
         UrlInterface                      $urlBuilder,
         SerializerInterface               $serializer,
         Logger                            $logger,
-        ModuleVersion                     $moduleVersion)
-    {
+        ModuleVersion                     $moduleVersion
+    ) {
         parent::__construct(
             $clientFactory,
             $moduleConfig,

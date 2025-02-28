@@ -27,22 +27,79 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
+use Monei\MoneiPayment\Service\Order\PaymentProcessor;
 
 /**
  * Controller for managing callback from Monei system
  */
 class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
 {
-    private string $errorMessage = '';
-    private Context $context;
-    private SerializerInterface $serializer;
-    private MoneiPaymentModuleConfigInterface $moduleConfig;
-    private Logger $logger;
-    private StoreManagerInterface $storeManager;
-    private GenerateInvoiceInterface $generateInvoiceService;
-    private SetOrderStatusAndStateInterface $setOrderStatusAndStateService;
-    private MagentoRedirect $resultRedirectFactory;
+    /**
+     * Controller source identifier
+     */
+    private const SOURCE = 'callback';
 
+    /**
+     * @var string
+     */
+    private $errorMessage = '';
+
+    /**
+     * @var Context
+     */
+    private $context;
+
+    /**
+     * @var SerializerInterface
+     */
+    private $serializer;
+
+    /**
+     * @var MoneiPaymentModuleConfigInterface
+     */
+    private $moduleConfig;
+
+    /**
+     * @var Logger
+     */
+    private $logger;
+
+    /**
+     * @var StoreManagerInterface
+     */
+    private $storeManager;
+
+    /**
+     * @var GenerateInvoiceInterface
+     */
+    private $generateInvoiceService;
+
+    /**
+     * @var SetOrderStatusAndStateInterface
+     */
+    private $setOrderStatusAndStateService;
+
+    /**
+     * @var MagentoRedirect
+     */
+    private $resultRedirectFactory;
+
+    /**
+     * @var PaymentProcessor
+     */
+    private $paymentProcessor;
+
+    /**
+     * @param Context $context
+     * @param SerializerInterface $serializer
+     * @param MoneiPaymentModuleConfigInterface $moduleConfig
+     * @param Logger $logger
+     * @param StoreManagerInterface $storeManager
+     * @param GenerateInvoiceInterface $generateInvoiceService
+     * @param SetOrderStatusAndStateInterface $setOrderStatusAndStateService
+     * @param MagentoRedirect $resultRedirectFactory
+     * @param PaymentProcessor $paymentProcessor
+     */
     public function __construct(
         Context $context,
         SerializerInterface $serializer,
@@ -51,7 +108,8 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         StoreManagerInterface $storeManager,
         GenerateInvoiceInterface $generateInvoiceService,
         SetOrderStatusAndStateInterface $setOrderStatusAndStateService,
-        MagentoRedirect $resultRedirectFactory
+        MagentoRedirect $resultRedirectFactory,
+        PaymentProcessor $paymentProcessor
     ) {
         $this->resultRedirectFactory = $resultRedirectFactory;
         $this->setOrderStatusAndStateService = $setOrderStatusAndStateService;
@@ -61,6 +119,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         $this->moduleConfig = $moduleConfig;
         $this->serializer = $serializer;
         $this->context = $context;
+        $this->paymentProcessor = $paymentProcessor;
     }
 
     /**
@@ -68,16 +127,29 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
      */
     public function execute()
     {
-        $content = $this->context->getRequest()->getContent();
-        $body = $this->serializer->unserialize($content);
-        if (isset($body['orderId'], $body['status'])) {
-            if ($body['status'] === Monei::ORDER_STATUS_SUCCEEDED) {
-                $this->generateInvoiceService->execute($body);
+        try {
+            $content = $this->context->getRequest()->getContent();
+            $body = $this->serializer->unserialize($content);
+
+            if (!isset($body['orderId'], $body['status'], $body['id'])) {
+                $this->logger->error('Callback request failed: Missing required parameters');
+                $this->logger->error('Request body: ' . $content);
+                return $this->resultRedirectFactory->setPath('/');
             }
-            $this->setOrderStatusAndStateService->execute($body);
-        } else {
-            $this->logger->critical('Callback request failed.');
-            $this->logger->critical('Request body: ' . $content);
+
+            // Process the payment through the centralized service
+            $processed = $this->paymentProcessor->processPayment($body, self::SOURCE);
+
+            if (!$processed) {
+                $this->logger->info(sprintf(
+                    'Payment processing was not completed for order %s, status %s',
+                    $body['orderId'],
+                    $body['status']
+                ));
+            }
+        } catch (Exception $e) {
+            $this->logger->critical('Error in Callback controller: ' . $e->getMessage());
+            $this->logger->critical('Request body: ' . ($content ?? 'not available'));
         }
 
         return $this->resultRedirectFactory->setPath('/');
@@ -102,8 +174,8 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     public function validateForCsrf(RequestInterface $request): ?bool
     {
         $header = $request->getHeader('MONEI-Signature');
-        if(!is_array($header)){
-            $header = $this->splitMoneiSignature((string)$header);
+        if (!is_array($header)) {
+            $header = $this->splitMoneiSignature((string) $header);
         }
         $body = $request->getContent();
         $this->logger->debug('Callback request received.');
@@ -115,7 +187,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         } catch (Exception $e) {
             $this->errorMessage = $e->getMessage();
             $this->logger->critical($e->getMessage());
-            $this->logger->critical('Request body: ' . $this->serializer->serialize($body));
+            $this->logger->critical('Request body: ' . ($body ?? 'not available'));
 
             return false;
         }
@@ -152,6 +224,12 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         return $this->moduleConfig->getApiKey($currentStoreId);
     }
 
+    /**
+     * Split Monei signature into associative array
+     *
+     * @param string $signature
+     * @return array
+     */
     private function splitMoneiSignature(string $signature): array
     {
         return array_reduce(explode(',', $signature), function ($result, $part) {

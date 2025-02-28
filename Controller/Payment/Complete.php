@@ -24,12 +24,19 @@ use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
 use Monei\MoneiPayment\Model\PendingOrderFactory;
 use Monei\MoneiPayment\Model\ResourceModel\PendingOrder as PendingOrderResource;
 use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
+use Monei\MoneiPayment\Service\Order\PaymentProcessor;
+use Monei\MoneiPayment\Service\Logger;
 
 /**
  * Monei payment complete controller
  */
 class Complete implements ActionInterface
 {
+    /**
+     * Controller source identifier
+     */
+    private const SOURCE = 'complete';
+
     /**
      * @var OrderRepositoryInterface
      */
@@ -74,7 +81,21 @@ class Complete implements ActionInterface
      * @var OrderSender
      */
     protected $orderSender;
-    private CreateVaultPayment $createVaultPayment;
+
+    /**
+     * @var CreateVaultPayment
+     */
+    private $createVaultPayment;
+
+    /**
+     * @var PaymentProcessor
+     */
+    private $paymentProcessor;
+
+    /**
+     * @var Logger
+     */
+    private $logger;
 
     /**
      * @param Context $context
@@ -87,6 +108,8 @@ class Complete implements ActionInterface
      * @param PendingOrderFactory $pendingOrderFactory
      * @param PendingOrderResource $pendingOrderResource
      * @param CreateVaultPayment $createVaultPayment
+     * @param PaymentProcessor $paymentProcessor
+     * @param Logger $logger
      */
     public function __construct(
         Context $context,
@@ -98,7 +121,9 @@ class Complete implements ActionInterface
         MagentoRedirect $resultRedirectFactory,
         PendingOrderFactory $pendingOrderFactory,
         PendingOrderResource $pendingOrderResource,
-        CreateVaultPayment $createVaultPayment
+        CreateVaultPayment $createVaultPayment,
+        PaymentProcessor $paymentProcessor,
+        Logger $logger
     ) {
         $this->createVaultPayment = $createVaultPayment;
         $this->context = $context;
@@ -110,6 +135,8 @@ class Complete implements ActionInterface
         $this->resultRedirectFactory = $resultRedirectFactory;
         $this->pendingOrderFactory = $pendingOrderFactory;
         $this->pendingOrderResource = $pendingOrderResource;
+        $this->paymentProcessor = $paymentProcessor;
+        $this->logger = $logger;
     }
 
     /**
@@ -118,56 +145,25 @@ class Complete implements ActionInterface
     public function execute()
     {
         $data = $this->context->getRequest()->getParams();
-        switch ($data['status']) {
-            case Monei::ORDER_STATUS_AUTHORIZED:
-                /**
-                 * @var $order OrderInterface
-                 */
-                $order = $this->orderFactory->create()->loadByIncrementId($data['orderId']);
-                $payment = $order->getPayment();
-                if($payment){
-                    $payment->setLastTransId($data['id']);
-                    if ($order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION)) {
-                        $vaultCreated = $this->createVaultPayment->execute(
-                            $data['id'],
-                            $payment
-                        );
-                        $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, $vaultCreated);
-                    }
-                }
 
-                $order->setStatus($this->moduleConfig->getPreAuthorizedStatus())
-                    ->setState(Order::STATE_PENDING_PAYMENT);
-                $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $data['id']);
-                $pendingOrder = $this->pendingOrderFactory->create()->setOrderIncrementId($data['orderId']);
-                $this->pendingOrderResource->save($pendingOrder);
-                $this->orderRepository->save($order);
+        // Check if we have the required parameters
+        if (!isset($data['status'], $data['orderId'])) {
+            $this->logger->error('Complete controller called with missing parameters');
+            return $this->resultRedirectFactory->setPath('checkout/cart', ['_secure' => true]);
+        }
 
+        try {
+            $processed = $this->paymentProcessor->processPayment($data, self::SOURCE);
+
+            // Redirect based on payment status, even if processing failed (we want to show the appropriate page to the customer)
+            if ($data['status'] === Monei::ORDER_STATUS_AUTHORIZED || $data['status'] === Monei::ORDER_STATUS_SUCCEEDED) {
                 return $this->resultRedirectFactory->setPath('checkout/onepage/success', ['_secure' => true]);
-
-            case Monei::ORDER_STATUS_SUCCEEDED:
-                $this->generateInvoiceService->execute($data);
-                /**
-                 * @var $order OrderInterface
-                 */
-                $order = $this->orderFactory->create()->loadByIncrementId($data['orderId']);
-                $order->setStatus($this->moduleConfig->getConfirmedStatus())->setState(Order::STATE_NEW);
-                $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $data['id']);
-                $this->orderRepository->save($order);
-
-                // send Order email
-                if ($order->getCanSendNewEmailFlag() && !$order->getEmailSent()) {
-                    try {
-                        $this->orderSender->send($order);
-                    } catch (\Exception $e) {
-                        $this->logger->critical($e);
-                    }
-                }
-
-                return $this->resultRedirectFactory->setPath('checkout/onepage/success', ['_secure' => true]);
-
-            default:
+            } else {
                 return $this->resultRedirectFactory->setPath('checkout/cart', ['_secure' => true]);
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('Error in Complete controller: ' . $e->getMessage());
+            return $this->resultRedirectFactory->setPath('checkout/cart', ['_secure' => true]);
         }
     }
 }

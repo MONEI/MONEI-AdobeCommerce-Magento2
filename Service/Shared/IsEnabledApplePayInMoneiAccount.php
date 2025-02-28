@@ -19,8 +19,8 @@ class IsEnabledApplePayInMoneiAccount
 
     public function __construct(
         MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentModuleConfig,
-        GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods)
-    {
+        GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods
+    ) {
         $this->moneiGoogleApplePaymentModuleConfig = $moneiGoogleApplePaymentModuleConfig;
         $this->getAvailableMoneiPaymentMethods = $getAvailableMoneiPaymentMethods;
     }
