@@ -36,12 +36,18 @@ namespace Magento\Framework\Component {
 }
 
 namespace Magento\Framework\Exception {
-    class LocalizedException extends \Exception {}
-    class NoSuchEntityException extends LocalizedException {}
+    class LocalizedException extends \Exception
+    {
+    }
+    class NoSuchEntityException extends LocalizedException
+    {
+    }
 }
 
 namespace Magento\Framework {
-    interface UrlInterface {}
+    interface UrlInterface
+    {
+    }
 }
 
 namespace Magento\Framework\Serialize {
@@ -62,7 +68,8 @@ namespace Magento\Framework\Serialize {
 }
 
 namespace Magento\Store\Model {
-    interface StoreManagerInterface {
+    interface StoreManagerInterface
+    {
         /**
          * @return mixed
          */
@@ -71,7 +78,8 @@ namespace Magento\Store\Model {
 }
 
 namespace Magento\Sales\Model {
-    class Order {
+    class Order
+    {
         const STATE_NEW = 'new';
         const STATE_PENDING_PAYMENT = 'pending_payment';
         const STATE_PROCESSING = 'processing';
@@ -83,7 +91,8 @@ namespace Magento\Sales\Model {
 }
 
 namespace Monolog {
-    class Logger {
+    class Logger
+    {
         const DEBUG = 100;
         const INFO = 200;
         const NOTICE = 250;
@@ -98,27 +107,35 @@ namespace Monolog {
          * @param array $context
          * @return void
          */
-        public function debug($message, array $context = []) {}
+        public function debug($message, array $context = [])
+        {
+        }
 
         /**
          * @param string $message
          * @param array $context
          * @return void
          */
-        public function info($message, array $context = []) {}
+        public function info($message, array $context = [])
+        {
+        }
 
         /**
          * @param string $message
          * @param array $context
          * @return void
          */
-        public function error($message, array $context = []) {}
+        public function error($message, array $context = [])
+        {
+        }
 
         /**
          * @param string $message
          * @param array $context
          * @return void
          */
-        public function critical($message, array $context = []) {}
+        public function critical($message, array $context = [])
+        {
+        }
     }
 }

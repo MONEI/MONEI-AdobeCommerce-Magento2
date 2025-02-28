@@ -22,6 +22,8 @@ use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\Response\Http as ResponseHttp;
+use Magento\Framework\Controller\Result\Json;
+use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Controller\Result\Redirect as MagentoRedirect;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Serialize\SerializerInterface;
@@ -85,6 +87,11 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     private $resultRedirectFactory;
 
     /**
+     * @var JsonFactory
+     */
+    private $resultJsonFactory;
+
+    /**
      * @var PaymentProcessor
      */
     private $paymentProcessor;
@@ -98,6 +105,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
      * @param GenerateInvoiceInterface $generateInvoiceService
      * @param SetOrderStatusAndStateInterface $setOrderStatusAndStateService
      * @param MagentoRedirect $resultRedirectFactory
+     * @param JsonFactory $resultJsonFactory
      * @param PaymentProcessor $paymentProcessor
      */
     public function __construct(
@@ -109,9 +117,11 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         GenerateInvoiceInterface $generateInvoiceService,
         SetOrderStatusAndStateInterface $setOrderStatusAndStateService,
         MagentoRedirect $resultRedirectFactory,
+        JsonFactory $resultJsonFactory,
         PaymentProcessor $paymentProcessor
     ) {
         $this->resultRedirectFactory = $resultRedirectFactory;
+        $this->resultJsonFactory = $resultJsonFactory;
         $this->setOrderStatusAndStateService = $setOrderStatusAndStateService;
         $this->generateInvoiceService = $generateInvoiceService;
         $this->storeManager = $storeManager;
@@ -127,6 +137,11 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
      */
     public function execute()
     {
+        /** @var Json $result */
+        $result = $this->resultJsonFactory->create();
+        $responseData = ['success' => true];
+        $responseCode = 200;
+
         try {
             $content = $this->context->getRequest()->getContent();
             $body = $this->serializer->unserialize($content);
@@ -134,7 +149,9 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
             if (!isset($body['orderId'], $body['status'], $body['id'])) {
                 $this->logger->error('Callback request failed: Missing required parameters');
                 $this->logger->error('Request body: ' . $content);
-                return $this->resultRedirectFactory->setPath('/');
+                $responseData = ['success' => false, 'message' => 'Missing required parameters'];
+                $responseCode = 400;
+                return $result->setHttpResponseCode($responseCode)->setData($responseData);
             }
 
             // Process the payment through the centralized service
@@ -146,13 +163,16 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
                     $body['orderId'],
                     $body['status']
                 ));
+                $responseData['info'] = 'Payment processing was not completed';
             }
         } catch (Exception $e) {
             $this->logger->critical('Error in Callback controller: ' . $e->getMessage());
             $this->logger->critical('Request body: ' . ($content ?? 'not available'));
+            $responseData = ['success' => false, 'message' => $e->getMessage()];
+            $responseCode = 500;
         }
 
-        return $this->resultRedirectFactory->setPath('/');
+        return $result->setHttpResponseCode($responseCode)->setData($responseData);
     }
 
     /**

@@ -45,8 +45,7 @@ class SetOrderStatusAfterRefund
     public function afterRefund(CreditmemoService $subject, CreditmemoInterface $result): CreditmemoInterface
     {
         $order = $result->getOrder();
-        if (
-            $order->getData('monei_payment_id') !== null
+        if ($order->getData('monei_payment_id') !== null
             && $result->getRefundReason() !== null
             && $order->getState() !== 'closed'
         ) {

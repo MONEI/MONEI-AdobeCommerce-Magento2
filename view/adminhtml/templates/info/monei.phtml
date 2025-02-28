@@ -12,7 +12,7 @@ $paymentTitle = $block->getPaymentTitle();
 $paymentInfo = $block->getPaymentInfo();
 ?>
 <?= $escaper->escapeHtml($paymentTitle) ?>
-<?php if (is_array($paymentInfo)) : ?>
+<?php if (is_array($paymentInfo)): ?>
     <?php foreach ($paymentInfo as $payKey => $payValue) { ?>
         <div class="admin__page-section-item-content">
             <strong><?= $escaper->escapeHtml(__($payKey . ':')) ?></strong>
