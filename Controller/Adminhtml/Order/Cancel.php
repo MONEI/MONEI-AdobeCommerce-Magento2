@@ -44,7 +44,7 @@ class Cancel extends Action
      *
      * @see _isAllowed()
      */
-    const ADMIN_RESOURCE = 'Magento_Sales::cancel';
+    public const ADMIN_RESOURCE = 'Magento_Sales::cancel';
 
     /**
      * @param Context                  $context

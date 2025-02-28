@@ -13,7 +13,7 @@ $refundReasons = $refundReasonsViewModel->getData();
 ?>
 <form id="edit_form" method="post" action="<?= $escaper->escapeUrl($block->getSaveUrl()) ?>">
     <?= $block->getBlockHtml('formkey') ?>
-    <?php  $_order = $block->getCreditmemo()->getOrder() ?>
+    <?php $_order = $block->getCreditmemo()->getOrder() ?>
 
     <?= $block->getChildHtml('order_info') ?>
 
@@ -23,10 +23,10 @@ $refundReasons = $refundReasonsViewModel->getData();
         </div>
         <div class="admin__page-section-content">
             <?php if (!$_order->getIsVirtual()): ?>
-            <div class="admin__page-section-item order-payment-method">
-            <?php else: ?>
-                <div class="admin__page-section-item order-payment-method order-payment-method-virtual">
-            <?php endif; ?>
+                <div class="admin__page-section-item order-payment-method">
+                <?php else: ?>
+                    <div class="admin__page-section-item order-payment-method order-payment-method-virtual">
+                    <?php endif; ?>
 
                     <?php /* Billing Address */ ?>
                     <div class="admin__page-section-item-title">
@@ -41,51 +41,51 @@ $refundReasons = $refundReasonsViewModel->getData();
                             <?= $block->getChildHtml('order_payment_additional') ?>
                         </div>
                     </div>
-                </div>
+                    </div>
 
-                <?php if (!$_order->getIsVirtual()): ?>
-                    <div class="admin__page-section-item order-shipping-address">
-                        <?php /* Shipping Address */ ?>
-                        <div class="admin__page-section-item-title">
-                            <span class="title"><?= $escaper->escapeHtml(__('Shipping Information')) ?></span>
-                        </div>
-                        <div class="admin__page-section-item-content shipping-description-wrapper">
-                            <div class="shipping-description-title"><?= $escaper->escapeHtml($_order->getShippingDescription()) ?></div>
-                            <div class="shipping-description-content">
-                                <?= $escaper->escapeHtml(__('Total Shipping Charges')) ?>:
-
-                                <?php if ($this->helper(\Magento\Tax\Helper\Data::class)->displaySalesPriceInclTax($block->getSource()->getStoreId())): ?>
-                                    <?php $_excl = $block->displayShippingPriceInclTax($_order); ?>
-                                <?php else: ?>
-                                    <?php $_excl = $block->displayPriceAttribute('shipping_amount', false, ' '); ?>
-                                <?php endif; ?>
-                                <?php $_incl = $block->displayShippingPriceInclTax($_order); ?>
-
-                                <?= /* @noEscape */ $_excl ?>
-                                <?php if ($this->helper(\Magento\Tax\Helper\Data::class)->displaySalesBothPrices($block->getSource()->getStoreId()) && $_incl != $_excl): ?>
-                                    (<?= $escaper->escapeHtml(__('Incl. Tax')) ?> <?= /* @noEscape */ $_incl ?>)
-                                <?php endif; ?>
+                    <?php if (!$_order->getIsVirtual()): ?>
+                        <div class="admin__page-section-item order-shipping-address">
+                            <?php /* Shipping Address */ ?>
+                            <div class="admin__page-section-item-title">
+                                <span class="title"><?= $escaper->escapeHtml(__('Shipping Information')) ?></span>
                             </div>
+                            <div class="admin__page-section-item-content shipping-description-wrapper">
+                                <div class="shipping-description-title"><?= $escaper->escapeHtml($_order->getShippingDescription()) ?></div>
+                                <div class="shipping-description-content">
+                                    <?= $escaper->escapeHtml(__('Total Shipping Charges')) ?>:
+
+                                    <?php if ($this->helper(\Magento\Tax\Helper\Data::class)->displaySalesPriceInclTax($block->getSource()->getStoreId())): ?>
+                                        <?php $_excl = $block->displayShippingPriceInclTax($_order); ?>
+                                    <?php else: ?>
+                                        <?php $_excl = $block->displayPriceAttribute('shipping_amount', false, ' '); ?>
+                                    <?php endif; ?>
+                                    <?php $_incl = $block->displayShippingPriceInclTax($_order); ?>
+
+                                    <?= /* @noEscape */ $_excl ?>
+                                    <?php if ($this->helper(\Magento\Tax\Helper\Data::class)->displaySalesBothPrices($block->getSource()->getStoreId()) && $_incl != $_excl): ?>
+                                        (<?= $escaper->escapeHtml(__('Incl. Tax')) ?> <?= /* @noEscape */ $_incl ?>)
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                <?php if ($_order->getData('monei_payment_id') !== null): ?>
+                    <div>
+                        <label for="refund_reason" class="admin__field-label">
+                            <?= $escaper->escapeHtml(__('Refund reason')) ?>
+                        </label>
+                        <div class="admin__field-control">
+                            <select name="creditmemo[refund_reason]" id="refund_reason" class="admin__control-select">
+                                <?php foreach ($refundReasons as $reason): ?>
+                                    <option value="<?= $escaper->escapeHtmlAttr($reason['value']) ?>">
+                                        <?= $escaper->escapeHtml($reason['label']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                     </div>
                 <?php endif; ?>
-            </div>
-            <?php if ($_order->getData('monei_payment_id') !== null): ?>
-            <div>
-                <label for="refund_reason" class="admin__field-label">
-                    <?= $escaper->escapeHtml(__('Refund reason')) ?>
-                </label>
-                <div class="admin__field-control">
-                    <select name="creditmemo[refund_reason]" id="refund_reason" class="admin__control-select">
-                        <?php foreach ($refundReasons as $reason): ?>
-                            <option value="<?= $reason['value'] ?>">
-                                <?= $reason['label'] ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            </div>
-            <?php endif; ?>
     </section>
     <div id="creditmemo_item_container">
         <?= $block->getChildHtml('order_items') ?>

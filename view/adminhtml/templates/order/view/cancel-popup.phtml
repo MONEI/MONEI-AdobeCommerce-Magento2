@@ -1,25 +1,26 @@
 <?php
+
 /** @var \Monei\MoneiPayment\Block\Adminhtml\Order\Cancel\Popup $block */
 ?>
 <?php if ($block->isOrderPlacedWithMonei()): ?>
     <div id="cancel-monei-order" style="display: none">
         <div>
-            <?= __('Are you sure you want to cancel this order?') ?>
+            <?= $escaper->escapeHtml(__('Are you sure you want to cancel this order?')) ?>
         </div>
         <input type="hidden"
-               id="cancel_url_monei"
-               value="<?= $block->getCancelUrl() ?>">
+            id="cancel_url_monei"
+            value="<?= $escaper->escapeUrl($block->getCancelUrl()) ?>">
         <input type="hidden"
-               id="payment_id"
-               value="<?= $block->getOrder()->getData('monei_payment_id') ?>" name="payment_id"/>
+            id="payment_id"
+            value="<?= $escaper->escapeHtmlAttr($block->getOrder()->getData('monei_payment_id')) ?>" name="payment_id" />
         <input type="hidden"
-               id="order_id"
-               value="<?= $block->getOrder()->getId() ?>" name="order_id"/>
+            id="order_id"
+            value="<?= $escaper->escapeHtmlAttr($block->getOrder()->getId()) ?>" name="order_id" />
         <div>
-            <label for="cancel_reason"><?= __('Cancel reason') ?></label>
+            <label for="cancel_reason"><?= $escaper->escapeHtml(__('Cancel reason')) ?></label>
             <select name="cancel_reason" id="cancel_reason" class="admin__control-select">
                 <?php foreach ($block->getCancelReasons() as $option): ?>
-                    <option value="<?= $option['value'] ?>"><?= $option['label'] ?></option>
+                    <option value="<?= $escaper->escapeHtmlAttr($option['value']) ?>"><?= $escaper->escapeHtml($option['label']) ?></option>
                 <?php endforeach ?>
             </select>
         </div>
