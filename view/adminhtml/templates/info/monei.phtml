@@ -11,12 +11,93 @@
 $paymentTitle = $block->getPaymentTitle();
 $paymentInfo = $block->getPaymentInfo();
 ?>
-<?= $escaper->escapeHtml($paymentTitle) ?>
 <?php if (is_array($paymentInfo)): ?>
-    <?php foreach ($paymentInfo as $payKey => $payValue) { ?>
-        <div class="admin__page-section-item-content">
-            <strong><?= $escaper->escapeHtml(__($payKey . ':')) ?></strong>
-            <span class="payment_details"><?= $escaper->escapeHtml($payValue) ?></span>
+    <?php
+    // Prepare combined payment method display
+    $paymentMethodDisplay = '';
+
+    if (isset($paymentInfo['brand']) && !empty($paymentInfo['brand'])) {
+        $brand = strtolower($paymentInfo['brand']);
+        $paymentMethodDisplay = ucfirst($paymentInfo['brand']);
+
+        // Add card type inline if available
+        if (isset($paymentInfo['type']) && !empty($paymentInfo['type'])) {
+            $paymentMethodDisplay .= ' ' . ucfirst($paymentInfo['type']);
+        }
+
+        if (isset($paymentInfo['last4']) && !empty($paymentInfo['last4'])) {
+            $paymentMethodDisplay .= ' •••• ' . $paymentInfo['last4'];
+        }
+    } elseif (isset($paymentInfo['method']) && !empty($paymentInfo['method'])) {
+        $method = $paymentInfo['method'];
+        $paymentMethodDisplay = ucfirst($method);
+    }
+    ?>
+
+    <table class="data-table admin__table-secondary">
+        <tbody>
+            <tr>
+                <th><?= $escaper->escapeHtml(__('Payment Method')) ?>:</th>
+                <td>
+                    <?= $escaper->escapeHtml($paymentMethodDisplay) ?>
+                </td>
+            </tr>
+
+            <?php if (isset($paymentInfo['tokenizationMethod']) && !empty($paymentInfo['tokenizationMethod'])):
+                // Pretty print tokenizationMethod value
+                $walletValue = $paymentInfo['tokenizationMethod'];
+
+                // Convert camelCase to readable format (e.g., googlePay -> Google Pay)
+                if ($walletValue === 'googlePay') {
+                    $walletValue = 'Google Pay';
+                } elseif ($walletValue === 'applePay') {
+                    $walletValue = 'Apple Pay';
+                } elseif ($walletValue === 'clickToPay') {
+                    $walletValue = 'Click to Pay';
+                } else {
+                    // Handle any other values by adding spaces before capital letters and capitalizing first letter
+                    $walletValue = ucfirst(preg_replace('/([a-z])([A-Z])/', '$1 $2', $walletValue));
+                }
+            ?>
+                <tr>
+                    <th><?= $escaper->escapeHtml(__('Digital Wallet')) ?>:</th>
+                    <td><?= $escaper->escapeHtml($walletValue) ?></td>
+                </tr>
+            <?php endif; ?>
+
+            <?php if (isset($paymentInfo['cardholderName']) && !empty($paymentInfo['cardholderName'])): ?>
+                <tr>
+                    <th><?= $escaper->escapeHtml(__('Cardholder')) ?>:</th>
+                    <td><?= $escaper->escapeHtml($paymentInfo['cardholderName']) ?></td>
+                </tr>
+            <?php endif; ?>
+
+            <?php if (isset($paymentInfo['bank']) && !empty($paymentInfo['bank'])): ?>
+                <tr>
+                    <th><?= $escaper->escapeHtml(__('Issuing Bank')) ?>:</th>
+                    <td><?= $escaper->escapeHtml($paymentInfo['bank']) ?></td>
+                </tr>
+            <?php endif; ?>
+
+            <?php if (isset($paymentInfo['phoneNumber']) && !empty($paymentInfo['phoneNumber'])): ?>
+                <tr>
+                    <th><?= $escaper->escapeHtml(__('Phone Number')) ?>:</th>
+                    <td><?= $escaper->escapeHtml($paymentInfo['phoneNumber']) ?></td>
+                </tr>
+            <?php endif; ?>
+
+            <?php if (isset($paymentInfo['country']) && !empty($paymentInfo['country'])): ?>
+                <tr>
+                    <th><?= $escaper->escapeHtml(__('Country')) ?>:</th>
+                    <td><?= $escaper->escapeHtml($paymentInfo['country']) ?></td>
+                </tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
+
+    <?php if (isset($paymentInfo['currency']) && !empty($paymentInfo['currency'])): ?>
+        <div style="margin-top: 10px; font-style: italic; color: #666; font-size: 13px;">
+            <?= $escaper->escapeHtml(__('The order was placed using')) ?> <?= $escaper->escapeHtml($paymentInfo['currency']) ?>.
         </div>
-    <?php } ?>
+    <?php endif; ?>
 <?php endif; ?>
