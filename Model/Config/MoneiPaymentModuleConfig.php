@@ -13,6 +13,7 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\ScopeInterface;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Model\Config\Source\Mode;
+use Monei\MoneiPayment\Model\Config\Source\Language;
 
 /**
  * Get Monei payment method configuration class.
@@ -158,6 +159,25 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      */
     public function getLanguage(int $storeId = null): string
     {
+        // First, try to get the store's locale code
+        $locale = $this->scopeConfig->getValue(
+            'general/locale/code',
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+
+        // Extract the language part from the locale (e.g., 'en_US' => 'en')
+        $localeLanguage = substr($locale, 0, 2);
+
+        // Check if the extracted language is supported by Monei
+        $supportedLanguages = array_keys(Language::LANGUAGES);
+
+        // If the locale language is supported, use it
+        if (in_array(strtolower($localeLanguage), $supportedLanguages)) {
+            return strtolower($localeLanguage);
+        }
+
+        // Otherwise, fall back to the configured value
         return (string) $this->scopeConfig->getValue(
             self::LANGUAGE,
             ScopeInterface::SCOPE_STORE,

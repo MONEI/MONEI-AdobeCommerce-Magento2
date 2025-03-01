@@ -37,7 +37,7 @@ $paymentInfo = $block->getPaymentInfo();
     <table class="data-table admin__table-secondary">
         <tbody>
             <tr>
-                <th><?= $escaper->escapeHtml(__('Payment Method')) ?>:</th>
+                <th><?= $escaper->escapeHtml(__('Payment Method')) ?></th>
                 <td>
                     <?= $escaper->escapeHtml($paymentMethodDisplay) ?>
                 </td>
@@ -60,35 +60,35 @@ $paymentInfo = $block->getPaymentInfo();
                 }
             ?>
                 <tr>
-                    <th><?= $escaper->escapeHtml(__('Digital Wallet')) ?>:</th>
+                    <th><?= $escaper->escapeHtml(__('Digital Wallet')) ?></th>
                     <td><?= $escaper->escapeHtml($walletValue) ?></td>
                 </tr>
             <?php endif; ?>
 
             <?php if (isset($paymentInfo['cardholderName']) && !empty($paymentInfo['cardholderName'])): ?>
                 <tr>
-                    <th><?= $escaper->escapeHtml(__('Cardholder')) ?>:</th>
+                    <th><?= $escaper->escapeHtml(__('Cardholder')) ?></th>
                     <td><?= $escaper->escapeHtml($paymentInfo['cardholderName']) ?></td>
                 </tr>
             <?php endif; ?>
 
             <?php if (isset($paymentInfo['bank']) && !empty($paymentInfo['bank'])): ?>
                 <tr>
-                    <th><?= $escaper->escapeHtml(__('Issuing Bank')) ?>:</th>
+                    <th><?= $escaper->escapeHtml(__('Issuing Bank')) ?></th>
                     <td><?= $escaper->escapeHtml($paymentInfo['bank']) ?></td>
                 </tr>
             <?php endif; ?>
 
             <?php if (isset($paymentInfo['phoneNumber']) && !empty($paymentInfo['phoneNumber'])): ?>
                 <tr>
-                    <th><?= $escaper->escapeHtml(__('Phone Number')) ?>:</th>
+                    <th><?= $escaper->escapeHtml(__('Phone Number')) ?></th>
                     <td><?= $escaper->escapeHtml($paymentInfo['phoneNumber']) ?></td>
                 </tr>
             <?php endif; ?>
 
             <?php if (isset($paymentInfo['country']) && !empty($paymentInfo['country'])): ?>
                 <tr>
-                    <th><?= $escaper->escapeHtml(__('Country')) ?>:</th>
+                    <th><?= $escaper->escapeHtml(__('Country')) ?></th>
                     <td><?= $escaper->escapeHtml($paymentInfo['country']) ?></td>
                 </tr>
             <?php endif; ?>
