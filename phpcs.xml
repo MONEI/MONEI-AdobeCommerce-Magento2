@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<ruleset name="MONEI">
+    <description>Coding standard for MONEI Payment module</description>
+
+    <!-- Use PSR-12 standard for standalone development -->
+    <rule ref="PSR12"/>
+
+    <!-- Exclude directories that don't contain PHP files or are not relevant for validation -->
+    <exclude-pattern>.git/*</exclude-pattern>
+    <exclude-pattern>.idea/*</exclude-pattern>
+    <exclude-pattern>build/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+    <exclude-pattern>vendor/*</exclude-pattern>
+    <exclude-pattern>stubs/*</exclude-pattern>
+
+    <!-- Include PHP files -->
+    <arg name="extensions" value="php"/>
+
+    <!-- Colors in output -->
+    <arg name="colors"/>
+
+    <!-- Show progress of the run -->
+    <arg value="p"/>
+
+    <!-- Show sniff codes in all reports -->
+    <arg value="s"/>
+</ruleset>

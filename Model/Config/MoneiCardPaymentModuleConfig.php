@@ -9,9 +9,9 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Model\Config;
 
-use Monei\MoneiPayment\Api\Config\MoneiCardPaymentModuleConfigInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\ScopeInterface;
+use Monei\MoneiPayment\Api\Config\MoneiCardPaymentModuleConfigInterface;
 
 /**
  * Get Monei payment method configuration class.

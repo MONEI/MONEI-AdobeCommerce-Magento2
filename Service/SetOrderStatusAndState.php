@@ -9,12 +9,12 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service;
 
-use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
-use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
-use Monei\MoneiPayment\Model\Payment\Monei;
 use Magento\Sales\Api\Data\OrderInterfaceFactory;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
+use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
+use Monei\MoneiPayment\Model\Payment\Monei;
 
 /**
  * Set order status and state depending from response data service class

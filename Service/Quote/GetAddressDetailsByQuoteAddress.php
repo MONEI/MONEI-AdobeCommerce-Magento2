@@ -13,7 +13,6 @@ use Magento\Quote\Api\Data\AddressInterface;
 
 class GetAddressDetailsByQuoteAddress
 {
-
     public function execute(AddressInterface $address, string $email = null): array
     {
         if (!$address->getId()) {
@@ -22,17 +21,17 @@ class GetAddressDetailsByQuoteAddress
 
         $streetAddress = $address->getStreet();
         $moneiAddress = [
-            "name"      => $address->getFirstname() . ' ' . $address->getLastname(),
-            "email"     => $address->getEmail()?: $email,
-            "phone"     => $address->getTelephone(),
-            "company"   => ($address->getCompany() ?? ''),
-            "address"   => [
-                "country"   => $address->getCountryId(),
-                "city"      => $address->getCity(),
-                "line1"     => ($streetAddress[0] ?? $streetAddress),
-                "line2"     => ($streetAddress[1] ?? ''),
-                "zip"       => $address->getPostcode(),
-                "state"     => $address->getRegion(),
+            'name'      => $address->getFirstname() . ' ' . $address->getLastname(),
+            'email'     => $address->getEmail() ?: $email,
+            'phone'     => $address->getTelephone(),
+            'company'   => ($address->getCompany() ?? ''),
+            'address'   => [
+                'country'   => $address->getCountryId(),
+                'city'      => $address->getCity(),
+                'line1'     => ($streetAddress[0] ?? $streetAddress),
+                'line2'     => ($streetAddress[1] ?? ''),
+                'zip'       => $address->getPostcode(),
+                'state'     => $address->getRegion(),
             ]
         ];
 

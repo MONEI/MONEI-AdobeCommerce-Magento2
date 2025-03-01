@@ -167,8 +167,9 @@ define(
                 this.isPlaceOrderActionAllowed(false);
 
                 if (this.validate() && additionalValidators.validate()) {
-
+                    fullScreenLoader.startLoader();
                     monei.createToken(this.cardInput).then(function (result) {
+                        fullScreenLoader.stopLoader();
                         if (result.error) {
                             // Inform the user if there was an error.
                             self.container.classList.add('is-invalid');
@@ -179,6 +180,7 @@ define(
                         }
                     }).catch(function (error) {
                         console.log(error);
+                        fullScreenLoader.stopLoader();
                         //Enable the button of place order
                         self.isPlaceOrderActionAllowed(true);
                     });

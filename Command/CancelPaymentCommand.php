@@ -59,6 +59,6 @@ class CancelPaymentCommand extends Command
         $result = $this->service->execute($data);
         $output->writeln('Response:');
         // @codingStandardsIgnoreLine
-        \print_r($result);
+        print_r($result);
     }
 }

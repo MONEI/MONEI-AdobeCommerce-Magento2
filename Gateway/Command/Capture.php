@@ -9,8 +9,8 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Gateway\Command;
 
-use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
 use Magento\Payment\Gateway\CommandInterface;
+use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
 
 /**
  * Capture Monei payment command

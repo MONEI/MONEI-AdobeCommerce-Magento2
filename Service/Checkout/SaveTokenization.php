@@ -22,8 +22,8 @@ class SaveTokenization implements SaveTokenizationInterface
 
     public function __construct(
         CartRepositoryInterface $quoteRepository,
-        Session                 $checkoutSession)
-    {
+        Session $checkoutSession
+    ) {
         $this->checkoutSession = $checkoutSession;
         $this->quoteRepository = $quoteRepository;
     }

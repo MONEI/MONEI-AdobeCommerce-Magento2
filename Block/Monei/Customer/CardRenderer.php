@@ -18,7 +18,6 @@ use Monei\MoneiPayment\Model\Payment\Monei;
  */
 class CardRenderer extends AbstractCardRenderer
 {
-
     public const ICON_TYPE_BY_BRAND = [
         'visa' => 'VI',
         'mastercard' => 'MC',
@@ -49,7 +48,6 @@ class CardRenderer extends AbstractCardRenderer
 
         return $this->getIconForType($this->getPaymentIcon($brand))['url'];
     }
-
 
     public function getIconHeight()
     {

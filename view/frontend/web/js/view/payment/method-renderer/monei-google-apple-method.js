@@ -115,6 +115,9 @@ define(
                     onBeforeOpen: function () {
                         return additionalValidators.validate();
                     },
+                    onBeforeSubmit: function () {
+                        fullScreenLoader.startLoader();
+                    },
                     onSubmit(result) {
                         if (result.error) {
                             console.log(result.error);
@@ -126,6 +129,7 @@ define(
                     },
                     onError(error) {
                         console.log(error);
+                        fullScreenLoader.stopLoader();
                         self.isPlaceOrderActionAllowed(false);
                     }
                 });

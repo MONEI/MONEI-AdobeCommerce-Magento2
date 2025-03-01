@@ -27,8 +27,8 @@ use Monei\MoneiPayment\Service\Shared\GetMoneiPaymentCodesByMagentoPaymentCode;
  */
 class Enable extends Value
 {
-    private GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode;
     protected ManagerInterface $messageManager;
+    private GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode;
     private GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods;
 
     /**
@@ -46,17 +46,17 @@ class Enable extends Value
      * @param array $data
      */
     public function __construct(
-        GetAvailableMoneiPaymentMethods          $getAvailableMoneiPaymentMethods,
+        GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods,
         GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode,
-        Context                                  $context,
-        Registry                                 $registry,
-        ScopeConfigInterface                     $config,
-        TypeListInterface                        $cacheTypeList,
-        ManagerInterface                         $messageManager,
-        AbstractResource                         $resource = null,
-        AbstractDb                               $resourceCollection = null,
-        array                                    $data = [])
-    {
+        Context $context,
+        Registry $registry,
+        ScopeConfigInterface $config,
+        TypeListInterface $cacheTypeList,
+        ManagerInterface $messageManager,
+        AbstractResource $resource = null,
+        AbstractDb $resourceCollection = null,
+        array $data = []
+    ) {
         parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);
         $this->getAvailableMoneiPaymentMethods = $getAvailableMoneiPaymentMethods;
         $this->getMoneiPaymentCodesByMagentoPaymentCode = $getMoneiPaymentCodesByMagentoPaymentCode;

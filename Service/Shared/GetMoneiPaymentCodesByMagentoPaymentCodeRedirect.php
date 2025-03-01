@@ -13,7 +13,6 @@ use Monei\MoneiPayment\Model\Payment\Monei;
 
 class GetMoneiPaymentCodesByMagentoPaymentCodeRedirect
 {
-
     public function execute(string $magentoPaymentCode): array
     {
         return Monei::MAPPER_MAGENTO_MONEI_PAYMENT_CODE_REDIRECT[$magentoPaymentCode] ?? [];

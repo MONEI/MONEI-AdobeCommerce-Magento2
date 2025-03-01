@@ -11,3 +11,12 @@ node_modules
 !/build/.yarn/releases
 !/build/.yarn/sdks
 !/build/.yarn/versions
+
+# Cache files
+.php-cs-fixer.cache
+.phpcs-cache
+.php_cs.cache
+.phpunit.result.cache
+stubs/cache/*
+/var/cache/*
+/generated/*

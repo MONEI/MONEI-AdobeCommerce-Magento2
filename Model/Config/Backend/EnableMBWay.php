@@ -21,10 +21,11 @@ class EnableMBWay extends Enable
     public function beforeSave(): EnableMBWay
     {
         if ($this->getValue() && !$this->isPaymentAvailable()) {
-            $this->setValue("0");
+            $this->setValue('0');
             // phpcs:disable
             $this->messageManager->addNoticeMessage(
-                __("MBWay payment method is not available in your Monei account. Please enable it in your Monei account to use it."));
+                __('MBWay payment method is not available in your Monei account. Please enable it in your Monei account to use it.')
+            );
             // phpcs:enable
         }
 
@@ -40,7 +41,7 @@ class EnableMBWay extends Enable
         $moneiPaymentCodes = $this->getMoneiPaymentCodesByMagentoPaymentCode(self::PAYMENT_METHOD_CODE);
 
         foreach ($moneiPaymentCodes as $moneiPaymentCode) {
-            if (in_array($moneiPaymentCode, $availablePaymentMethods, true)) {
+            if (\in_array($moneiPaymentCode, $availablePaymentMethods, true)) {
                 return true;
             }
         }

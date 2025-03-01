@@ -46,7 +46,7 @@ class CreatePayment extends AbstractService implements CreatePaymentInterface
         }
         $data = array_merge($data, $this->getUrls());
         if ($this->moduleConfig->getTypeOfPayment() === TypeOfPayment::TYPE_PRE_AUTHORIZED) {
-            $data['transactionType'] = "AUTH";
+            $data['transactionType'] = 'AUTH';
         }
 
         $this->logger->debug('------------------ START CREATE PAYMENT REQUEST -----------------');

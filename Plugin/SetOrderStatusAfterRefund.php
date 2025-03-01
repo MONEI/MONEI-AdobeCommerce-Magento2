@@ -9,11 +9,11 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Plugin;
 
-use Monei\MoneiPayment\Model\Payment\Monei;
+use Magento\Sales\Api\Data\CreditmemoInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Service\CreditmemoService;
-use Magento\Sales\Api\Data\CreditmemoInterface;
+use Monei\MoneiPayment\Model\Payment\Monei;
 
 /**
  * Set status and state for Monei order after credit memo creation.

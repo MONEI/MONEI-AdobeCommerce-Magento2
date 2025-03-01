@@ -53,46 +53,46 @@ class CreatePaymentCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $data = [
-            "amount"        => 110,
-            "currency"      => "EUR",
-            "orderId"       => (string) rand(),
-            "customer"      => [
-                "email" => "testing-customer@monei.com",
-                "name"  => "Testing customer",
-                "phone" => "+34678678678"
+            'amount'        => 110,
+            'currency'      => 'EUR',
+            'orderId'       => (string) rand(),
+            'customer'      => [
+                'email' => 'testing-customer@monei.com',
+                'name'  => 'Testing customer',
+                'phone' => '+34678678678'
             ],
-            "billingDetails"  => [
-                "name"      => "Testing customer",
-                "email"     => "testing-customer@monei.com",
-                "phone"     => "+34678678678",
-                "company"   => "Testing company",
-                "address"   => [
-                    "country"   => "ES",
-                    "city"      => "Madrid",
-                    "line1"     => "Fake Street",
-                    "line2"     => "1",
-                    "zip"       => "28001",
-                    "state"     => "Madrid",
+            'billingDetails'  => [
+                'name'      => 'Testing customer',
+                'email'     => 'testing-customer@monei.com',
+                'phone'     => '+34678678678',
+                'company'   => 'Testing company',
+                'address'   => [
+                    'country'   => 'ES',
+                    'city'      => 'Madrid',
+                    'line1'     => 'Fake Street',
+                    'line2'     => '1',
+                    'zip'       => '28001',
+                    'state'     => 'Madrid',
                 ]
             ],
-            "shippingDetails"  => [
-                "name"      => "Testing customer",
-                "email"     => "testing-customer@monei.com",
-                "phone"     => "+34678678678",
-                "company"   => "Testing company",
-                "address"   => [
-                    "country"   => "ES",
-                    "city"      => "Madrid",
-                    "line1"     => "Fake Street",
-                    "line2"     => "1",
-                    "zip"       => "28001",
-                    "state"     => "Madrid",
+            'shippingDetails'  => [
+                'name'      => 'Testing customer',
+                'email'     => 'testing-customer@monei.com',
+                'phone'     => '+34678678678',
+                'company'   => 'Testing company',
+                'address'   => [
+                    'country'   => 'ES',
+                    'city'      => 'Madrid',
+                    'line1'     => 'Fake Street',
+                    'line2'     => '1',
+                    'zip'       => '28001',
+                    'state'     => 'Madrid',
                 ]
             ]
         ];
         $result = $this->service->execute($data);
         $output->writeln('Response:');
         // @codingStandardsIgnoreLine
-        \print_r($result);
+        print_r($result);
     }
 }

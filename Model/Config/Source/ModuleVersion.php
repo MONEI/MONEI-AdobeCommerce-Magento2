@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)

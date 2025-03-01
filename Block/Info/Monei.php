@@ -35,8 +35,8 @@ class Monei extends Info
 
     public function __construct(
         GetPaymentInterface $paymentService,
-        Template\Context    $context,
-        array               $data = []
+        Template\Context $context,
+        array $data = []
     ) {
         parent::__construct($context, $data);
         $this->paymentService = $paymentService;
@@ -55,13 +55,13 @@ class Monei extends Info
         $monei_payment_id = $this->getInfo()->getOrder()->getData('monei_payment_id');
         if ($monei_payment_id) {
             $paymentData = $this->paymentService->execute($monei_payment_id);
-            $paymentMethodData = array_key_exists('paymentMethod', $paymentData) ? $paymentData['paymentMethod'] : null;
+            $paymentMethodData = \array_key_exists('paymentMethod', $paymentData) ? $paymentData['paymentMethod'] : null;
             if ($paymentMethodData) {
                 foreach ($paymentMethodData as $payKey => $payValue) {
-                    if (is_array($payValue)) {
+                    if (\is_array($payValue)) {
                         foreach ($payValue as $key => $value) {
-                            if ($key == 'expiration') {
-                                $paymentMethodData[$payKey][$key] = date("m/y", $value);
+                            if ($key === 'expiration') {
+                                $paymentMethodData[$payKey][$key] = date('m/y', $value);
                             } else {
                                 $paymentMethodData[$key] = $value;
                             }

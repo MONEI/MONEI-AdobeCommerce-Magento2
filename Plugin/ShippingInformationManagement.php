@@ -19,17 +19,15 @@ use Monei\MoneiPayment\Service\Shared\GetMoneiPaymentCodesByMagentoPaymentCode;
 
 class ShippingInformationManagement
 {
-
     private MoneiPaymentModuleConfigInterface $moneiPaymentModuleConfig;
     private GetAvailableMoneiPaymentMethodsByCountry $getAvailableMoneiPaymentMethodsByCountry;
     private GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode;
 
     public function __construct(
-        MoneiPaymentModuleConfigInterface        $moneiPaymentModuleConfig,
+        MoneiPaymentModuleConfigInterface $moneiPaymentModuleConfig,
         GetAvailableMoneiPaymentMethodsByCountry $getAvailableMoneiPaymentMethodsByCountry,
         GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode
-    )
-    {
+    ) {
         $this->moneiPaymentModuleConfig = $moneiPaymentModuleConfig;
         $this->getAvailableMoneiPaymentMethodsByCountry = $getAvailableMoneiPaymentMethodsByCountry;
         $this->getMoneiPaymentCodesByMagentoPaymentCode = $getMoneiPaymentCodesByMagentoPaymentCode;
@@ -40,11 +38,10 @@ class ShippingInformationManagement
      */
     public function aroundSaveAddressInformation(
         MagentoShippingInformationManagement $subject,
-        callable                             $proceed,
-                                             $cartId,
-        ShippingInformationInterface         $addressInformation
-    )
-    {
+        callable $proceed,
+        $cartId,
+        ShippingInformationInterface $addressInformation
+    ) {
         $paymentDetails = $proceed($cartId, $addressInformation);
 
         return $this->filterPaymentMethods($paymentDetails, $addressInformation);
@@ -53,8 +50,7 @@ class ShippingInformationManagement
     private function filterPaymentMethods(
         PaymentDetailsInterface $paymentDetails,
         ShippingInformationInterface $addressInformation
-    ): PaymentDetailsInterface
-    {
+    ): PaymentDetailsInterface {
         $accountId = $this->moneiPaymentModuleConfig->getAccountId();
         $apiKey = $this->moneiPaymentModuleConfig->getApiKey();
 
@@ -88,7 +84,7 @@ class ShippingInformationManagement
     private function isPaymentMethodAllowed(array $moneiPaymentCodes, array $availableMoneiPaymentMethodsByCountry): bool
     {
         foreach ($moneiPaymentCodes as $moneiPaymentCode) {
-            if (in_array($moneiPaymentCode, $availableMoneiPaymentMethodsByCountry, true)) {
+            if (\in_array($moneiPaymentCode, $availableMoneiPaymentMethodsByCountry, true)) {
                 return true;
             }
         }
@@ -99,7 +95,7 @@ class ShippingInformationManagement
     {
         $paymentMethods = $paymentDetails->getPaymentMethods();
         $filteredPaymentMethods = array_filter($paymentMethods, function ($paymentMethod) {
-            return !in_array($paymentMethod->getCode(), Monei::PAYMENT_METHODS_MONEI, true);
+            return !\in_array($paymentMethod->getCode(), Monei::PAYMENT_METHODS_MONEI, true);
         });
         $paymentDetails->setPaymentMethods($filteredPaymentMethods);
         return $paymentDetails;

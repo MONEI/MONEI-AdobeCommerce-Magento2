@@ -23,15 +23,15 @@ class AccountId extends Value
     private RegistryAccountId $registryAccountId;
 
     public function __construct(
-        RegistryAccountId    $registryAccountId,
-        Context              $context,
-        Registry             $registry,
+        RegistryAccountId $registryAccountId,
+        Context $context,
+        Registry $registry,
         ScopeConfigInterface $config,
-        TypeListInterface    $cacheTypeList,
-        AbstractResource     $resource = null,
-        AbstractDb           $resourceCollection = null,
-        array                $data = [])
-    {
+        TypeListInterface $cacheTypeList,
+        AbstractResource $resource = null,
+        AbstractDb $resourceCollection = null,
+        array $data = []
+    ) {
         parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);
         $this->registryAccountId = $registryAccountId;
     }

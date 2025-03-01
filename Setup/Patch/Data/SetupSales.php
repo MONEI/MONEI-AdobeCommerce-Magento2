@@ -1,16 +1,17 @@
 <?php
 
-  namespace Monei\MoneiPayment\Setup\Patch\Data;
-  use Magento\Framework\DB\Ddl\Table;
-  use Magento\Framework\Setup\Patch\NonTransactionableInterface;
+declare(strict_types=1);
 
-  use Magento\Framework\Setup\ModuleDataSetupInterface;
-  use Magento\Framework\Setup\Patch\DataPatchInterface;
-  use Monei\MoneiPayment\Model\Payment\Monei;
-  use Magento\Sales\Setup\SalesSetup;
+namespace Monei\MoneiPayment\Setup\Patch\Data;
 
-  class SetupSales implements DataPatchInterface, NonTransactionableInterface
-  {
+use Magento\Framework\Setup\ModuleDataSetupInterface;
+use Magento\Framework\Setup\Patch\DataPatchInterface;
+use Magento\Framework\Setup\Patch\NonTransactionableInterface;
+use Magento\Sales\Setup\SalesSetup;
+use Monei\MoneiPayment\Model\Payment\Monei;
+
+class SetupSales implements DataPatchInterface, NonTransactionableInterface
+{
     /** @var ModuleDataSetupInterface */
     private ModuleDataSetupInterface $moduleDataSetup;
 
@@ -22,12 +23,11 @@
      * @param SalesSetup $salesSetup
      */
     public function __construct(
-      ModuleDataSetupInterface $moduleDataSetup,
-      SalesSetup               $salesSetup
-    )
-    {
-      $this->moduleDataSetup = $moduleDataSetup;
-      $this->salesSetup = $salesSetup;
+        ModuleDataSetupInterface $moduleDataSetup,
+        SalesSetup $salesSetup
+    ) {
+        $this->moduleDataSetup = $moduleDataSetup;
+        $this->salesSetup = $salesSetup;
     }
 
     /**
@@ -35,7 +35,7 @@
      */
     public static function getDependencies(): array
     {
-      return [];
+        return [];
     }
 
     /**
@@ -43,7 +43,7 @@
      */
     public function getAliases(): array
     {
-      return [];
+        return [];
     }
 
     /**
@@ -51,14 +51,14 @@
      */
     public static function getVersion(): string
     {
-      return '1.1.9';
+        return '1.1.9';
     }
 
     public function apply(): void
     {
-      $this->moduleDataSetup->getConnection()->startSetup();
+        $this->moduleDataSetup->getConnection()->startSetup();
 
-      $attributesInfo = [
+        $attributesInfo = [
         'label' => 'Monei payment Id',
         'type' => 'text',
         'position' => 150,
@@ -66,15 +66,15 @@
         'required' => false,
         'system' => 0,
         'is_user_defined' => 1,
-      ];
+        ];
 
-      $this->salesSetup->addAttribute(
-        'order',
-        'monei_payment_id',
-        $attributesInfo
-      );
+        $this->salesSetup->addAttribute(
+            'order',
+            'monei_payment_id',
+            $attributesInfo
+        );
 
-      $statuses = [
+        $statuses = [
         Monei::STATUS_MONEI_PENDING => __('Monei - pending'),
         Monei::STATUS_MONEI_AUTHORIZED => __('Monei - pre-authorized'),
         Monei::STATUS_MONEI_EXPIRED => __('Monei - expired'),
@@ -82,18 +82,18 @@
         Monei::STATUS_MONEI_SUCCEDED => __('Monei - succeeded'),
         Monei::STATUS_MONEI_PARTIALLY_REFUNDED => __('Monei - partially refunded'),
         Monei::STATUS_MONEI_REFUNDED => __('Monei - refunded'),
-      ];
-      foreach ($statuses as $code => $info) {
-        $data[] = ['status' => $code, 'label' => $info];
-      }
-      $this->moduleDataSetup->getConnection()->insertArray(
-        $this->moduleDataSetup->getTable('sales_order_status'),
-        ['status', 'label'],
-        $data
-      );
+        ];
+        foreach ($statuses as $code => $info) {
+            $data[] = ['status' => $code, 'label' => $info];
+        }
+        $this->moduleDataSetup->getConnection()->insertArray(
+            $this->moduleDataSetup->getTable('sales_order_status'),
+            ['status', 'label'],
+            $data
+        );
 
-      $data = [];
-      $statuses = [
+        $data = [];
+        $statuses = [
         'pending_payment' => [
           Monei::STATUS_MONEI_PENDING => false,
           Monei::STATUS_MONEI_AUTHORIZED => false,
@@ -109,24 +109,24 @@
         'complete' => [
           Monei::STATUS_MONEI_REFUNDED => false,
         ],
-      ];
+        ];
 
-      foreach ($statuses as $stateCode => $status) {
-        foreach ($status as $statusCode => $isDefault) {
-          $data[] = [
-            'status' => $statusCode,
-            'state' => $stateCode,
-            'is_default' => $isDefault,
-          ];
+        foreach ($statuses as $stateCode => $status) {
+            foreach ($status as $statusCode => $isDefault) {
+                $data[] = [
+                'status' => $statusCode,
+                'state' => $stateCode,
+                'is_default' => $isDefault,
+                ];
+            }
         }
-      }
 
-      $this->moduleDataSetup->getConnection()->insertArray(
-        $this->moduleDataSetup->getTable('sales_order_status_state'),
-        ['status', 'state', 'is_default'],
-        $data
-      );
+        $this->moduleDataSetup->getConnection()->insertArray(
+            $this->moduleDataSetup->getTable('sales_order_status_state'),
+            ['status', 'state', 'is_default'],
+            $data
+        );
 
-      $this->moduleDataSetup->getConnection()->endSetup();
+        $this->moduleDataSetup->getConnection()->endSetup();
     }
-  }
+}

@@ -12,11 +12,11 @@ namespace Monei\MoneiPayment\Controller\Adminhtml\Order;
 use Exception;
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
-use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Controller\Result\Json;
-use Monei\MoneiPayment\Api\Service\CancelPaymentInterface;
+use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\OrderManagementInterface;
+use Monei\MoneiPayment\Api\Service\CancelPaymentInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -24,6 +24,12 @@ use Psr\Log\LoggerInterface;
  */
 class Cancel extends Action
 {
+    /**
+     * Authorization level of a basic admin session
+     *
+     * @see _isAllowed()
+     */
+    public const ADMIN_RESOURCE = 'Magento_Sales::cancel';
     /**
      * @var JsonFactory
      */
@@ -38,13 +44,6 @@ class Cancel extends Action
      * @var OrderManagementInterface
      */
     private $orderManagement;
-
-    /**
-     * Authorization level of a basic admin session
-     *
-     * @see _isAllowed()
-     */
-    const ADMIN_RESOURCE = 'Magento_Sales::cancel';
 
     /**
      * @param Context                  $context

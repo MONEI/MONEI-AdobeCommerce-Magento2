@@ -19,12 +19,11 @@ class IsEnabledApplePayInMoneiAccount
 
     public function __construct(
         MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentModuleConfig,
-        GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods)
-    {
+        GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods
+    ) {
         $this->moneiGoogleApplePaymentModuleConfig = $moneiGoogleApplePaymentModuleConfig;
         $this->getAvailableMoneiPaymentMethods = $getAvailableMoneiPaymentMethods;
     }
-
 
     public function execute(): bool
     {
@@ -33,6 +32,6 @@ class IsEnabledApplePayInMoneiAccount
         }
         $availableMoneiPaymentMethods = $this->getAvailableMoneiPaymentMethods->execute();
 
-        return in_array(Monei::MONEI_APPLE_CODE, $availableMoneiPaymentMethods, true);
+        return \in_array(Monei::MONEI_APPLE_CODE, $availableMoneiPaymentMethods, true);
     }
 }

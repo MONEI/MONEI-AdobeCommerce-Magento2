@@ -9,9 +9,9 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service;
 
-use Monei\MoneiPayment\Api\Service\RefundPaymentInterface;
-use Magento\Framework\Exception\LocalizedException;
 use Exception;
+use Magento\Framework\Exception\LocalizedException;
+use Monei\MoneiPayment\Api\Service\RefundPaymentInterface;
 
 /**
  * Monei refund payment REST integration service class.
@@ -91,7 +91,7 @@ class RefundPayment extends AbstractService implements RefundPaymentInterface
         foreach ($this->requiredArguments as $argument) {
             if (!isset($data[$argument]) || null === $data[$argument]) {
                 $this->throwRequiredArgumentException($argument);
-            } elseif ($argument === 'refundReason' && !in_array($data[$argument], $this->refundReasons)) {
+            } elseif ($argument === 'refundReason' && !\in_array($data[$argument], $this->refundReasons, true)) {
                 throw new LocalizedException(
                     __(
                         '%1 doesn\'t match any allowed reasons %2',

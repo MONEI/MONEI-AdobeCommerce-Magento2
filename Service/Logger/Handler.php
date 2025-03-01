@@ -9,13 +9,10 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service\Logger;
 
-use Monei\MoneiPayment\Service\Logger;
 use Magento\Framework\Logger\Handler\Base;
+use Monei\MoneiPayment\Service\Logger;
 use Monolog\Logger as MonologLogger;
 
-/**
- * Class Handler.
- */
 class Handler extends Base
 {
     /**

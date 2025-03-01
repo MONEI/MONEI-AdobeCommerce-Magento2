@@ -9,10 +9,8 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Observer;
 
-use Magento\Framework\DataObject\Copy;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Quote\Model\Quote;
 use Magento\Sales\Model\Order;
 use Monei\MoneiPayment\Model\Payment\Monei;
 
@@ -27,7 +25,7 @@ class SaveQuoteSubmitSuccessObserver implements ObserverInterface
         /* @var Order $order */
         $order = $observer->getEvent()->getData('order');
 
-        if (in_array($order->getPayment()->getMethod(), Monei::PAYMENT_METHODS_MONEI)) {
+        if (\in_array($order->getPayment()->getMethod(), Monei::PAYMENT_METHODS_MONEI, true)) {
             $order->setCanSendNewEmailFlag(true);
         }
 

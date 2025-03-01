@@ -28,15 +28,15 @@ class GetPaymentMethods extends AbstractService implements GetPaymentMethodsInte
     private RegistryAccountId $registryAccountId;
 
     public function __construct(
-        RegistryAccountId                 $registryAccountId,
-        ClientFactory                     $clientFactory,
+        RegistryAccountId $registryAccountId,
+        ClientFactory $clientFactory,
         MoneiPaymentModuleConfigInterface $moduleConfig,
-        StoreManagerInterface             $storeManager,
-        UrlInterface                      $urlBuilder,
-        SerializerInterface               $serializer,
-        Logger                            $logger,
-        ModuleVersion                     $moduleVersion)
-    {
+        StoreManagerInterface $storeManager,
+        UrlInterface $urlBuilder,
+        SerializerInterface $serializer,
+        Logger $logger,
+        ModuleVersion $moduleVersion
+    ) {
         parent::__construct(
             $clientFactory,
             $moduleConfig,

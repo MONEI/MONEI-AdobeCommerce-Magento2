@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Cron;
 
+use Magento\Framework\Stdlib\DateTime\DateTime;
+use Magento\Sales\Api\Data\OrderInterfaceFactory;
 use Monei\MoneiPayment\Api\Service\CancelPaymentInterface;
 use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
@@ -17,8 +19,6 @@ use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Model\ResourceModel\PendingOrder as PendingOrderResource;
 use Monei\MoneiPayment\Model\ResourceModel\PendingOrder\Collection;
 use Monei\MoneiPayment\Model\ResourceModel\PendingOrder\CollectionFactory;
-use Magento\Framework\Stdlib\DateTime\DateTime;
-use Magento\Sales\Api\Data\OrderInterfaceFactory;
 
 /**
  * Cron job for processing orders with Monei payment method
