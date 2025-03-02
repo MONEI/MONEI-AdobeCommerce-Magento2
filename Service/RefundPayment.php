@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -19,18 +18,14 @@ class RefundPayment extends AbstractService implements RefundPaymentInterface
 {
     public const METHOD = 'refund';
 
-    /**
-     * @var array
-     */
+    /** @var array */
     private $requiredArguments = [
         'paymentId',
         'refundReason',
         'amount',
     ];
 
-    /**
-     * @var array
-     */
+    /** @var array */
     private $refundReasons = [
         'duplicated',
         'fraudulent',

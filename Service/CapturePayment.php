@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -19,9 +18,7 @@ class CapturePayment extends AbstractService implements CapturePaymentInterface
 {
     public const METHOD = 'capture';
 
-    /**
-     * @var array
-     */
+    /** @var array */
     private $requiredArguments = [
         'paymentId',
         'amount',

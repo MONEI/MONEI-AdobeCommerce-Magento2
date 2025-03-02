@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -25,44 +24,28 @@ use Monei\MoneiPayment\Model\ResourceModel\PendingOrder\CollectionFactory;
  */
 class ProcessPendingOrders
 {
-    /**
-     * @var CollectionFactory
-     */
+    /** @var CollectionFactory */
     private $collectionFactory;
 
-    /**
-     * @var OrderInterfaceFactory
-     */
+    /** @var OrderInterfaceFactory */
     private $orderFactory;
 
-    /**
-     * @var GetPaymentInterface
-     */
+    /** @var GetPaymentInterface */
     private $getPaymentService;
 
-    /**
-     * @var GenerateInvoiceInterface
-     */
+    /** @var GenerateInvoiceInterface */
     private $generateInvoiceService;
 
-    /**
-     * @var SetOrderStatusAndStateInterface
-     */
+    /** @var SetOrderStatusAndStateInterface */
     private $setOrderStatusAndStateService;
 
-    /**
-     * @var PendingOrderResource
-     */
+    /** @var PendingOrderResource */
     private $pendingOrderResource;
 
-    /**
-     * @var DateTime
-     */
+    /** @var DateTime */
     private $date;
 
-    /**
-     * @var CancelPaymentInterface
-     */
+    /** @var CancelPaymentInterface */
     private $cancelPaymentService;
 
     public function __construct(

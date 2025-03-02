@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -29,49 +28,31 @@ use Monei\MoneiPayment\Service\Shared\IsEnabledGooglePayInMoneiAccount;
  */
 class CheckoutConfigProvider implements ConfigProviderInterface
 {
-    /**
-     * URL builder.
-     */
+    /** URL builder. */
     private UrlInterface $urlBuilder;
 
-    /**
-     * Monei payment configuration.
-     */
+    /** Monei payment configuration. */
     private MoneiPaymentModuleConfigInterface $moneiPaymentConfig;
 
-    /**
-     * Monei card payment configuration.
-     */
+    /** Monei card payment configuration. */
     private MoneiCardPaymentModuleConfigInterface $moneiCardPaymentConfig;
 
-    /**
-     * Monei Google and Apple Pay configuration.
-     */
+    /** Monei Google and Apple Pay configuration. */
     private MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentConfig;
 
-    /**
-     * Monei Bizum payment configuration.
-     */
+    /** Monei Bizum payment configuration. */
     private MoneiBizumPaymentModuleConfigInterface $moneiBizumPaymentModuleConfig;
 
-    /**
-     * Store manager.
-     */
+    /** Store manager. */
     private StoreManagerInterface $storeManager;
 
-    /**
-     * All Monei payment configurations.
-     */
+    /** All Monei payment configurations. */
     private AllMoneiPaymentModuleConfigInterface $allMoneiPaymentModuleConfig;
 
-    /**
-     * Google Pay availability checker.
-     */
+    /** Google Pay availability checker. */
     private IsEnabledGooglePayInMoneiAccount $isEnabledGooglePayInMoneiAccount;
 
-    /**
-     * Apple Pay availability checker.
-     */
+    /** Apple Pay availability checker. */
     private IsEnabledApplePayInMoneiAccount $isEnabledApplePayInMoneiAccount;
 
     public function __construct(

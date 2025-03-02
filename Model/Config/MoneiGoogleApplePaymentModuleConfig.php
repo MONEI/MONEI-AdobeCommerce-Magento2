@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -22,9 +21,7 @@ use Monei\MoneiPayment\Api\Config\MoneiGoogleApplePaymentModuleConfigInterface;
  */
 class MoneiGoogleApplePaymentModuleConfig implements MoneiGoogleApplePaymentModuleConfigInterface
 {
-    /**
-     * Scope configuration.
-     */
+    /** Scope configuration. */
     private ScopeConfigInterface $scopeConfig;
 
     /**

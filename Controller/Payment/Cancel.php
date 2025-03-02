@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -21,29 +20,19 @@ use Magento\Sales\Api\OrderRepositoryInterface;
  */
 class Cancel implements ActionInterface
 {
-    /**
-     * @var Session
-     */
+    /** @var Session */
     private $checkoutSession;
 
-    /**
-     * @var OrderRepositoryInterface
-     */
+    /** @var OrderRepositoryInterface */
     private $orderRepository;
 
-    /**
-     * @var Context
-     */
+    /** @var Context */
     private $context;
 
-    /**
-     * @var ManagerInterface
-     */
+    /** @var ManagerInterface */
     private $messageManager;
 
-    /**
-     * @var MagentoRedirect
-     */
+    /** @var MagentoRedirect */
     private $resultRedirectFactory;
 
     public function __construct(

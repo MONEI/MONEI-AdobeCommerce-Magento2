@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -17,9 +16,7 @@ use Monei\MoneiPayment\Api\Service\RefundPaymentInterface;
  */
 class Refund implements CommandInterface
 {
-    /**
-     * @var RefundPaymentInterface
-     */
+    /** @var RefundPaymentInterface */
     private $refundPaymentService;
 
     public function __construct(

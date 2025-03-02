@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -30,59 +29,37 @@ use Monei\MoneiPayment\Service\Logger;
  */
 class PaymentProcessor
 {
-    /**
-     * @var ProcessingLock
-     */
+    /** @var ProcessingLock */
     private $processingLock;
 
-    /**
-     * @var OrderRepositoryInterface
-     */
+    /** @var OrderRepositoryInterface */
     private $orderRepository;
 
-    /**
-     * @var OrderInterfaceFactory
-     */
+    /** @var OrderInterfaceFactory */
     private $orderFactory;
 
-    /**
-     * @var MoneiPaymentModuleConfigInterface
-     */
+    /** @var MoneiPaymentModuleConfigInterface */
     private $moduleConfig;
 
-    /**
-     * @var GenerateInvoiceInterface
-     */
+    /** @var GenerateInvoiceInterface */
     private $generateInvoiceService;
 
-    /**
-     * @var SetOrderStatusAndStateInterface
-     */
+    /** @var SetOrderStatusAndStateInterface */
     private $setOrderStatusAndStateService;
 
-    /**
-     * @var PendingOrderFactory
-     */
+    /** @var PendingOrderFactory */
     private $pendingOrderFactory;
 
-    /**
-     * @var PendingOrderResource
-     */
+    /** @var PendingOrderResource */
     private $pendingOrderResource;
 
-    /**
-     * @var OrderSender
-     */
+    /** @var OrderSender */
     private $orderSender;
 
-    /**
-     * @var CreateVaultPayment
-     */
+    /** @var CreateVaultPayment */
     private $createVaultPayment;
 
-    /**
-     * @var Logger
-     */
+    /** @var Logger */
     private $logger;
 
     public function __construct(

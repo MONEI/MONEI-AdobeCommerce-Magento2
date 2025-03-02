@@ -58,6 +58,12 @@
     "scripts": {
         "lint": "vendor/bin/phpcs --standard=phpcs.xml .",
         "fix": "vendor/bin/phpcbf --standard=phpcs.xml .",
+        "cs:check": "vendor/bin/php-cs-fixer check --config=.php-cs-fixer.php .",
+        "cs:fix": "vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php .",
+        "fix:all": [
+            "@fix",
+            "@cs:fix"
+        ],
         "post-install-cmd": [
             "([ $COMPOSER_DEV_MODE -eq 0 ] || vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/,../../magento/php-compatibility-fork/)"
         ],

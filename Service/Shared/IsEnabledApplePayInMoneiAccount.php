@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -17,14 +16,10 @@ use Monei\MoneiPayment\Model\Payment\Monei;
  */
 class IsEnabledApplePayInMoneiAccount
 {
-    /**
-     * Google and Apple Payment module configuration.
-     */
+    /** Google and Apple Payment module configuration. */
     private MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentModuleConfig;
 
-    /**
-     * Service to get available Monei payment methods.
-     */
+    /** Service to get available Monei payment methods. */
     private GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods;
 
     /**

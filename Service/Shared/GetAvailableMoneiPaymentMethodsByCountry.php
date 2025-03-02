@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -14,9 +13,7 @@ namespace Monei\MoneiPayment\Service\Shared;
  */
 class GetAvailableMoneiPaymentMethodsByCountry
 {
-    /**
-     * Service to get all available Monei payment methods.
-     */
+    /** Service to get all available Monei payment methods. */
     private GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods;
 
     /**

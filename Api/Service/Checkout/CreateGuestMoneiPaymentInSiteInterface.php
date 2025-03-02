@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -12,7 +11,7 @@ namespace Monei\MoneiPayment\Api\Service\Checkout;
 interface CreateGuestMoneiPaymentInSiteInterface
 {
     /**
-     * Create a Monei payment for a guest customer
+     * Create a Monei payment for a guest customer.
      *
      * @param string $cartId
      * @param string $email

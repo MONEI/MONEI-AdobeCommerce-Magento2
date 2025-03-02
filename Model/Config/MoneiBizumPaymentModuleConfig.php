@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -18,9 +17,7 @@ use Monei\MoneiPayment\Api\Config\MoneiBizumPaymentModuleConfigInterface;
  */
 class MoneiBizumPaymentModuleConfig implements MoneiBizumPaymentModuleConfigInterface
 {
-    /**
-     * Scope configuration.
-     */
+    /** Scope configuration. */
     private ScopeConfigInterface $scopeConfig;
 
     public function __construct(

@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -24,34 +23,22 @@ use Monei\MoneiPayment\Model\Config\Source\ModuleVersion;
  */
 abstract class AbstractService
 {
-    /**
-     * @var MoneiPaymentModuleConfigInterface
-     */
+    /** @var MoneiPaymentModuleConfigInterface */
     protected $moduleConfig;
 
-    /**
-     * @var StoreManagerInterface
-     */
+    /** @var StoreManagerInterface */
     protected $storeManager;
 
-    /**
-     * @var SerializerInterface
-     */
+    /** @var SerializerInterface */
     protected $serializer;
 
-    /**
-     * @var Logger
-     */
+    /** @var Logger */
     protected $logger;
 
-    /**
-     * @var ClientFactory
-     */
+    /** @var ClientFactory */
     private $clientFactory;
 
-    /**
-     * @var UrlInterface
-     */
+    /** @var UrlInterface */
     private $urlBuilder;
 
     private ModuleVersion $moduleVersion;

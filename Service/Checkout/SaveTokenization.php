@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -23,14 +22,10 @@ use Monei\MoneiPayment\Api\Service\Checkout\SaveTokenizationInterface;
  */
 class SaveTokenization implements SaveTokenizationInterface
 {
-    /**
-     * Quote repository for managing quote data.
-     */
+    /** Quote repository for managing quote data. */
     private CartRepositoryInterface $quoteRepository;
 
-    /**
-     * Checkout session to access current quote.
-     */
+    /** Checkout session to access current quote. */
     private Session $checkoutSession;
 
     /**

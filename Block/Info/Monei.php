@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -19,9 +18,7 @@ use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
  */
 class Monei extends Info
 {
-    /**
-     * Payment information fields allowed to be displayed.
-     */
+    /** Payment information fields allowed to be displayed. */
     private const INFO_PAY_ALLOWED = [
         'last4',
         'brand',
@@ -59,7 +56,7 @@ class Monei extends Info
      *
      * @throws LocalizedException
      *
-     * @return null|array
+     * @return array|null
      */
     public function getPaymentInfo()
     {
@@ -98,7 +95,7 @@ class Monei extends Info
      *
      * @throws LocalizedException
      *
-     * @return null|string
+     * @return string|null
      */
     public function getPaymentTitle()
     {

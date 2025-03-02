@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -22,24 +21,16 @@ use Monei\MoneiPayment\Service\Shared\GetMoneiPaymentCodesByMagentoPaymentCodeRe
  */
 class Redirect implements ActionInterface
 {
-    /**
-     * @var Session
-     */
+    /** @var Session */
     private $checkoutSession;
 
-    /**
-     * @var CreatePaymentInterface
-     */
+    /** @var CreatePaymentInterface */
     private $createPayment;
 
-    /**
-     * @var MagentoRedirect
-     */
+    /** @var MagentoRedirect */
     private $resultRedirectFactory;
 
-    /**
-     * @var GetMoneiPaymentCodesByMagentoPaymentCodeRedirect
-     */
+    /** @var GetMoneiPaymentCodesByMagentoPaymentCodeRedirect */
     private $getMoneiPaymentCodesByMagentoPaymentCodeRedirect;
 
     public function __construct(

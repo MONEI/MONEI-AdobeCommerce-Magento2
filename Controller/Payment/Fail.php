@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -22,34 +21,22 @@ use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
  */
 class Fail implements ActionInterface
 {
-    /**
-     * @var OrderInterfaceFactory
-     */
+    /** @var OrderInterfaceFactory */
     protected $orderFactory;
 
-    /**
-     * @var Session
-     */
+    /** @var Session */
     private $checkoutSession;
 
-    /**
-     * @var SetOrderStatusAndStateInterface
-     */
+    /** @var SetOrderStatusAndStateInterface */
     private $setOrderStatusAndStateService;
 
-    /**
-     * @var Context
-     */
+    /** @var Context */
     private $context;
 
-    /**
-     * @var ManagerInterface
-     */
+    /** @var ManagerInterface */
     private $messageManager;
 
-    /**
-     * @var MagentoRedirect
-     */
+    /** @var MagentoRedirect */
     private $resultRedirectFactory;
 
     public function __construct(

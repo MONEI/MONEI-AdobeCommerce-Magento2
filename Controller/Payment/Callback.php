@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -34,9 +33,7 @@ use Monei\MoneiPayment\Service\Order\PaymentProcessor;
  */
 class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
 {
-    /**
-     * Controller source identifier.
-     */
+    /** Controller source identifier. */
     private const SOURCE = 'callback';
 
     /**
@@ -46,54 +43,34 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
      */
     private $errorMessage = '';
 
-    /**
-     * @var Context
-     */
+    /** @var Context */
     private $context;
 
-    /**
-     * @var SerializerInterface
-     */
+    /** @var SerializerInterface */
     private $serializer;
 
-    /**
-     * @var MoneiPaymentModuleConfigInterface
-     */
+    /** @var MoneiPaymentModuleConfigInterface */
     private $moduleConfig;
 
-    /**
-     * @var Logger
-     */
+    /** @var Logger */
     private $logger;
 
-    /**
-     * @var StoreManagerInterface
-     */
+    /** @var StoreManagerInterface */
     private $storeManager;
 
-    /**
-     * @var GenerateInvoiceInterface
-     */
+    /** @var GenerateInvoiceInterface */
     private $generateInvoiceService;
 
-    /**
-     * @var SetOrderStatusAndStateInterface
-     */
+    /** @var SetOrderStatusAndStateInterface */
     private $setOrderStatusAndStateService;
 
-    /**
-     * @var MagentoRedirect
-     */
+    /** @var MagentoRedirect */
     private $resultRedirectFactory;
 
-    /**
-     * @var JsonFactory
-     */
+    /** @var JsonFactory */
     private $resultJsonFactory;
 
-    /**
-     * @var PaymentProcessor
-     */
+    /** @var PaymentProcessor */
     private $paymentProcessor;
 
     public function __construct(

@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -22,14 +21,10 @@ use Monei\MoneiPayment\Model\Config\Source\CancelReason;
  */
 class Popup extends Template
 {
-    /**
-     * @var Registry
-     */
+    /** @var Registry */
     private $registry;
 
-    /**
-     * @var CancelReason
-     */
+    /** @var CancelReason */
     private $source;
 
     public function __construct(

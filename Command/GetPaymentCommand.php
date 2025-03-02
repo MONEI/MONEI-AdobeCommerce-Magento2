@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -19,9 +18,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class GetPaymentCommand extends Command
 {
-    /**
-     * @var GetPaymentInterface
-     */
+    /** @var GetPaymentInterface */
     private $service;
 
     public function __construct(

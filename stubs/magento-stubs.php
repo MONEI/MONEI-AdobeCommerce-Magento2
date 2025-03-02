@@ -1,14 +1,17 @@
 <?php
 
 /**
- * Basic stubs for Magento 2
+ * Basic stubs for Magento 2.
+ *
+ * @param mixed $text
  */
 
 /**
- * Translation function
+ * Translation function.
  *
  * @param string $text
  * @param mixed ...$args
+ *
  * @return string
  */
 function __($text, ...$args): string
@@ -28,6 +31,7 @@ namespace Magento\Framework\Component {
          * @param string $type
          * @param string $name
          * @param string $path
+         *
          * @return void
          */
         public static function register($type, $name, $path)
@@ -56,12 +60,14 @@ namespace Magento\Framework\Serialize {
     {
         /**
          * @param mixed $data
+         *
          * @return string
          */
         public function serialize($data);
 
         /**
          * @param string $string
+         *
          * @return mixed
          */
         public function unserialize($string);
@@ -106,6 +112,7 @@ namespace Monolog {
         /**
          * @param string $message
          * @param array $context
+         *
          * @return void
          */
         public function debug($message, array $context = [])
@@ -115,6 +122,7 @@ namespace Monolog {
         /**
          * @param string $message
          * @param array $context
+         *
          * @return void
          */
         public function info($message, array $context = [])
@@ -124,6 +132,7 @@ namespace Monolog {
         /**
          * @param string $message
          * @param array $context
+         *
          * @return void
          */
         public function error($message, array $context = [])
@@ -133,6 +142,7 @@ namespace Monolog {
         /**
          * @param string $message
          * @param array $context
+         *
          * @return void
          */
         public function critical($message, array $context = [])

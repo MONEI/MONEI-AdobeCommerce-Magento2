@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -17,8 +16,6 @@ use Magento\Sales\Model\Order;
  */
 class PendingStatus extends Status
 {
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $_stateStatuses = Order::STATE_PENDING_PAYMENT;
 }

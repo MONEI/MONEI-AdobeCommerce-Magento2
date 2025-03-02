@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -21,19 +20,13 @@ use Monei\MoneiPayment\Model\Payment\Monei;
  */
 class SetOrderStatusAndState implements SetOrderStatusAndStateInterface
 {
-    /**
-     * @var \Magento\Sales\Api\Data\OrderInterfaceFactory
-     */
+    /** @var \Magento\Sales\Api\Data\OrderInterfaceFactory */
     protected $orderFactory;
 
-    /**
-     * @var OrderRepositoryInterface
-     */
+    /** @var OrderRepositoryInterface */
     private $orderRepository;
 
-    /**
-     * @var MoneiPaymentModuleConfigInterface
-     */
+    /** @var MoneiPaymentModuleConfigInterface */
     private $moduleConfig;
 
     /**

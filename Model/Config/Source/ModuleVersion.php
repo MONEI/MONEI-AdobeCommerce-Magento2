@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -23,9 +22,7 @@ use Magento\Framework\Registry;
  */
 class ModuleVersion extends Value
 {
-    /**
-     * @var ResourceInterface
-     */
+    /** @var ResourceInterface */
     protected $moduleResource;
 
     public function __construct(

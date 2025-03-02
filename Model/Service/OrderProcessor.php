@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -21,24 +20,16 @@ use Monei\MoneiPayment\Service\Logger;
  */
 class OrderProcessor
 {
-    /**
-     * @var OrderLockManagerInterface
-     */
+    /** @var OrderLockManagerInterface */
     private $orderLockManager;
 
-    /**
-     * @var OrderRepositoryInterface
-     */
+    /** @var OrderRepositoryInterface */
     private $orderRepository;
 
-    /**
-     * @var TransactionFactory
-     */
+    /** @var TransactionFactory */
     private $transactionFactory;
 
-    /**
-     * @var Logger
-     */
+    /** @var Logger */
     private $logger;
 
     public function __construct(

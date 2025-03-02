@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -17,9 +16,7 @@ use Monei\MoneiPayment\Model\Config\Source\CancelReason;
  */
 class RefundReasons implements ArgumentInterface
 {
-    /**
-     * @var CancelReason
-     */
+    /** @var CancelReason */
     private $reasonsSource;
 
     public function __construct(

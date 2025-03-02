@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -27,34 +26,22 @@ use Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote;
  */
 class CreateLoggedMoneiPaymentVault implements CreateLoggedMoneiPaymentVaultInterface
 {
-    /**
-     * Quote repository for managing quote data.
-     */
+    /** Quote repository for managing quote data. */
     private CartRepositoryInterface $quoteRepository;
 
-    /**
-     * Checkout session to access current quote.
-     */
+    /** Checkout session to access current quote. */
     private Session $checkoutSession;
 
-    /**
-     * Service to get customer details from quote.
-     */
+    /** Service to get customer details from quote. */
     private GetCustomerDetailsByQuote $getCustomerDetailsByQuote;
 
-    /**
-     * Service to get address details from quote address.
-     */
+    /** Service to get address details from quote address. */
     private GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress;
 
-    /**
-     * Payment token management for handling saved payment methods.
-     */
+    /** Payment token management for handling saved payment methods. */
     private PaymentTokenManagementInterface $tokenManagement;
 
-    /**
-     * Service to create payment in Monei.
-     */
+    /** Service to create payment in Monei. */
     private CreatePayment $createPayment;
 
     /**

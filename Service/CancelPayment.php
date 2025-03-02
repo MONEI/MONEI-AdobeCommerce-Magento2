@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -19,17 +18,13 @@ class CancelPayment extends AbstractService implements CancelPaymentInterface
 {
     public const METHOD = 'cancel';
 
-    /**
-     * @var array
-     */
+    /** @var array */
     private $requiredArguments = [
         'paymentId',
         'cancellationReason',
     ];
 
-    /**
-     * @var array
-     */
+    /** @var array */
     private $cancellationReasons = [
         'duplicated',
         'fraudulent',

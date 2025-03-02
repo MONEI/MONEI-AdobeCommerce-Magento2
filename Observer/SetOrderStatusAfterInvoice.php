@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -21,14 +20,10 @@ use Monei\MoneiPayment\Model\Payment\Monei;
  */
 class SetOrderStatusAfterInvoice implements ObserverInterface
 {
-    /**
-     * @var OrderRepositoryInterface
-     */
+    /** @var OrderRepositoryInterface */
     private $orderRepository;
 
-    /**
-     * @var MoneiPaymentModuleConfigInterface
-     */
+    /** @var MoneiPaymentModuleConfigInterface */
     private $moduleConfig;
 
     public function __construct(

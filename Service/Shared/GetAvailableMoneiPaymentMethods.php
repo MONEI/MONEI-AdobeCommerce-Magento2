@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -16,19 +15,13 @@ use Monei\MoneiPayment\Api\Service\GetPaymentMethodsInterface;
  */
 class GetAvailableMoneiPaymentMethods
 {
-    /**
-     * Available payment methods.
-     */
+    /** Available payment methods. */
     private array $availablePaymentMethods = [];
 
-    /**
-     * Metadata for payment methods.
-     */
+    /** Metadata for payment methods. */
     private array $metadataPaymentMethods = [];
 
-    /**
-     * Payment methods service.
-     */
+    /** Payment methods service. */
     private GetPaymentMethodsInterface $getPaymentMethodsService;
 
     /**

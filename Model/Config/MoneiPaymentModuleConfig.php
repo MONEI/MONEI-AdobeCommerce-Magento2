@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -24,9 +23,7 @@ use Monei\MoneiPayment\Model\Config\Source\Mode;
  */
 class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
 {
-    /**
-     * Scope configuration for accessing store configuration values.
-     */
+    /** Scope configuration for accessing store configuration values. */
     private ScopeConfigInterface $scopeConfig;
 
     /**

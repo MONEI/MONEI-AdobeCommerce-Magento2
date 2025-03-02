@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -29,69 +28,43 @@ use Monei\MoneiPayment\Service\Order\PaymentProcessor;
  */
 class Complete implements ActionInterface
 {
-    /**
-     * Controller source identifier.
-     */
+    /** Controller source identifier. */
     private const SOURCE = 'complete';
 
-    /**
-     * @var OrderSender
-     */
+    /** @var OrderSender */
     protected $orderSender;
 
-    /**
-     * @var OrderRepositoryInterface
-     */
+    /** @var OrderRepositoryInterface */
     private $orderRepository;
 
-    /**
-     * @var OrderInterfaceFactory
-     */
+    /** @var OrderInterfaceFactory */
     private $orderFactory;
 
-    /**
-     * @var MoneiPaymentModuleConfigInterface
-     */
+    /** @var MoneiPaymentModuleConfigInterface */
     private $moduleConfig;
 
-    /**
-     * @var GenerateInvoiceInterface
-     */
+    /** @var GenerateInvoiceInterface */
     private $generateInvoiceService;
 
-    /**
-     * @var Context
-     */
+    /** @var Context */
     private $context;
 
-    /**
-     * @var MagentoRedirect
-     */
+    /** @var MagentoRedirect */
     private $resultRedirectFactory;
 
-    /**
-     * @var PendingOrderFactory
-     */
+    /** @var PendingOrderFactory */
     private $pendingOrderFactory;
 
-    /**
-     * @var PendingOrderResource
-     */
+    /** @var PendingOrderResource */
     private $pendingOrderResource;
 
-    /**
-     * @var CreateVaultPayment
-     */
+    /** @var CreateVaultPayment */
     private $createVaultPayment;
 
-    /**
-     * @var PaymentProcessor
-     */
+    /** @var PaymentProcessor */
     private $paymentProcessor;
 
-    /**
-     * @var Logger
-     */
+    /** @var Logger */
     private $logger;
 
     /**

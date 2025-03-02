@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -17,9 +16,7 @@ use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
  */
 class Capture implements CommandInterface
 {
-    /**
-     * @var CapturePaymentInterface
-     */
+    /** @var CapturePaymentInterface */
     private $capturePaymentService;
 
     public function __construct(

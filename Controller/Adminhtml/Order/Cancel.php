@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -30,19 +29,13 @@ class Cancel extends Action
      */
     public const ADMIN_RESOURCE = 'Magento_Sales::cancel';
 
-    /**
-     * @var JsonFactory
-     */
+    /** @var JsonFactory */
     private $resultJsonFactory;
 
-    /**
-     * @var CancelPaymentInterface
-     */
+    /** @var CancelPaymentInterface */
     private $cancelPaymentService;
 
-    /**
-     * @var OrderManagementInterface
-     */
+    /** @var OrderManagementInterface */
     private $orderManagement;
 
     public function __construct(

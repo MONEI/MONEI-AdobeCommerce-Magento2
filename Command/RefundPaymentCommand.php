@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -19,9 +18,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class RefundPaymentCommand extends Command
 {
-    /**
-     * @var RefundPaymentInterface
-     */
+    /** @var RefundPaymentInterface */
     private $service;
 
     public function __construct(

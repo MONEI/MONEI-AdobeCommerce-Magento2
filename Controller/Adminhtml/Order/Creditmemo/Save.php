@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -33,24 +32,16 @@ class Save extends Action implements HttpPostActionInterface
      */
     public const ADMIN_RESOURCE = 'Magento_Sales::sales_creditmemo';
 
-    /**
-     * @var CreditmemoLoader
-     */
+    /** @var CreditmemoLoader */
     protected $creditmemoLoader;
 
-    /**
-     * @var CreditmemoSender
-     */
+    /** @var CreditmemoSender */
     protected $creditmemoSender;
 
-    /**
-     * @var ForwardFactory
-     */
+    /** @var ForwardFactory */
     protected $resultForwardFactory;
 
-    /**
-     * @var SalesData
-     */
+    /** @var SalesData */
     private $salesData;
 
     public function __construct(
