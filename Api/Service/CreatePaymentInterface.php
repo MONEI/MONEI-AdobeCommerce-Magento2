@@ -15,6 +15,8 @@ interface CreatePaymentInterface
 {
     /**
      * Service execute method.
+     *
+     * @param array $data
      */
     public function execute(array $data): array;
 }

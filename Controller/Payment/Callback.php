@@ -175,6 +175,9 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     /**
      * Verifies signature from header.
      *
+     * @param string $body
+     * @param array $header
+     *
      * @throws LocalizedException
      */
     private function verifySignature(string $body, array $header): void
@@ -200,6 +203,8 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
 
     /**
      * Split Monei signature into associative array.
+     *
+     * @param string $signature
      */
     private function splitMoneiSignature(string $signature): array
     {

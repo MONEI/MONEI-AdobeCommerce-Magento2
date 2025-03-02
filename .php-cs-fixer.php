@@ -17,8 +17,8 @@ return $config->setRules([
     'no_unused_imports' => true,
     'ordered_imports' => true,
 
-    // DocBlock generation and formatting rules
-    'phpdoc_add_missing_param_annotation' => true,
+    // DocBlock generation and formatting rules - More aggressive settings
+    'phpdoc_add_missing_param_annotation' => ['only_untyped' => false], // Add missing @param annotations and also for typed parameters
     'phpdoc_align' => false,
     'phpdoc_annotation_without_dot' => false, // Allow dots in annotations
     'phpdoc_indent' => true,

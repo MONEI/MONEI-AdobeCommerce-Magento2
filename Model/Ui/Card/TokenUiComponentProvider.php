@@ -25,6 +25,8 @@ class TokenUiComponentProvider implements TokenUiComponentProviderInterface
     }
 
     /**
+     * @param PaymentTokenInterface $paymentToken
+     *
      * @return TokenUiComponentInterface
      */
     public function getComponentForToken(PaymentTokenInterface $paymentToken)

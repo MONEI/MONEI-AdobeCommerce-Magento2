@@ -20,6 +20,8 @@ class SaveQuoteSubmitSuccessObserver implements ObserverInterface
 {
     /**
      * Enable email sending for MONEI payment methods.
+     *
+     * @param Observer $observer
      */
     public function execute(Observer $observer): SaveQuoteSubmitSuccessObserver
     {

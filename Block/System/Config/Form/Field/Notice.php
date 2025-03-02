@@ -16,6 +16,8 @@ class Notice extends AbstractBlock implements RendererInterface
 {
     /**
      * Render element html.
+     *
+     * @param AbstractElement $element
      */
     public function render(AbstractElement $element): string
     {

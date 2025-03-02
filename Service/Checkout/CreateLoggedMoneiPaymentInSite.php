@@ -35,6 +35,12 @@ class CreateLoggedMoneiPaymentInSite implements CreateLoggedMoneiPaymentInSiteIn
 
     /**
      * Constructor.
+     *
+     * @param CartRepositoryInterface $quoteRepository
+     * @param Session $checkoutSession
+     * @param GetCustomerDetailsByQuote $getCustomerDetailsByQuote
+     * @param GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress
+     * @param CreatePayment $createPayment
      */
     public function __construct(
         CartRepositoryInterface $quoteRepository,
@@ -51,6 +57,9 @@ class CreateLoggedMoneiPaymentInSite implements CreateLoggedMoneiPaymentInSiteIn
     }
 
     /**
+     * @param string $cartId
+     * @param string $email
+     *
      * @throws LocalizedException
      */
     public function execute(string $cartId, string $email): array

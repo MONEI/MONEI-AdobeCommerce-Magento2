@@ -84,16 +84,22 @@ interface MoneiPaymentModuleConfigInterface
 
     /**
      * Get account id.
+     *
+     * @param ?int $storeId
      */
     public function getAccountId(?int $storeId = null): string;
 
     /**
      * Get test account id.
+     *
+     * @param ?int $storeId
      */
     public function getTestAccountId(?int $storeId = null): string;
 
     /**
      * Get production account id.
+     *
+     * @param ?int $storeId
      */
     public function getProductionAccountId(?int $storeId = null): string;
 
@@ -120,6 +126,8 @@ interface MoneiPaymentModuleConfigInterface
 
     /**
      * Get language.
+     *
+     * @param ?int $storeId
      */
     public function getLanguage(?int $storeId = null): string;
 

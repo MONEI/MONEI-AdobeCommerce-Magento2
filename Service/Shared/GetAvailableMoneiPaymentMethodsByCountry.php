@@ -18,6 +18,8 @@ class GetAvailableMoneiPaymentMethodsByCountry
 
     /**
      * Constructor.
+     *
+     * @param GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods
      */
     public function __construct(GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods)
     {

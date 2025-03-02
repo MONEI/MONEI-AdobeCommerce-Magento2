@@ -27,31 +27,43 @@ interface MoneiBizumPaymentModuleConfigInterface
 
     /**
      * Check if payment method is enabled.
+     *
+     * @param ?int $storeId
      */
     public function isEnabled(?int $storeId = null): bool;
 
     /**
      * Get payment method title.
+     *
+     * @param ?int $storeId
      */
     public function getTitle(?int $storeId = null): string;
 
     /**
      * Get allow specific countries.
+     *
+     * @param ?int $storeId
      */
     public function isAllowSpecific(?int $storeId = null): bool;
 
     /**
      * Get specific countries for payment method.
+     *
+     * @param ?int $storeId
      */
     public function getSpecificCountries(?int $storeId = null): string;
 
     /**
      * Get payment method sort order.
+     *
+     * @param ?int $storeId
      */
     public function getSortOrder(?int $storeId = null): int;
 
     /**
      * Get json style for payment method.
+     *
+     * @param ?int $storeId
      */
     public function getJsonStyle(?int $storeId = null): array;
 }

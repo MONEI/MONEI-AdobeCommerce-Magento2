@@ -32,6 +32,9 @@ class SetOrderStatusAfterRefund
      * Sets status and state for order.
      *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     *
+     * @param CreditmemoService $subject
+     * @param CreditmemoInterface $result
      */
     public function afterRefund(CreditmemoService $subject, CreditmemoInterface $result): CreditmemoInterface
     {

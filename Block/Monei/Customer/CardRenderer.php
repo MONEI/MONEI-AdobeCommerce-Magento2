@@ -33,6 +33,8 @@ class CardRenderer extends AbstractCardRenderer
     /**
      * Check if payment token can be rendered.
      *
+     * @param PaymentTokenInterface $token
+     *
      * @return bool
      */
     public function canRender(PaymentTokenInterface $token)
@@ -98,6 +100,8 @@ class CardRenderer extends AbstractCardRenderer
 
     /**
      * Get payment icon code by brand.
+     *
+     * @param string $brandCard
      */
     private function getPaymentIcon(string $brandCard): string
     {

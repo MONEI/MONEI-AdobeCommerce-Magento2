@@ -26,6 +26,8 @@ class GetAvailableMoneiPaymentMethods
 
     /**
      * GetAvailableMoneiPaymentMethods constructor.
+     *
+     * @param GetPaymentMethodsInterface $getPaymentMethodsService
      */
     public function __construct(
         GetPaymentMethodsInterface $getPaymentMethodsService

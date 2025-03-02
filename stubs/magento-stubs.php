@@ -4,6 +4,7 @@
  * Basic stubs for Magento 2.
  *
  * @param mixed $text
+ * @param array $args
  */
 
 /**

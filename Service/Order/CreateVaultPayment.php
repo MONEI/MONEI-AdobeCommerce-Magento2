@@ -22,6 +22,9 @@ class CreateVaultPayment
 
     /**
      * Constructor.
+     *
+     * @param PaymentTokenFactoryInterface $paymentTokenFactory
+     * @param GetPaymentInterface $getPayment
      */
     public function __construct(
         PaymentTokenFactoryInterface $paymentTokenFactory,
@@ -33,6 +36,9 @@ class CreateVaultPayment
 
     /**
      * Execute vault payment creation.
+     *
+     * @param string $moneiPaymentId
+     * @param OrderPaymentInterface $payment
      */
     public function execute(string $moneiPaymentId, OrderPaymentInterface &$payment): bool
     {

@@ -73,6 +73,8 @@ class CreatePayment extends AbstractService implements CreatePaymentInterface
 
     /**
      * Validate request required parameters.
+     *
+     * @param array $data
      */
     private function validate(array $data): void
     {

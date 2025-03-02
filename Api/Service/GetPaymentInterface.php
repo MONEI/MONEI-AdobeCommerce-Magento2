@@ -15,6 +15,8 @@ interface GetPaymentInterface
 {
     /**
      * Service execute method.
+     *
+     * @param string $paymentId
      */
     public function execute(string $paymentId): array;
 }

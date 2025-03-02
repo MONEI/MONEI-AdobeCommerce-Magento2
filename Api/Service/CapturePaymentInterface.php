@@ -15,6 +15,8 @@ interface CapturePaymentInterface
 {
     /**
      * Service execute method.
+     *
+     * @param array $data
      */
     public function execute(array $data): array;
 }

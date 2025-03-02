@@ -91,6 +91,7 @@ class PaymentProcessor
     /**
      * Process payment data with concurrency control.
      *
+     * @param array $paymentData
      * @param string $source Controller source ('complete' or 'callback')
      *
      * @throws LocalizedException
@@ -173,6 +174,9 @@ class PaymentProcessor
 
     /**
      * Process a payment with AUTHORIZED status.
+     *
+     * @param OrderInterface $order
+     * @param array $paymentData
      */
     private function processAuthorizedPayment(OrderInterface $order, array $paymentData): bool
     {
@@ -222,6 +226,9 @@ class PaymentProcessor
 
     /**
      * Process a payment with SUCCEEDED status.
+     *
+     * @param OrderInterface $order
+     * @param array $paymentData
      */
     private function processSucceededPayment(OrderInterface $order, array $paymentData): bool
     {
@@ -267,6 +274,9 @@ class PaymentProcessor
 
     /**
      * Check if the order already has the correct status for the given payment status.
+     *
+     * @param OrderInterface $order
+     * @param string $paymentStatus
      */
     private function hasOrderCorrectStatus(OrderInterface $order, string $paymentStatus): bool
     {

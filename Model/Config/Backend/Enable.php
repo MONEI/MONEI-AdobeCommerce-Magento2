@@ -31,6 +31,17 @@ class Enable extends Value
 
     /**
      * Enable constructor.
+     *
+     * @param GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods
+     * @param GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode
+     * @param Context $context
+     * @param Registry $registry
+     * @param ScopeConfigInterface $config
+     * @param TypeListInterface $cacheTypeList
+     * @param ManagerInterface $messageManager
+     * @param ?AbstractResource $resource
+     * @param ?AbstractDb $resourceCollection
+     * @param array $data
      */
     public function __construct(
         GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods,

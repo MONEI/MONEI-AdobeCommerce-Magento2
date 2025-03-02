@@ -29,7 +29,14 @@ class GetPaymentMethods extends AbstractService implements GetPaymentMethodsInte
     /**
      * Constructor.
      *
+     * @param RegistryAccountId $registryAccountId
      * @param ClientFactory $clientFactory Class from GuzzleHttp namespace
+     * @param MoneiPaymentModuleConfigInterface $moduleConfig
+     * @param StoreManagerInterface $storeManager
+     * @param UrlInterface $urlBuilder
+     * @param SerializerInterface $serializer
+     * @param Logger $logger
+     * @param ModuleVersion $moduleVersion
      */
     public function __construct(
         RegistryAccountId $registryAccountId,

@@ -15,6 +15,8 @@ interface SetOrderStatusAndStateInterface
 {
     /**
      * Service execute method.
+     *
+     * @param array $data
      */
     public function execute(array $data): bool;
 }

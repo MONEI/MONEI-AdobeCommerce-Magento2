@@ -64,6 +64,8 @@ abstract class AbstractService
     /**
      * Creates client with base URI.
      *
+     * @param ?int $storeId
+     *
      * @throws NoSuchEntityException
      */
     public function createClient(?int $storeId = null): Client
@@ -76,6 +78,8 @@ abstract class AbstractService
     /**
      * Get webservice API url(test or production).
      *
+     * @param ?int $storeId
+     *
      * @throws NoSuchEntityException
      */
     protected function getApiUrl(?int $storeId = null): string
@@ -86,6 +90,8 @@ abstract class AbstractService
     }
 
     /**
+     * @param ?int $storeId
+     *
      * @throws NoSuchEntityException
      */
     protected function getHeaders(?int $storeId = null): array
@@ -99,6 +105,8 @@ abstract class AbstractService
 
     /**
      * Throws exception about missing required argument.
+     *
+     * @param string $parameter
      *
      * @throws LocalizedException
      */
@@ -122,6 +130,8 @@ abstract class AbstractService
 
     /**
      * Get webservice API key(test or production).
+     *
+     * @param ?int $storeId
      *
      * @throws NoSuchEntityException
      */

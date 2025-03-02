@@ -48,6 +48,7 @@ class OrderProcessor
      * Execute a callback function with a lock to prevent race conditions
      * This method ensures the lock is always released, even if an exception occurs.
      *
+     * @param OrderInterface $order
      * @param callable $callback Function to execute while holding the lock
      *
      * @throws LocalizedException

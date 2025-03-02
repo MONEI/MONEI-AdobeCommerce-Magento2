@@ -33,6 +33,12 @@ class GenerateInvoice implements GenerateInvoiceInterface
 
     /**
      * Constructor.
+     *
+     * @param OrderInterfaceFactory $orderFactory
+     * @param TransactionFactory $transactionFactory
+     * @param OrderLockManagerInterface $orderLockManager
+     * @param CreateVaultPayment $createVaultPayment
+     * @param Logger $logger
      */
     public function __construct(
         OrderInterfaceFactory $orderFactory,

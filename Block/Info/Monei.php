@@ -41,6 +41,10 @@ class Monei extends Info
 
     /**
      * Constructor.
+     *
+     * @param GetPaymentInterface $paymentService
+     * @param Template\Context $context
+     * @param array $data
      */
     public function __construct(
         GetPaymentInterface $paymentService,

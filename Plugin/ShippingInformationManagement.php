@@ -40,7 +40,10 @@ class ShippingInformationManagement
     /**
      * Filter payment methods based on shipping address.
      *
+     * @param MagentoShippingInformationManagement $subject
+     * @param callable $proceed
      * @param int $cartId
+     * @param ShippingInformationInterface $addressInformation
      *
      * @return PaymentDetailsInterface
      *
@@ -59,6 +62,9 @@ class ShippingInformationManagement
 
     /**
      * Filter payment methods based on MONEI configuration.
+     *
+     * @param PaymentDetailsInterface $paymentDetails
+     * @param ShippingInformationInterface $addressInformation
      */
     private function filterPaymentMethods(
         PaymentDetailsInterface $paymentDetails,
@@ -76,6 +82,9 @@ class ShippingInformationManagement
 
     /**
      * Disable payment methods not available for the shipping address country.
+     *
+     * @param PaymentDetailsInterface $paymentDetails
+     * @param ShippingInformationInterface $addressInformation
      */
     private function disablePaymentMethodsByShippingAddress(
         PaymentDetailsInterface $paymentDetails,
@@ -106,6 +115,9 @@ class ShippingInformationManagement
 
     /**
      * Check if payment method is allowed for the country.
+     *
+     * @param array $moneiPaymentCodes
+     * @param array $availableMoneiPaymentMethodsByCountry
      */
     private function isPaymentMethodAllowed(
         array $moneiPaymentCodes,
@@ -122,6 +134,8 @@ class ShippingInformationManagement
 
     /**
      * Disable all MONEI payment methods.
+     *
+     * @param PaymentDetailsInterface $paymentDetails
      */
     private function disableMoneiPaymentMethods(PaymentDetailsInterface $paymentDetails): PaymentDetailsInterface
     {

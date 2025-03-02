@@ -68,8 +68,18 @@ class Complete implements ActionInterface
     private $logger;
 
     /**
+     * @param Context $context
+     * @param OrderRepositoryInterface $orderRepository
+     * @param OrderSender $orderSender
      * @param OrderInterfaceFactory $orderFactory        Class from Magento\Sales\Api\Data namespace
+     * @param MoneiPaymentModuleConfigInterface $moduleConfig
+     * @param GenerateInvoiceInterface $generateInvoiceService
+     * @param MagentoRedirect $resultRedirectFactory
      * @param PendingOrderFactory   $pendingOrderFactory Class from Monei\MoneiPayment\Model namespace
+     * @param PendingOrderResource $pendingOrderResource
+     * @param CreateVaultPayment $createVaultPayment
+     * @param PaymentProcessor $paymentProcessor
+     * @param Logger $logger
      */
     public function __construct(
         Context $context,

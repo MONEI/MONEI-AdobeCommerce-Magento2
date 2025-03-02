@@ -17,6 +17,8 @@ class OrderLockManager implements OrderLockManagerInterface
 
     /**
      * Constructor.
+     *
+     * @param LockManagerInterface $lockManager
      */
     public function __construct(
         LockManagerInterface $lockManager
@@ -26,6 +28,8 @@ class OrderLockManager implements OrderLockManagerInterface
 
     /**
      * Lock an order by increment ID.
+     *
+     * @param string $incrementId
      */
     public function lock(string $incrementId): bool
     {
@@ -37,6 +41,8 @@ class OrderLockManager implements OrderLockManagerInterface
 
     /**
      * Unlock an order by increment ID.
+     *
+     * @param string $incrementId
      */
     public function unlock(string $incrementId): bool
     {
@@ -52,6 +58,8 @@ class OrderLockManager implements OrderLockManagerInterface
 
     /**
      * Check if an order is locked by increment ID.
+     *
+     * @param string $incrementId
      */
     public function isLocked(string $incrementId): bool
     {
@@ -60,6 +68,8 @@ class OrderLockManager implements OrderLockManagerInterface
 
     /**
      * Get lock name for an order.
+     *
+     * @param string $incrementId
      */
     private function getLockName(string $incrementId): string
     {

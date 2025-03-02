@@ -73,6 +73,8 @@ class RefundPayment extends AbstractService implements RefundPaymentInterface
 
     /**
      * Validate request required parameters.
+     *
+     * @param array $data
      */
     private function validate(array $data): void
     {

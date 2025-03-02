@@ -14,6 +14,8 @@ class AccountId
 
     /**
      * Set account ID.
+     *
+     * @param string $accountId
      */
     public function set(string $accountId): void
     {
