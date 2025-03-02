@@ -15,6 +15,10 @@ use Monei\MoneiPayment\Model\Payment\Monei;
 
 /**
  * @api
+ *
+ * This class extends AbstractCardRenderer which provides the following methods:
+ * - getTokenDetails(): array - Returns the token details from the payment token
+ * - getIconForType(string $type): array - Returns the icon data for the given card type
  */
 class CardRenderer extends AbstractCardRenderer
 {
@@ -27,21 +31,41 @@ class CardRenderer extends AbstractCardRenderer
         'unionpay' => 'UN',
     ];
 
+    /**
+     * Check if payment token can be rendered.
+     *
+     * @return bool
+     */
     public function canRender(PaymentTokenInterface $token)
     {
-        return $token->getPaymentMethodCode() === Monei::CARD_CODE;
+        return Monei::CARD_CODE === $token->getPaymentMethodCode();
     }
 
+    /**
+     * Get last 4 digits of card.
+     *
+     * @return string
+     */
     public function getNumberLast4Digits()
     {
         return $this->getTokenDetails()['last4'];
     }
 
+    /**
+     * Get card expiration date.
+     *
+     * @return string
+     */
     public function getExpDate()
     {
         return $this->getTokenDetails()['expiration_date'];
     }
 
+    /**
+     * Get icon URL for card type.
+     *
+     * @return string
+     */
     public function getIconUrl()
     {
         $brand = $this->getTokenDetails()['brand'];
@@ -49,6 +73,11 @@ class CardRenderer extends AbstractCardRenderer
         return $this->getIconForType($this->getPaymentIcon($brand))['url'];
     }
 
+    /**
+     * Get icon height for card type.
+     *
+     * @return int
+     */
     public function getIconHeight()
     {
         $brand = $this->getTokenDetails()['brand'];
@@ -56,6 +85,11 @@ class CardRenderer extends AbstractCardRenderer
         return $this->getIconForType($this->getPaymentIcon($brand))['height'];
     }
 
+    /**
+     * Get icon width for card type.
+     *
+     * @return int
+     */
     public function getIconWidth()
     {
         $brand = $this->getTokenDetails()['brand'];
@@ -63,6 +97,9 @@ class CardRenderer extends AbstractCardRenderer
         return $this->getIconForType($this->getPaymentIcon($brand))['width'];
     }
 
+    /**
+     * Get payment icon code by brand.
+     */
     private function getPaymentIcon(string $brandCard): string
     {
         return self::ICON_TYPE_BY_BRAND[$brandCard] ?? $brandCard;

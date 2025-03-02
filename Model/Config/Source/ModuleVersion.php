@@ -28,24 +28,14 @@ class ModuleVersion extends Value
      */
     protected $moduleResource;
 
-    /**
-     * @param Context               $context
-     * @param Registry              $registry
-     * @param ScopeConfigInterface  $config
-     * @param TypeListInterface     $cacheTypeList
-     * @param ResourceInterface     $moduleResource
-     * @param AbstractResource|null $resource
-     * @param AbstractDb|null       $resourceCollection
-     * @param array                 $data
-     */
     public function __construct(
         Context $context,
         Registry $registry,
         ScopeConfigInterface $config,
         TypeListInterface $cacheTypeList,
         ResourceInterface $moduleResource,
-        AbstractResource $resource = null,
-        AbstractDb $resourceCollection = null,
+        ?AbstractResource $resource = null,
+        ?AbstractDb $resourceCollection = null,
         array $data = []
     ) {
         $this->moduleResource = $moduleResource;
@@ -63,8 +53,6 @@ class ModuleVersion extends Value
 
     /**
      * Inject current installed module version as the config value.
-     *
-     * @return void
      */
     public function afterLoad()
     {

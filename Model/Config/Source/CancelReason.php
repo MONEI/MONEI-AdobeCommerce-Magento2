@@ -16,9 +16,6 @@ use Magento\Framework\Data\OptionSourceInterface;
  */
 class CancelReason implements OptionSourceInterface
 {
-    /**
-     * @inheritDoc
-     */
     public function toOptionArray(): array
     {
         return [

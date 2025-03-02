@@ -9,7 +9,6 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service;
 
-use Exception;
 use Magento\Framework\Exception\LocalizedException;
 use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
 
@@ -28,20 +27,18 @@ class CapturePayment extends AbstractService implements CapturePaymentInterface
         'amount',
     ];
 
-    /**
-     * @inheritDoc
-     */
     public function execute(array $data): array
     {
         $this->logger->debug(__METHOD__);
+
         try {
             $this->validate($data);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->logger->critical($e->getMessage());
         }
 
         $requestBody = [
-            'amount' => $data['amount']
+            'amount' => $data['amount'],
         ];
 
         $this->logger->debug('------------------ START CAPTURE PAYMENT REQUEST -----------------');
@@ -50,15 +47,16 @@ class CapturePayment extends AbstractService implements CapturePaymentInterface
         $this->logger->debug('');
 
         $client = $this->createClient();
+
         try {
             $response = $client->post(
-                'payments/' . $data['paymentId'] . '/' . self::METHOD,
+                'payments/'.$data['paymentId'].'/'.self::METHOD,
                 [
                     'headers' => $this->getHeaders(),
-                    'json'    => $requestBody,
+                    'json' => $requestBody,
                 ]
             );
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return ['error' => true, 'errorMessage' => $e->getMessage()];
         }
 
@@ -72,16 +70,13 @@ class CapturePayment extends AbstractService implements CapturePaymentInterface
 
     /**
      * Validate request required parameters.
-     *
-     * @param array $data
-     * @return void
      */
     private function validate(array $data): void
     {
         foreach ($this->requiredArguments as $argument) {
             if (!isset($data[$argument]) || null === $data[$argument]) {
                 $this->throwRequiredArgumentException($argument);
-            } elseif ($argument === 'amount' && !is_numeric($data[$argument])) {
+            } elseif ('amount' === $argument && !is_numeric($data[$argument])) {
                 throw new LocalizedException(
                     __(
                         '%1 should be numeric value',

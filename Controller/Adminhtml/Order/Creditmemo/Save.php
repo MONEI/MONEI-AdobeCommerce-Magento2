@@ -9,10 +9,9 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Controller\Adminhtml\Order\Creditmemo;
 
-use Exception;
 use Magento\Backend\App\Action;
 use Magento\Backend\Model\View\Result\ForwardFactory;
-use Magento\Framework\App\Action\HttpPostActionInterface as HttpPostActionInterface;
+use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Exception\LocalizedException;
@@ -23,12 +22,12 @@ use Magento\Sales\Model\Order\Email\Sender\CreditmemoSender;
 use Psr\Log\LoggerInterface;
 
 /**
- * Save creditmemo controller
+ * Save creditmemo controller.
  */
 class Save extends Action implements HttpPostActionInterface
 {
     /**
-     * Authorization level of a basic admin session
+     * Authorization level of a basic admin session.
      *
      * @see _isAllowed()
      */
@@ -54,19 +53,12 @@ class Save extends Action implements HttpPostActionInterface
      */
     private $salesData;
 
-    /**
-     * @param Action\Context   $context
-     * @param CreditmemoLoader $creditmemoLoader
-     * @param CreditmemoSender $creditmemoSender
-     * @param ForwardFactory   $resultForwardFactory
-     * @param SalesData|null   $salesData
-     */
     public function __construct(
         Action\Context $context,
         CreditmemoLoader $creditmemoLoader,
         CreditmemoSender $creditmemoSender,
         ForwardFactory $resultForwardFactory,
-        SalesData $salesData = null
+        ?SalesData $salesData = null
     ) {
         $this->creditmemoLoader = $creditmemoLoader;
         $this->creditmemoSender = $creditmemoSender;
@@ -76,8 +68,6 @@ class Save extends Action implements HttpPostActionInterface
     }
 
     /**
-     * @inheritDoc
-     *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
      */
@@ -88,6 +78,7 @@ class Save extends Action implements HttpPostActionInterface
         if (!empty($data['comment_text'])) {
             $this->_getSession()->setCommentText($data['comment_text']);
         }
+
         try {
             $this->creditmemoLoader->setOrderId($this->getRequest()->getParam('order_id'));
             $this->creditmemoLoader->setCreditmemoId($this->getRequest()->getParam('creditmemo_id'));
@@ -128,7 +119,7 @@ class Save extends Action implements HttpPostActionInterface
                     CreditmemoManagementInterface::class
                 );
                 $creditmemo->getOrder()->setCustomerNoteNotify(!empty($data['send_email']));
-                $doOffline = isset($data['do_offline']) && (bool)$data['do_offline'];
+                $doOffline = isset($data['do_offline']) && (bool) $data['do_offline'];
                 $creditmemoManagement->refund($creditmemo, $doOffline);
 
                 if (!empty($data['send_email']) && $this->salesData->canSendNewCreditMemoEmail()) {
@@ -140,16 +131,15 @@ class Save extends Action implements HttpPostActionInterface
                 $resultRedirect->setPath('sales/order/view', ['order_id' => $creditmemo->getOrderId()]);
 
                 return $resultRedirect;
-            } else {
-                $resultForward = $this->resultForwardFactory->create();
-                $resultForward->forward('noroute');
-
-                return $resultForward;
             }
+            $resultForward = $this->resultForwardFactory->create();
+            $resultForward->forward('noroute');
+
+            return $resultForward;
         } catch (LocalizedException $e) {
             $this->messageManager->addErrorMessage($e->getMessage());
             $this->_getSession()->setFormData($data);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->_objectManager->get(LoggerInterface::class)->critical($e);
             $this->messageManager->addErrorMessage(__('We can\'t save the credit memo right now.'));
         }

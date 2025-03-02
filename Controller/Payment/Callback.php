@@ -9,7 +9,6 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Controller\Payment;
 
-use Exception;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\CsrfAwareActionInterface;
@@ -31,16 +30,18 @@ use Monei\MoneiPayment\Service\Logger;
 use Monei\MoneiPayment\Service\Order\PaymentProcessor;
 
 /**
- * Controller for managing callback from Monei system
+ * Controller for managing callback from Monei system.
  */
 class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
 {
     /**
-     * Controller source identifier
+     * Controller source identifier.
      */
     private const SOURCE = 'callback';
 
     /**
+     * Error message.
+     *
      * @var string
      */
     private $errorMessage = '';
@@ -95,18 +96,6 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
      */
     private $paymentProcessor;
 
-    /**
-     * @param Context $context
-     * @param SerializerInterface $serializer
-     * @param MoneiPaymentModuleConfigInterface $moduleConfig
-     * @param Logger $logger
-     * @param StoreManagerInterface $storeManager
-     * @param GenerateInvoiceInterface $generateInvoiceService
-     * @param SetOrderStatusAndStateInterface $setOrderStatusAndStateService
-     * @param MagentoRedirect $resultRedirectFactory
-     * @param JsonFactory $resultJsonFactory
-     * @param PaymentProcessor $paymentProcessor
-     */
     public function __construct(
         Context $context,
         SerializerInterface $serializer,
@@ -131,9 +120,6 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         $this->paymentProcessor = $paymentProcessor;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function execute()
     {
         /** @var Json $result */
@@ -147,9 +133,10 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
 
             if (!isset($body['orderId'], $body['status'], $body['id'])) {
                 $this->logger->error('Callback request failed: Missing required parameters');
-                $this->logger->error('Request body: ' . $content);
+                $this->logger->error('Request body: '.$content);
                 $responseData = ['success' => false, 'message' => 'Missing required parameters'];
                 $responseCode = 400;
+
                 return $result->setHttpResponseCode($responseCode)->setData($responseData);
             }
 
@@ -164,9 +151,9 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
                 ));
                 $responseData['info'] = 'Payment processing was not completed';
             }
-        } catch (Exception $e) {
-            $this->logger->critical('Error in Callback controller: ' . $e->getMessage());
-            $this->logger->critical('Request body: ' . ($content ?? 'not available'));
+        } catch (\Exception $e) {
+            $this->logger->critical('Error in Callback controller: '.$e->getMessage());
+            $this->logger->critical('Request body: '.($content ?? 'not available'));
             $responseData = ['success' => false, 'message' => $e->getMessage()];
             $responseCode = 500;
         }
@@ -174,9 +161,6 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         return $result->setHttpResponseCode($responseCode)->setData($responseData);
     }
 
-    /**
-     * @inheritDoc
-     */
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
     {
         /** @var ResponseHttp $response */
@@ -187,9 +171,6 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         return new InvalidRequestException($response);
     }
 
-    /**
-     * @inheritDoc
-     */
     public function validateForCsrf(RequestInterface $request): ?bool
     {
         $header = $request->getHeader('MONEI-Signature');
@@ -198,15 +179,15 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         }
         $body = $request->getContent();
         $this->logger->debug('Callback request received.');
-        $this->logger->debug('Header:' . $this->serializer->serialize($header));
-        $this->logger->debug('Body:' . $body);
+        $this->logger->debug('Header:'.$this->serializer->serialize($header));
+        $this->logger->debug('Body:'.$body);
 
         try {
             $this->verifySignature($body, $header);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->errorMessage = $e->getMessage();
             $this->logger->critical($e->getMessage());
-            $this->logger->critical('Request body: ' . ($body ?? 'not available'));
+            $this->logger->critical('Request body: '.($body ?? 'not available'));
 
             return false;
         }
@@ -215,15 +196,13 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     }
 
     /**
-     * Verifies signature from header
+     * Verifies signature from header.
      *
-     * @param string $body
-     * @param array $header
      * @throws LocalizedException
      */
     private function verifySignature(string $body, array $header): void
     {
-        $hmac = hash_hmac('SHA256', $header['t'] . '.' . $body, $this->getApiKey());
+        $hmac = hash_hmac('SHA256', $header['t'].'.'.$body, $this->getApiKey());
 
         if ($hmac !== $header['v1']) {
             throw new LocalizedException(__('Callback signature verification failed'));
@@ -231,9 +210,8 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     }
 
     /**
-     * Get webservice API key(test or production)
+     * Get webservice API key(test or production).
      *
-     * @return string
      * @throws NoSuchEntityException
      */
     private function getApiKey(): string
@@ -244,16 +222,14 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     }
 
     /**
-     * Split Monei signature into associative array
-     *
-     * @param string $signature
-     * @return array
+     * Split Monei signature into associative array.
      */
     private function splitMoneiSignature(string $signature): array
     {
         return array_reduce(explode(',', $signature), function ($result, $part) {
             [$key, $value] = explode('=', $part);
             $result[$key] = $value;
+
             return $result;
         }, []);
     }

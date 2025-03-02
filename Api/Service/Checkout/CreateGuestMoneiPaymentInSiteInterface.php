@@ -12,8 +12,11 @@ namespace Monei\MoneiPayment\Api\Service\Checkout;
 interface CreateGuestMoneiPaymentInSiteInterface
 {
     /**
+     * Create a Monei payment for a guest customer
+     *
      * @param string $cartId
      * @param string $email
+     *
      * @return array
      */
     public function execute(string $cartId, string $email): array;

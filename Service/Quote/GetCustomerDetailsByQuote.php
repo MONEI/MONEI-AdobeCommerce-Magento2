@@ -13,7 +13,7 @@ use Magento\Quote\Api\Data\CartInterface;
 
 class GetCustomerDetailsByQuote
 {
-    public function execute(CartInterface $quote, string $email = null): array
+    public function execute(CartInterface $quote, ?string $email = null): array
     {
         if (!$quote->getEntityId()) {
             return [];
@@ -21,15 +21,16 @@ class GetCustomerDetailsByQuote
 
         $address = $quote->getShippingAddress() ?: $quote->getBillingAddress();
 
-        $customerName = $quote->getCustomerFirstname() . ' ' . $quote->getCustomerLastname();
+        $customerName = $quote->getCustomerFirstname().' '.$quote->getCustomerLastname();
         $addressEmail = $address ? $address->getEmail() : '';
-        $addressCustomerName = $address ? $address->getFirstname() . ' ' . $address->getLastname() : '';
+        $addressCustomerName = $address ? $address->getFirstname().' '.$address->getLastname() : '';
+
         return [
             'email' => $email ?: ($quote->getCustomerEmail() ?? $addressEmail),
-            'name'  => !empty(trim($customerName))
+            'name' => !empty(trim($customerName))
                 ? $customerName
                 : $addressCustomerName,
-            'phone' => $address ? $address->getTelephone() : ''
+            'phone' => $address ? $address->getTelephone() : '',
         ];
     }
 }

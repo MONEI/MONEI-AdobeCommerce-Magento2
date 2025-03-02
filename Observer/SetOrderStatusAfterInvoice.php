@@ -30,9 +30,7 @@ class SetOrderStatusAfterInvoice implements ObserverInterface
      * @var MoneiPaymentModuleConfigInterface
      */
     private $moduleConfig;
-    /**
-     * @param OrderRepositoryInterface $orderRepository
-     */
+
     public function __construct(
         OrderRepositoryInterface $orderRepository,
         MoneiPaymentModuleConfigInterface $moduleConfig
@@ -41,14 +39,11 @@ class SetOrderStatusAfterInvoice implements ObserverInterface
         $this->moduleConfig = $moduleConfig;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function execute(Observer $observer): void
     {
         $order = $observer->getOrder();
         $invoice = $observer->getInvoice();
-        if ($order->getData('monei_payment_id') !== null && $invoice->getIsPaid() === true) {
+        if (null !== $order->getData('monei_payment_id') && true === $invoice->getIsPaid()) {
             $orderStatus = $this->moduleConfig->getConfirmedStatus($order->getStoreId())
                 ?? Monei::STATUS_MONEI_SUCCEDED;
             $orderState = Order::STATE_PROCESSING;

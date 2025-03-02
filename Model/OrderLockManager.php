@@ -16,12 +16,18 @@ class OrderLockManager implements OrderLockManagerInterface
 {
     private LockManagerInterface $lockManager;
 
+    /**
+     * Constructor.
+     */
     public function __construct(
         LockManagerInterface $lockManager
     ) {
         $this->lockManager = $lockManager;
     }
 
+    /**
+     * Lock an order by increment ID.
+     */
     public function lock(string $incrementId): bool
     {
         return $this->lockManager->lock(
@@ -29,6 +35,10 @@ class OrderLockManager implements OrderLockManagerInterface
             self::ORDER_LOCKED_TIMEOUT
         );
     }
+
+    /**
+     * Unlock an order by increment ID.
+     */
     public function unlock(string $incrementId): bool
     {
         $unlocked = false;
@@ -41,13 +51,19 @@ class OrderLockManager implements OrderLockManagerInterface
         return $unlocked;
     }
 
+    /**
+     * Check if an order is locked by increment ID.
+     */
     public function isLocked(string $incrementId): bool
     {
         return $this->lockManager->isLocked($this->getLockName($incrementId));
     }
 
+    /**
+     * Get lock name for an order.
+     */
     private function getLockName(string $incrementId): string
     {
-        return self::ORDER_LOCKED_PREFIX . $incrementId;
+        return self::ORDER_LOCKED_PREFIX.$incrementId;
     }
 }

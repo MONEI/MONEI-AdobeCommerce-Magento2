@@ -15,10 +15,7 @@ namespace Monei\MoneiPayment\Api\Service;
 interface RefundPaymentInterface
 {
     /**
-     * Service execute method
-     *
-     * @param array $data
-     * @return array
+     * Service execute method.
      */
     public function execute(array $data): array;
 }

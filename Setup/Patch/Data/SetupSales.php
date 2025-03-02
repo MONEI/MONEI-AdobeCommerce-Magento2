@@ -12,16 +12,10 @@ use Monei\MoneiPayment\Model\Payment\Monei;
 
 class SetupSales implements DataPatchInterface, NonTransactionableInterface
 {
-    /** @var ModuleDataSetupInterface */
     private ModuleDataSetupInterface $moduleDataSetup;
 
-    /** @var SalesSetup */
     private SalesSetup $salesSetup;
 
-    /**
-     * @param ModuleDataSetupInterface $moduleDataSetup
-     * @param SalesSetup $salesSetup
-     */
     public function __construct(
         ModuleDataSetupInterface $moduleDataSetup,
         SalesSetup $salesSetup
@@ -30,24 +24,18 @@ class SetupSales implements DataPatchInterface, NonTransactionableInterface
         $this->salesSetup = $salesSetup;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public static function getDependencies(): array
     {
         return [];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getAliases(): array
     {
         return [];
     }
 
     /**
-     * {}
+     * {}.
      */
     public static function getVersion(): string
     {
@@ -59,13 +47,13 @@ class SetupSales implements DataPatchInterface, NonTransactionableInterface
         $this->moduleDataSetup->getConnection()->startSetup();
 
         $attributesInfo = [
-        'label' => 'Monei payment Id',
-        'type' => 'text',
-        'position' => 150,
-        'visible' => true,
-        'required' => false,
-        'system' => 0,
-        'is_user_defined' => 1,
+            'label' => 'Monei payment Id',
+            'type' => 'text',
+            'position' => 150,
+            'visible' => true,
+            'required' => false,
+            'system' => 0,
+            'is_user_defined' => 1,
         ];
 
         $this->salesSetup->addAttribute(
@@ -75,13 +63,13 @@ class SetupSales implements DataPatchInterface, NonTransactionableInterface
         );
 
         $statuses = [
-        Monei::STATUS_MONEI_PENDING => __('Monei - pending'),
-        Monei::STATUS_MONEI_AUTHORIZED => __('Monei - pre-authorized'),
-        Monei::STATUS_MONEI_EXPIRED => __('Monei - expired'),
-        Monei::STATUS_MONEI_FAILED => __('Monei - failed'),
-        Monei::STATUS_MONEI_SUCCEDED => __('Monei - succeeded'),
-        Monei::STATUS_MONEI_PARTIALLY_REFUNDED => __('Monei - partially refunded'),
-        Monei::STATUS_MONEI_REFUNDED => __('Monei - refunded'),
+            Monei::STATUS_MONEI_PENDING => __('Monei - pending'),
+            Monei::STATUS_MONEI_AUTHORIZED => __('Monei - pre-authorized'),
+            Monei::STATUS_MONEI_EXPIRED => __('Monei - expired'),
+            Monei::STATUS_MONEI_FAILED => __('Monei - failed'),
+            Monei::STATUS_MONEI_SUCCEDED => __('Monei - succeeded'),
+            Monei::STATUS_MONEI_PARTIALLY_REFUNDED => __('Monei - partially refunded'),
+            Monei::STATUS_MONEI_REFUNDED => __('Monei - refunded'),
         ];
         foreach ($statuses as $code => $info) {
             $data[] = ['status' => $code, 'label' => $info];
@@ -94,29 +82,29 @@ class SetupSales implements DataPatchInterface, NonTransactionableInterface
 
         $data = [];
         $statuses = [
-        'pending_payment' => [
-          Monei::STATUS_MONEI_PENDING => false,
-          Monei::STATUS_MONEI_AUTHORIZED => false,
-        ],
-        'canceled' => [
-          Monei::STATUS_MONEI_EXPIRED => false,
-          Monei::STATUS_MONEI_FAILED => false,
-        ],
-        'processing' => [
-          Monei::STATUS_MONEI_SUCCEDED => false,
-          Monei::STATUS_MONEI_PARTIALLY_REFUNDED => false,
-        ],
-        'complete' => [
-          Monei::STATUS_MONEI_REFUNDED => false,
-        ],
+            'pending_payment' => [
+                Monei::STATUS_MONEI_PENDING => false,
+                Monei::STATUS_MONEI_AUTHORIZED => false,
+            ],
+            'canceled' => [
+                Monei::STATUS_MONEI_EXPIRED => false,
+                Monei::STATUS_MONEI_FAILED => false,
+            ],
+            'processing' => [
+                Monei::STATUS_MONEI_SUCCEDED => false,
+                Monei::STATUS_MONEI_PARTIALLY_REFUNDED => false,
+            ],
+            'complete' => [
+                Monei::STATUS_MONEI_REFUNDED => false,
+            ],
         ];
 
         foreach ($statuses as $stateCode => $status) {
             foreach ($status as $statusCode => $isDefault) {
                 $data[] = [
-                'status' => $statusCode,
-                'state' => $stateCode,
-                'is_default' => $isDefault,
+                    'status' => $statusCode,
+                    'state' => $stateCode,
+                    'is_default' => $isDefault,
                 ];
             }
         }

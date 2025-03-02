@@ -9,7 +9,6 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service;
 
-use Exception;
 use Magento\Framework\Exception\LocalizedException;
 use Monei\MoneiPayment\Api\Service\CancelPaymentInterface;
 
@@ -37,20 +36,18 @@ class CancelPayment extends AbstractService implements CancelPaymentInterface
         'requested_by_customer',
     ];
 
-    /**
-     * @inheritDoc
-     */
     public function execute(array $data): array
     {
         $this->logger->debug(__METHOD__);
+
         try {
             $this->validate($data);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->logger->critical($e->getMessage());
         }
 
         $requestBody = [
-            'cancellationReason' => $data['cancellationReason']
+            'cancellationReason' => $data['cancellationReason'],
         ];
 
         $this->logger->debug('------------------ START CANCEL PAYMENT REQUEST -----------------');
@@ -59,15 +56,16 @@ class CancelPayment extends AbstractService implements CancelPaymentInterface
         $this->logger->debug('');
 
         $client = $this->createClient();
+
         try {
             $response = $client->post(
-                'payments/' . $data['paymentId'] . '/' . self::METHOD,
+                'payments/'.$data['paymentId'].'/'.self::METHOD,
                 [
                     'headers' => $this->getHeaders(),
-                    'json'    => $requestBody,
+                    'json' => $requestBody,
                 ]
             );
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return ['error' => true, 'errorMessage' => $e->getMessage()];
         }
 
@@ -81,9 +79,6 @@ class CancelPayment extends AbstractService implements CancelPaymentInterface
 
     /**
      * Validate request required parameters.
-     *
-     * @param array $data
-     * @return void
      */
     private function validate(array $data): void
     {
@@ -91,7 +86,7 @@ class CancelPayment extends AbstractService implements CancelPaymentInterface
             if (!isset($data[$argument]) || null === $data[$argument]) {
                 $this->throwRequiredArgumentException($argument);
             }
-            if ($argument === 'cancellationReason' && !\in_array($data[$argument], $this->cancellationReasons, true)) {
+            if ('cancellationReason' === $argument && !\in_array($data[$argument], $this->cancellationReasons, true)) {
                 throw new LocalizedException(
                     __(
                         '%1 doesn\'t match any allowed reasons %2',

@@ -18,7 +18,7 @@ use Magento\Sales\Api\Data\OrderInterfaceFactory;
 use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
 
 /**
- * Monei payment fail controller
+ * Monei payment fail controller.
  */
 class Fail implements ActionInterface
 {
@@ -26,6 +26,7 @@ class Fail implements ActionInterface
      * @var OrderInterfaceFactory
      */
     protected $orderFactory;
+
     /**
      * @var Session
      */
@@ -51,14 +52,6 @@ class Fail implements ActionInterface
      */
     private $resultRedirectFactory;
 
-    /**
-     * @param Context $context
-     * @param Session $checkoutSession
-     * @param OrderInterfaceFactory $orderFactory
-     * @param SetOrderStatusAndStateInterface $setOrderStatusAndStateService
-     * @param ManagerInterface $messageManager
-     * @param MagentoRedirect $resultRedirectFactory
-     */
     public function __construct(
         Context $context,
         Session $checkoutSession,
@@ -75,9 +68,6 @@ class Fail implements ActionInterface
         $this->resultRedirectFactory = $resultRedirectFactory;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function execute()
     {
         $data = $this->context->getRequest()->getParams();

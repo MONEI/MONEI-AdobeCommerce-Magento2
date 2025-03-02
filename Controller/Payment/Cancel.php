@@ -17,7 +17,7 @@ use Magento\Framework\Message\ManagerInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 
 /**
- * Monei payment cancel controller
+ * Monei payment cancel controller.
  */
 class Cancel implements ActionInterface
 {
@@ -46,13 +46,6 @@ class Cancel implements ActionInterface
      */
     private $resultRedirectFactory;
 
-    /**
-     * @param Context $context
-     * @param Session $checkoutSession
-     * @param OrderRepositoryInterface $orderRepository
-     * @param ManagerInterface $messageManager
-     * @param MagentoRedirect $resultRedirectFactory
-     */
     public function __construct(
         Context $context,
         Session $checkoutSession,
@@ -67,9 +60,6 @@ class Cancel implements ActionInterface
         $this->resultRedirectFactory = $resultRedirectFactory;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function execute()
     {
         $order = $this->checkoutSession->getLastRealOrder();

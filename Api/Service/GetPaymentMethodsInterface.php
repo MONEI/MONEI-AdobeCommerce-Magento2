@@ -15,9 +15,7 @@ namespace Monei\MoneiPayment\Api\Service;
 interface GetPaymentMethodsInterface
 {
     /**
-     * Service execute method
-     *
-     * @return array
+     * Service execute method.
      */
     public function execute(): array;
 }

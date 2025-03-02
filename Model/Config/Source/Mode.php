@@ -20,9 +20,6 @@ class Mode implements OptionSourceInterface
 
     public const MODE_PRODUCTION = 2;
 
-    /**
-     * @inheritDoc
-     */
     public function toOptionArray(): array
     {
         return [

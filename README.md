@@ -33,6 +33,9 @@ Accept payments through [MONEI](https://monei.com) in your Adobe Commerce (Magen
   - [Contributing](#contributing)
   - [License](#license)
   - [Support](#support)
+  - [Code Validation](#code-validation)
+    - [Validation](#validation)
+    - [Fixing Code Issues](#fixing-code-issues)
 
 ## Overview
 
@@ -239,4 +242,36 @@ For questions or issues:
 - [Official Documentation](https://docs.monei.com/docs/e-commerce/adobe-commerce/)
 - [GitHub Issues](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues)
 - [Contact MONEI Support](https://monei.com/contact)
+
+## Code Validation
+
+The MONEI Payment Module for Adobe Commerce (Magento 2) adheres to Magento Marketplace standards. We provide simple commands to validate and fix code:
+
+### Validation
+
+```bash
+# Run complete validation with all severity levels
+composer lint
+
+# Check only Marketplace critical issues (severity 10)
+composer lint:marketplace
+
+# Run PHP style validation
+composer lint:style
+
+# Run both marketplace and style validations
+composer validate
+
+# Generate detailed reports in reports/ directory
+composer report
+```
+
+### Fixing Code Issues
+
+```bash
+# Fix coding standards and style issues automatically
+composer fix
+```
+
+For detailed information about Magento Marketplace validation, please see [docs/MARKETPLACE_VALIDATION.md](docs/MARKETPLACE_VALIDATION.md).
 

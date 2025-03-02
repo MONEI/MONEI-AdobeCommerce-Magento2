@@ -1,7 +1,14 @@
+# IDE and Editor files
 .idea/*
-node_modules
 .DS_Store
-.composer.lock
+
+# Composer
+/vendor/
+composer.lock
+auth.json
+
+# Node.js
+node_modules
 
 # Yarn
 /build/.pnp.*

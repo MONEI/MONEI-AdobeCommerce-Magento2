@@ -13,11 +13,12 @@ use Magento\Checkout\Model\Session;
 use Magento\Framework\App\ActionInterface;
 use Magento\Framework\Controller\Result\Redirect as MagentoRedirect;
 use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Sales\Model\Order\Address;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
 use Monei\MoneiPayment\Service\Shared\GetMoneiPaymentCodesByMagentoPaymentCodeRedirect;
 
 /**
- * Monei payment redirect controller
+ * Monei payment redirect controller.
  */
 class Redirect implements ActionInterface
 {
@@ -41,11 +42,6 @@ class Redirect implements ActionInterface
      */
     private $getMoneiPaymentCodesByMagentoPaymentCodeRedirect;
 
-    /**
-     * @param Session $checkoutSession
-     * @param CreatePaymentInterface $createPayment
-     * @param MagentoRedirect $resultRedirectFactory
-     */
     public function __construct(
         Session $checkoutSession,
         CreatePaymentInterface $createPayment,
@@ -58,26 +54,23 @@ class Redirect implements ActionInterface
         $this->getMoneiPaymentCodesByMagentoPaymentCodeRedirect = $getMoneiPaymentCodesByMagentoPaymentCodeRedirect;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function execute()
     {
         /**
-         * @var $order OrderInterface
+         * @var OrderInterface $order
          */
         $order = $this->checkoutSession->getLastRealOrder();
 
         $data = [
-            'amount'            => $order->getBaseGrandTotal() * 100,
-            'orderId'           => (string) $order->getIncrementId(),
-            'currency'          => $order->getBaseCurrencyCode(),
-            'customer'          => $this->getCustomerDetails($order),
-            'billingDetails'    => $this->getAddressDetails($order->getBillingAddress()),
-            'shippingDetails'   => $this->getAddressDetails($order->getShippingAddress())
+            'amount' => $order->getBaseGrandTotal() * 100,
+            'orderId' => (string) $order->getIncrementId(),
+            'currency' => $order->getBaseCurrencyCode(),
+            'customer' => $this->getCustomerDetails($order),
+            'billingDetails' => $this->getAddressDetails($order->getBillingAddress()),
+            'shippingDetails' => $this->getAddressDetails($order->getShippingAddress()),
         ];
 
-        $allowedPaymentMethods =  $this->getAllowedPaymentMethods($order);
+        $allowedPaymentMethods = $this->getAllowedPaymentMethods($order);
         if ($allowedPaymentMethods) {
             $data['allowedPaymentMethods'] = $allowedPaymentMethods;
         }
@@ -85,6 +78,7 @@ class Redirect implements ActionInterface
         $result = $this->createPayment->execute($data);
         if (!isset($result['error']) && isset($result['nextAction']['redirectUrl'])) {
             $this->resultRedirectFactory->setUrl($result['nextAction']['redirectUrl']);
+
             return $this->resultRedirectFactory;
         }
 
@@ -107,8 +101,8 @@ class Redirect implements ActionInterface
 
         return [
             'email' => $order->getCustomerEmail(),
-            'name'  => $order->getCustomerFirstname() . ' ' . $order->getCustomerLastname(),
-            'phone' => $this->getCustomerPhone($order)
+            'name' => $order->getCustomerFirstname().' '.$order->getCustomerLastname(),
+            'phone' => $this->getCustomerPhone($order),
         ];
     }
 
@@ -127,7 +121,7 @@ class Redirect implements ActionInterface
     }
 
     /**
-     * @param \Magento\Sales\Model\Order\Address $address
+     * @param Address $address
      *
      * @return array|void
      */
@@ -139,18 +133,18 @@ class Redirect implements ActionInterface
 
         $streetAddress = $address->getStreet();
         $moneiAddress = [
-            'name'      => $address->getFirstname() . ' ' . $address->getLastname(),
-            'email'     => $address->getEmail(),
-            'phone'     => $address->getTelephone(),
-            'company'   => ($address->getCompany() ?? ''),
-            'address'   => [
-                'country'   => $address->getCountryId(),
-                'city'      => $address->getCity(),
-                'line1'     => ($streetAddress[0] ?? $streetAddress),
-                'line2'     => ($streetAddress[1] ?? ''),
-                'zip'       => $address->getPostcode(),
-                'state'     => $address->getRegion(),
-            ]
+            'name' => $address->getFirstname().' '.$address->getLastname(),
+            'email' => $address->getEmail(),
+            'phone' => $address->getTelephone(),
+            'company' => ($address->getCompany() ?? ''),
+            'address' => [
+                'country' => $address->getCountryId(),
+                'city' => $address->getCity(),
+                'line1' => ($streetAddress[0] ?? $streetAddress),
+                'line2' => ($streetAddress[1] ?? ''),
+                'zip' => $address->getPostcode(),
+                'state' => $address->getRegion(),
+            ],
         ];
 
         if (!$moneiAddress['company']) {

@@ -43,6 +43,7 @@ abstract class AbstractService
      * @var Logger
      */
     protected $logger;
+
     /**
      * @var ClientFactory
      */
@@ -55,15 +56,6 @@ abstract class AbstractService
 
     private ModuleVersion $moduleVersion;
 
-    /**
-     * @param ClientFactory                     $clientFactory
-     * @param MoneiPaymentModuleConfigInterface $moduleConfig
-     * @param StoreManagerInterface             $storeManager
-     * @param UrlInterface                      $urlBuilder
-     * @param SerializerInterface               $serializer
-     * @param Logger                            $logger
-     * @param ModuleVersion                     $moduleVersion
-     */
     public function __construct(
         ClientFactory $clientFactory,
         MoneiPaymentModuleConfigInterface $moduleConfig,
@@ -83,27 +75,23 @@ abstract class AbstractService
     }
 
     /**
-     * Creates client with base URI
+     * Creates client with base URI.
      *
-     * @param int|null $storeId
-     * @return Client
      * @throws NoSuchEntityException
      */
-    public function createClient(int $storeId = null): Client
+    public function createClient(?int $storeId = null): Client
     {
         return $this->clientFactory->create(['config' => [
-            'base_uri' => $this->getApiUrl($storeId)
+            'base_uri' => $this->getApiUrl($storeId),
         ]]);
     }
 
     /**
-     * Get webservice API url(test or production)
+     * Get webservice API url(test or production).
      *
-     * @param int|null $storeId
-     * @return string
      * @throws NoSuchEntityException
      */
-    protected function getApiUrl(int $storeId = null): string
+    protected function getApiUrl(?int $storeId = null): string
     {
         $currentStoreId = $storeId ?: $this->storeManager->getStore()->getId();
 
@@ -111,23 +99,19 @@ abstract class AbstractService
     }
 
     /**
-     * @param int|null $storeId
-     * @return array
      * @throws NoSuchEntityException
      */
-    protected function getHeaders(int $storeId = null): array
+    protected function getHeaders(?int $storeId = null): array
     {
         return [
             'Authorization' => $this->getApiKey($storeId),
-            'User-Agent'    => $this->getUserAgent(),
-            'Content-Type'  => 'application/json',
+            'User-Agent' => $this->getUserAgent(),
+            'Content-Type' => 'application/json',
         ];
     }
 
     /**
      * Throws exception about missing required argument.
-     *
-     * @param string $parameter
      *
      * @throws LocalizedException
      */
@@ -137,9 +121,7 @@ abstract class AbstractService
     }
 
     /**
-     * Get array of URLs for WS request
-     *
-     * @return array
+     * Get array of URLs for WS request.
      */
     protected function getUrls(): array
     {
@@ -152,13 +134,11 @@ abstract class AbstractService
     }
 
     /**
-     * Get webservice API key(test or production)
+     * Get webservice API key(test or production).
      *
-     * @param int|null $storeId
-     * @return string
      * @throws NoSuchEntityException
      */
-    private function getApiKey(int $storeId = null): string
+    private function getApiKey(?int $storeId = null): string
     {
         $currentStoreId = $storeId ?: $this->storeManager->getStore()->getId();
 
@@ -166,14 +146,13 @@ abstract class AbstractService
     }
 
     /**
-     * Get webservice API user agent with module version
-     * @return string
+     * Get webservice API user agent with module version.
      */
     private function getUserAgent(): string
     {
         $moduleVersion = $this->moduleVersion->getModuleVersion();
         if ($moduleVersion) {
-            return 'MONEI/Magento2/' . $moduleVersion;
+            return 'MONEI/Magento2/'.$moduleVersion;
         }
 
         return '';

@@ -12,9 +12,7 @@ namespace Monei\MoneiPayment\Api\Service\Checkout;
 interface SaveTokenizationInterface
 {
     /**
-     * @param string $cartId
-     * @param int $isVaultChecked
-     * @return array
+     * Save tokenization preference for the current cart.
      */
     public function execute(string $cartId, int $isVaultChecked = 0): array;
 }

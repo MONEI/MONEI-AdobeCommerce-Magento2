@@ -29,58 +29,37 @@ interface MoneiCardPaymentModuleConfigInterface
     public const JSON_STYLE = 'payment/monei_card/json_style';
 
     /**
-     * Check if payment method is enabled
-     *
-     * @param int|null $storeId
-     * @return bool
+     * Check if payment method is enabled.
      */
-    public function isEnabled(int $storeId = null): bool;
+    public function isEnabled(?int $storeId = null): bool;
 
     /**
-     * Get payment method title
-     *
-     * @param int|null $storeId
-     * @return string
+     * Get payment method title.
      */
-    public function getTitle(int $storeId = null): string;
+    public function getTitle(?int $storeId = null): string;
 
     /**
-     * Is enable tokenization
-     *
-     * @param int|null $storeId
-     * @return bool
+     * Is enable tokenization.
      */
-    public function isEnabledTokenization(int $storeId = null): bool;
+    public function isEnabledTokenization(?int $storeId = null): bool;
 
     /**
-     * Get allow specific countries
-     *
-     * @param int|null $storeId
-     * @return bool
+     * Get allow specific countries.
      */
-    public function isAllowSpecific(int $storeId = null): bool;
+    public function isAllowSpecific(?int $storeId = null): bool;
 
     /**
-     * Get specific countries for payment method
-     *
-     * @param int|null $storeId
-     * @return string
+     * Get specific countries for payment method.
      */
-    public function getSpecificCountries(int $storeId = null): string;
+    public function getSpecificCountries(?int $storeId = null): string;
 
     /**
-     * Get payment method sort order
-     *
-     * @param int|null $storeId
-     * @return int
+     * Get payment method sort order.
      */
-    public function getSortOrder(int $storeId = null): int;
+    public function getSortOrder(?int $storeId = null): int;
 
     /**
-     * Get json style for payment method
-     *
-     * @param int|null $storeId
-     * @return array
+     * Get json style for payment method.
      */
-    public function getJsonStyle(int $storeId = null): array;
+    public function getJsonStyle(?int $storeId = null): array;
 }

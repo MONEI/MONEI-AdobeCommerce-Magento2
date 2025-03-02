@@ -18,9 +18,6 @@ class GetPayment extends AbstractService implements GetPaymentInterface
 {
     public const METHOD = 'payments';
 
-    /**
-     * @inheritDoc
-     */
     public function execute(string $paymentId): array
     {
         $this->logger->debug(__METHOD__);
@@ -28,12 +25,12 @@ class GetPayment extends AbstractService implements GetPaymentInterface
         $client = $this->createClient();
 
         $this->logger->debug('------------------ START GET PAYMENT REQUEST -----------------');
-        $this->logger->debug('Payment id = ' . $paymentId);
+        $this->logger->debug('Payment id = '.$paymentId);
         $this->logger->debug('------------------- END GET PAYMENT REQUEST ------------------');
         $this->logger->debug('');
 
         $response = $client->get(
-            self::METHOD . '/' . $paymentId,
+            self::METHOD.'/'.$paymentId,
             [
                 'headers' => $this->getHeaders(),
             ]

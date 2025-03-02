@@ -18,7 +18,7 @@ use Magento\Sales\Api\Data\OrderInterface;
 use Monei\MoneiPayment\Model\Config\Source\CancelReason;
 
 /**
- * Block for Monei cancel order popup
+ * Block for Monei cancel order popup.
  */
 class Popup extends Template
 {
@@ -32,14 +32,6 @@ class Popup extends Template
      */
     private $source;
 
-    /**
-     * @param Registry             $registry
-     * @param CancelReason         $source
-     * @param Context              $context
-     * @param array                $data
-     * @param JsonHelper|null      $jsonHelper
-     * @param DirectoryHelper|null $directoryHelper
-     */
     public function __construct(
         Registry $registry,
         CancelReason $source,
@@ -54,19 +46,15 @@ class Popup extends Template
     }
 
     /**
-     * Check if order was placed using Monei payment method
-     *
-     * @return bool
+     * Check if order was placed using Monei payment method.
      */
     public function isOrderPlacedWithMonei(): bool
     {
-        return $this->getOrder()->getData('monei_payment_id') !== null;
+        return null !== $this->getOrder()->getData('monei_payment_id');
     }
 
     /**
-     * Retrieve order model object
-     *
-     * @return OrderInterface
+     * Retrieve order model object.
      */
     public function getOrder(): OrderInterface
     {
@@ -74,9 +62,7 @@ class Popup extends Template
     }
 
     /**
-     * Retrieve cancel order url
-     *
-     * @return string
+     * Retrieve cancel order url.
      */
     public function getCancelUrl(): string
     {
@@ -84,9 +70,7 @@ class Popup extends Template
     }
 
     /**
-     * Retrieve cancel reasons for order
-     *
-     * @return array
+     * Retrieve cancel reasons for order.
      */
     public function getCancelReasons(): array
     {

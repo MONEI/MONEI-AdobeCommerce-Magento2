@@ -18,6 +18,9 @@ use Monei\MoneiPayment\Api\Config\MoneiBizumPaymentModuleConfigInterface;
  */
 class MoneiBizumPaymentModuleConfig implements MoneiBizumPaymentModuleConfigInterface
 {
+    /**
+     * Scope configuration.
+     */
     private ScopeConfigInterface $scopeConfig;
 
     public function __construct(
@@ -26,10 +29,7 @@ class MoneiBizumPaymentModuleConfig implements MoneiBizumPaymentModuleConfigInte
         $this->scopeConfig = $scopeConfig;
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function isEnabled(int $storeId = null): bool
+    public function isEnabled(?int $storeId = null): bool
     {
         return (bool) $this->scopeConfig->getValue(
             self::IS_PAYMENT_ENABLED,
@@ -38,10 +38,7 @@ class MoneiBizumPaymentModuleConfig implements MoneiBizumPaymentModuleConfigInte
         );
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function getTitle(int $storeId = null): string
+    public function getTitle(?int $storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
             self::TITLE,
@@ -50,10 +47,7 @@ class MoneiBizumPaymentModuleConfig implements MoneiBizumPaymentModuleConfigInte
         );
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function isAllowSpecific(int $storeId = null): bool
+    public function isAllowSpecific(?int $storeId = null): bool
     {
         return (bool) $this->scopeConfig->getValue(
             self::ALLOW_SPECIFIC,
@@ -62,10 +56,7 @@ class MoneiBizumPaymentModuleConfig implements MoneiBizumPaymentModuleConfigInte
         );
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function getSpecificCountries(int $storeId = null): string
+    public function getSpecificCountries(?int $storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
             self::SPECIFIC_COUNTRIES,
@@ -74,10 +65,7 @@ class MoneiBizumPaymentModuleConfig implements MoneiBizumPaymentModuleConfigInte
         );
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function getSortOrder(int $storeId = null): int
+    public function getSortOrder(?int $storeId = null): int
     {
         return (int) $this->scopeConfig->getValue(
             self::SORT_ORDER,
@@ -86,10 +74,7 @@ class MoneiBizumPaymentModuleConfig implements MoneiBizumPaymentModuleConfigInte
         );
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function getJsonStyle(int $storeId = null): array
+    public function getJsonStyle(?int $storeId = null): array
     {
         $result = (string) $this->scopeConfig->getValue(
             self::JSON_STYLE,

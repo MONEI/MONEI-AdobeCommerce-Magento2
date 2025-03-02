@@ -20,9 +20,6 @@ class TypeOfPayment implements OptionSourceInterface
 
     public const TYPE_AUTHORIZED = 2;
 
-    /**
-     * @inheritDoc
-     */
     public function toOptionArray(): array
     {
         return [

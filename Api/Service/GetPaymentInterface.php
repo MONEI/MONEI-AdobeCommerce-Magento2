@@ -15,10 +15,7 @@ namespace Monei\MoneiPayment\Api\Service;
 interface GetPaymentInterface
 {
     /**
-     * Service execute method
-     *
-     * @param string $paymentId
-     * @return array
+     * Service execute method.
      */
     public function execute(string $paymentId): array;
 }

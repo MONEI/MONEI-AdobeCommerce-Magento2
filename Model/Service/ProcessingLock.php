@@ -13,7 +13,7 @@ use Magento\Framework\Lock\LockManagerInterface;
 use Monei\MoneiPayment\Service\Logger;
 
 /**
- * Service for managing processing locks to prevent race conditions
+ * Service for managing processing locks to prevent race conditions.
  */
 class ProcessingLock
 {
@@ -33,10 +33,6 @@ class ProcessingLock
      */
     private $logger;
 
-    /**
-     * @param LockManagerInterface $lockManager
-     * @param Logger $logger
-     */
     public function __construct(
         LockManagerInterface $lockManager,
         Logger $logger
@@ -47,11 +43,12 @@ class ProcessingLock
 
     /**
      * Execute a callback function with a lock to prevent race conditions
-     * This method ensures the lock is always released, even if an exception occurs
+     * This method ensures the lock is always released, even if an exception occurs.
      *
-     * @param string $orderId Order increment ID
-     * @param string $paymentId Monei payment ID
-     * @param callable $callback Function to execute while holding the lock
+     * @param string   $orderId   Order increment ID
+     * @param string   $paymentId Monei payment ID
+     * @param callable $callback  Function to execute while holding the lock
+     *
      * @return mixed The result of the callback function, or false if lock couldn't be acquired
      */
     public function executeWithLock(string $orderId, string $paymentId, callable $callback)
@@ -67,6 +64,7 @@ class ProcessingLock
                     $orderId,
                     $paymentId
                 ));
+
                 return false;
             }
 
@@ -83,15 +81,17 @@ class ProcessingLock
                 $orderId,
                 $e->getMessage()
             ));
+
             return false;
         }
     }
 
     /**
-     * Acquire a lock for processing an order payment
+     * Acquire a lock for processing an order payment.
      *
-     * @param string $orderId Order increment ID
+     * @param string $orderId   Order increment ID
      * @param string $paymentId Monei payment ID
+     *
      * @return bool True if lock acquired, false otherwise
      */
     public function acquireLock(string $orderId, string $paymentId): bool
@@ -116,15 +116,17 @@ class ProcessingLock
                 $orderId,
                 $e->getMessage()
             ));
+
             return false;
         }
     }
 
     /**
-     * Release a lock for processing an order payment
+     * Release a lock for processing an order payment.
      *
-     * @param string $orderId Order increment ID
+     * @param string $orderId   Order increment ID
      * @param string $paymentId Monei payment ID
+     *
      * @return bool True if lock released, false otherwise
      */
     public function releaseLock(string $orderId, string $paymentId): bool
@@ -139,19 +141,19 @@ class ProcessingLock
                 $orderId,
                 $e->getMessage()
             ));
+
             return false;
         }
     }
 
     /**
-     * Generate a unique lock name for a given order and payment ID
+     * Generate a unique lock name for a given order and payment ID.
      *
-     * @param string $orderId Order increment ID
+     * @param string $orderId   Order increment ID
      * @param string $paymentId Monei payment ID
-     * @return string
      */
     private function getLockName(string $orderId, string $paymentId): string
     {
-        return self::LOCK_PREFIX . $orderId . '_' . $paymentId;
+        return self::LOCK_PREFIX.$orderId.'_'.$paymentId;
     }
 }

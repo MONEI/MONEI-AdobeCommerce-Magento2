@@ -13,11 +13,17 @@ class AccountId
 {
     private ?string $accountId = null;
 
+    /**
+     * Set account ID.
+     */
     public function set(string $accountId): void
     {
         $this->accountId = $accountId;
     }
 
+    /**
+     * Get account ID.
+     */
     public function get(): ?string
     {
         return $this->accountId;

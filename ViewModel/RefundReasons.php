@@ -22,9 +22,6 @@ class RefundReasons implements ArgumentInterface
      */
     private $reasonsSource;
 
-    /**
-     * @param CancelReason $reasonsSource
-     */
     public function __construct(
         CancelReason $reasonsSource
     ) {
@@ -32,9 +29,7 @@ class RefundReasons implements ArgumentInterface
     }
 
     /**
-     * Get refund reasons array
-     *
-     * @return array
+     * Get refund reasons array.
      */
     public function getData(): array
     {

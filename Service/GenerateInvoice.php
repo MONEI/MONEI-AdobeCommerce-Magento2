@@ -18,16 +18,23 @@ use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
 use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 
 /**
- * Generate invoice for order service class
+ * Generate invoice for order service class.
  */
 class GenerateInvoice implements GenerateInvoiceInterface
 {
     private OrderInterfaceFactory $orderFactory;
+
     private TransactionFactory $transactionFactory;
+
     private OrderLockManagerInterface $orderLockManager;
+
     private CreateVaultPayment $createVaultPayment;
+
     private Logger $logger;
 
+    /**
+     * Constructor.
+     */
     public function __construct(
         OrderInterfaceFactory $orderFactory,
         TransactionFactory $transactionFactory,
@@ -42,12 +49,10 @@ class GenerateInvoice implements GenerateInvoiceInterface
         $this->logger = $logger;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function execute(array $data): void
     {
         $incrementId = $data['orderId'];
+
         /** @var OrderInterface $order */
         $order = $this->orderFactory->create()->loadByIncrementId($incrementId);
         if (!$order->getId()) {
@@ -66,6 +71,7 @@ class GenerateInvoice implements GenerateInvoiceInterface
                 'Could not acquire lock for order %s - already being processed',
                 $incrementId
             ));
+
             return;
         }
 
@@ -97,6 +103,7 @@ class GenerateInvoice implements GenerateInvoiceInterface
                 $incrementId,
                 $e->getMessage()
             ));
+
             throw $e; // Rethrow the exception after logging
         } finally {
             // Always release the lock, even if an exception occurred
@@ -104,6 +111,13 @@ class GenerateInvoice implements GenerateInvoiceInterface
         }
     }
 
+    /**
+     * Check if the order is already paid.
+     *
+     * @param OrderInterface $order Order to check
+     *
+     * @return bool True if order is already paid, false otherwise
+     */
     private function isOrderAlreadyPaid(OrderInterface $order): bool
     {
         $payment = $order->getPayment();

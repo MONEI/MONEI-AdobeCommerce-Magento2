@@ -9,7 +9,7 @@
         <input type="radio"
                name="payment[method]"
                class="radio custom-control-input"
-               data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible()"/>
+               data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible()">
         <label data-bind="attr: {'for': getCode()}" class="label custom-control-label">
             <span data-bind="text: getTitle()"></span>
             <span class="monei-payment-icon"></span>
@@ -24,7 +24,7 @@
                             <span data-bind="i18n: 'Name on card'"></span>
                         </label>
                         <div class="control">
-                            <input type="text" id="monei-insite-cardholder-name" name="monei-insite-cardholder-name" class="input-text" data-bind="attr: {'data-validate': JSON.stringify({'required':true})}, css: {'_error': !cardHolderNameValid()}" />
+                            <input type="text" id="monei-insite-cardholder-name" name="monei-insite-cardholder-name" class="input-text" data-bind="attr: {'data-validate': JSON.stringify({'required':true})}, css: {'_error': !cardHolderNameValid()}">
                             <div class="field-error" data-bind="visible: !cardHolderNameValid(), i18n: errorMessageCardHolderName()"></div>
                         </div>
                     </div>
@@ -46,7 +46,7 @@
             <div class="field choice">
                 <input type="checkbox"
                        class="checkbox"
-                       data-bind="checked: checkedVault, attr: {'id': getCode() + '_enable_vault', 'name': getCode() + '_enable_vault'}"/>
+                       data-bind="checked: checkedVault, attr: {'id': getCode() + '_enable_vault', 'name': getCode() + '_enable_vault'}">
                 <label class="label" data-bind="attr: {'for': getCode() + '_enable_vault'}">
                     <span><!-- ko i18n: 'Save payment information to my account for future purchases'--><!-- /ko --></span>
                 </label>

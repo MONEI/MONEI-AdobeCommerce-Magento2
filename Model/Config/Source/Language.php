@@ -33,9 +33,6 @@ class Language implements OptionSourceInterface
         'ru' => 'Russian',
     ];
 
-    /**
-     * @inheritDoc
-     */
     public function toOptionArray(): array
     {
         $options = [];

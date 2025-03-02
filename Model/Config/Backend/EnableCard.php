@@ -32,9 +32,6 @@ class EnableCard extends Enable
         return parent::beforeSave();
     }
 
-    /**
-     * @return bool
-     */
     private function isPaymentAvailable(): bool
     {
         $availablePaymentMethods = $this->getAvailablePaymentMethods();

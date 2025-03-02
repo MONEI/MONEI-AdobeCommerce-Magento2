@@ -26,10 +26,15 @@ use Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote;
 class CreateGuestMoneiPaymentInSite implements CreateGuestMoneiPaymentInSiteInterface
 {
     private CartRepositoryInterface $quoteRepository;
+
     private Session $checkoutSession;
+
     private MaskedQuoteIdToQuoteIdInterface $maskedQuoteIdToQuoteId;
+
     private GetCustomerDetailsByQuote $getCustomerDetailsByQuote;
+
     private GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress;
+
     private CreatePayment $createPayment;
 
     public function __construct(
@@ -49,10 +54,13 @@ class CreateGuestMoneiPaymentInSite implements CreateGuestMoneiPaymentInSiteInte
     }
 
     /**
-     * @param string $cartId
-     * @param string $email
-     * @return array
-     * @throws LocalizedException|NoSuchEntityException
+     * Create payment for guest customer.
+     *
+     * @param string $cartId Masked cart ID
+     * @param string $email  Customer email
+     *
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
      */
     public function execute(string $cartId, string $email): array
     {

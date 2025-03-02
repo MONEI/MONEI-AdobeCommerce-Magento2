@@ -17,7 +17,7 @@ use Monei\MoneiPayment\Api\OrderLockManagerInterface;
 use Monei\MoneiPayment\Service\Logger;
 
 /**
- * Service for processing orders with proper transaction and locking
+ * Service for processing orders with proper transaction and locking.
  */
 class OrderProcessor
 {
@@ -41,12 +41,6 @@ class OrderProcessor
      */
     private $logger;
 
-    /**
-     * @param OrderLockManagerInterface $orderLockManager
-     * @param OrderRepositoryInterface $orderRepository
-     * @param TransactionFactory $transactionFactory
-     * @param Logger $logger
-     */
     public function __construct(
         OrderLockManagerInterface $orderLockManager,
         OrderRepositoryInterface $orderRepository,
@@ -61,12 +55,13 @@ class OrderProcessor
 
     /**
      * Execute a callback function with a lock to prevent race conditions
-     * This method ensures the lock is always released, even if an exception occurs
+     * This method ensures the lock is always released, even if an exception occurs.
      *
-     * @param OrderInterface $order
      * @param callable $callback Function to execute while holding the lock
-     * @return mixed The result of the callback function, or false if lock couldn't be acquired
+     *
      * @throws LocalizedException
+     *
+     * @return mixed The result of the callback function, or false if lock couldn't be acquired
      */
     public function executeWithLock(OrderInterface $order, callable $callback)
     {
@@ -82,6 +77,7 @@ class OrderProcessor
                 'Order %s is already being processed by another request',
                 $incrementId
             ));
+
             return false;
         }
 
@@ -92,6 +88,7 @@ class OrderProcessor
                 'Could not acquire lock for order %s',
                 $incrementId
             ));
+
             return false;
         }
 
@@ -103,7 +100,7 @@ class OrderProcessor
             $result = $callback($order, $transaction);
 
             // Save the order within the transaction
-            if ($result !== false) {
+            if (false !== $result) {
                 // Add order to transaction and save
                 $transaction->addObject($order);
                 $transaction->save();
@@ -116,6 +113,7 @@ class OrderProcessor
                 $incrementId,
                 $e->getMessage()
             ));
+
             throw $e;
         } finally {
             // Always release the lock, even if an exception occurs
@@ -124,12 +122,14 @@ class OrderProcessor
     }
 
     /**
-     * Load the latest order data and execute a callback with locking
+     * Load the latest order data and execute a callback with locking.
      *
-     * @param string $incrementId Order increment ID
-     * @param callable $callback Function to execute while holding the lock
-     * @return mixed The result of the callback function, or false if lock couldn't be acquired
+     * @param string   $incrementId Order increment ID
+     * @param callable $callback    Function to execute while holding the lock
+     *
      * @throws LocalizedException
+     *
+     * @return mixed The result of the callback function, or false if lock couldn't be acquired
      */
     public function processOrderById(string $incrementId, callable $callback)
     {
@@ -139,6 +139,7 @@ class OrderProcessor
                 'Order %s is already being processed by another request',
                 $incrementId
             ));
+
             return false;
         }
 
@@ -149,6 +150,7 @@ class OrderProcessor
                 'Could not acquire lock for order %s',
                 $incrementId
             ));
+
             return false;
         }
 
@@ -163,7 +165,7 @@ class OrderProcessor
             $result = $callback($order, $transaction);
 
             // Save the order within the transaction
-            if ($result !== false) {
+            if (false !== $result) {
                 // Add order to transaction and save
                 $transaction->addObject($order);
                 $transaction->save();
@@ -176,6 +178,7 @@ class OrderProcessor
                 $incrementId,
                 $e->getMessage()
             ));
+
             throw $e;
         } finally {
             // Always release the lock, even if an exception occurs

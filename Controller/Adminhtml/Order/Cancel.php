@@ -9,7 +9,6 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Controller\Adminhtml\Order;
 
-use Exception;
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\Controller\Result\Json;
@@ -25,11 +24,12 @@ use Psr\Log\LoggerInterface;
 class Cancel extends Action
 {
     /**
-     * Authorization level of a basic admin session
+     * Authorization level of a basic admin session.
      *
      * @see _isAllowed()
      */
     public const ADMIN_RESOURCE = 'Magento_Sales::cancel';
+
     /**
      * @var JsonFactory
      */
@@ -45,12 +45,6 @@ class Cancel extends Action
      */
     private $orderManagement;
 
-    /**
-     * @param Context                  $context
-     * @param JsonFactory              $resultJsonFactory
-     * @param CancelPaymentInterface   $cancelPaymentService
-     * @param OrderManagementInterface $orderManagement
-     */
     public function __construct(
         Context $context,
         JsonFactory $resultJsonFactory,
@@ -69,6 +63,7 @@ class Cancel extends Action
     public function execute(): Json
     {
         $params = $this->getRequest()->getParams();
+
         /** @var Json $resultJson */
         $resultJson = $this->resultJsonFactory->create();
         if (!isset($params['payment_id']) || !isset($params['cancel_reason']) || !isset($params['order_id'])) {
@@ -87,7 +82,7 @@ class Cancel extends Action
         ];
         $response = $this->cancelPaymentService->execute($data);
 
-        if (isset($response['error']) && $response['error'] === true) {
+        if (isset($response['error']) && true === $response['error']) {
             $this->messageManager->addErrorMessage($response['errorMessage']);
             $url = $this->getUrl('sales/*/');
             $response = [
@@ -102,7 +97,7 @@ class Cancel extends Action
             $this->messageManager->addSuccessMessage(__('You canceled the order.'));
         } catch (LocalizedException $e) {
             $this->messageManager->addErrorMessage($e->getMessage());
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->messageManager->addErrorMessage(__('You have not canceled the item.'));
             $this->_objectManager->get(LoggerInterface::class)->critical($e);
         }

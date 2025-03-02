@@ -17,10 +17,15 @@ use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Service\Shared\GetAvailableMoneiPaymentMethodsByCountry;
 use Monei\MoneiPayment\Service\Shared\GetMoneiPaymentCodesByMagentoPaymentCode;
 
+/**
+ * Plugin for ShippingInformationManagement to filter payment methods based on shipping address.
+ */
 class ShippingInformationManagement
 {
     private MoneiPaymentModuleConfigInterface $moneiPaymentModuleConfig;
+
     private GetAvailableMoneiPaymentMethodsByCountry $getAvailableMoneiPaymentMethodsByCountry;
+
     private GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode;
 
     public function __construct(
@@ -34,6 +39,12 @@ class ShippingInformationManagement
     }
 
     /**
+     * Filter payment methods based on shipping address.
+     *
+     * @param int $cartId
+     *
+     * @return PaymentDetailsInterface
+     *
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function aroundSaveAddressInformation(
@@ -47,6 +58,9 @@ class ShippingInformationManagement
         return $this->filterPaymentMethods($paymentDetails, $addressInformation);
     }
 
+    /**
+     * Filter payment methods based on MONEI configuration.
+     */
     private function filterPaymentMethods(
         PaymentDetailsInterface $paymentDetails,
         ShippingInformationInterface $addressInformation
@@ -61,8 +75,13 @@ class ShippingInformationManagement
         return $this->disablePaymentMethodsByShippingAddress($paymentDetails, $addressInformation);
     }
 
-    private function disablePaymentMethodsByShippingAddress(PaymentDetailsInterface $paymentDetails, ShippingInformationInterface $addressInformation): PaymentDetailsInterface
-    {
+    /**
+     * Disable payment methods not available for the shipping address country.
+     */
+    private function disablePaymentMethodsByShippingAddress(
+        PaymentDetailsInterface $paymentDetails,
+        ShippingInformationInterface $addressInformation
+    ): PaymentDetailsInterface {
         $paymentMethods = $paymentDetails->getPaymentMethods();
         $shippingAddress = $addressInformation->getShippingAddress();
         $availableMoneiPaymentMethodsByCountry = $this->getAvailableMoneiPaymentMethodsByCountry->execute(
@@ -71,26 +90,40 @@ class ShippingInformationManagement
 
         $filteredPaymentMethods = [];
         foreach ($paymentMethods as $paymentMethod) {
-            $moneiPaymentCodes = $this->getMoneiPaymentCodesByMagentoPaymentCode->execute($paymentMethod->getCode());
-            if (!$moneiPaymentCodes || $this->isPaymentMethodAllowed($moneiPaymentCodes, $availableMoneiPaymentMethodsByCountry)) {
+            $moneiPaymentCodes = $this->getMoneiPaymentCodesByMagentoPaymentCode->execute(
+                $paymentMethod->getCode()
+            );
+            if (!$moneiPaymentCodes
+                || $this->isPaymentMethodAllowed($moneiPaymentCodes, $availableMoneiPaymentMethodsByCountry)
+            ) {
                 $filteredPaymentMethods[] = $paymentMethod;
             }
         }
 
         $paymentDetails->setPaymentMethods($filteredPaymentMethods);
+
         return $paymentDetails;
     }
 
-    private function isPaymentMethodAllowed(array $moneiPaymentCodes, array $availableMoneiPaymentMethodsByCountry): bool
-    {
+    /**
+     * Check if payment method is allowed for the country.
+     */
+    private function isPaymentMethodAllowed(
+        array $moneiPaymentCodes,
+        array $availableMoneiPaymentMethodsByCountry
+    ): bool {
         foreach ($moneiPaymentCodes as $moneiPaymentCode) {
             if (\in_array($moneiPaymentCode, $availableMoneiPaymentMethodsByCountry, true)) {
                 return true;
             }
         }
+
         return false;
     }
 
+    /**
+     * Disable all MONEI payment methods.
+     */
     private function disableMoneiPaymentMethods(PaymentDetailsInterface $paymentDetails): PaymentDetailsInterface
     {
         $paymentMethods = $paymentDetails->getPaymentMethods();
@@ -98,6 +131,7 @@ class ShippingInformationManagement
             return !\in_array($paymentMethod->getCode(), Monei::PAYMENT_METHODS_MONEI, true);
         });
         $paymentDetails->setPaymentMethods($filteredPaymentMethods);
+
         return $paymentDetails;
     }
 }

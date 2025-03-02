@@ -13,7 +13,7 @@ use Magento\Payment\Gateway\CommandInterface;
 use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
 
 /**
- * Capture Monei payment command
+ * Capture Monei payment command.
  */
 class Capture implements CommandInterface
 {
@@ -22,24 +22,18 @@ class Capture implements CommandInterface
      */
     private $capturePaymentService;
 
-    /**
-     * @param CapturePaymentInterface $capturePaymentService
-     */
     public function __construct(
         CapturePaymentInterface $capturePaymentService
     ) {
         $this->capturePaymentService = $capturePaymentService;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function execute(array $commandSubject)
     {
         $order = $commandSubject['payment']->getPayment()->getOrder();
         $data = [
             'paymentId' => $order->getData('monei_payment_id'),
-            'amount' => $commandSubject['amount'] * 100
+            'amount' => $commandSubject['amount'] * 100,
         ];
 
         $this->capturePaymentService->execute($data);

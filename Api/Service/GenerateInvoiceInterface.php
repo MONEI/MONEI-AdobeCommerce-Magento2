@@ -10,15 +10,12 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Api\Service;
 
 /**
- * Generate invoice for order service interface
+ * Generate invoice for order service interface.
  */
 interface GenerateInvoiceInterface
 {
     /**
-     * Service execute method
-     *
-     * @param array $data
-     * @return void
+     * Service execute method.
      */
     public function execute(array $data): void;
 }

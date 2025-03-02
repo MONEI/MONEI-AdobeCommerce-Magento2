@@ -15,11 +15,30 @@ use Magento\Quote\Api\CartRepositoryInterface;
 use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\SaveTokenizationInterface;
 
+/**
+ * Service to save the payment tokenization flag on the customer's quote.
+ *
+ * This service handles saving the customer's preference for storing their payment
+ * method details for future purchases (tokenization).
+ */
 class SaveTokenization implements SaveTokenizationInterface
 {
+    /**
+     * Quote repository for managing quote data.
+     */
     private CartRepositoryInterface $quoteRepository;
+
+    /**
+     * Checkout session to access current quote.
+     */
     private Session $checkoutSession;
 
+    /**
+     * Constructor for SaveTokenization.
+     *
+     * @param CartRepositoryInterface $quoteRepository Repository for managing quote data
+     * @param Session                 $checkoutSession Checkout session for accessing the current quote
+     */
     public function __construct(
         CartRepositoryInterface $quoteRepository,
         Session $checkoutSession
@@ -29,7 +48,14 @@ class SaveTokenization implements SaveTokenizationInterface
     }
 
     /**
-     * @throws LocalizedException
+     * Save the tokenization flag on the quote.
+     *
+     * @param string $cartId         The ID of the cart/quote
+     * @param int    $isVaultChecked Flag indicating if the customer wants to save the payment method (1 = yes, 0 = no)
+     *
+     * @throws LocalizedException If there are issues retrieving the quote or saving the data
+     *
+     * @return array Empty array on success
      */
     public function execute(string $cartId, int $isVaultChecked = 0): array
     {

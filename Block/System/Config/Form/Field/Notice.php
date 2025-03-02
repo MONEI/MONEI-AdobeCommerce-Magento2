@@ -13,14 +13,10 @@ use Magento\Backend\Block\AbstractBlock;
 use Magento\Framework\Data\Form\Element\AbstractElement;
 use Magento\Framework\Data\Form\Element\Renderer\RendererInterface;
 
-class Notice extends AbstractBlock implements
-    RendererInterface
+class Notice extends AbstractBlock implements RendererInterface
 {
     /**
-     * Render element html
-     *
-     * @param AbstractElement $element
-     * @return string
+     * Render element html.
      */
     public function render(AbstractElement $element): string
     {

@@ -25,12 +25,12 @@ use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 use Monei\MoneiPayment\Service\Order\PaymentProcessor;
 
 /**
- * Monei payment complete controller
+ * Monei payment complete controller.
  */
 class Complete implements ActionInterface
 {
     /**
-     * Controller source identifier
+     * Controller source identifier.
      */
     private const SOURCE = 'complete';
 
@@ -95,18 +95,8 @@ class Complete implements ActionInterface
     private $logger;
 
     /**
-     * @param Context $context
-     * @param OrderRepositoryInterface $orderRepository
-     * @param OrderSender $orderSender
-     * @param OrderInterfaceFactory $orderFactory
-     * @param MoneiPaymentModuleConfigInterface $moduleConfig
-     * @param GenerateInvoiceInterface $generateInvoiceService
-     * @param MagentoRedirect $resultRedirectFactory
-     * @param PendingOrderFactory $pendingOrderFactory
-     * @param PendingOrderResource $pendingOrderResource
-     * @param CreateVaultPayment $createVaultPayment
-     * @param PaymentProcessor $paymentProcessor
-     * @param Logger $logger
+     * @param OrderInterfaceFactory $orderFactory        Class from Magento\Sales\Api\Data namespace
+     * @param PendingOrderFactory   $pendingOrderFactory Class from Monei\MoneiPayment\Model namespace
      */
     public function __construct(
         Context $context,
@@ -136,9 +126,6 @@ class Complete implements ActionInterface
         $this->logger = $logger;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function execute()
     {
         $data = $this->context->getRequest()->getParams();
@@ -146,20 +133,31 @@ class Complete implements ActionInterface
         // Check if we have the required parameters
         if (!isset($data['status'], $data['orderId'])) {
             $this->logger->error('Complete controller called with missing parameters');
+
             return $this->resultRedirectFactory->setPath('checkout/cart', ['_secure' => true]);
         }
 
         try {
             $processed = $this->paymentProcessor->processPayment($data, self::SOURCE);
 
-            // Redirect based on payment status, even if processing failed (we want to show the appropriate page to the customer)
-            if ($data['status'] === Monei::ORDER_STATUS_AUTHORIZED || $data['status'] === Monei::ORDER_STATUS_SUCCEEDED) {
-                return $this->resultRedirectFactory->setPath('checkout/onepage/success', ['_secure' => true]);
-            } else {
-                return $this->resultRedirectFactory->setPath('checkout/cart', ['_secure' => true]);
+            // Redirect based on payment status, even if processing failed
+            // (we want to show the appropriate page to the customer)
+            if (Monei::ORDER_STATUS_AUTHORIZED === $data['status']
+                || Monei::ORDER_STATUS_SUCCEEDED === $data['status']
+            ) {
+                return $this->resultRedirectFactory->setPath(
+                    'checkout/onepage/success',
+                    ['_secure' => true]
+                );
             }
+
+            return $this->resultRedirectFactory->setPath(
+                'checkout/cart',
+                ['_secure' => true]
+            );
         } catch (\Exception $e) {
-            $this->logger->error('Error in Complete controller: ' . $e->getMessage());
+            $this->logger->error('Error in Complete controller: '.$e->getMessage());
+
             return $this->resultRedirectFactory->setPath('checkout/cart', ['_secure' => true]);
         }
     }

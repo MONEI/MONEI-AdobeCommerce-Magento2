@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Basic stubs for Magento 2
  */
@@ -18,10 +19,10 @@ function __($text, ...$args): string
 namespace Magento\Framework\Component {
     class ComponentRegistrar
     {
-        const MODULE = 'module';
-        const THEME = 'theme';
-        const LANGUAGE = 'language';
-        const LIBRARY = 'library';
+        public const MODULE = 'module';
+        public const THEME = 'theme';
+        public const LANGUAGE = 'language';
+        public const LIBRARY = 'library';
 
         /**
          * @param string $type
@@ -80,27 +81,27 @@ namespace Magento\Store\Model {
 namespace Magento\Sales\Model {
     class Order
     {
-        const STATE_NEW = 'new';
-        const STATE_PENDING_PAYMENT = 'pending_payment';
-        const STATE_PROCESSING = 'processing';
-        const STATE_COMPLETE = 'complete';
-        const STATE_CLOSED = 'closed';
-        const STATE_CANCELED = 'canceled';
-        const STATE_HOLDED = 'holded';
+        public const STATE_NEW = 'new';
+        public const STATE_PENDING_PAYMENT = 'pending_payment';
+        public const STATE_PROCESSING = 'processing';
+        public const STATE_COMPLETE = 'complete';
+        public const STATE_CLOSED = 'closed';
+        public const STATE_CANCELED = 'canceled';
+        public const STATE_HOLDED = 'holded';
     }
 }
 
 namespace Monolog {
     class Logger
     {
-        const DEBUG = 100;
-        const INFO = 200;
-        const NOTICE = 250;
-        const WARNING = 300;
-        const ERROR = 400;
-        const CRITICAL = 500;
-        const ALERT = 550;
-        const EMERGENCY = 600;
+        public const DEBUG = 100;
+        public const INFO = 200;
+        public const NOTICE = 250;
+        public const WARNING = 300;
+        public const ERROR = 400;
+        public const CRITICAL = 500;
+        public const ALERT = 550;
+        public const EMERGENCY = 600;
 
         /**
          * @param string $message

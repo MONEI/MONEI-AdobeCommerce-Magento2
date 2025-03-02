@@ -9,7 +9,6 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service;
 
-use Exception;
 use Magento\Framework\Exception\LocalizedException;
 use Monei\MoneiPayment\Api\Service\RefundPaymentInterface;
 
@@ -38,16 +37,13 @@ class RefundPayment extends AbstractService implements RefundPaymentInterface
         'requested_by_customer',
     ];
 
-    /**
-     * @inheritDoc
-     */
     public function execute(array $data): array
     {
         $this->logger->debug(__METHOD__);
 
         try {
             $this->validate($data);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->logger->critical($e->getMessage());
         }
 
@@ -65,7 +61,7 @@ class RefundPayment extends AbstractService implements RefundPaymentInterface
 
         $client = $this->createClient($storeId);
         $response = $client->post(
-            'payments/' . $data['paymentId'] . '/' . self::METHOD,
+            'payments/'.$data['paymentId'].'/'.self::METHOD,
             [
                 'headers' => $this->getHeaders($storeId),
                 'json' => $requestBody,
@@ -82,16 +78,13 @@ class RefundPayment extends AbstractService implements RefundPaymentInterface
 
     /**
      * Validate request required parameters.
-     *
-     * @param array $data
-     * @return void
      */
     private function validate(array $data): void
     {
         foreach ($this->requiredArguments as $argument) {
             if (!isset($data[$argument]) || null === $data[$argument]) {
                 $this->throwRequiredArgumentException($argument);
-            } elseif ($argument === 'refundReason' && !\in_array($data[$argument], $this->refundReasons, true)) {
+            } elseif ('refundReason' === $argument && !\in_array($data[$argument], $this->refundReasons, true)) {
                 throw new LocalizedException(
                     __(
                         '%1 doesn\'t match any allowed reasons %2',
@@ -99,7 +92,7 @@ class RefundPayment extends AbstractService implements RefundPaymentInterface
                         $this->serializer->serialize($this->refundReasons)
                     )
                 );
-            } elseif ($argument === 'amount' && !is_numeric($data[$argument])) {
+            } elseif ('amount' === $argument && !is_numeric($data[$argument])) {
                 throw new LocalizedException(
                     __(
                         '%1 should be numeric value',

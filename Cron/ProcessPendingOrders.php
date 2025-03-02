@@ -21,7 +21,7 @@ use Monei\MoneiPayment\Model\ResourceModel\PendingOrder\Collection;
 use Monei\MoneiPayment\Model\ResourceModel\PendingOrder\CollectionFactory;
 
 /**
- * Cron job for processing orders with Monei payment method
+ * Cron job for processing orders with Monei payment method.
  */
 class ProcessPendingOrders
 {
@@ -65,16 +65,6 @@ class ProcessPendingOrders
      */
     private $cancelPaymentService;
 
-    /**
-     * @param CollectionFactory               $collectionFactory
-     * @param OrderInterfaceFactory           $orderFactory
-     * @param GetPaymentInterface             $getPaymentService
-     * @param GenerateInvoiceInterface        $generateInvoiceService
-     * @param SetOrderStatusAndStateInterface $setOrderStatusAndStateService
-     * @param PendingOrderResource            $pendingOrderResource
-     * @param DateTime                        $date
-     * @param CancelPaymentInterface          $cancelPaymentService
-     */
     public function __construct(
         CollectionFactory $collectionFactory,
         OrderInterfaceFactory $orderFactory,
@@ -97,8 +87,6 @@ class ProcessPendingOrders
 
     /**
      * Set order status if order is succeeded or canceled in Monei or cancel it if order is 7 days or older.
-     *
-     * @return void
      */
     public function execute(): void
     {
@@ -108,13 +96,14 @@ class ProcessPendingOrders
         foreach ($collection as $item) {
             $date = $this->date->date();
             $order = $this->orderFactory->create()->loadByIncrementId($item->getOrderIncrementId());
-            if ($order->getStatus() !== Monei::STATUS_MONEI_AUTHORIZED) {
+            if (Monei::STATUS_MONEI_AUTHORIZED !== $order->getStatus()) {
                 $this->pendingOrderResource->delete($item);
+
                 continue;
             }
 
             $orderDate = $order->getCreatedAt();
-            $diff = (int)(strtotime($date) - strtotime($orderDate)) / (60 * 60 * 24);
+            $diff = (int) (strtotime($date) - strtotime($orderDate)) / (60 * 60 * 24);
             if ($diff >= 7) {
                 $data = [
                     'paymentId' => $order->getData('monei_payment_id'),
@@ -123,15 +112,16 @@ class ProcessPendingOrders
                 $response = $this->cancelPaymentService->execute($data);
                 $this->setOrderStatusAndStateService->execute($response);
                 $this->pendingOrderResource->delete($item);
+
                 continue;
             }
 
             $response = $this->getPaymentService->execute($order->getData('monei_payment_id'));
-            if ($response['status'] === Monei::ORDER_STATUS_SUCCEEDED) {
+            if (Monei::ORDER_STATUS_SUCCEEDED === $response['status']) {
                 $this->generateInvoiceService->execute($response);
                 $this->setOrderStatusAndStateService->execute($response);
                 $this->pendingOrderResource->delete($item);
-            } elseif ($response['status'] === Monei::ORDER_STATUS_CANCELED) {
+            } elseif (Monei::ORDER_STATUS_CANCELED === $response['status']) {
                 $this->setOrderStatusAndStateService->execute($response);
                 $this->pendingOrderResource->delete($item);
             }

@@ -26,7 +26,7 @@ use Monei\MoneiPayment\Model\Service\ProcessingLock;
 use Monei\MoneiPayment\Service\Logger;
 
 /**
- * Handles payment processing with concurrency control
+ * Handles payment processing with concurrency control.
  */
 class PaymentProcessor
 {
@@ -85,19 +85,6 @@ class PaymentProcessor
      */
     private $logger;
 
-    /**
-     * @param ProcessingLock $processingLock
-     * @param OrderRepositoryInterface $orderRepository
-     * @param OrderInterfaceFactory $orderFactory
-     * @param MoneiPaymentModuleConfigInterface $moduleConfig
-     * @param GenerateInvoiceInterface $generateInvoiceService
-     * @param SetOrderStatusAndStateInterface $setOrderStatusAndStateService
-     * @param PendingOrderFactory $pendingOrderFactory
-     * @param PendingOrderResource $pendingOrderResource
-     * @param OrderSender $orderSender
-     * @param CreateVaultPayment $createVaultPayment
-     * @param Logger $logger
-     */
     public function __construct(
         ProcessingLock $processingLock,
         OrderRepositoryInterface $orderRepository,
@@ -125,17 +112,17 @@ class PaymentProcessor
     }
 
     /**
-     * Process payment data with concurrency control
+     * Process payment data with concurrency control.
      *
-     * @param array $paymentData
      * @param string $source Controller source ('complete' or 'callback')
-     * @return bool
+     *
      * @throws LocalizedException
      */
     public function processPayment(array $paymentData, string $source): bool
     {
         if (!isset($paymentData['orderId'], $paymentData['id'], $paymentData['status'])) {
             $this->logger->error('Missing required payment data', $paymentData);
+
             return false;
         }
 
@@ -159,6 +146,7 @@ class PaymentProcessor
 
                 if (!$order->getId()) {
                     $this->logger->error(\sprintf('Order %s not found', $orderId));
+
                     return false;
                 }
 
@@ -191,6 +179,7 @@ class PaymentProcessor
                             $status,
                             $orderId
                         ));
+
                         return false;
                 }
             } catch (\Exception $e) {
@@ -199,17 +188,14 @@ class PaymentProcessor
                     $orderId,
                     $e->getMessage()
                 ));
+
                 return false;
             }
         });
     }
 
     /**
-     * Process a payment with AUTHORIZED status
-     *
-     * @param OrderInterface $order
-     * @param array $paymentData
-     * @return bool
+     * Process a payment with AUTHORIZED status.
      */
     private function processAuthorizedPayment(OrderInterface $order, array $paymentData): bool
     {
@@ -221,6 +207,7 @@ class PaymentProcessor
         $payment = $order->getPayment();
         if (!$payment) {
             $this->logger->error(\sprintf('No payment found for order %s', $order->getIncrementId()));
+
             return false;
         }
 
@@ -235,13 +222,15 @@ class PaymentProcessor
         }
 
         $order->setStatus($this->moduleConfig->getPreAuthorizedStatus())
-            ->setState(Order::STATE_PENDING_PAYMENT);
+            ->setState(Order::STATE_PENDING_PAYMENT)
+        ;
         $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $paymentData['id']);
 
         try {
             $pendingOrder = $this->pendingOrderFactory->create()->setOrderIncrementId($paymentData['orderId']);
             $this->pendingOrderResource->save($pendingOrder);
             $this->orderRepository->save($order);
+
             return true;
         } catch (\Exception $e) {
             $this->logger->error(\sprintf(
@@ -249,16 +238,13 @@ class PaymentProcessor
                 $order->getIncrementId(),
                 $e->getMessage()
             ));
+
             return false;
         }
     }
 
     /**
-     * Process a payment with SUCCEEDED status
-     *
-     * @param OrderInterface $order
-     * @param array $paymentData
-     * @return bool
+     * Process a payment with SUCCEEDED status.
      */
     private function processSucceededPayment(OrderInterface $order, array $paymentData): bool
     {
@@ -272,7 +258,8 @@ class PaymentProcessor
             $this->generateInvoiceService->execute($paymentData);
 
             $order->setStatus($this->moduleConfig->getConfirmedStatus())
-                ->setState(Order::STATE_NEW);
+                ->setState(Order::STATE_NEW)
+            ;
             $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $paymentData['id']);
             $this->orderRepository->save($order);
 
@@ -296,26 +283,23 @@ class PaymentProcessor
                 $order->getIncrementId(),
                 $e->getMessage()
             ));
+
             return false;
         }
     }
 
     /**
-     * Check if the order already has the correct status for the given payment status
-     *
-     * @param OrderInterface $order
-     * @param string $paymentStatus
-     * @return bool
+     * Check if the order already has the correct status for the given payment status.
      */
     private function hasOrderCorrectStatus(OrderInterface $order, string $paymentStatus): bool
     {
         switch ($paymentStatus) {
             case Monei::ORDER_STATUS_AUTHORIZED:
-                return $order->getState() === Order::STATE_PENDING_PAYMENT;
+                return Order::STATE_PENDING_PAYMENT === $order->getState();
 
             case Monei::ORDER_STATUS_SUCCEEDED:
-                return $order->getStatus() === $this->moduleConfig->getConfirmedStatus() &&
-                    $order->getState() === Order::STATE_NEW;
+                return $order->getStatus() === $this->moduleConfig->getConfirmedStatus()
+                    && Order::STATE_NEW === $order->getState();
 
             default:
                 return false;

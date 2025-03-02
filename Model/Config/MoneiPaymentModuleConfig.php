@@ -12,25 +12,34 @@ namespace Monei\MoneiPayment\Model\Config;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\ScopeInterface;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
-use Monei\MoneiPayment\Model\Config\Source\Mode;
 use Monei\MoneiPayment\Model\Config\Source\Language;
+use Monei\MoneiPayment\Model\Config\Source\Mode;
 
 /**
- * Get Monei payment method configuration class.
+ * Monei payment method configuration provider.
+ *
+ * This class provides access to configuration values for the Monei payment method,
+ * including API credentials, environment settings, display options, payment statuses,
+ * and country restrictions.
  */
 class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
 {
+    /**
+     * Scope configuration for accessing store configuration values.
+     */
     private ScopeConfigInterface $scopeConfig;
 
+    /**
+     * Constructor for MoneiPaymentModuleConfig.
+     *
+     * @param ScopeConfigInterface $scopeConfig The configuration interface for accessing store configuration values
+     */
     public function __construct(
         ScopeConfigInterface $scopeConfig
     ) {
         $this->scopeConfig = $scopeConfig;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function isEnabled($storeId = null): bool
     {
         return (bool) $this->scopeConfig->getValue(
@@ -40,9 +49,6 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
         );
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getMode($storeId = null): int
     {
         return (int) $this->scopeConfig->getValue(
@@ -52,19 +58,13 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
         );
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getUrl($storeId = null): string
     {
-        return $this->getMode($storeId) === Mode::MODE_TEST
+        return Mode::MODE_TEST === $this->getMode($storeId)
             ? $this->getTestUrl($storeId)
             : $this->getProductionUrl($storeId);
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getTestUrl($storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
@@ -74,9 +74,6 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
         );
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getProductionUrl($storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
@@ -86,20 +83,14 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
         );
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function getAccountId(int $storeId = null): string
+    public function getAccountId(?int $storeId = null): string
     {
-        return $this->getMode($storeId) === Mode::MODE_TEST
+        return Mode::MODE_TEST === $this->getMode($storeId)
             ? $this->getTestAccountId($storeId)
             : $this->getProductionAccountId($storeId);
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function getTestAccountId(int $storeId = null): string
+    public function getTestAccountId(?int $storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
             self::TEST_ACCOUNT_ID,
@@ -108,10 +99,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
         );
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function getProductionAccountId(int $storeId = null): string
+    public function getProductionAccountId(?int $storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
             self::PRODUCTION_ACCOUNT_ID,
@@ -120,19 +108,13 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
         );
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getApiKey($storeId = null): string
     {
-        return $this->getMode($storeId) === Mode::MODE_TEST
+        return Mode::MODE_TEST === $this->getMode($storeId)
             ? $this->getTestApiKey($storeId)
             : $this->getProductionApiKey($storeId);
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getTestApiKey($storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
@@ -142,9 +124,6 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
         );
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getProductionApiKey($storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
@@ -154,10 +133,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
         );
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function getLanguage(int $storeId = null): string
+    public function getLanguage(?int $storeId = null): string
     {
         // First, try to get the store's locale code
         $locale = $this->scopeConfig->getValue(
@@ -185,9 +161,6 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
         );
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getTitle($storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
@@ -197,9 +170,6 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
         );
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getDescription($storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
@@ -209,9 +179,6 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
         );
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getTypeOfPayment($storeId = null): int
     {
         return (int) $this->scopeConfig->getValue(
@@ -221,9 +188,6 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
         );
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getConfirmedStatus($storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
@@ -233,9 +197,6 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
         );
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getPreAuthorizedStatus($storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
@@ -245,9 +206,6 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
         );
     }
 
-    /**
-     * @inheritDoc
-     */
     public function isAllowSpecific($storeId = null): bool
     {
         return (bool) $this->scopeConfig->getValue(
@@ -257,9 +215,6 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
         );
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getSpecificCountries($storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
@@ -269,9 +224,6 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
         );
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getSortOrder($storeId = null): int
     {
         return (int) $this->scopeConfig->getValue(

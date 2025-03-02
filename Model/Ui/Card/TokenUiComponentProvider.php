@@ -31,14 +31,15 @@ class TokenUiComponentProvider implements TokenUiComponentProviderInterface
     public function getComponentForToken(PaymentTokenInterface $paymentToken)
     {
         $jsonDetails = json_decode($paymentToken->getTokenDetails() ?: '{}', true);
+
         return $this->componentFactory->create(
             [
                 'config' => [
                     'code' => Monei::CC_VAULT_CODE,
                     TokenUiComponentProviderInterface::COMPONENT_DETAILS => $jsonDetails,
-                    TokenUiComponentProviderInterface::COMPONENT_PUBLIC_HASH => $paymentToken->getPublicHash()
+                    TokenUiComponentProviderInterface::COMPONENT_PUBLIC_HASH => $paymentToken->getPublicHash(),
                 ],
-                'name' => 'Monei_MoneiPayment/js/view/payment/method-renderer/vault'
+                'name' => 'Monei_MoneiPayment/js/view/payment/method-renderer/vault',
             ]
         );
     }

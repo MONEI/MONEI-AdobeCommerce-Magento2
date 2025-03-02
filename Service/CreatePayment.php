@@ -9,7 +9,6 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service;
 
-use Exception;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
 use Monei\MoneiPayment\Model\Config\Source\TypeOfPayment;
 
@@ -29,23 +28,20 @@ class CreatePayment extends AbstractService implements CreatePaymentInterface
         'orderId',
         'customer',
         'billingDetails',
-        'shippingDetails'
+        'shippingDetails',
     ];
 
-    /**
-     * @inheritDoc
-     */
     public function execute(array $data): array
     {
         $this->logger->debug(__METHOD__);
 
         try {
             $this->validate($data);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->logger->critical($e->getMessage());
         }
         $data = array_merge($data, $this->getUrls());
-        if ($this->moduleConfig->getTypeOfPayment() === TypeOfPayment::TYPE_PRE_AUTHORIZED) {
+        if (TypeOfPayment::TYPE_PRE_AUTHORIZED === $this->moduleConfig->getTypeOfPayment()) {
             $data['transactionType'] = 'AUTH';
         }
 
@@ -55,15 +51,16 @@ class CreatePayment extends AbstractService implements CreatePaymentInterface
         $this->logger->debug('');
 
         $client = $this->createClient();
+
         try {
             $response = $client->post(
                 self::METHOD,
                 [
                     'headers' => $this->getHeaders(),
-                    'json'    => $data,
+                    'json' => $data,
                 ]
             );
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->logger->critical($e->getMessage());
 
             return ['error' => true, 'orderId' => $data['orderId']];
@@ -79,9 +76,6 @@ class CreatePayment extends AbstractService implements CreatePaymentInterface
 
     /**
      * Validate request required parameters.
-     *
-     * @param array $data
-     * @return void
      */
     private function validate(array $data): void
     {

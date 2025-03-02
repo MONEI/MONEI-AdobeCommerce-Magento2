@@ -58,7 +58,7 @@ $paymentInfo = $block->getPaymentInfo();
                     // Handle any other values by adding spaces before capital letters and capitalizing first letter
                     $walletValue = ucfirst(preg_replace('/([a-z])([A-Z])/', '$1 $2', $walletValue));
                 }
-            ?>
+                ?>
                 <tr>
                     <th><?= $escaper->escapeHtml(__('Digital Wallet')) ?></th>
                     <td><?= $escaper->escapeHtml($walletValue) ?></td>

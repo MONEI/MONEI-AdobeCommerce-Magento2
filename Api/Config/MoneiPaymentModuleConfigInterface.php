@@ -49,162 +49,134 @@ interface MoneiPaymentModuleConfigInterface
     public const SORT_ORDER = 'payment/monei/sort_order';
 
     /**
-     * Check if payment method is enabled
+     * Check if payment method is enabled.
      *
-     * @param null $storeId
-     * @return bool
+     * @param null|int $storeId
      */
     public function isEnabled($storeId = null): bool;
 
     /**
-     * Get payment mode
+     * Get payment mode.
      *
-     * @param null $storeId
-     * @return int
+     * @param null|int $storeId
      */
     public function getMode($storeId = null): int;
 
     /**
-     * Get test URL
+     * Get test URL.
      *
-     * @param null $storeId
-     * @return string
+     * @param null|int $storeId
      */
     public function getUrl($storeId = null): string;
 
     /**
-     * Get test URL
+     * Get test URL.
      *
-     * @param null $storeId
-     * @return string
+     * @param null|int $storeId
      */
     public function getTestUrl($storeId = null): string;
 
     /**
-     * Get production URL
+     * Get production URL.
      *
-     * @param null $storeId
-     * @return string
+     * @param null|int $storeId
      */
     public function getProductionUrl($storeId = null): string;
 
     /**
-     * Get account id
-     *
-     * @param int|null $storeId
-     * @return string
+     * Get account id.
      */
-    public function getAccountId(int $storeId = null): string;
+    public function getAccountId(?int $storeId = null): string;
 
     /**
-     * Get test account id
-     *
-     * @param int|null $storeId
-     * @return string
+     * Get test account id.
      */
-    public function getTestAccountId(int $storeId = null): string;
+    public function getTestAccountId(?int $storeId = null): string;
 
     /**
-     * Get production account id
-     *
-     * @param int|null $storeId
-     * @return string
+     * Get production account id.
      */
-    public function getProductionAccountId(int $storeId = null): string;
+    public function getProductionAccountId(?int $storeId = null): string;
 
     /**
-     * Get test API key
+     * Get test API key.
      *
-     * @param null $storeId
-     * @return string
+     * @param null|int $storeId
      */
     public function getApiKey($storeId = null): string;
 
     /**
-     * Get test API key
+     * Get test API key.
      *
-     * @param null $storeId
-     * @return string
+     * @param null|int $storeId
      */
     public function getTestApiKey($storeId = null): string;
 
     /**
-     * Get production API key
+     * Get production API key.
      *
-     * @param null $storeId
-     * @return string
+     * @param null|int $storeId
      */
     public function getProductionApiKey($storeId = null): string;
 
     /**
-     * Get language
-     *
-     * @param int|null $storeId
-     * @return string
+     * Get language.
      */
-    public function getLanguage(int $storeId = null): string;
+    public function getLanguage(?int $storeId = null): string;
 
     /**
-     * Get payment method title
+     * Get payment method title.
      *
-     * @param null $storeId
-     * @return string
+     * @param null|int $storeId
      */
     public function getTitle($storeId = null): string;
 
     /**
-     * Get payment method description
+     * Get payment method description.
      *
-     * @param null $storeId
-     * @return string
+     * @param null|int $storeId
      */
     public function getDescription($storeId = null): string;
 
     /**
-     * Get type of payment
+     * Get type of payment.
      *
-     * @param null $storeId
-     * @return int
+     * @param null|int $storeId
      */
     public function getTypeOfPayment($storeId = null): int;
 
     /**
-     * Get confirmed status
+     * Get confirmed status.
      *
-     * @param null $storeId
-     * @return string
+     * @param null|int $storeId
      */
     public function getConfirmedStatus($storeId = null): string;
 
     /**
-     * Get pre-authorized status
+     * Get pre-authorized status.
      *
-     * @param null $storeId
-     * @return string
+     * @param null|int $storeId
      */
     public function getPreAuthorizedStatus($storeId = null): string;
 
     /**
-     * Get allow specific countries
+     * Get allow specific countries.
      *
-     * @param null $storeId
-     * @return bool
+     * @param null|int $storeId
      */
     public function isAllowSpecific($storeId = null): bool;
 
     /**
-     * Get specific countries for payment method
+     * Get specific countries for payment method.
      *
-     * @param null $storeId
-     * @return string
+     * @param null|int $storeId
      */
     public function getSpecificCountries($storeId = null): string;
 
     /**
-     * Get payment method sort order
+     * Get payment method sort order.
      *
-     * @param null $storeId
-     * @return int
+     * @param null|int $storeId
      */
     public function getSortOrder($storeId = null): int;
 }

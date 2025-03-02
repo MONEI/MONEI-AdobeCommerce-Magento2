@@ -27,6 +27,11 @@ class GetPaymentMethods extends AbstractService implements GetPaymentMethodsInte
 
     private RegistryAccountId $registryAccountId;
 
+    /**
+     * Constructor.
+     *
+     * @param ClientFactory $clientFactory Class from GuzzleHttp namespace
+     */
     public function __construct(
         RegistryAccountId $registryAccountId,
         ClientFactory $clientFactory,
@@ -49,9 +54,6 @@ class GetPaymentMethods extends AbstractService implements GetPaymentMethodsInte
         $this->registryAccountId = $registryAccountId;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function execute(): array
     {
         $this->logger->debug(__METHOD__);
@@ -63,12 +65,12 @@ class GetPaymentMethods extends AbstractService implements GetPaymentMethodsInte
             $client = $this->createClient();
 
             $this->logger->debug('------------------ START GET PAYMENT METHODS REQUEST -----------------');
-            $this->logger->debug('Account id = ' . $accountId);
+            $this->logger->debug('Account id = '.$accountId);
             $this->logger->debug('------------------- END GET PAYMENT METHODS REQUEST ------------------');
             $this->logger->debug('');
 
             $response = $client->get(
-                self::METHOD . '?accountId=' . $accountId . '&' . time(),
+                self::METHOD.'?accountId='.$accountId.'&'.time(),
                 [
                     'headers' => $this->getHeaders(),
                 ]

@@ -10,7 +10,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Model\Payment;
 
 /**
- * Monei payment method class
+ * Monei payment method class.
  */
 class Monei
 {
@@ -67,7 +67,7 @@ class Monei
         self::BIZUM_CODE,
         self::GOOGLE_APPLE_CODE,
         self::MULTIBANCO_REDIRECT_CODE,
-        self::MBWAY_REDIRECT_CODE
+        self::MBWAY_REDIRECT_CODE,
     ];
 
     public const MONEI_GOOGLE_CODE = 'googlePay';
@@ -78,11 +78,11 @@ class Monei
         self::GOOGLE_APPLE_CODE => [self::MONEI_GOOGLE_CODE, self::MONEI_APPLE_CODE],
         self::CARD_CODE => ['card'],
         self::MULTIBANCO_REDIRECT_CODE => ['multibanco'],
-        self::MBWAY_REDIRECT_CODE => ['mbway']
+        self::MBWAY_REDIRECT_CODE => ['mbway'],
     ];
 
     public const MAPPER_MAGENTO_MONEI_PAYMENT_CODE_REDIRECT = [
         self::MULTIBANCO_REDIRECT_CODE => ['multibanco'],
-        self::MBWAY_REDIRECT_CODE => ['mbway']
+        self::MBWAY_REDIRECT_CODE => ['mbway'],
     ];
 }

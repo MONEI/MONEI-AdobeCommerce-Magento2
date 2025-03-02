@@ -15,10 +15,9 @@ namespace Monei\MoneiPayment\Api\Config;
 interface AllMoneiPaymentModuleConfigInterface
 {
     /**
-     * Check if any payment methods is enabled
+     * Check if any payment methods is enabled.
      *
      * @param null $storeId
-     * @return bool
      */
     public function isAnyPaymentEnabled($storeId = null): bool;
 }

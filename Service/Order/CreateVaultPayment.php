@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Service\Order;
 
 use Magento\Sales\Api\Data\OrderPaymentInterface;
+// @phpstan-ignore-next-line
 use Magento\Vault\Api\Data\PaymentTokenFactoryInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
@@ -17,8 +18,12 @@ use Monei\MoneiPayment\Model\Payment\Monei;
 class CreateVaultPayment
 {
     private PaymentTokenFactoryInterface $paymentTokenFactory;
+
     private GetPaymentInterface $getPayment;
 
+    /**
+     * Constructor.
+     */
     public function __construct(
         PaymentTokenFactoryInterface $paymentTokenFactory,
         GetPaymentInterface $getPayment
@@ -27,9 +32,12 @@ class CreateVaultPayment
         $this->paymentTokenFactory = $paymentTokenFactory;
     }
 
+    /**
+     * Execute vault payment creation.
+     */
     public function execute(string $moneiPaymentId, OrderPaymentInterface &$payment): bool
     {
-        if ($payment->getMethod() !== Monei::CARD_CODE) {
+        if (Monei::CARD_CODE !== $payment->getMethod()) {
             return false;
         }
         $moneiPayment = $this->getPayment->execute($moneiPaymentId);
@@ -46,7 +54,7 @@ class CreateVaultPayment
                     'brand' => $detailsCard['brand'] ?? '',
                     'name' => $detailsCard['cardholderName'] ?? '',
                     'last4' => $detailsCard['last4'] ?? '',
-                    'expiration_date' => date('m/Y', $detailsCard['expiration']) ?? ''
+                    'expiration_date' => date('m/Y', $detailsCard['expiration']) ?? '',
                 ]
             )
         );

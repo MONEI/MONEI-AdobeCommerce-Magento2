@@ -17,11 +17,12 @@ use Magento\Sales\Api\Data\OrderInterfaceFactory;
 use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
 
 /**
- * Monei payment fail insite controller
+ * Monei payment fail insite controller.
  */
 class FailLastOrderByStatus extends Fail
 {
     private Context $context;
+
     private Session $checkoutSession;
 
     public function __construct(
@@ -37,9 +38,6 @@ class FailLastOrderByStatus extends Fail
         parent::__construct($context, $checkoutSession, $orderFactory, $setOrderStatusAndStateService, $messageManager, $resultRedirectFactory);
     }
 
-    /**
-     * @inheritDoc
-     */
     public function execute()
     {
         $order = $this->checkoutSession->getLastRealOrder();

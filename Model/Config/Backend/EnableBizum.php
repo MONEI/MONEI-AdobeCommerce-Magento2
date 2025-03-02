@@ -15,9 +15,6 @@ class EnableBizum extends Enable
 {
     protected const PAYMENT_METHOD_CODE = Monei::BIZUM_CODE;
 
-    /**
-     * @return EnableBizum
-     */
     public function beforeSave(): EnableBizum
     {
         if ($this->getValue() && !$this->isPaymentAvailable()) {
@@ -32,9 +29,6 @@ class EnableBizum extends Enable
         return parent::beforeSave();
     }
 
-    /**
-     * @return bool
-     */
     private function isPaymentAvailable(): bool
     {
         $availablePaymentMethods = $this->getAvailablePaymentMethods();

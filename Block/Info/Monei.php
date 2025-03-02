@@ -9,12 +9,19 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Block\Info;
 
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\View\Element\Template;
 use Magento\Payment\Block\Info;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 
+/**
+ * Monei payment info block.
+ */
 class Monei extends Info
 {
+    /**
+     * Payment information fields allowed to be displayed.
+     */
     private const INFO_PAY_ALLOWED = [
         'last4',
         'brand',
@@ -22,17 +29,22 @@ class Monei extends Info
     ];
 
     /**
-     * Monei template
+     * Monei template.
      *
      * @var string
      */
     protected $_template = 'Monei_MoneiPayment::info/monei.phtml';
 
     /**
+     * Payment service.
+     *
      * @var GetPaymentInterface
      */
     private $paymentService;
 
+    /**
+     * Constructor.
+     */
     public function __construct(
         GetPaymentInterface $paymentService,
         Template\Context $context,
@@ -43,8 +55,11 @@ class Monei extends Info
     }
 
     /**
-     * @return array|null
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * Get payment information.
+     *
+     * @throws LocalizedException
+     *
+     * @return null|array
      */
     public function getPaymentInfo()
     {
@@ -55,12 +70,14 @@ class Monei extends Info
         $monei_payment_id = $this->getInfo()->getOrder()->getData('monei_payment_id');
         if ($monei_payment_id) {
             $paymentData = $this->paymentService->execute($monei_payment_id);
-            $paymentMethodData = \array_key_exists('paymentMethod', $paymentData) ? $paymentData['paymentMethod'] : null;
+            $paymentMethodData = \array_key_exists('paymentMethod', $paymentData)
+                ? $paymentData['paymentMethod']
+                : null;
             if ($paymentMethodData) {
                 foreach ($paymentMethodData as $payKey => $payValue) {
                     if (\is_array($payValue)) {
                         foreach ($payValue as $key => $value) {
-                            if ($key === 'expiration') {
+                            if ('expiration' === $key) {
                                 $paymentMethodData[$payKey][$key] = date('m/y', $value);
                             } else {
                                 $paymentMethodData[$key] = $value;
@@ -77,8 +94,11 @@ class Monei extends Info
     }
 
     /**
-     * @return mixed|null
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * Get payment title.
+     *
+     * @throws LocalizedException
+     *
+     * @return null|string
      */
     public function getPaymentTitle()
     {
@@ -89,6 +109,9 @@ class Monei extends Info
         return null;
     }
 
+    /**
+     * Get list of allowed payment information fields.
+     */
     public function getInfoPayAllowed(): array
     {
         return self::INFO_PAY_ALLOWED;

@@ -18,8 +18,11 @@ use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 class AllMoneiPaymentModuleConfig implements AllMoneiPaymentModuleConfigInterface
 {
     private MoneiPaymentModuleConfigInterface $moneiPaymentModuleConfig;
+
     private MoneiCardPaymentModuleConfigInterface $moneiCardPaymentModuleConfig;
+
     private MoneiBizumPaymentModuleConfigInterface $moneiBizumPaymentModuleConfig;
+
     private MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentModuleConfig;
 
     public function __construct(
@@ -28,16 +31,12 @@ class AllMoneiPaymentModuleConfig implements AllMoneiPaymentModuleConfigInterfac
         MoneiBizumPaymentModuleConfigInterface $moneiBizumPaymentModuleConfig,
         MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentModuleConfig,
     ) {
-
         $this->moneiPaymentModuleConfig = $moneiPaymentModuleConfig;
         $this->moneiCardPaymentModuleConfig = $moneiCardPaymentModuleConfig;
         $this->moneiBizumPaymentModuleConfig = $moneiBizumPaymentModuleConfig;
         $this->moneiGoogleApplePaymentModuleConfig = $moneiGoogleApplePaymentModuleConfig;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function isAnyPaymentEnabled($storeId = null): bool
     {
         return (bool) $this->moneiPaymentModuleConfig->isEnabled($storeId)

@@ -25,9 +25,6 @@ class SetOrderStatusAfterRefund
      */
     private $orderRepository;
 
-    /**
-     * @param OrderRepositoryInterface $orderRepository
-     */
     public function __construct(
         OrderRepositoryInterface $orderRepository
     ) {
@@ -35,19 +32,16 @@ class SetOrderStatusAfterRefund
     }
 
     /**
-     * Sets status and state for order
+     * Sets status and state for order.
      *
-     * @param CreditmemoService   $subject
-     * @param CreditmemoInterface $result
-     * @return CreditmemoInterface
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function afterRefund(CreditmemoService $subject, CreditmemoInterface $result): CreditmemoInterface
     {
         $order = $result->getOrder();
-        if ($order->getData('monei_payment_id') !== null
-            && $result->getRefundReason() !== null
-            && $order->getState() !== 'closed'
+        if (null !== $order->getData('monei_payment_id')
+            && null !== $result->getRefundReason()
+            && 'closed' !== $order->getState()
         ) {
             $orderStatus = Monei::STATUS_MONEI_PARTIALLY_REFUNDED;
             $orderState = Order::STATE_PROCESSING;

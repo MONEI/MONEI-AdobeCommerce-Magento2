@@ -16,9 +16,6 @@ class TypeOfConnection implements OptionSourceInterface
     public const TYPE_REDIRECT = 'redirect';
     public const TYPE_INSITE = 'insite';
 
-    /**
-     * @inheritDoc
-     */
     public function toOptionArray(): array
     {
         return [

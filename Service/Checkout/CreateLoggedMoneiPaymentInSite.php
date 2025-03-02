@@ -11,6 +11,7 @@ namespace Monei\MoneiPayment\Service\Checkout;
 
 use Magento\Checkout\Model\Session;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Phrase;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentInSiteInterface;
@@ -24,11 +25,18 @@ use Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote;
 class CreateLoggedMoneiPaymentInSite implements CreateLoggedMoneiPaymentInSiteInterface
 {
     private CartRepositoryInterface $quoteRepository;
+
     private Session $checkoutSession;
+
     private GetCustomerDetailsByQuote $getCustomerDetailsByQuote;
+
     private GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress;
+
     private CreatePayment $createPayment;
 
+    /**
+     * Constructor.
+     */
     public function __construct(
         CartRepositoryInterface $quoteRepository,
         Session $checkoutSession,
@@ -50,7 +58,7 @@ class CreateLoggedMoneiPaymentInSite implements CreateLoggedMoneiPaymentInSiteIn
     {
         $quote = $this->checkoutSession->getQuote() ?? $this->quoteRepository->get($cartId);
         if (!$quote) {
-            throw new LocalizedException(__('An error occurred to retrieve the information about the quote'));
+            throw new LocalizedException(new Phrase('An error occurred to retrieve the information about the quote'));
         }
 
         // Save the quote in order to avoid that the other processes can reserve the order
@@ -73,7 +81,7 @@ class CreateLoggedMoneiPaymentInSite implements CreateLoggedMoneiPaymentInSiteIn
 
             return [$result];
         } catch (\Exception $e) {
-            throw new LocalizedException(__('An error occurred rendering the pay with card. Please try again later.'));
+            throw new LocalizedException(new Phrase('An error occurred rendering the pay with card. Please try again later.'));
         }
     }
 }

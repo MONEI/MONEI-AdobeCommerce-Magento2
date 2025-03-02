@@ -14,15 +14,17 @@ use Magento\Framework\Event\ObserverInterface;
 use Magento\Sales\Model\Order;
 use Monei\MoneiPayment\Model\Payment\Monei;
 
+/**
+ * Observer for quote submit success event.
+ */
 class SaveQuoteSubmitSuccessObserver implements ObserverInterface
 {
     /**
-     * @param Observer $observer
-     * @return SaveQuoteSubmitSuccessObserver
+     * Enable email sending for MONEI payment methods.
      */
     public function execute(Observer $observer): SaveQuoteSubmitSuccessObserver
     {
-        /* @var Order $order */
+        // @var Order $order
         $order = $observer->getEvent()->getData('order');
 
         if (\in_array($order->getPayment()->getMethod(), Monei::PAYMENT_METHODS_MONEI, true)) {

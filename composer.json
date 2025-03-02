@@ -28,9 +28,11 @@
         "magento/module-sales": "103.0.*"
     },
     "require-dev": {
-        "squizlabs/php_codesniffer": "^3.7",
+        "friendsofphp/php-cs-fixer": "^3.38",
         "magento/magento-coding-standard": "^34.0",
-        "friendsofphp/php-cs-fixer": "^3.38"
+        "magento/php-compatibility-fork": "^0.1",
+        "phpdocumentor/reflection-docblock": "^5.6",
+        "squizlabs/php_codesniffer": "^3.7"
     },
     "conflict": {
         "magento/product-community-edition": "<2.4.4"
@@ -44,14 +46,29 @@
         }
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "platform": {
+            "php": "8.3.0"
+        },
+        "allow-plugins": {
+            "magento/composer-dependency-version-audit-plugin": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
     },
     "scripts": {
-        "lint": "ERRORS_ONLY=1 bash scripts/lint.sh",
-        "fix": "bash scripts/fix.sh",
-        "cs-check": "php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.php",
-        "cs-fix": "php-cs-fixer fix --config=.php-cs-fixer.php",
-        "phpcs": "phpcs --standard=phpcs.xml --extensions=php,phtml --report=full .",
-        "phpcbf": "phpcbf --standard=phpcs.xml --extensions=php,phtml ."
+        "lint": "vendor/bin/phpcs --standard=phpcs.xml .",
+        "fix": "vendor/bin/phpcbf --standard=phpcs.xml .",
+        "post-install-cmd": [
+            "([ $COMPOSER_DEV_MODE -eq 0 ] || vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/,../../magento/php-compatibility-fork/)"
+        ],
+        "post-update-cmd": [
+            "([ $COMPOSER_DEV_MODE -eq 0 ] || vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/,../../magento/php-compatibility-fork/)"
+        ]
+    },
+    "repositories": {
+        "magento": {
+            "type": "composer",
+            "url": "https://repo.magento.com/"
+        }
     }
 }

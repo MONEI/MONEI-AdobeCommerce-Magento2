@@ -24,21 +24,14 @@ class CancelPaymentCommand extends Command
      */
     private $service;
 
-    /**
-     * @param CancelPaymentInterface $service
-     * @param string|null            $name
-     */
     public function __construct(
         CancelPaymentInterface $service,
-        string $name = null
+        ?string $name = null
     ) {
         $this->service = $service;
         parent::__construct($name);
     }
 
-    /**
-     * @inheritDoc
-     */
     protected function configure()
     {
         $this->setName('monei:moneiws:cancelpayment');
@@ -47,18 +40,14 @@ class CancelPaymentCommand extends Command
         parent::configure();
     }
 
-    /**
-     * @inheritDoc
-     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $data = [
             'paymentId' => '8a437c2d2423283bc940c786196098cae3653dc4',
-            'cancellationReason' => 'requested_by_customer'
+            'cancellationReason' => 'requested_by_customer',
         ];
         $result = $this->service->execute($data);
         $output->writeln('Response:');
-        // @codingStandardsIgnoreLine
-        print_r($result);
+        $output->writeln(json_encode($result, JSON_PRETTY_PRINT));
     }
 }

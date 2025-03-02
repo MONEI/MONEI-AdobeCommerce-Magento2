@@ -25,15 +25,11 @@ class SaveOrderBeforeSalesModelQuoteObserver implements ObserverInterface
         $this->objectCopyService = $objectCopyService;
     }
 
-    /**
-     * @param Observer $observer
-     * @return SaveOrderBeforeSalesModelQuoteObserver
-     */
     public function execute(Observer $observer): SaveOrderBeforeSalesModelQuoteObserver
     {
-        /* @var Order $order */
+        // @var Order $order
         $order = $observer->getEvent()->getData('order');
-        /* @var Quote $quote */
+        // @var Quote $quote
         $quote = $observer->getEvent()->getData('quote');
 
         $this->objectCopyService->copyFieldsetToTarget('sales_convert_quote', 'to_order', $quote, $order);

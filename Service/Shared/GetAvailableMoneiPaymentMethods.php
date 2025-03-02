@@ -16,15 +16,23 @@ use Monei\MoneiPayment\Api\Service\GetPaymentMethodsInterface;
  */
 class GetAvailableMoneiPaymentMethods
 {
+    /**
+     * Available payment methods.
+     */
     private array $availablePaymentMethods = [];
+
+    /**
+     * Metadata for payment methods.
+     */
     private array $metadataPaymentMethods = [];
 
+    /**
+     * Payment methods service.
+     */
     private GetPaymentMethodsInterface $getPaymentMethodsService;
 
     /**
      * GetAvailableMoneiPaymentMethods constructor.
-     *
-     * @param GetPaymentMethodsInterface $getPaymentMethodsService
      */
     public function __construct(
         GetPaymentMethodsInterface $getPaymentMethodsService
@@ -32,6 +40,11 @@ class GetAvailableMoneiPaymentMethods
         $this->getPaymentMethodsService = $getPaymentMethodsService;
     }
 
+    /**
+     * Get available payment methods.
+     *
+     * @return array List of available payment methods
+     */
     public function execute(): array
     {
         if (!$this->availablePaymentMethods) {
@@ -43,6 +56,11 @@ class GetAvailableMoneiPaymentMethods
         return $this->availablePaymentMethods;
     }
 
+    /**
+     * Get metadata for payment methods.
+     *
+     * @return array Metadata for payment methods
+     */
     public function getMetadataPaymentMethods(): array
     {
         if (!$this->metadataPaymentMethods) {

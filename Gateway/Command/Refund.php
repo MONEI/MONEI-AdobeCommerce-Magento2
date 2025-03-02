@@ -13,7 +13,7 @@ use Magento\Payment\Gateway\CommandInterface;
 use Monei\MoneiPayment\Api\Service\RefundPaymentInterface;
 
 /**
- * Refund Monei payment command
+ * Refund Monei payment command.
  */
 class Refund implements CommandInterface
 {
@@ -22,18 +22,12 @@ class Refund implements CommandInterface
      */
     private $refundPaymentService;
 
-    /**
-     * @param RefundPaymentInterface $subjectReader
-     */
     public function __construct(
         RefundPaymentInterface $refundPaymentService
     ) {
         $this->refundPaymentService = $refundPaymentService;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function execute(array $commandSubject)
     {
         $payment = $commandSubject['payment']->getPayment();
