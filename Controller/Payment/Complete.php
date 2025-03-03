@@ -164,22 +164,22 @@ class Complete implements ActionInterface
      */
     public function execute()
     {
-        $data = $this->context->getRequest()->getParams();
+        /** @var array $params */
+        $params = $this->context->getRequest()->getParams();
 
-        // Check if we have the required parameters
-        if (!isset($data['status'], $data['orderId'])) {
-            $this->logger->error('Complete controller called with missing parameters');
-
-            return $this->resultRedirectFactory->setPath('checkout/cart', ['_secure' => true]);
+        if (!isset($params['orderId'], $params['status'], $params['id'])) {
+            $this->logger->error('[Complete controller error] Missing required parameters');
+            return $this->resultRedirectFactory->setPath('checkout/cart');
         }
 
         try {
-            $processed = $this->paymentProcessor->processPayment($data, self::SOURCE);
+            $processed = $this->paymentProcessor->processPayment($params, self::SOURCE);
 
             // Redirect based on payment status, even if processing failed
             // (we want to show the appropriate page to the customer)
-            if (Monei::ORDER_STATUS_AUTHORIZED === $data['status']
-                || Monei::ORDER_STATUS_SUCCEEDED === $data['status']
+            if (
+                Monei::ORDER_STATUS_AUTHORIZED === $params['status']
+                || Monei::ORDER_STATUS_SUCCEEDED === $params['status']
             ) {
                 return $this->resultRedirectFactory->setPath(
                     'checkout/onepage/success',
@@ -192,9 +192,8 @@ class Complete implements ActionInterface
                 ['_secure' => true]
             );
         } catch (\Exception $e) {
-            $this->logger->error('Error in Complete controller: ' . $e->getMessage());
-
-            return $this->resultRedirectFactory->setPath('checkout/cart', ['_secure' => true]);
+            $this->logger->error('[Complete controller error] ' . $e->getMessage());
+            return $this->resultRedirectFactory->setPath('checkout/cart');
         }
     }
 }

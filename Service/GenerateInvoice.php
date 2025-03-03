@@ -1,6 +1,7 @@
 <?php
 
 /**
+ * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -8,64 +9,58 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service;
 
-use Magento\Framework\DB\TransactionFactory;
 use Magento\Sales\Api\Data\OrderInterface;
-use Magento\Sales\Api\Data\OrderInterfaceFactory;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
 use Monei\MoneiPayment\Api\OrderLockManagerInterface;
 use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
+use Magento\Framework\DB\TransactionFactory;
+use Magento\Sales\Api\Data\OrderInterfaceFactory;
 use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
+use Psr\Log\LoggerInterface;
 
 /**
- * Generate invoice for order service class.
+ * Generate invoice for order service class
  */
 class GenerateInvoice implements GenerateInvoiceInterface
 {
     /**
-     * Order factory for creating order instances.
      * @var OrderInterfaceFactory
      */
-    private OrderInterfaceFactory $orderFactory;
+    private $orderFactory;
 
     /**
-     * Transaction factory for managing database transactions.
      * @var TransactionFactory
      */
-    private TransactionFactory $transactionFactory;
+    private $transactionFactory;
 
     /**
-     * Order lock manager service.
      * @var OrderLockManagerInterface
      */
-    private OrderLockManagerInterface $orderLockManager;
+    private $orderLockManager;
 
     /**
-     * Service for creating vault payments.
      * @var CreateVaultPayment
      */
-    private CreateVaultPayment $createVaultPayment;
+    private $createVaultPayment;
 
     /**
-     * Logger for payment-related operations.
-     * @var Logger
+     * @var LoggerInterface
      */
-    private Logger $logger;
+    private $logger;
 
     /**
-     * Constructor.
-     *
      * @param OrderInterfaceFactory $orderFactory
      * @param TransactionFactory $transactionFactory
      * @param OrderLockManagerInterface $orderLockManager
      * @param CreateVaultPayment $createVaultPayment
-     * @param Logger $logger
+     * @param LoggerInterface $logger
      */
     public function __construct(
         OrderInterfaceFactory $orderFactory,
         TransactionFactory $transactionFactory,
         OrderLockManagerInterface $orderLockManager,
         CreateVaultPayment $createVaultPayment,
-        Logger $logger
+        LoggerInterface $logger
     ) {
         $this->createVaultPayment = $createVaultPayment;
         $this->orderLockManager = $orderLockManager;
@@ -75,18 +70,11 @@ class GenerateInvoice implements GenerateInvoiceInterface
     }
 
     /**
-     * Generate an invoice for the specified order.
-     *
-     * Takes payment data including orderId and creates an invoice for that order.
-     * Handles payment processing, transaction management, and vault payment creation if needed.
-     *
-     * @param array $data Payment data containing orderId and other payment details
-     * @return void
+     * @inheritDoc
      */
     public function execute(array $data): void
     {
         $incrementId = $data['orderId'];
-
         /** @var OrderInterface $order */
         $order = $this->orderFactory->create()->loadByIncrementId($incrementId);
         if (!$order->getId()) {
@@ -98,59 +86,44 @@ class GenerateInvoice implements GenerateInvoiceInterface
             return;
         }
 
-        // Get lock before processing
-        $lockAcquired = $this->orderLockManager->lock($incrementId);
-        if (!$lockAcquired) {
-            $this->logger->info(\sprintf(
-                'Could not acquire lock for order %s - already being processed',
-                $incrementId
-            ));
+        $this->orderLockManager->lock($incrementId);
+        $payment = $order->getPayment();
+        if ($payment) {
+            $payment->setLastTransId($data['id']);
+        }
 
+        // Set the MONEI payment id on the order for future reference
+        $order->setData('monei_payment_id', $data['id']);
+        $this->logger->debug('[Generate invoice] Monei payment ID set on order: ' . $data['id']);
+
+        $invoice = $order->prepareInvoice();
+        if (!$invoice->getAllItems()) {
             return;
         }
+        $invoice->register()->capture();
+        $this->logger->debug('[Generate invoice] Invoice registered and captured');
 
-        try {
-            $payment = $order->getPayment();
-            if ($payment) {
-                $payment->setLastTransId($data['id']);
+        $order->addRelatedObject($invoice);
+        if ($payment) {
+            $payment->setCreatedInvoice($invoice);
+            if ($order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION)) {
+                $vaultCreated = $this->createVaultPayment->execute(
+                    $data['id'],
+                    $payment
+                );
+                $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, $vaultCreated);
             }
-            $invoice = $order->prepareInvoice();
-            if (!$invoice->getAllItems()) {
-                return;
-            }
-            $invoice->register()->capture();
-            $order->addRelatedObject($invoice);
-            if ($payment) {
-                $payment->setCreatedInvoice($invoice);
-                if ($order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION)) {
-                    $vaultCreated = $this->createVaultPayment->execute(
-                        $data['id'],
-                        $payment
-                    );
-                    $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, $vaultCreated);
-                }
-            }
-            $this->transactionFactory->create()->addObject($invoice)->addObject($invoice->getOrder())->save();
-        } catch (\Exception $e) {
-            $this->logger->error(\sprintf(
-                'Error generating invoice for order %s: %s',
-                $incrementId,
-                $e->getMessage()
-            ));
-
-            throw $e; // Rethrow the exception after logging
-        } finally {
-            // Always release the lock, even if an exception occurred
-            $this->orderLockManager->unlock($incrementId);
         }
+        $this->transactionFactory->create()->addObject($invoice)->addObject($invoice->getOrder())->save();
+
+        $this->orderLockManager->unlock($incrementId);
     }
 
     /**
-     * Check if the order is already paid.
+     * Check if the order is already paid
      *
-     * @param OrderInterface $order Order to check
-     *
-     * @return bool True if order is already paid, false otherwise
+     * @param OrderInterface $order
+     * @return bool
      */
     private function isOrderAlreadyPaid(OrderInterface $order): bool
     {

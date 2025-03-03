@@ -39,22 +39,21 @@ class CreatePayment extends AbstractService implements CreatePaymentInterface
      */
     public function execute(array $data): array
     {
-        $this->logger->debug(__METHOD__);
+        $this->logger->debug('[Method] ' . __METHOD__);
 
         try {
             $this->validate($data);
         } catch (\Exception $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical('[Exception] ' . $e->getMessage());
         }
         $data = array_merge($data, $this->getUrls());
         if (TypeOfPayment::TYPE_PRE_AUTHORIZED === $this->moduleConfig->getTypeOfPayment()) {
             $data['transactionType'] = 'AUTH';
         }
 
-        $this->logger->debug('------------------ START CREATE PAYMENT REQUEST -----------------');
-        $this->logger->debug($this->serializer->serialize($data));
-        $this->logger->debug('------------------- END CREATE PAYMENT REQUEST ------------------');
-        $this->logger->debug('');
+        $this->logger->debug('[Create payment request]');
+        $this->logger->debug(json_encode(json_decode($this->serializer->serialize($data)), JSON_PRETTY_PRINT));
+
 
         $client = $this->createClient();
 
@@ -67,15 +66,14 @@ class CreatePayment extends AbstractService implements CreatePaymentInterface
                 ]
             );
         } catch (\Exception $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical('[Exception] ' . $e->getMessage());
 
             return ['error' => true, 'orderId' => $data['orderId']];
         }
 
-        $this->logger->debug('----------------- START CREATE PAYMENT RESPONSE -----------------');
-        $this->logger->debug((string) $response->getBody());
-        $this->logger->debug('------------------ END CREATE PAYMENT RESPONSE ------------------');
-        $this->logger->debug('');
+        $this->logger->debug('[Create payment response]');
+        $this->logger->debug(json_encode(json_decode((string) $response->getBody()), JSON_PRETTY_PRINT));
+
 
         return $this->serializer->unserialize($response->getBody());
     }

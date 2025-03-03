@@ -114,7 +114,7 @@ class PaymentProcessor
     public function processPayment(array $paymentData, string $source): bool
     {
         if (!isset($paymentData['orderId'], $paymentData['id'], $paymentData['status'])) {
-            $this->logger->error('Missing required payment data', $paymentData);
+            $this->logger->error('[Missing required payment data]', $paymentData);
 
             return false;
         }
@@ -124,7 +124,7 @@ class PaymentProcessor
         $status = $paymentData['status'];
 
         $this->logger->info(\sprintf(
-            'Processing payment for order %s, payment %s, status %s from %s',
+            '[Processing payment] Order %s, payment %s, status %s from %s',
             $orderId,
             $paymentId,
             $status,
@@ -141,18 +141,18 @@ class PaymentProcessor
                     $order = $this->orderFactory->create()->loadByIncrementId($orderId);
 
                     if (!$order->getId()) {
-                        $this->logger->error(\sprintf('Order %s not found', $orderId));
+                        $this->logger->error(\sprintf('[Order not found] Order %s', $orderId));
 
                         return false;
                     }
 
                     // Check for idempotency - if this payment has already been processed, don't process it again
                     $existingPaymentId = $order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID);
-                    if ($existingPaymentId === $paymentId) {
+                    if (!empty($existingPaymentId) && $existingPaymentId === $paymentId) {
                         $this->logger->info(\sprintf(
-                            'Payment %s for order %s has already been processed',
-                            $paymentId,
-                            $orderId
+                            '[Payment already processed] Order %s, payment %s',
+                            $orderId,
+                            $paymentId
                         ));
 
                         // If the existing payment has the same status, we don't need to process it again
@@ -170,17 +170,27 @@ class PaymentProcessor
                             return $this->processSucceededPayment($order, $paymentData);
 
                         default:
+                            if (!$this->isValidStatus($status)) {
+                                $this->logger->error(\sprintf(
+                                    '[Invalid payment status] Order %s, status %s',
+                                    $orderId,
+                                    $status
+                                ));
+
+                                return false;
+                            }
+
                             $this->logger->info(\sprintf(
-                                'Unhandled payment status %s for order %s',
-                                $status,
-                                $orderId
+                                '[Unhandled payment status] Order %s, status %s',
+                                $orderId,
+                                $status
                             ));
 
                             return false;
                     }
                 } catch (\Exception $e) {
                     $this->logger->error(\sprintf(
-                        'Error processing payment for order %s: %s',
+                        '[Payment processing exception] Order %s, error: %s',
                         $orderId,
                         $e->getMessage()
                     ));
@@ -205,8 +215,8 @@ class PaymentProcessor
         }
 
         $payment = $order->getPayment();
-        if (!$payment) {
-            $this->logger->error(\sprintf('No payment found for order %s', $order->getIncrementId()));
+        if (null === $payment) {
+            $this->logger->error(\sprintf('[No payment found] Order %s', $order->getIncrementId()));
 
             return false;
         }
@@ -234,7 +244,7 @@ class PaymentProcessor
             return true;
         } catch (\Exception $e) {
             $this->logger->error(\sprintf(
-                'Error saving authorized payment for order %s: %s',
+                '[Error saving authorized payment] Order %s, error: %s',
                 $order->getIncrementId(),
                 $e->getMessage()
             ));
@@ -272,7 +282,7 @@ class PaymentProcessor
                     $this->orderSender->send($order);
                 } catch (\Exception $e) {
                     $this->logger->error(\sprintf(
-                        'Error sending order email for %s: %s',
+                        '[Error sending order email] Order %s, error: %s',
                         $order->getIncrementId(),
                         $e->getMessage()
                     ));
@@ -282,7 +292,7 @@ class PaymentProcessor
             return true;
         } catch (\Exception $e) {
             $this->logger->error(\sprintf(
-                'Error processing succeeded payment for order %s: %s',
+                '[Error processing succeeded payment] Order %s, error: %s',
                 $order->getIncrementId(),
                 $e->getMessage()
             ));
@@ -310,5 +320,10 @@ class PaymentProcessor
             default:
                 return false;
         }
+    }
+
+    private function isValidStatus(string $status): bool
+    {
+        return in_array($status, [Monei::ORDER_STATUS_AUTHORIZED, Monei::ORDER_STATUS_SUCCEEDED]);
     }
 }

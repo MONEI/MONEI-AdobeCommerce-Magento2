@@ -62,7 +62,7 @@ class ProcessingLock
 
             if (!$locked) {
                 $this->logger->info(\sprintf(
-                    'Could not acquire lock for order %s and payment %s - already being processed.',
+                    '[Payment already processing] Order %s, payment %s',
                     $orderId,
                     $paymentId
                 ));
@@ -79,7 +79,7 @@ class ProcessingLock
             }
         } catch (\Exception $e) {
             $this->logger->error(\sprintf(
-                'Error in lock management for order %s: %s',
+                '[Error in lock management] Order %s: %s',
                 $orderId,
                 $e->getMessage()
             ));
@@ -99,28 +99,24 @@ class ProcessingLock
     public function acquireLock(string $orderId, string $paymentId): bool
     {
         $lockName = $this->getLockName($orderId, $paymentId);
+        $locked = $this->lockManager->lock($lockName, self::LOCK_TIMEOUT);
 
-        try {
-            $locked = $this->lockManager->lock($lockName, self::LOCK_TIMEOUT);
-
-            if (!$locked) {
-                $this->logger->info(\sprintf(
-                    'Could not acquire lock for order %s and payment %s - already being processed.',
-                    $orderId,
-                    $paymentId
-                ));
-            }
-
-            return $locked;
-        } catch (\Exception $e) {
-            $this->logger->error(\sprintf(
-                'Error acquiring lock for order %s: %s',
+        if ($locked) {
+            $this->logger->info(\sprintf(
+                '[Lock acquired] Order %s, payment %s',
                 $orderId,
-                $e->getMessage()
+                $paymentId
             ));
-
-            return false;
+        } else {
+            $this->logger->error(\sprintf(
+                '[Failed to acquire lock] Order %s, payment %s, timeout: %d seconds',
+                $orderId,
+                $paymentId,
+                self::LOCK_TIMEOUT
+            ));
         }
+
+        return $locked;
     }
 
     /**
@@ -134,18 +130,23 @@ class ProcessingLock
     public function releaseLock(string $orderId, string $paymentId): bool
     {
         $lockName = $this->getLockName($orderId, $paymentId);
+        $released = $this->lockManager->unlock($lockName);
 
-        try {
-            return $this->lockManager->unlock($lockName);
-        } catch (\Exception $e) {
-            $this->logger->error(\sprintf(
-                'Error releasing lock for order %s: %s',
+        if ($released) {
+            $this->logger->info(\sprintf(
+                '[Lock released] Order %s, payment %s',
                 $orderId,
-                $e->getMessage()
+                $paymentId
             ));
-
-            return false;
+        } else {
+            $this->logger->error(\sprintf(
+                '[Failed to release lock] Order %s, payment %s',
+                $orderId,
+                $paymentId
+            ));
         }
+
+        return $released;
     }
 
     /**

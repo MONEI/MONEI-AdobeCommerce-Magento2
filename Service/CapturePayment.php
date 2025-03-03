@@ -42,22 +42,21 @@ class CapturePayment extends AbstractService implements CapturePaymentInterface
      */
     public function execute(array $data): array
     {
-        $this->logger->debug(__METHOD__);
+        $this->logger->debug('[Method] ' . __METHOD__);
 
         try {
             $this->validate($data);
         } catch (\Exception $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical('[Exception] ' . $e->getMessage());
         }
 
         $requestBody = [
             'amount' => $data['amount'],
         ];
 
-        $this->logger->debug('------------------ START CAPTURE PAYMENT REQUEST -----------------');
-        $this->logger->debug($this->serializer->serialize($data));
-        $this->logger->debug('------------------- END CAPTURE PAYMENT REQUEST ------------------');
-        $this->logger->debug('');
+        $this->logger->debug('[Capture payment request]');
+        $this->logger->debug(json_encode(json_decode($this->serializer->serialize($data)), JSON_PRETTY_PRINT));
+
 
         $client = $this->createClient();
 
@@ -70,13 +69,13 @@ class CapturePayment extends AbstractService implements CapturePaymentInterface
                 ]
             );
         } catch (\Exception $e) {
+            $this->logger->critical('[Exception] ' . $e->getMessage());
             return ['error' => true, 'errorMessage' => $e->getMessage()];
         }
 
-        $this->logger->debug('----------------- START CAPTURE PAYMENT RESPONSE -----------------');
-        $this->logger->debug((string) $response->getBody());
-        $this->logger->debug('------------------ END CAPTURE PAYMENT RESPONSE ------------------');
-        $this->logger->debug('');
+        $this->logger->debug('[Capture payment response]');
+        $this->logger->debug(json_encode(json_decode((string) $response->getBody()), JSON_PRETTY_PRINT));
+
 
         return $this->serializer->unserialize($response->getBody());
     }

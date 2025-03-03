@@ -40,22 +40,21 @@ class CancelPayment extends AbstractService implements CancelPaymentInterface
      */
     public function execute(array $data): array
     {
-        $this->logger->debug(__METHOD__);
+        $this->logger->debug('[Method] ' . __METHOD__);
 
         try {
             $this->validate($data);
         } catch (\Exception $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical('[Exception] ' . $e->getMessage());
         }
 
         $requestBody = [
-            'cancellationReason' => $data['cancellationReason'],
+            'cancellationReason' => $data['cancellationReason']
         ];
 
-        $this->logger->debug('------------------ START CANCEL PAYMENT REQUEST -----------------');
-        $this->logger->debug($this->serializer->serialize($data));
-        $this->logger->debug('------------------- END CANCEL PAYMENT REQUEST ------------------');
-        $this->logger->debug('');
+        $this->logger->debug('[Cancel payment request]');
+        $this->logger->debug(json_encode(json_decode($this->serializer->serialize($data)), JSON_PRETTY_PRINT));
+
 
         $client = $this->createClient();
 
@@ -68,13 +67,13 @@ class CancelPayment extends AbstractService implements CancelPaymentInterface
                 ]
             );
         } catch (\Exception $e) {
+            $this->logger->critical('[Exception] ' . $e->getMessage());
             return ['error' => true, 'errorMessage' => $e->getMessage()];
         }
 
-        $this->logger->debug('----------------- START CANCEL PAYMENT RESPONSE -----------------');
-        $this->logger->debug((string) $response->getBody());
-        $this->logger->debug('------------------ END CANCEL PAYMENT RESPONSE ------------------');
-        $this->logger->debug('');
+        $this->logger->debug('[Cancel payment response]');
+        $this->logger->debug(json_encode(json_decode((string) $response->getBody()), JSON_PRETTY_PRINT));
+
 
         return $this->serializer->unserialize($response->getBody());
     }

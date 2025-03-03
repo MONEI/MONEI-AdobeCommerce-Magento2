@@ -30,26 +30,24 @@ class GetPayment extends AbstractService implements GetPaymentInterface
      */
     public function execute(string $paymentId): array
     {
-        $this->logger->debug(__METHOD__);
+        $this->logger->debug('[Method] ' . __METHOD__);
 
-        $client = $this->createClient();
+        $this->logger->debug('[Get payment request]');
+        $this->logger->debug('[Payment ID] ' . $paymentId);
 
-        $this->logger->debug('------------------ START GET PAYMENT REQUEST -----------------');
-        $this->logger->debug('Payment id = ' . $paymentId);
-        $this->logger->debug('------------------- END GET PAYMENT REQUEST ------------------');
-        $this->logger->debug('');
 
-        $response = $client->get(
-            self::METHOD . '/' . $paymentId,
-            [
-                'headers' => $this->getHeaders(),
-            ]
-        );
+        try {
+            $response = $this->createClient()->get('payments/' . $paymentId, [
+                'headers' => $this->getHeaders()
+            ]);
+        } catch (\Exception $e) {
+            $this->logger->critical('[Exception] ' . $e->getMessage());
+            throw $e;
+        }
 
-        $this->logger->debug('----------------- START GET PAYMENT RESPONSE -----------------');
-        $this->logger->debug((string) $response->getBody());
-        $this->logger->debug('------------------ END GET PAYMENT RESPONSE ------------------');
-        $this->logger->debug('');
+        $this->logger->debug('[Get payment response]');
+        $this->logger->debug(json_encode(json_decode((string) $response->getBody()), JSON_PRETTY_PRINT));
+
 
         return $this->serializer->unserialize($response->getBody());
     }

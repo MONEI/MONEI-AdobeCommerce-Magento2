@@ -128,8 +128,8 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
             $body = $this->serializer->unserialize($content);
 
             if (!isset($body['orderId'], $body['status'], $body['id'])) {
-                $this->logger->error('Callback request failed: Missing required parameters');
-                $this->logger->error('Request body: ' . $content);
+                $this->logger->error('[Callback request failed] Missing required parameters');
+                $this->logger->error('[Request body] ' . $content);
                 $responseData = ['success' => false, 'message' => 'Missing required parameters'];
                 $responseCode = 400;
 
@@ -141,15 +141,15 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
 
             if (!$processed) {
                 $this->logger->info(\sprintf(
-                    'Payment processing was not completed for order %s, status %s',
+                    '[Payment processing not completed] Order %s, status %s',
                     $body['orderId'],
                     $body['status']
                 ));
                 $responseData['info'] = 'Payment processing was not completed';
             }
         } catch (\Exception $e) {
-            $this->logger->critical('Error in Callback controller: ' . $e->getMessage());
-            $this->logger->critical('Request body: ' . ($content ?? 'not available'));
+            $this->logger->critical('[Error in Callback controller] ' . $e->getMessage());
+            $this->logger->critical('[Request body] ' . ($content ?? 'not available'));
             $responseData = ['success' => false, 'message' => $e->getMessage()];
             $responseCode = 500;
         }
@@ -186,16 +186,16 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
             $header = $this->splitMoneiSignature((string) $header);
         }
         $body = $request->getContent();
-        $this->logger->debug('Callback request received.');
-        $this->logger->debug('Header:' . $this->serializer->serialize($header));
-        $this->logger->debug('Body:' . $body);
+        $this->logger->debug('[Callback request received]');
+        $this->logger->debug('[Header] ' . json_encode(json_decode($this->serializer->serialize($header)), JSON_PRETTY_PRINT));
+        $this->logger->debug('[Body] ' . json_encode(json_decode($body), JSON_PRETTY_PRINT));
 
         try {
             $this->verifySignature($body, $header);
         } catch (\Exception $e) {
             $this->errorMessage = $e->getMessage();
-            $this->logger->critical($e->getMessage());
-            $this->logger->critical('Request body: ' . ($body ?? 'not available'));
+            $this->logger->critical('[Signature verification failed] ' . $e->getMessage());
+            $this->logger->critical('[Request body] ' . ($body ?? 'not available'));
 
             return false;
         }

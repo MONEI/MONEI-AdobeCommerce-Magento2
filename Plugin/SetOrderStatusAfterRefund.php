@@ -69,7 +69,8 @@ class SetOrderStatusAfterRefund
             $order = $this->orderRepository->get($orderId);
 
             // Check if this is a Monei payment and not already closed
-            if (null !== $order->getData('monei_payment_id') &&
+            if (
+                null !== $order->getData('monei_payment_id') &&
                 'closed' !== $order->getState()
             ) {
                 $orderStatus = Monei::STATUS_MONEI_PARTIALLY_REFUNDED;
@@ -81,7 +82,7 @@ class SetOrderStatusAfterRefund
             // Silently handle any exceptions to avoid breaking the checkout flow
             // Log the exception for debugging purposes
             $this->logger->error(
-                'Error updating order status after refund: ' . $e->getMessage(),
+                '[Order status update] Error updating after refund: ' . $e->getMessage(),
                 ['exception' => $e]
             );
         }

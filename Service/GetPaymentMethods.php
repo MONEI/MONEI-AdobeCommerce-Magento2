@@ -66,36 +66,37 @@ class GetPaymentMethods extends AbstractService implements GetPaymentMethodsInte
      *
      * @return array List of available payment methods
      */
-    public function execute(): array
+    public function execute(string $accountId = null): array
     {
-        $this->logger->debug(__METHOD__);
+        $this->logger->debug('[Method] ' . __METHOD__);
 
-        $storeId = (int) $this->storeManager->getStore()->getId();
-        $accountId = $this->registryAccountId->get() ?? $this->moduleConfig->getAccountId($storeId);
-
-        if ($accountId) {
-            $client = $this->createClient();
-
-            $this->logger->debug('------------------ START GET PAYMENT METHODS REQUEST -----------------');
-            $this->logger->debug('Account id = ' . $accountId);
-            $this->logger->debug('------------------- END GET PAYMENT METHODS REQUEST ------------------');
-            $this->logger->debug('');
-
-            $response = $client->get(
-                self::METHOD . '?accountId=' . $accountId . '&' . time(),
-                [
-                    'headers' => $this->getHeaders(),
-                ]
-            );
-
-            $this->logger->debug('----------------- START GET PAYMENT METHODS RESPONSE -----------------');
-            $this->logger->debug((string) $response->getBody());
-            $this->logger->debug('------------------ END GET PAYMENT METHODS RESPONSE ------------------');
-            $this->logger->debug('');
-
-            return $this->serializer->unserialize($response->getBody());
+        if ($accountId === null) {
+            $storeId = null;
+            $accountId = $this->moduleConfig->getAccountId($storeId);
         }
 
-        return [];
+        $this->logger->debug('[Get payment methods request]');
+        $this->logger->debug('[Account ID] ' . $accountId);
+
+        try {
+            $response = $this->createClient()->get(
+                self::METHOD,
+                [
+                    'headers' => $this->getHeaders(),
+                    'query' => [
+                        'accountId' => $accountId
+                    ]
+                ]
+            );
+        } catch (\Exception $e) {
+            $this->logger->critical('[Exception] ' . $e->getMessage());
+            throw $e;
+        }
+
+        $this->logger->debug('[Get payment methods response]');
+        $this->logger->debug(json_encode(json_decode((string) $response->getBody()), JSON_PRETTY_PRINT));
+
+
+        return $this->serializer->unserialize($response->getBody());
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 /**
+ * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -8,42 +9,62 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Gateway\Command;
 
-use Magento\Payment\Gateway\CommandInterface;
 use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
+use Monei\MoneiPayment\Service\Logger;
 
 /**
- * Capture Monei payment command.
+ * Capture Monei payment command
  */
-class Capture implements CommandInterface
+class Capture
 {
-    /** @var CapturePaymentInterface */
+    /**
+     * @var CapturePaymentInterface
+     */
     private $capturePaymentService;
 
     /**
-     * Constructor.
-     *
-     * @param CapturePaymentInterface $capturePaymentService Service for processing captures
+     * @var Logger
+     */
+    private $logger;
+
+    /**
+     * @param CapturePaymentInterface $capturePaymentService
+     * @param Logger $logger
      */
     public function __construct(
-        CapturePaymentInterface $capturePaymentService
+        CapturePaymentInterface $capturePaymentService,
+        Logger $logger
     ) {
         $this->capturePaymentService = $capturePaymentService;
+        $this->logger = $logger;
     }
 
     /**
-     * Execute capture command.
+     * Execute capture command
      *
-     * @param array $commandSubject Command subject containing payment and amount
+     * @param array $commandSubject
      * @return void
      */
     public function execute(array $commandSubject)
     {
         $order = $commandSubject['payment']->getPayment()->getOrder();
-        $data = [
-            'paymentId' => $order->getData('monei_payment_id'),
-            'amount' => $commandSubject['amount'] * 100,
-        ];
+        $paymentId = $order->getData('monei_payment_id');
 
-        $this->capturePaymentService->execute($data);
+        if (!$paymentId) {
+            $this->logger->critical('Cannot capture payment: No payment ID found on order ' . $order->getIncrementId());
+            return;
+        }
+
+        try {
+            $data = [
+                'paymentId' => $paymentId,
+                'amount' => $commandSubject['amount'] * 100
+            ];
+
+            $this->logger->info('Capturing payment ' . $paymentId . ' for amount ' . $commandSubject['amount']);
+            $this->capturePaymentService->execute($data);
+        } catch (\Exception $e) {
+            $this->logger->critical('Error in capture process: ' . $e->getMessage());
+        }
     }
 }

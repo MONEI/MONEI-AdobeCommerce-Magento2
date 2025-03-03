@@ -41,12 +41,12 @@ class RefundPayment extends AbstractService implements RefundPaymentInterface
      */
     public function execute(array $data): array
     {
-        $this->logger->debug(__METHOD__);
+        $this->logger->debug('[Method] ' . __METHOD__);
 
         try {
             $this->validate($data);
         } catch (\Exception $e) {
-            $this->logger->critical($e->getMessage());
+            $this->logger->critical('[Exception] ' . $e->getMessage());
         }
 
         $requestBody = [
@@ -54,26 +54,29 @@ class RefundPayment extends AbstractService implements RefundPaymentInterface
             'amount' => $data['amount'],
         ];
 
-        $this->logger->debug('------------------ START REFUND PAYMENT REQUEST -----------------');
-        $this->logger->debug($this->serializer->serialize($data));
-        $this->logger->debug('------------------- END REFUND PAYMENT REQUEST ------------------');
-        $this->logger->debug('');
+        $this->logger->debug('[Refund payment request]');
+        $this->logger->debug(json_encode(json_decode($this->serializer->serialize($data)), JSON_PRETTY_PRINT));
+
 
         $storeId = $data['storeId'] ?? null;
 
         $client = $this->createClient($storeId);
-        $response = $client->post(
-            'payments/' . $data['paymentId'] . '/' . self::METHOD,
-            [
-                'headers' => $this->getHeaders($storeId),
-                'json' => $requestBody,
-            ]
-        );
+        try {
+            $response = $client->post(
+                'payments/' . $data['paymentId'] . '/' . self::METHOD,
+                [
+                    'headers' => $this->getHeaders($storeId),
+                    'json' => $requestBody,
+                ]
+            );
+        } catch (\Exception $e) {
+            $this->logger->critical('[Exception] ' . $e->getMessage());
+            return ['error' => true, 'errorMessage' => $e->getMessage()];
+        }
 
-        $this->logger->debug('----------------- START REFUND PAYMENT RESPONSE -----------------');
-        $this->logger->debug((string) $response->getBody());
-        $this->logger->debug('------------------ END REFUND PAYMENT RESPONSE ------------------');
-        $this->logger->debug('');
+        $this->logger->debug('[Refund payment response]');
+        $this->logger->debug(json_encode(json_decode((string) $response->getBody()), JSON_PRETTY_PRINT));
+
 
         return $this->serializer->unserialize($response->getBody());
     }
