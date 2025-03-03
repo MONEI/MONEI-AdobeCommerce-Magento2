@@ -17,6 +17,7 @@ class GetCustomerDetailsByQuote
      *
      * @param CartInterface $quote Quote to get customer details from
      * @param string|null $email Optional email override
+     *
      * @return array Customer details including email, name, and phone
      */
     public function execute(CartInterface $quote, ?string $email = null): array

@@ -10,20 +10,18 @@ namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\Exception\LocalizedException;
 use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
-use Magento\Framework\Phrase;
 
 /**
  * Monei capture payment REST integration service class.
  */
 class CapturePayment extends AbstractService implements CapturePaymentInterface
 {
-    /**
-     * API method name for capturing payments.
-     */
+    /** API method name for capturing payments. */
     public const METHOD = 'capture';
 
     /**
      * List of required parameters for capture request.
+     *
      * @var array
      */
     private $requiredArguments = [
@@ -38,6 +36,7 @@ class CapturePayment extends AbstractService implements CapturePaymentInterface
      * Requires a payment ID and amount to capture.
      *
      * @param array $data Data for the capture request containing paymentId and amount
+     *
      * @return array Response from the API with capture results or error details
      */
     public function execute(array $data): array
@@ -57,7 +56,6 @@ class CapturePayment extends AbstractService implements CapturePaymentInterface
         $this->logger->debug('[Capture payment request]');
         $this->logger->debug(json_encode(json_decode($this->serializer->serialize($data)), JSON_PRETTY_PRINT));
 
-
         $client = $this->createClient();
 
         try {
@@ -70,12 +68,12 @@ class CapturePayment extends AbstractService implements CapturePaymentInterface
             );
         } catch (\Exception $e) {
             $this->logger->critical('[Exception] ' . $e->getMessage());
+
             return ['error' => true, 'errorMessage' => $e->getMessage()];
         }
 
         $this->logger->debug('[Capture payment response]');
         $this->logger->debug(json_encode(json_decode((string) $response->getBody()), JSON_PRETTY_PRINT));
-
 
         return $this->serializer->unserialize($response->getBody());
     }
@@ -87,6 +85,7 @@ class CapturePayment extends AbstractService implements CapturePaymentInterface
      * Throws exceptions if validation fails.
      *
      * @param array $data Request data to validate
+     *
      * @throws LocalizedException If validation fails
      */
     private function validate(array $data): void

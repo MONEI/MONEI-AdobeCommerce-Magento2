@@ -20,7 +20,7 @@ class TypeOfPayment implements OptionSourceInterface
     public const TYPE_AUTHORIZED = 2;
 
     /**
-     * Get array of options for payment type configuration
+     * Get array of options for payment type configuration.
      *
      * @return array Array of options: [['label' => string, 'value' => int]]
      */

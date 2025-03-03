@@ -34,7 +34,7 @@ class Redirect implements ActionInterface
     private $getMoneiPaymentCodesByMagentoPaymentCodeRedirect;
 
     /**
-     * Constructor
+     * Constructor.
      *
      * @param Session $checkoutSession
      * @param CreatePaymentInterface $createPayment
@@ -54,7 +54,7 @@ class Redirect implements ActionInterface
     }
 
     /**
-     * Execute action to create payment and redirect to Monei
+     * Execute action to create payment and redirect to Monei.
      *
      * @return MagentoRedirect
      */
@@ -93,7 +93,7 @@ class Redirect implements ActionInterface
     }
 
     /**
-     * Get customer details from order for Monei payment
+     * Get customer details from order for Monei payment.
      *
      * @param OrderInterface $order
      *
@@ -113,7 +113,7 @@ class Redirect implements ActionInterface
     }
 
     /**
-     * Get customer phone number from order
+     * Get customer phone number from order.
      *
      * @param OrderInterface $order
      *
@@ -129,7 +129,7 @@ class Redirect implements ActionInterface
     }
 
     /**
-     * Get billing address details for Monei payment
+     * Get billing address details for Monei payment.
      *
      * @param Address $address
      *
@@ -169,9 +169,10 @@ class Redirect implements ActionInterface
     }
 
     /**
-     * Get allowed payment methods for the order
+     * Get allowed payment methods for the order.
      *
      * @param OrderInterface $order
+     *
      * @return array
      */
     private function getAllowedPaymentMethods(OrderInterface $order): array

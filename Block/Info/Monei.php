@@ -85,6 +85,7 @@ class Monei extends Info
      * Process payment method data.
      *
      * @param array|null $paymentMethodData Payment method data
+     *
      * @return array|null Processed payment method data
      */
     private function processPaymentMethodData(?array $paymentMethodData): ?array
@@ -97,6 +98,7 @@ class Monei extends Info
         foreach ($paymentMethodData as $payKey => $payValue) {
             if (!\is_array($payValue)) {
                 $result[$payKey] = $payValue;
+
                 continue;
             }
 

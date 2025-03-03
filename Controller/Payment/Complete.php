@@ -11,14 +11,12 @@ namespace Monei\MoneiPayment\Controller\Payment;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\ActionInterface;
 use Magento\Framework\Controller\Result\Redirect as MagentoRedirect;
-use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\Data\OrderInterfaceFactory;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
-use Monei\MoneiPayment\Model\PendingOrder;
 use Monei\MoneiPayment\Model\PendingOrderFactory;
 use Monei\MoneiPayment\Model\ResourceModel\PendingOrder as PendingOrderResource;
 use Monei\MoneiPayment\Service\Logger;
@@ -35,72 +33,84 @@ class Complete implements ActionInterface
 
     /**
      * Handles sending order confirmation emails.
+     *
      * @var OrderSender
      */
     protected $orderSender;
 
     /**
      * Provides access to order data storage.
+     *
      * @var OrderRepositoryInterface
      */
     private $orderRepository;
 
     /**
      * Creates new order instances.
+     *
      * @var OrderInterfaceFactory
      */
     private $orderFactory;
 
     /**
      * Provides configuration settings for the Monei payment module.
+     *
      * @var MoneiPaymentModuleConfigInterface
      */
     private $moduleConfig;
 
     /**
      * Service for generating invoices.
+     *
      * @var GenerateInvoiceInterface
      */
     private $generateInvoiceService;
 
     /**
      * Provides access to controller context data.
+     *
      * @var Context
      */
     private $context;
 
     /**
      * Creates redirect response objects.
+     *
      * @var MagentoRedirect
      */
     private $resultRedirectFactory;
 
     /**
      * Creates pending order instances.
+     *
      * @var PendingOrderFactory
      */
     private $pendingOrderFactory;
 
     /**
      * Manages persistence of pending order data.
+     *
      * @var PendingOrderResource
      */
     private $pendingOrderResource;
 
     /**
      * Service for creating vault payment records.
+     *
      * @var CreateVaultPayment
      */
     private $createVaultPayment;
 
     /**
      * Processes payment operations.
+     *
      * @var PaymentProcessor
      */
     private $paymentProcessor;
 
     /**
      * Provides logging functionality for the controller.
+     *
      * @var Logger
      */
     private $logger;
@@ -169,6 +179,7 @@ class Complete implements ActionInterface
 
         if (!isset($params['orderId'], $params['status'], $params['id'])) {
             $this->logger->error('[Complete controller error] Missing required parameters');
+
             return $this->resultRedirectFactory->setPath('checkout/cart');
         }
 
@@ -177,8 +188,7 @@ class Complete implements ActionInterface
 
             // Redirect based on payment status, even if processing failed
             // (we want to show the appropriate page to the customer)
-            if (
-                Monei::ORDER_STATUS_AUTHORIZED === $params['status']
+            if (Monei::ORDER_STATUS_AUTHORIZED === $params['status']
                 || Monei::ORDER_STATUS_SUCCEEDED === $params['status']
             ) {
                 return $this->resultRedirectFactory->setPath(
@@ -193,6 +203,7 @@ class Complete implements ActionInterface
             );
         } catch (\Exception $e) {
             $this->logger->error('[Complete controller error] ' . $e->getMessage());
+
             return $this->resultRedirectFactory->setPath('checkout/cart');
         }
     }

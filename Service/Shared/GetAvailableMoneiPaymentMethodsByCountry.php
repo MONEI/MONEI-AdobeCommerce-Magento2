@@ -15,6 +15,7 @@ class GetAvailableMoneiPaymentMethodsByCountry
 {
     /**
      * Service to get all available Monei payment methods.
+     *
      * @var GetAvailableMoneiPaymentMethods
      */
     private GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods;

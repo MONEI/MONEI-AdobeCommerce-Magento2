@@ -55,6 +55,7 @@ class SetOrderStatusAfterRefund
      *
      * @param CreditmemoService $subject Credit memo service
      * @param CreditmemoInterface $result The created credit memo
+     *
      * @return CreditmemoInterface The credit memo instance
      */
     public function afterRefund(CreditmemoService $subject, CreditmemoInterface $result): CreditmemoInterface
@@ -69,8 +70,7 @@ class SetOrderStatusAfterRefund
             $order = $this->orderRepository->get($orderId);
 
             // Check if this is a Monei payment and not already closed
-            if (
-                null !== $order->getData('monei_payment_id') &&
+            if (null !== $order->getData('monei_payment_id') &&
                 'closed' !== $order->getState()
             ) {
                 $orderStatus = Monei::STATUS_MONEI_PARTIALLY_REFUNDED;

@@ -36,7 +36,7 @@ class Cancel implements ActionInterface
     private $resultRedirectFactory;
 
     /**
-     * Constructor
+     * Constructor.
      *
      * @param Context $context
      * @param Session $checkoutSession
@@ -59,7 +59,7 @@ class Cancel implements ActionInterface
     }
 
     /**
-     * Execute action to cancel payment and restore quote
+     * Execute action to cancel payment and restore quote.
      *
      * @return MagentoRedirect
      */

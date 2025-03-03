@@ -16,6 +16,7 @@ class GetMoneiPaymentCodesByMagentoPaymentCode
      * Get Monei payment codes for a given Magento payment code.
      *
      * @param string $magentoPaymentCode Magento payment method code
+     *
      * @return array Array of corresponding Monei payment codes
      */
     public function execute(string $magentoPaymentCode): array

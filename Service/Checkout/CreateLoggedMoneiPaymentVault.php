@@ -10,10 +10,9 @@ namespace Monei\MoneiPayment\Service\Checkout;
 
 use Magento\Checkout\Model\Session;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Phrase;
 use Magento\Quote\Api\CartRepositoryInterface;
-use Magento\Quote\Api\Data\CartInterface as QuoteInterface;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
+use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentVaultInterface;
 use Monei\MoneiPayment\Service\CreatePayment;
 use Monei\MoneiPayment\Service\Quote\GetAddressDetailsByQuoteAddress;
@@ -118,28 +117,22 @@ class CreateLoggedMoneiPaymentVault implements CreateLoggedMoneiPaymentVaultInte
         }
 
         // Save the quote in order to avoid that the other processes can reserve the order
-        if (method_exists($quote, 'reserveOrderId')) {
-            $quote->reserveOrderId();
-        }
+        $quote->reserveOrderId();
         $this->quoteRepository->save($quote);
 
         $data = [
-            'amount' => method_exists($quote, 'getBaseGrandTotal') ? $quote->getBaseGrandTotal() * 100 : 0,
-            'currency' => method_exists($quote, 'getBaseCurrencyCode') ? $quote->getBaseCurrencyCode() : 'EUR',
-            'orderId' => $quote->getReservedOrderId(),
-            'customer' => $this->getCustomerDetailsByQuote->execute($quote),
-            'billingDetails' => $this->getAddressDetailsByQuoteAddress->execute($quote->getBillingAddress()),
-            'shippingDetails' => method_exists($quote, 'getShippingAddress') && $quote->getShippingAddress() ?
-                $this->getAddressDetailsByQuoteAddress->execute($quote->getShippingAddress()) :
-                $this->getAddressDetailsByQuoteAddress->execute($quote->getBillingAddress()),
+            "amount" => $quote->getBaseGrandTotal() * 100,
+            "currency" => $quote->getBaseCurrencyCode(),
+            "orderId" => $quote->getReservedOrderId(),
+            "customer" => $this->getCustomerDetailsByQuote->execute($quote),
+            "billingDetails" => $this->getAddressDetailsByQuoteAddress->execute($quote->getBillingAddress()),
+            "shippingDetails" => $this->getAddressDetailsByQuoteAddress->execute($quote->getShippingAddress()),
         ];
 
         try {
             $result = $this->createPayment->execute($data);
-            if (method_exists($quote, 'setData')) {
-                $quote->setData(QuoteInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $result['id'] ?: '');
-                $this->quoteRepository->save($quote);
-            }
+            $quote->setData(QuoteInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $result['id'] ?: '');
+            $this->quoteRepository->save($quote);
 
             $result['paymentToken'] = $paymentToken->getGatewayToken();
 

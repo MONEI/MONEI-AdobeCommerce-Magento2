@@ -53,6 +53,7 @@ class CreatePaymentCommand extends Command
      *
      * @param InputInterface $input Command input
      * @param OutputInterface $output Command output
+     *
      * @return int Exit code
      */
     protected function execute(InputInterface $input, OutputInterface $output)

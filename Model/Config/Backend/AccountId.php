@@ -20,14 +20,14 @@ use Monei\MoneiPayment\Registry\AccountId as RegistryAccountId;
 class AccountId extends Value
 {
     /**
-     * Registry for storing account ID
+     * Registry for storing account ID.
      *
      * @var RegistryAccountId
      */
     private RegistryAccountId $registryAccountId;
 
     /**
-     * Constructor
+     * Constructor.
      *
      * @param RegistryAccountId $registryAccountId
      * @param Context $context
@@ -53,7 +53,7 @@ class AccountId extends Value
     }
 
     /**
-     * Process value before saving
+     * Process value before saving.
      *
      * @return AccountId
      */

@@ -29,7 +29,7 @@ class ProcessingLock
     private $logger;
 
     /**
-     * Constructor
+     * Constructor.
      *
      * @param LockManagerInterface $lockManager
      * @param Logger $logger

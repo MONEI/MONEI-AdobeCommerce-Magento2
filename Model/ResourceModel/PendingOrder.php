@@ -18,7 +18,7 @@ class PendingOrder extends AbstractDb
     public const TABLE_NAME = 'pending_monei_orders';
 
     /**
-     * Initialize resource model
+     * Initialize resource model.
      *
      * @return void
      */

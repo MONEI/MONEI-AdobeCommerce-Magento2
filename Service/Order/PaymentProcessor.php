@@ -232,8 +232,7 @@ class PaymentProcessor
         }
 
         $order->setStatus($this->moduleConfig->getPreAuthorizedStatus())
-            ->setState(Order::STATE_PENDING_PAYMENT)
-        ;
+            ->setState(Order::STATE_PENDING_PAYMENT);
         $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $paymentData['id']);
 
         try {
@@ -271,8 +270,7 @@ class PaymentProcessor
             $this->generateInvoiceService->execute($paymentData);
 
             $order->setStatus($this->moduleConfig->getConfirmedStatus())
-                ->setState(Order::STATE_NEW)
-            ;
+                ->setState(Order::STATE_NEW);
             $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $paymentData['id']);
             $this->orderRepository->save($order);
 
@@ -322,6 +320,12 @@ class PaymentProcessor
         }
     }
 
+    /**
+     * Check if the payment status is valid.
+     *
+     * @param string $status
+     * @return bool
+     */
     private function isValidStatus(string $status): bool
     {
         return in_array($status, [Monei::ORDER_STATUS_AUTHORIZED, Monei::ORDER_STATUS_SUCCEEDED]);

@@ -3,7 +3,11 @@
     <description>MONEI Adobe Commerce (Magento 2) Module Coding Standard</description>
 
     <!-- Specify the standard to use -->
-    <rule ref="Magento2"/>
+    <rule ref="Magento2">
+        <!-- Customize specific rules -->
+        <exclude name="Magento2.Annotation.MethodAnnotationStructure.MethodAnnotation"/>
+        <exclude name="Magento2.Annotation.MethodArguments.InheritDoc"/>
+    </rule>
 
     <!-- Set extensions to check -->
     <arg name="extensions" value="php,phtml"/>
@@ -16,7 +20,6 @@
 
     <!-- Directories to exclude -->
     <exclude-pattern>*/vendor/*</exclude-pattern>
-    <exclude-pattern>*/stubs/*</exclude-pattern>
 
     <!-- Set max line length -->
     <rule ref="Generic.Files.LineLength">
@@ -25,4 +28,4 @@
             <property name="absoluteLineLimit" value="120"/>
         </properties>
     </rule>
-</ruleset> 
+</ruleset>

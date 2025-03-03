@@ -17,6 +17,7 @@ class GetAddressDetailsByQuoteAddress
      *
      * @param AddressInterface $address Quote address to get details from
      * @param string|null $email Optional email override
+     *
      * @return array Formatted address details for Monei API
      */
     public function execute(AddressInterface $address, ?string $email = null): array

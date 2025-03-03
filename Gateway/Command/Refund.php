@@ -34,6 +34,7 @@ class Refund implements CommandInterface
      * Execute refund command.
      *
      * @param array $commandSubject Command subject containing payment and amount
+     *
      * @return void
      */
     public function execute(array $commandSubject)

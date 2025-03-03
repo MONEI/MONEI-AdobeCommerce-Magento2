@@ -75,6 +75,7 @@ class AllMoneiPaymentModuleConfig implements AllMoneiPaymentModuleConfigInterfac
      * Check if any of the Monei payment methods are enabled.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return bool True if any payment method is enabled, false otherwise
      */
     public function isAnyPaymentEnabled($storeId = null): bool

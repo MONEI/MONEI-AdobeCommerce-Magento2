@@ -18,12 +18,14 @@ class IsEnabledGooglePayInMoneiAccount
 {
     /**
      * Google and Apple Payment module configuration.
+     *
      * @var MoneiGoogleApplePaymentModuleConfigInterface
      */
     private MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentModuleConfig;
 
     /**
      * Service to get available Monei payment methods.
+     *
      * @var GetAvailableMoneiPaymentMethods
      */
     private GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods;

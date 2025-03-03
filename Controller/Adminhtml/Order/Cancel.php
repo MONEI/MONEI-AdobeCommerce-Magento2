@@ -29,19 +29,13 @@ class Cancel extends Action
      */
     public const ADMIN_RESOURCE = 'Magento_Sales::cancel';
 
-    /**
-     * @var JsonFactory
-     */
+    /** @var JsonFactory */
     private $resultJsonFactory;
 
-    /**
-     * @var CancelPaymentInterface
-     */
+    /** @var CancelPaymentInterface */
     private $cancelPaymentService;
 
-    /**
-     * @var OrderManagementInterface
-     */
+    /** @var OrderManagementInterface */
     private $orderManagement;
 
     /**
@@ -65,7 +59,9 @@ class Cancel extends Action
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
+     *
+     * @return Json
      */
     public function execute(): Json
     {

@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -9,43 +8,33 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service;
 
+use Magento\Framework\DB\TransactionFactory;
 use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Sales\Api\Data\OrderInterfaceFactory;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
 use Monei\MoneiPayment\Api\OrderLockManagerInterface;
 use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
-use Magento\Framework\DB\TransactionFactory;
-use Magento\Sales\Api\Data\OrderInterfaceFactory;
 use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 use Psr\Log\LoggerInterface;
 
 /**
- * Generate invoice for order service class
+ * Generate invoice for order service class.
  */
 class GenerateInvoice implements GenerateInvoiceInterface
 {
-    /**
-     * @var OrderInterfaceFactory
-     */
+    /** @var OrderInterfaceFactory */
     private $orderFactory;
 
-    /**
-     * @var TransactionFactory
-     */
+    /** @var TransactionFactory */
     private $transactionFactory;
 
-    /**
-     * @var OrderLockManagerInterface
-     */
+    /** @var OrderLockManagerInterface */
     private $orderLockManager;
 
-    /**
-     * @var CreateVaultPayment
-     */
+    /** @var CreateVaultPayment */
     private $createVaultPayment;
 
-    /**
-     * @var LoggerInterface
-     */
+    /** @var LoggerInterface */
     private $logger;
 
     /**
@@ -70,7 +59,9 @@ class GenerateInvoice implements GenerateInvoiceInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
+     * @param array $data
+     * @return void
      */
     public function execute(array $data): void
     {
@@ -120,9 +111,10 @@ class GenerateInvoice implements GenerateInvoiceInterface
     }
 
     /**
-     * Check if the order is already paid
+     * Check if the order is already paid.
      *
      * @param OrderInterface $order
+     *
      * @return bool
      */
     private function isOrderAlreadyPaid(OrderInterface $order): bool

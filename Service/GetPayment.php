@@ -15,9 +15,7 @@ use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
  */
 class GetPayment extends AbstractService implements GetPaymentInterface
 {
-    /**
-     * API endpoint for payment operations.
-     */
+    /** API endpoint for payment operations. */
     public const METHOD = 'payments';
 
     /**
@@ -26,6 +24,7 @@ class GetPayment extends AbstractService implements GetPaymentInterface
      * Retrieves payment details by ID from the Monei payment API.
      *
      * @param string $paymentId The ID of the payment to retrieve
+     *
      * @return array Response from the API with payment details or error information
      */
     public function execute(string $paymentId): array
@@ -35,19 +34,18 @@ class GetPayment extends AbstractService implements GetPaymentInterface
         $this->logger->debug('[Get payment request]');
         $this->logger->debug('[Payment ID] ' . $paymentId);
 
-
         try {
             $response = $this->createClient()->get('payments/' . $paymentId, [
                 'headers' => $this->getHeaders()
             ]);
         } catch (\Exception $e) {
             $this->logger->critical('[Exception] ' . $e->getMessage());
+
             throw $e;
         }
 
         $this->logger->debug('[Get payment response]');
         $this->logger->debug(json_encode(json_decode((string) $response->getBody()), JSON_PRETTY_PRINT));
-
 
         return $this->serializer->unserialize($response->getBody());
     }

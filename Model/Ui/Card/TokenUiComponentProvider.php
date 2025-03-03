@@ -24,6 +24,7 @@ class TokenUiComponentProvider implements TokenUiComponentProviderInterface
 {
     /**
      * Factory for creating token UI components.
+     *
      * @var TokenUiComponentInterfaceFactory
      */
     private TokenUiComponentInterfaceFactory $componentFactory;
@@ -46,6 +47,7 @@ class TokenUiComponentProvider implements TokenUiComponentProviderInterface
      * based on the token details stored in the vault.
      *
      * @param PaymentTokenInterface $paymentToken The saved payment token
+     *
      * @return TokenUiComponentInterface Component used for token rendering
      */
     public function getComponentForToken(PaymentTokenInterface $paymentToken)

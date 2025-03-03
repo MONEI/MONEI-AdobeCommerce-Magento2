@@ -18,12 +18,14 @@ class CreateVaultPayment
 {
     /**
      * Payment token factory for creating vault payment tokens.
+     *
      * @var PaymentTokenFactoryInterface
      */
     private PaymentTokenFactoryInterface $paymentTokenFactory;
 
     /**
      * Service for retrieving payment information.
+     *
      * @var GetPaymentInterface
      */
     private GetPaymentInterface $getPayment;

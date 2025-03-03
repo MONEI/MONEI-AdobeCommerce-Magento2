@@ -30,54 +30,63 @@ class CheckoutConfigProvider implements ConfigProviderInterface
 {
     /**
      * URL builder interface for creating URLs.
+     *
      * @var UrlInterface
      */
     private UrlInterface $urlBuilder;
 
     /**
      * Configuration settings for the main Monei payment methods.
+     *
      * @var MoneiPaymentModuleConfigInterface
      */
     private MoneiPaymentModuleConfigInterface $moneiPaymentConfig;
 
     /**
      * Configuration settings specific to Monei card payments.
+     *
      * @var MoneiCardPaymentModuleConfigInterface
      */
     private MoneiCardPaymentModuleConfigInterface $moneiCardPaymentConfig;
 
     /**
      * Configuration settings for Google Pay and Apple Pay payment methods.
+     *
      * @var MoneiGoogleApplePaymentModuleConfigInterface
      */
     private MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentConfig;
 
     /**
      * Configuration settings specific to Bizum payment method.
+     *
      * @var MoneiBizumPaymentModuleConfigInterface
      */
     private MoneiBizumPaymentModuleConfigInterface $moneiBizumPaymentModuleConfig;
 
     /**
      * Interface for accessing store-related information.
+     *
      * @var StoreManagerInterface
      */
     private StoreManagerInterface $storeManager;
 
     /**
      * All Monei payment configurations.
+     *
      * @var AllMoneiPaymentModuleConfigInterface
      */
     private AllMoneiPaymentModuleConfigInterface $allMoneiPaymentModuleConfig;
 
     /**
      * Google Pay availability checker.
+     *
      * @var IsEnabledGooglePayInMoneiAccount
      */
     private IsEnabledGooglePayInMoneiAccount $isEnabledGooglePayInMoneiAccount;
 
     /**
      * Apple Pay availability checker.
+     *
      * @var IsEnabledApplePayInMoneiAccount
      */
     private IsEnabledApplePayInMoneiAccount $isEnabledApplePayInMoneiAccount;

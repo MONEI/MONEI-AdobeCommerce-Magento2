@@ -14,7 +14,6 @@ use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Phrase;
 use Magento\Sales\Api\CreditmemoManagementInterface;
 use Magento\Sales\Controller\Adminhtml\Order\CreditmemoLoader;
 use Magento\Sales\Helper\Data as SalesData;
@@ -39,9 +38,7 @@ class Save extends Action implements HttpPostActionInterface
     /** @var CreditmemoSender */
     protected $creditmemoSender;
 
-    /**
-     * @var \Magento\Backend\Model\View\Result\ForwardFactory
-     */
+    /** @var \Magento\Backend\Model\View\Result\ForwardFactory */
     protected $resultForwardFactory;
 
     /** @var SalesData */

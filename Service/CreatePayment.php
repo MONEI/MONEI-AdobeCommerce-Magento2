@@ -35,6 +35,7 @@ class CreatePayment extends AbstractService implements CreatePaymentInterface
      * The payment can be configured for authorization or capture based on the module configuration.
      *
      * @param array $data Payment data including amount, currency, orderId, customer and address details
+     *
      * @return array Response from the API with payment creation results or error details
      */
     public function execute(array $data): array
@@ -54,7 +55,6 @@ class CreatePayment extends AbstractService implements CreatePaymentInterface
         $this->logger->debug('[Create payment request]');
         $this->logger->debug(json_encode(json_decode($this->serializer->serialize($data)), JSON_PRETTY_PRINT));
 
-
         $client = $this->createClient();
 
         try {
@@ -73,7 +73,6 @@ class CreatePayment extends AbstractService implements CreatePaymentInterface
 
         $this->logger->debug('[Create payment response]');
         $this->logger->debug(json_encode(json_decode((string) $response->getBody()), JSON_PRETTY_PRINT));
-
 
         return $this->serializer->unserialize($response->getBody());
     }

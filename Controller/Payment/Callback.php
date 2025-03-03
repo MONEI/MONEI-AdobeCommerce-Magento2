@@ -161,6 +161,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
      * Create CSRF validation exception.
      *
      * @param RequestInterface $request
+     *
      * @return InvalidRequestException|null
      */
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
@@ -177,6 +178,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
      * Validate for CSRF.
      *
      * @param RequestInterface $request
+     *
      * @return bool|null
      */
     public function validateForCsrf(RequestInterface $request): ?bool
@@ -187,7 +189,9 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         }
         $body = $request->getContent();
         $this->logger->debug('[Callback request received]');
-        $this->logger->debug('[Header] ' . json_encode(json_decode($this->serializer->serialize($header)), JSON_PRETTY_PRINT));
+        $this->logger->debug(
+            '[Header] ' . json_encode(json_decode($this->serializer->serialize($header)), JSON_PRETTY_PRINT)
+        );
         $this->logger->debug('[Body] ' . json_encode(json_decode($body), JSON_PRETTY_PRINT));
 
         try {

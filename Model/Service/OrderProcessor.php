@@ -8,14 +8,11 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Model\Service;
 
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Phrase;
-use Magento\Sales\Api\Data\OrderInterface;
-use Magento\Sales\Api\OrderRepositoryInterface;
-use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface as TransactionBuilder;
-use Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\CollectionFactory as TransactionCollectionFactory;
 use Magento\Framework\DB\Transaction;
 use Magento\Framework\DB\TransactionFactory;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Sales\Api\OrderRepositoryInterface;
 use Monei\MoneiPayment\Api\OrderLockManagerInterface;
 use Monei\MoneiPayment\Service\Logger;
 
@@ -37,7 +34,7 @@ class OrderProcessor
     private $logger;
 
     /**
-     * Constructor
+     * Constructor.
      *
      * @param OrderLockManagerInterface $orderLockManager
      * @param OrderRepositoryInterface $orderRepository
@@ -75,6 +72,7 @@ class OrderProcessor
 
         if (!$incrementId) {
             $this->logger->error('[Error] Cannot process order without increment ID');
+
             throw new LocalizedException(__('Cannot process order without increment ID'));
         }
 
@@ -83,6 +81,7 @@ class OrderProcessor
         // Check if order is already locked
         if ($this->orderLockManager->isLocked($incrementId)) {
             $this->logger->logOrder($incrementId, '[Order is already being processed] By another request');
+
             return false;
         }
 
@@ -90,6 +89,7 @@ class OrderProcessor
         $lockAcquired = $this->orderLockManager->lock($incrementId);
         if (!$lockAcquired) {
             $this->logger->logOrder($incrementId, '[Could not acquire lock] For order');
+
             return false;
         }
 
@@ -148,6 +148,7 @@ class OrderProcessor
         // Check if order is already locked
         if ($this->orderLockManager->isLocked($incrementId)) {
             $this->logger->logOrder($incrementId, '[Order is already being processed] By another request');
+
             return false;
         }
 
@@ -155,6 +156,7 @@ class OrderProcessor
         $lockAcquired = $this->orderLockManager->lock($incrementId);
         if (!$lockAcquired) {
             $this->logger->logOrder($incrementId, '[Could not acquire lock] For order');
+
             return false;
         }
 

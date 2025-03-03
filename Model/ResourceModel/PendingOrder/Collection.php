@@ -18,7 +18,7 @@ use Monei\MoneiPayment\Model\ResourceModel\PendingOrder as PendingOrderResource;
 class Collection extends AbstractCollection
 {
     /**
-     * Initialize resource model
+     * Initialize resource model.
      *
      * @return void
      */

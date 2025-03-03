@@ -34,7 +34,7 @@ class EnableMBWay extends Enable
     }
 
     /**
-     * Check if payment method is available in Monei account
+     * Check if payment method is available in Monei account.
      *
      * @return bool
      */

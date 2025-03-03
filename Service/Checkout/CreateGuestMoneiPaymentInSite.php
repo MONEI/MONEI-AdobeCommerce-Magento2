@@ -18,7 +18,6 @@ use Monei\MoneiPayment\Api\Service\Checkout\CreateGuestMoneiPaymentInSiteInterfa
 use Monei\MoneiPayment\Service\CreatePayment;
 use Monei\MoneiPayment\Service\Quote\GetAddressDetailsByQuoteAddress;
 use Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote;
-use Magento\Framework\Phrase;
 
 /**
  * Monei create payment in site REST integration service class.

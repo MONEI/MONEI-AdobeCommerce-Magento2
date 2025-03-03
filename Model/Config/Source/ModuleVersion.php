@@ -73,7 +73,7 @@ class ModuleVersion extends Value
     }
 
     /**
-     * Get current installed module version
+     * Get current installed module version.
      *
      * @return string|false
      */

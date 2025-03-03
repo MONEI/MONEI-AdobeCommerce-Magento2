@@ -15,6 +15,7 @@ class OrderLockManager implements OrderLockManagerInterface
 {
     /**
      * Lock manager for handling order locks.
+     *
      * @var LockManagerInterface
      */
     private LockManagerInterface $lockManager;

@@ -64,6 +64,8 @@ class GetPaymentMethods extends AbstractService implements GetPaymentMethodsInte
     /**
      * Execute payment methods request.
      *
+     * @param string|null $accountId
+     *
      * @return array List of available payment methods
      */
     public function execute(string $accountId = null): array
@@ -90,12 +92,12 @@ class GetPaymentMethods extends AbstractService implements GetPaymentMethodsInte
             );
         } catch (\Exception $e) {
             $this->logger->critical('[Exception] ' . $e->getMessage());
+
             throw $e;
         }
 
         $this->logger->debug('[Get payment methods response]');
         $this->logger->debug(json_encode(json_decode((string) $response->getBody()), JSON_PRETTY_PRINT));
-
 
         return $this->serializer->unserialize($response->getBody());
     }

@@ -12,7 +12,6 @@ use GuzzleHttp\Client;
 use GuzzleHttp\ClientFactory;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Framework\Phrase;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Model\StoreManagerInterface;
@@ -26,24 +25,28 @@ abstract class AbstractService
 {
     /**
      * Module configuration provider.
+     *
      * @var MoneiPaymentModuleConfigInterface
      */
     protected $moduleConfig;
 
     /**
      * Magento store manager service.
+     *
      * @var StoreManagerInterface
      */
     protected $storeManager;
 
     /**
      * Service for JSON serialization and deserialization.
+     *
      * @var SerializerInterface
      */
     protected $serializer;
 
     /**
      * Service for logging operations.
+     *
      * @var Logger
      */
     protected $logger;
@@ -52,18 +55,21 @@ abstract class AbstractService
      * HTTP client factory for creating API clients.
      *
      * @var ClientFactory
+     *
      * @phpstan-var \GuzzleHttp\ClientFactory
      */
     private $clientFactory;
 
     /**
      * Magento URL builder service for generating URLs.
+     *
      * @var UrlInterface
      */
     private $urlBuilder;
 
     /**
      * Module version provider.
+     *
      * @var ModuleVersion
      */
     private ModuleVersion $moduleVersion;
@@ -116,8 +122,10 @@ abstract class AbstractService
      * Gets the API URL for the specified store.
      *
      * @param ?int $storeId Optional store ID, uses current store if not provided
-     * @return string The API URL
+     *
      * @throws NoSuchEntityException If the store cannot be found
+     *
+     * @return string The API URL
      */
     protected function getApiUrl(?int $storeId = null): string
     {
@@ -130,8 +138,10 @@ abstract class AbstractService
      * Gets the API headers for the specified store.
      *
      * @param ?int $storeId Optional store ID, uses current store if not provided
-     * @return array The API headers
+     *
      * @throws NoSuchEntityException If the store cannot be found
+     *
+     * @return array The API headers
      */
     protected function getHeaders(?int $storeId = null): array
     {

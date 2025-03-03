@@ -36,8 +36,10 @@ class RefundPayment extends AbstractService implements RefundPaymentInterface
      * Execute payment refund request.
      *
      * @param array $data Payment data including paymentId, refundReason, and amount
-     * @return array Response from the Monei API
+     *
      * @throws LocalizedException If validation fails
+     *
+     * @return array Response from the Monei API
      */
     public function execute(array $data): array
     {
@@ -57,10 +59,10 @@ class RefundPayment extends AbstractService implements RefundPaymentInterface
         $this->logger->debug('[Refund payment request]');
         $this->logger->debug(json_encode(json_decode($this->serializer->serialize($data)), JSON_PRETTY_PRINT));
 
-
         $storeId = $data['storeId'] ?? null;
 
         $client = $this->createClient($storeId);
+
         try {
             $response = $client->post(
                 'payments/' . $data['paymentId'] . '/' . self::METHOD,
@@ -71,12 +73,12 @@ class RefundPayment extends AbstractService implements RefundPaymentInterface
             );
         } catch (\Exception $e) {
             $this->logger->critical('[Exception] ' . $e->getMessage());
+
             return ['error' => true, 'errorMessage' => $e->getMessage()];
         }
 
         $this->logger->debug('[Refund payment response]');
         $this->logger->debug(json_encode(json_decode((string) $response->getBody()), JSON_PRETTY_PRINT));
-
 
         return $this->serializer->unserialize($response->getBody());
     }

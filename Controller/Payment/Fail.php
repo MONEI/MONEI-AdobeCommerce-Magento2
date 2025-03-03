@@ -13,7 +13,6 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\ActionInterface;
 use Magento\Framework\Controller\Result\Redirect as MagentoRedirect;
 use Magento\Framework\Message\ManagerInterface;
-use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\Data\OrderInterfaceFactory;
 use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
 
@@ -23,7 +22,7 @@ use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
 class Fail implements ActionInterface
 {
     /**
-     * Factory for creating order objects
+     * Factory for creating order objects.
      *
      * @var OrderInterfaceFactory
      */

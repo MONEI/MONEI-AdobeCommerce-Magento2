@@ -39,6 +39,7 @@ class MoneiCardPaymentModuleConfig implements MoneiCardPaymentModuleConfigInterf
      * Check if the Monei card payment method is enabled.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return bool True if the payment method is enabled, false otherwise
      */
     public function isEnabled(?int $storeId = null): bool
@@ -54,6 +55,7 @@ class MoneiCardPaymentModuleConfig implements MoneiCardPaymentModuleConfigInterf
      * Get the title of the Monei card payment method.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return string The payment method title
      */
     public function getTitle(?int $storeId = null): string
@@ -69,6 +71,7 @@ class MoneiCardPaymentModuleConfig implements MoneiCardPaymentModuleConfigInterf
      * Check if tokenization is enabled for the Monei card payment method.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return bool True if tokenization is enabled, false otherwise
      */
     public function isEnabledTokenization(?int $storeId = null): bool
@@ -84,6 +87,7 @@ class MoneiCardPaymentModuleConfig implements MoneiCardPaymentModuleConfigInterf
      * Check if the payment method is restricted to specific countries.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return bool True if the payment method is restricted to specific countries
      */
     public function isAllowSpecific(?int $storeId = null): bool
@@ -99,6 +103,7 @@ class MoneiCardPaymentModuleConfig implements MoneiCardPaymentModuleConfigInterf
      * Get the list of specific countries where the payment method is available.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return string Comma-separated list of country codes
      */
     public function getSpecificCountries(?int $storeId = null): string
@@ -114,6 +119,7 @@ class MoneiCardPaymentModuleConfig implements MoneiCardPaymentModuleConfigInterf
      * Get the sort order for the Monei card payment method.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return int The sort order value
      */
     public function getSortOrder(?int $storeId = null): int
@@ -129,6 +135,7 @@ class MoneiCardPaymentModuleConfig implements MoneiCardPaymentModuleConfigInterf
      * Get the JSON style configuration for the Monei card payment method.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return array The JSON style configuration as an array
      */
     public function getJsonStyle(?int $storeId = null): array

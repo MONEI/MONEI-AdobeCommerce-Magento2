@@ -22,12 +22,14 @@ class FailLastOrderByStatus extends Fail
 {
     /**
      * Controller context.
+     *
      * @var Context
      */
     private Context $context;
 
     /**
      * Session manager for handling customer checkout data.
+     *
      * @var Session
      */
     private Session $checkoutSession;

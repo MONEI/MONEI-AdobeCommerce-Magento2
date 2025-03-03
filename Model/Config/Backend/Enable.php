@@ -27,18 +27,21 @@ class Enable extends Value
 {
     /**
      * Message manager for admin notifications.
+     *
      * @var ManagerInterface
      */
     protected ManagerInterface $messageManager;
 
     /**
      * Service to get Monei payment codes by Magento payment code.
+     *
      * @var GetMoneiPaymentCodesByMagentoPaymentCode
      */
     private GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode;
 
     /**
      * Service to get available Monei payment methods.
+     *
      * @var GetAvailableMoneiPaymentMethods
      */
     private GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods;
@@ -89,6 +92,7 @@ class Enable extends Value
      * Get Monei payment codes that correspond to a specific Magento payment code.
      *
      * @param string $magentoPaymentCode Magento payment method code
+     *
      * @return array List of corresponding Monei payment method codes
      */
     protected function getMoneiPaymentCodesByMagentoPaymentCode(string $magentoPaymentCode): array
