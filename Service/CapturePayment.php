@@ -97,7 +97,7 @@ class CapturePayment extends AbstractService implements CapturePaymentInterface
                 $this->throwRequiredArgumentException($argument);
             } elseif ('amount' === $argument && !is_numeric($data[$argument])) {
                 throw new LocalizedException(
-                    new Phrase('%1 should be numeric value', [$argument])
+                    __('%1 should be numeric value', [$argument])
                 );
             }
         }

@@ -13,7 +13,7 @@ use Magento\Backend\Block\Template\Context;
 use Magento\Directory\Helper\Data as DirectoryHelper;
 use Magento\Framework\Json\Helper\Data as JsonHelper;
 use Magento\Framework\Registry;
-use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Sales\Model\Order;
 use Monei\MoneiPayment\Model\Config\Source\CancelReason;
 
 /**
@@ -60,8 +60,10 @@ class Popup extends Template
 
     /**
      * Retrieve order model object.
+     *
+     * @return Order
      */
-    public function getOrder(): OrderInterface
+    public function getOrder(): Order
     {
         return $this->registry->registry('sales_order');
     }

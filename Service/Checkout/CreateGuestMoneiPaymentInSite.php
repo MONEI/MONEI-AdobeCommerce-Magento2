@@ -107,7 +107,7 @@ class CreateGuestMoneiPaymentInSite implements CreateGuestMoneiPaymentInSiteInte
         $quoteId = $this->maskedQuoteIdToQuoteId->execute($cartId);
         $quote = $this->checkoutSession->getQuote() ?? $this->quoteRepository->get($quoteId);
         if (!$quote) {
-            throw new LocalizedException(new Phrase('An error occurred to retrieve the information about the quote'));
+            throw new LocalizedException(__('An error occurred to retrieve the information about the quote'));
         }
         // Save the quote in order to avoid that the other processes can reserve the order
         if (method_exists($quote, 'reserveOrderId')) {
@@ -136,7 +136,7 @@ class CreateGuestMoneiPaymentInSite implements CreateGuestMoneiPaymentInSiteInte
             return [$result];
         } catch (\Exception $e) {
             throw new LocalizedException(
-                new Phrase('An error occurred rendering the pay with card. Please try again later.')
+                __('An error occurred rendering the pay with card. Please try again later.')
             );
         }
     }

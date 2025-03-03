@@ -95,7 +95,7 @@ class Save extends Action implements HttpPostActionInterface
             if ($creditmemo) {
                 if (!$creditmemo->isValidGrandTotal()) {
                     throw new LocalizedException(
-                        new Phrase('The credit memo\'s total must be positive.')
+                        __('The credit memo\'s total must be positive.')
                     );
                 }
 
@@ -117,7 +117,7 @@ class Save extends Action implements HttpPostActionInterface
                 if (isset($data['do_offline'])) {
                     if (!$data['do_offline'] && !empty($data['refund_customerbalance_return_enable'])) {
                         throw new LocalizedException(
-                            new Phrase('Cannot create online refund for Refund to Store Credit.')
+                            __('Cannot create online refund for Refund to Store Credit.')
                         );
                     }
                 }

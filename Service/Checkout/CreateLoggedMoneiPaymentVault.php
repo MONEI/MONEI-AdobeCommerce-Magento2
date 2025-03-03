@@ -109,12 +109,12 @@ class CreateLoggedMoneiPaymentVault implements CreateLoggedMoneiPaymentVaultInte
     {
         $quote = $this->checkoutSession->getQuote() ?? $this->quoteRepository->get($cartId);
         if (!$quote) {
-            throw new LocalizedException(new Phrase('An error occurred to retrieve the information about the quote'));
+            throw new LocalizedException(__('An error occurred to retrieve the information about the quote'));
         }
 
         $paymentToken = $this->tokenManagement->getByPublicHash($publicHash, $quote->getCustomerId());
         if (!$paymentToken) {
-            throw new LocalizedException(new Phrase('It is not possible to make the payment with the saved card.'));
+            throw new LocalizedException(__('It is not possible to make the payment with the saved card.'));
         }
 
         // Save the quote in order to avoid that the other processes can reserve the order
@@ -146,7 +146,7 @@ class CreateLoggedMoneiPaymentVault implements CreateLoggedMoneiPaymentVaultInte
             return [$result];
         } catch (\Exception $e) {
             throw new LocalizedException(
-                new Phrase('An error occurred rendering the pay with card. Please try again later.')
+                __('An error occurred rendering the pay with card. Please try again later.')
             );
         }
     }

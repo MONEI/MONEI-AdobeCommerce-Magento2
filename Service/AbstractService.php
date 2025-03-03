@@ -152,7 +152,7 @@ abstract class AbstractService
     protected function throwRequiredArgumentException(string $parameter): void
     {
         throw new LocalizedException(
-            new Phrase('Required parameter is missing %1', [$parameter])
+            __('Required parameter is missing %1', [$parameter])
         );
     }
 
