@@ -11,146 +11,94 @@ namespace Monei\MoneiPayment\Controller\Payment;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\ActionInterface;
 use Magento\Framework\Controller\Result\Redirect as MagentoRedirect;
+use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\Data\OrderInterfaceFactory;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
+use Magento\Sales\Model\Order;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
 use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Model\ResourceModel\PendingOrder as PendingOrderResource;
 use Monei\MoneiPayment\Model\PendingOrderFactory;
 use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
-use Monei\MoneiPayment\Service\Order\PaymentProcessor;
-use Monei\MoneiPayment\Service\Logger;
 
 /**
- * Monei payment complete controller.
+ * Monei payment complete controller
  */
 class Complete implements ActionInterface
 {
     /**
-     * Controller source identifier.
-     */
-    private const SOURCE = 'complete';
-
-    /**
-     * Handles sending order confirmation emails.
-     *
-     * @var OrderSender
-     */
-    protected $orderSender;
-
-    /**
-     * Provides access to order data storage.
-     *
      * @var OrderRepositoryInterface
      */
     private $orderRepository;
 
     /**
-     * Creates new order instances.
-     *
      * @var OrderInterfaceFactory
      */
     private $orderFactory;
 
     /**
-     * Provides configuration settings for the Monei payment module.
-     *
      * @var MoneiPaymentModuleConfigInterface
      */
     private $moduleConfig;
 
     /**
-     * Service for generating invoices.
-     *
      * @var GenerateInvoiceInterface
      */
     private $generateInvoiceService;
 
     /**
-     * Provides access to controller context data.
-     *
      * @var Context
      */
     private $context;
 
     /**
-     * Creates redirect response objects.
-     *
      * @var MagentoRedirect
      */
     private $resultRedirectFactory;
 
     /**
-     * Creates pending order instances.
-     *
      * @var PendingOrderFactory
      */
     private $pendingOrderFactory;
 
     /**
-     * Manages persistence of pending order data.
-     *
      * @var PendingOrderResource
      */
     private $pendingOrderResource;
 
     /**
-     * Service for creating vault payment records.
-     *
-     * @var CreateVaultPayment
+     * @var OrderSender
      */
-    private $createVaultPayment;
+    protected $orderSender;
+
+    private CreateVaultPayment $createVaultPayment;
 
     /**
-     * Processes payment operations.
-     *
-     * @var PaymentProcessor
-     */
-    private $paymentProcessor;
-
-    /**
-     * Provides logging functionality for the controller.
-     *
-     * @var Logger
-     */
-    private $logger;
-
-    /**
-     * Constructor for Complete payment controller.
-     *
-     * Initializes the controller with all required dependencies for handling
-     * the Monei payment completion process.
-     *
-     * @param Context $context Application context
-     * @param OrderRepositoryInterface $orderRepository Repository for order operations
-     * @param OrderSender $orderSender Service for sending order confirmation emails
-     * @param OrderInterfaceFactory $orderFactory Factory for creating order objects
-     * @param MoneiPaymentModuleConfigInterface $moduleConfig Monei payment module configuration
-     * @param GenerateInvoiceInterface $generateInvoiceService Service for generating invoices
-     * @param MagentoRedirect $resultRedirectFactory Factory for creating redirect responses
-     * @param PendingOrderFactory $pendingOrderFactory Factory for creating pending order objects
-     * @param PendingOrderResource $pendingOrderResource Resource model for pending orders
-     * @param CreateVaultPayment $createVaultPayment Service for creating vault payments
-     * @param PaymentProcessor $paymentProcessor Service for processing payments
-     * @param Logger $logger Logging service
+     * @param Context $context
+     * @param OrderRepositoryInterface $orderRepository
+     * @param OrderSender $orderSender
+     * @param OrderInterfaceFactory $orderFactory
+     * @param MoneiPaymentModuleConfigInterface $moduleConfig
+     * @param GenerateInvoiceInterface $generateInvoiceService
+     * @param MagentoRedirect $resultRedirectFactory
+     * @param PendingOrderFactory $pendingOrderFactory
+     * @param PendingOrderResource $pendingOrderResource
+     * @param CreateVaultPayment $createVaultPayment
      */
     public function __construct(
         Context $context,
         OrderRepositoryInterface $orderRepository,
         OrderSender $orderSender,
-        /** @phpstan-ignore-next-line */
         OrderInterfaceFactory $orderFactory,
         MoneiPaymentModuleConfigInterface $moduleConfig,
         GenerateInvoiceInterface $generateInvoiceService,
         MagentoRedirect $resultRedirectFactory,
-        /** @phpstan-ignore-next-line */
         PendingOrderFactory $pendingOrderFactory,
         PendingOrderResource $pendingOrderResource,
-        CreateVaultPayment $createVaultPayment,
-        PaymentProcessor $paymentProcessor,
-        Logger $logger
+        CreateVaultPayment $createVaultPayment
     ) {
         $this->createVaultPayment = $createVaultPayment;
         $this->context = $context;
@@ -162,51 +110,61 @@ class Complete implements ActionInterface
         $this->resultRedirectFactory = $resultRedirectFactory;
         $this->pendingOrderFactory = $pendingOrderFactory;
         $this->pendingOrderResource = $pendingOrderResource;
-        $this->paymentProcessor = $paymentProcessor;
-        $this->logger = $logger;
     }
 
     /**
-     * Execute payment completion logic.
-     *
-     * Processes the payment result from Monei based on the received parameters.
-     * Redirects to success page if payment was successful or to cart if it wasn't.
-     *
-     * @return MagentoRedirect Redirects to success page or cart based on payment status
+     * {@inheritDoc}
      */
     public function execute()
     {
-        /** @var array $params */
-        $params = $this->context->getRequest()->getParams();
+        $data = $this->context->getRequest()->getParams();
+        switch ($data['status']) {
+            case Monei::ORDER_STATUS_AUTHORIZED:
+                /** @var $order OrderInterface */
+                $order = $this->orderFactory->create()->loadByIncrementId($data['orderId']);
+                $payment = $order->getPayment();
+                if ($payment) {
+                    $payment->setLastTransId($data['id']);
+                    if ($order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION)) {
+                        $vaultCreated = $this->createVaultPayment->execute(
+                            $data['id'],
+                            $payment
+                        );
+                        $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, $vaultCreated);
+                    }
+                }
 
-        if (!isset($params['orderId'], $params['status'], $params['id'])) {
-            $this->logger->error('[Complete controller error] Missing required parameters');
+                $order
+                    ->setStatus($this->moduleConfig->getPreAuthorizedStatus())
+                    ->setState(Order::STATE_PENDING_PAYMENT);
+                $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $data['id']);
+                $pendingOrder = $this->pendingOrderFactory->create()->setOrderIncrementId($data['orderId']);
+                $this->pendingOrderResource->save($pendingOrder);
+                $this->orderRepository->save($order);
 
-            return $this->resultRedirectFactory->setPath('checkout/cart');
-        }
+                return $this->resultRedirectFactory->setPath('checkout/onepage/success', ['_secure' => true]);
 
-        try {
-            $processed = $this->paymentProcessor->processPayment($params, self::SOURCE);
+            case Monei::ORDER_STATUS_SUCCEEDED:
+                $this->generateInvoiceService->execute($data);
+                /** @var $order OrderInterface */
+                $order = $this->orderFactory->create()->loadByIncrementId($data['orderId']);
+                $order->setStatus($this->moduleConfig->getConfirmedStatus())->setState(Order::STATE_NEW);
+                $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $data['id']);
+                $this->orderRepository->save($order);
 
-            // Redirect based on payment status, even if processing failed
-            // (we want to show the appropriate page to the customer)
-            if (Monei::ORDER_STATUS_AUTHORIZED === $params['status'] ||
-                Monei::ORDER_STATUS_SUCCEEDED === $params['status']
-            ) {
-                return $this->resultRedirectFactory->setPath(
-                    'checkout/onepage/success',
-                    ['_secure' => true]
-                );
-            }
+                // send Order email
+                if ($order->getCanSendNewEmailFlag() && !$order->getEmailSent()) {
+                    try {
+                        $this->orderSender->send($order);
+                    } catch (\Exception $e) {
+                        $this->logger->critical($e);
+                    }
+                }
 
-            return $this->resultRedirectFactory->setPath(
-                'checkout/cart',
-                ['_secure' => true]
-            );
-        } catch (\Exception $e) {
-            $this->logger->error('[Complete controller error] ' . $e->getMessage());
+                return $this->resultRedirectFactory->setPath('checkout/onepage/success', ['_secure' => true]);
 
-            return $this->resultRedirectFactory->setPath('checkout/cart');
+            default:
+                return $this->resultRedirectFactory->setPath('checkout/cart', ['_secure' => true]);
         }
     }
 }

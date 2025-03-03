@@ -14,8 +14,6 @@ use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\Response\Http as ResponseHttp;
 use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\RequestInterface;
-use Magento\Framework\Controller\Result\Json;
-use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Controller\Result\Redirect as MagentoRedirect;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -25,90 +23,24 @@ use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
 use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
-use Monei\MoneiPayment\Service\Order\PaymentProcessor;
 use Monei\MoneiPayment\Service\Logger;
+use Exception;
 
 /**
- * Controller for managing callback from Monei system.
+ * Controller for managing callback from Monei system
  */
 class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
 {
-    /**
-     * Controller source identifier.
-     */
-    private const SOURCE = 'callback';
+    private string $errorMessage = '';
+    private Context $context;
+    private SerializerInterface $serializer;
+    private MoneiPaymentModuleConfigInterface $moduleConfig;
+    private Logger $logger;
+    private StoreManagerInterface $storeManager;
+    private GenerateInvoiceInterface $generateInvoiceService;
+    private SetOrderStatusAndStateInterface $setOrderStatusAndStateService;
+    private MagentoRedirect $resultRedirectFactory;
 
-    /**
-     * Stores error messages that occur during payment processing.
-     *
-     * @var string
-     */
-    private $errorMessage = '';
-
-    /**
-     * @var Context
-     */
-    private $context;
-
-    /**
-     * @var SerializerInterface
-     */
-    private $serializer;
-
-    /**
-     * @var MoneiPaymentModuleConfigInterface
-     */
-    private $moduleConfig;
-
-    /**
-     * @var Logger
-     */
-    private $logger;
-
-    /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-
-    /**
-     * @var GenerateInvoiceInterface
-     */
-    private $generateInvoiceService;
-
-    /**
-     * @var SetOrderStatusAndStateInterface
-     */
-    private $setOrderStatusAndStateService;
-
-    /**
-     * @var MagentoRedirect
-     */
-    private $resultRedirectFactory;
-
-    /**
-     * @var JsonFactory
-     */
-    private $resultJsonFactory;
-
-    /**
-     * @var PaymentProcessor
-     */
-    private $paymentProcessor;
-
-    /**
-     * Constructor.
-     *
-     * @param Context $context
-     * @param SerializerInterface $serializer
-     * @param MoneiPaymentModuleConfigInterface $moduleConfig
-     * @param Logger $logger
-     * @param StoreManagerInterface $storeManager
-     * @param GenerateInvoiceInterface $generateInvoiceService
-     * @param SetOrderStatusAndStateInterface $setOrderStatusAndStateService
-     * @param MagentoRedirect $resultRedirectFactory
-     * @param JsonFactory $resultJsonFactory
-     * @param PaymentProcessor $paymentProcessor
-     */
     public function __construct(
         Context $context,
         SerializerInterface $serializer,
@@ -117,12 +49,9 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         StoreManagerInterface $storeManager,
         GenerateInvoiceInterface $generateInvoiceService,
         SetOrderStatusAndStateInterface $setOrderStatusAndStateService,
-        MagentoRedirect $resultRedirectFactory,
-        JsonFactory $resultJsonFactory,
-        PaymentProcessor $paymentProcessor
+        MagentoRedirect $resultRedirectFactory
     ) {
         $this->resultRedirectFactory = $resultRedirectFactory;
-        $this->resultJsonFactory = $resultJsonFactory;
         $this->setOrderStatusAndStateService = $setOrderStatusAndStateService;
         $this->generateInvoiceService = $generateInvoiceService;
         $this->storeManager = $storeManager;
@@ -130,61 +59,30 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         $this->moduleConfig = $moduleConfig;
         $this->serializer = $serializer;
         $this->context = $context;
-        $this->paymentProcessor = $paymentProcessor;
     }
 
     /**
-     * Execute action based on request and return result.
-     *
-     * @return ResultInterface
+     * {@inheritDoc}
      */
     public function execute()
     {
-        /** @var Json $result */
-        $result = $this->resultJsonFactory->create();
-        $responseData = ['success' => true];
-        $responseCode = 200;
-
-        try {
-            $content = $this->context->getRequest()->getContent();
-            $body = $this->serializer->unserialize($content);
-
-            if (!isset($body['orderId'], $body['status'], $body['id'])) {
-                $this->logger->error('[Callback request failed] Missing required parameters');
-                $this->logger->error('[Request body] ' . $content);
-                $responseData = ['success' => false, 'message' => 'Missing required parameters'];
-                $responseCode = 400;
-
-                return $result->setHttpResponseCode($responseCode)->setData($responseData);
+        $content = $this->context->getRequest()->getContent();
+        $body = $this->serializer->unserialize($content);
+        if (isset($body['orderId'], $body['status'])) {
+            if ($body['status'] === Monei::ORDER_STATUS_SUCCEEDED) {
+                $this->generateInvoiceService->execute($body);
             }
-
-            // Process the payment through the centralized service
-            $processed = $this->paymentProcessor->processPayment($body, self::SOURCE);
-
-            if (!$processed) {
-                $this->logger->info(\sprintf(
-                    '[Payment processing not completed] Order %s, status %s',
-                    $body['orderId'],
-                    $body['status']
-                ));
-                $responseData['info'] = 'Payment processing was not completed';
-            }
-        } catch (\Exception $e) {
-            $this->logger->critical('[Error in Callback controller] ' . $e->getMessage());
-            $this->logger->critical('[Request body] ' . ($content ?? 'not available'));
-            $responseData = ['success' => false, 'message' => $e->getMessage()];
-            $responseCode = 500;
+            $this->setOrderStatusAndStateService->execute($body);
+        } else {
+            $this->logger->critical('Callback request failed.');
+            $this->logger->critical('Request body: ' . $content);
         }
 
-        return $result->setHttpResponseCode($responseCode)->setData($responseData);
+        return $this->resultRedirectFactory->setPath('/');
     }
 
     /**
-     * Create CSRF validation exception.
-     *
-     * @param RequestInterface $request
-     *
-     * @return InvalidRequestException|null
+     * {@inheritDoc}
      */
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
     {
@@ -197,31 +95,25 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     }
 
     /**
-     * Validate for CSRF.
-     *
-     * @param RequestInterface $request
-     *
-     * @return bool|null
+     * {@inheritDoc}
      */
     public function validateForCsrf(RequestInterface $request): ?bool
     {
         $header = $request->getHeader('MONEI-Signature');
-        if (!\is_array($header)) {
+        if (!is_array($header)) {
             $header = $this->splitMoneiSignature((string) $header);
         }
         $body = $request->getContent();
-        $this->logger->debug('[Callback request received]');
-        $this->logger->debug(
-            '[Header] ' . json_encode(json_decode($this->serializer->serialize($header)), JSON_PRETTY_PRINT)
-        );
-        $this->logger->debug('[Body] ' . json_encode(json_decode($body), JSON_PRETTY_PRINT));
+        $this->logger->debug('Callback request received.');
+        $this->logger->debug('Header:' . $this->serializer->serialize($header));
+        $this->logger->debug('Body:' . $body);
 
         try {
             $this->verifySignature($body, $header);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->errorMessage = $e->getMessage();
-            $this->logger->critical('[Signature verification failed] ' . $e->getMessage());
-            $this->logger->critical('[Request body] ' . ($body ?? 'not available'));
+            $this->logger->critical($e->getMessage());
+            $this->logger->critical('Request body: ' . $this->serializer->serialize($body));
 
             return false;
         }
@@ -230,11 +122,10 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     }
 
     /**
-     * Verifies signature from header.
+     * Verifies signature from header
      *
      * @param string $body
      * @param array $header
-     *
      * @throws LocalizedException
      */
     private function verifySignature(string $body, array $header): void
@@ -247,8 +138,9 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     }
 
     /**
-     * Get webservice API key(test or production).
+     * Get webservice API key(test or production)
      *
+     * @return string
      * @throws NoSuchEntityException
      */
     private function getApiKey(): string
@@ -258,11 +150,6 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         return $this->moduleConfig->getApiKey($currentStoreId);
     }
 
-    /**
-     * Split Monei signature into associative array.
-     *
-     * @param string $signature
-     */
     private function splitMoneiSignature(string $signature): array
     {
         return array_reduce(explode(',', $signature), function ($result, $part) {

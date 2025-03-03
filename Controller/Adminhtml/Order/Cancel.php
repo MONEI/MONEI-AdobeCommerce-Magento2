@@ -65,7 +65,7 @@ class Cancel extends Action
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      *
      * @return Json
      */

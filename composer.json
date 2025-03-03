@@ -61,9 +61,9 @@
     "fix": "vendor/bin/phpcbf --standard=phpcs.xml .",
     "cs:check": "vendor/bin/php-cs-fixer check --config=.php-cs-fixer.php .",
     "cs:fix": "vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php .",
-    "pretty:check": "./pretty-php.phar --check --exclude=node_modules .",
-    "pretty:diff": "./pretty-php.phar --diff --exclude=node_modules .",
-    "pretty:fix": "./pretty-php.phar  --exclude=node_modules .",
+    "pretty:check": "./pretty-php.phar --check .",
+    "pretty:diff": "./pretty-php.phar --diff .",
+    "pretty:fix": "./pretty-php.phar .",
     "fix:all": [
       "@fix",
       "@cs:fix",

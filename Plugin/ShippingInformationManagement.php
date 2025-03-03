@@ -127,8 +127,7 @@ class ShippingInformationManagement
                 $paymentMethod->getCode()
             );
             if (!$moneiPaymentCodes ||
-                $this->isPaymentMethodAllowed($moneiPaymentCodes, $availableMoneiPaymentMethodsByCountry)
-            ) {
+                    $this->isPaymentMethodAllowed($moneiPaymentCodes, $availableMoneiPaymentMethodsByCountry)) {
                 $filteredPaymentMethods[] = $paymentMethod;
             }
         }
