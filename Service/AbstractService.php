@@ -12,6 +12,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\ClientFactory;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Phrase;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Model\StoreManagerInterface;
@@ -23,27 +24,63 @@ use Monei\MoneiPayment\Model\Config\Source\ModuleVersion;
  */
 abstract class AbstractService
 {
-    /** @var MoneiPaymentModuleConfigInterface */
+    /**
+     * Module configuration provider.
+     * @var MoneiPaymentModuleConfigInterface
+     */
     protected $moduleConfig;
 
-    /** @var StoreManagerInterface */
+    /**
+     * Magento store manager service.
+     * @var StoreManagerInterface
+     */
     protected $storeManager;
 
-    /** @var SerializerInterface */
+    /**
+     * Service for JSON serialization and deserialization.
+     * @var SerializerInterface
+     */
     protected $serializer;
 
-    /** @var Logger */
+    /**
+     * Service for logging operations.
+     * @var Logger
+     */
     protected $logger;
 
-    /** @var ClientFactory */
+    /**
+     * HTTP client factory for creating API clients.
+     *
+     * @var ClientFactory
+     * @phpstan-var \GuzzleHttp\ClientFactory
+     */
     private $clientFactory;
 
-    /** @var UrlInterface */
+    /**
+     * Magento URL builder service for generating URLs.
+     * @var UrlInterface
+     */
     private $urlBuilder;
 
+    /**
+     * Module version provider.
+     * @var ModuleVersion
+     */
     private ModuleVersion $moduleVersion;
 
+    /**
+     * Constructor for AbstractService.
+     *
+     * @param ClientFactory $clientFactory HTTP client factory
+     * @param MoneiPaymentModuleConfigInterface $moduleConfig Module configuration provider
+     * @param StoreManagerInterface $storeManager Magento store manager
+     * @param UrlInterface $urlBuilder URL builder service
+     * @param SerializerInterface $serializer JSON serializer
+     * @param Logger $logger Logging service
+     * @param ModuleVersion $moduleVersion Module version provider
+     */
     public function __construct(
+        /** @phpstan-ignore-next-line */
         ClientFactory $clientFactory,
         MoneiPaymentModuleConfigInterface $moduleConfig,
         StoreManagerInterface $storeManager,
@@ -76,11 +113,11 @@ abstract class AbstractService
     }
 
     /**
-     * Get webservice API url(test or production).
+     * Gets the API URL for the specified store.
      *
-     * @param ?int $storeId
-     *
-     * @throws NoSuchEntityException
+     * @param ?int $storeId Optional store ID, uses current store if not provided
+     * @return string The API URL
+     * @throws NoSuchEntityException If the store cannot be found
      */
     protected function getApiUrl(?int $storeId = null): string
     {
@@ -90,9 +127,11 @@ abstract class AbstractService
     }
 
     /**
-     * @param ?int $storeId
+     * Gets the API headers for the specified store.
      *
-     * @throws NoSuchEntityException
+     * @param ?int $storeId Optional store ID, uses current store if not provided
+     * @return array The API headers
+     * @throws NoSuchEntityException If the store cannot be found
      */
     protected function getHeaders(?int $storeId = null): array
     {
@@ -112,7 +151,9 @@ abstract class AbstractService
      */
     protected function throwRequiredArgumentException(string $parameter): void
     {
-        throw new LocalizedException(__('Required parameter is missing %1', $parameter));
+        throw new LocalizedException(
+            new Phrase('Required parameter is missing %1', [$parameter])
+        );
     }
 
     /**
@@ -149,7 +190,7 @@ abstract class AbstractService
     {
         $moduleVersion = $this->moduleVersion->getModuleVersion();
         if ($moduleVersion) {
-            return 'MONEI/Magento2/'.$moduleVersion;
+            return 'MONEI/Magento2/' . $moduleVersion;
         }
 
         return '';

@@ -21,6 +21,12 @@ class GetPaymentCommand extends Command
     /** @var GetPaymentInterface */
     private $service;
 
+    /**
+     * Constructor.
+     *
+     * @param GetPaymentInterface $service Service for retrieving payment details
+     * @param string|null $name Command name
+     */
     public function __construct(
         GetPaymentInterface $service,
         ?string $name = null
@@ -29,6 +35,11 @@ class GetPaymentCommand extends Command
         parent::__construct($name);
     }
 
+    /**
+     * Configure the command.
+     *
+     * @return void
+     */
     protected function configure()
     {
         $this->setName('monei:moneiws:getpayment');
@@ -37,6 +48,13 @@ class GetPaymentCommand extends Command
         parent::configure();
     }
 
+    /**
+     * Execute the command.
+     *
+     * @param InputInterface $input Command input
+     * @param OutputInterface $output Command output
+     * @return int Exit code
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $data = 'c5fbae6a0ffd8035a6563be76d9acdfa0a892f50';

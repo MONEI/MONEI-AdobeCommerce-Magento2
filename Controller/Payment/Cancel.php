@@ -35,6 +35,15 @@ class Cancel implements ActionInterface
     /** @var MagentoRedirect */
     private $resultRedirectFactory;
 
+    /**
+     * Constructor
+     *
+     * @param Context $context
+     * @param Session $checkoutSession
+     * @param OrderRepositoryInterface $orderRepository
+     * @param ManagerInterface $messageManager
+     * @param MagentoRedirect $resultRedirectFactory
+     */
     public function __construct(
         Context $context,
         Session $checkoutSession,
@@ -49,6 +58,11 @@ class Cancel implements ActionInterface
         $this->resultRedirectFactory = $resultRedirectFactory;
     }
 
+    /**
+     * Execute action to cancel payment and restore quote
+     *
+     * @return MagentoRedirect
+     */
     public function execute()
     {
         $order = $this->checkoutSession->getLastRealOrder();

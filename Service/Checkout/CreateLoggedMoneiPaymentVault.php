@@ -10,9 +10,10 @@ namespace Monei\MoneiPayment\Service\Checkout;
 
 use Magento\Checkout\Model\Session;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Phrase;
 use Magento\Quote\Api\CartRepositoryInterface;
+use Magento\Quote\Api\Data\CartInterface as QuoteInterface;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
-use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentVaultInterface;
 use Monei\MoneiPayment\Service\CreatePayment;
 use Monei\MoneiPayment\Service\Quote\GetAddressDetailsByQuoteAddress;
@@ -26,33 +27,57 @@ use Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote;
  */
 class CreateLoggedMoneiPaymentVault implements CreateLoggedMoneiPaymentVaultInterface
 {
-    /** Quote repository for managing quote data. */
+    /**
+     * Quote repository for managing quote data.
+     *
+     * @var CartRepositoryInterface
+     */
     private CartRepositoryInterface $quoteRepository;
 
-    /** Checkout session to access current quote. */
+    /**
+     * Checkout session to access current quote.
+     *
+     * @var Session
+     */
     private Session $checkoutSession;
 
-    /** Service to get customer details from quote. */
+    /**
+     * Service to get customer details from quote.
+     *
+     * @var GetCustomerDetailsByQuote
+     */
     private GetCustomerDetailsByQuote $getCustomerDetailsByQuote;
 
-    /** Service to get address details from quote address. */
+    /**
+     * Service to get address details from quote address.
+     *
+     * @var GetAddressDetailsByQuoteAddress
+     */
     private GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress;
 
-    /** Payment token management for handling saved payment methods. */
+    /**
+     * Payment token management for handling saved payment methods.
+     *
+     * @var PaymentTokenManagementInterface
+     */
     private PaymentTokenManagementInterface $tokenManagement;
 
-    /** Service to create payment in Monei. */
+    /**
+     * Service to create payment in Monei.
+     *
+     * @var CreatePayment
+     */
     private CreatePayment $createPayment;
 
     /**
      * Constructor for CreateLoggedMoneiPaymentVault.
      *
-     * @param CartRepositoryInterface         $quoteRepository                 Repository for managing quote data
-     * @param Session                         $checkoutSession                 Checkout session for accessing the current quote
-     * @param GetCustomerDetailsByQuote       $getCustomerDetailsByQuote       Service to retrieve customer details
+     * @param CartRepositoryInterface $quoteRepository Repository for managing quote data
+     * @param Session $checkoutSession Checkout session for accessing the current quote
+     * @param GetCustomerDetailsByQuote $getCustomerDetailsByQuote Service to retrieve customer details
      * @param GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress Service to retrieve address details
-     * @param PaymentTokenManagementInterface $tokenManagement                 For handling saved payment methods
-     * @param CreatePayment                   $createPayment                   Service to create payment in Monei
+     * @param PaymentTokenManagementInterface $tokenManagement For handling saved payment methods
+     * @param CreatePayment $createPayment Service to create payment in Monei
      */
     public function __construct(
         CartRepositoryInterface $quoteRepository,
@@ -84,37 +109,45 @@ class CreateLoggedMoneiPaymentVault implements CreateLoggedMoneiPaymentVaultInte
     {
         $quote = $this->checkoutSession->getQuote() ?? $this->quoteRepository->get($cartId);
         if (!$quote) {
-            throw new LocalizedException(__('An error occurred to retrieve the information about the quote'));
+            throw new LocalizedException(new Phrase('An error occurred to retrieve the information about the quote'));
         }
 
         $paymentToken = $this->tokenManagement->getByPublicHash($publicHash, $quote->getCustomerId());
         if (!$paymentToken) {
-            throw new LocalizedException(__('It is not possible to make the payment with the saved card.'));
+            throw new LocalizedException(new Phrase('It is not possible to make the payment with the saved card.'));
         }
 
         // Save the quote in order to avoid that the other processes can reserve the order
-        $quote->reserveOrderId();
+        if (method_exists($quote, 'reserveOrderId')) {
+            $quote->reserveOrderId();
+        }
         $this->quoteRepository->save($quote);
 
         $data = [
-            'amount' => $quote->getBaseGrandTotal() * 100,
-            'currency' => $quote->getBaseCurrencyCode(),
+            'amount' => method_exists($quote, 'getBaseGrandTotal') ? $quote->getBaseGrandTotal() * 100 : 0,
+            'currency' => method_exists($quote, 'getBaseCurrencyCode') ? $quote->getBaseCurrencyCode() : 'EUR',
             'orderId' => $quote->getReservedOrderId(),
             'customer' => $this->getCustomerDetailsByQuote->execute($quote),
             'billingDetails' => $this->getAddressDetailsByQuoteAddress->execute($quote->getBillingAddress()),
-            'shippingDetails' => $this->getAddressDetailsByQuoteAddress->execute($quote->getShippingAddress()),
+            'shippingDetails' => method_exists($quote, 'getShippingAddress') && $quote->getShippingAddress() ?
+                $this->getAddressDetailsByQuoteAddress->execute($quote->getShippingAddress()) :
+                $this->getAddressDetailsByQuoteAddress->execute($quote->getBillingAddress()),
         ];
 
         try {
             $result = $this->createPayment->execute($data);
-            $quote->setData(QuoteInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $result['id'] ?: '');
-            $this->quoteRepository->save($quote);
+            if (method_exists($quote, 'setData')) {
+                $quote->setData(QuoteInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $result['id'] ?: '');
+                $this->quoteRepository->save($quote);
+            }
 
             $result['paymentToken'] = $paymentToken->getGatewayToken();
 
             return [$result];
         } catch (\Exception $e) {
-            throw new LocalizedException(__('An error occurred rendering the pay with card. Please try again later.'));
+            throw new LocalizedException(
+                new Phrase('An error occurred rendering the pay with card. Please try again later.')
+            );
         }
     }
 }

@@ -15,6 +15,11 @@ use Magento\Framework\Data\OptionSourceInterface;
  */
 class CancelReason implements OptionSourceInterface
 {
+    /**
+     * Get options for cancel reason dropdown
+     *
+     * @return array
+     */
     public function toOptionArray(): array
     {
         return [

@@ -28,6 +28,12 @@ class ProcessingLock
     /** @var Logger */
     private $logger;
 
+    /**
+     * Constructor
+     *
+     * @param LockManagerInterface $lockManager
+     * @param Logger $logger
+     */
     public function __construct(
         LockManagerInterface $lockManager,
         Logger $logger
@@ -37,7 +43,8 @@ class ProcessingLock
     }
 
     /**
-     * Execute a callback function with a lock to prevent race conditions
+     * Execute a callback function with a lock to prevent race conditions.
+     *
      * This method ensures the lock is always released, even if an exception occurs.
      *
      * @param string   $orderId   Order increment ID
@@ -149,6 +156,6 @@ class ProcessingLock
      */
     private function getLockName(string $orderId, string $paymentId): string
     {
-        return self::LOCK_PREFIX.$orderId.'_'.$paymentId;
+        return self::LOCK_PREFIX . $orderId . '_' . $paymentId;
     }
 }

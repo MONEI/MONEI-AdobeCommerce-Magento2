@@ -19,12 +19,23 @@ class Capture implements CommandInterface
     /** @var CapturePaymentInterface */
     private $capturePaymentService;
 
+    /**
+     * Constructor.
+     *
+     * @param CapturePaymentInterface $capturePaymentService Service for processing captures
+     */
     public function __construct(
         CapturePaymentInterface $capturePaymentService
     ) {
         $this->capturePaymentService = $capturePaymentService;
     }
 
+    /**
+     * Execute capture command.
+     *
+     * @param array $commandSubject Command subject containing payment and amount
+     * @return void
+     */
     public function execute(array $commandSubject)
     {
         $order = $commandSubject['payment']->getPayment()->getOrder();

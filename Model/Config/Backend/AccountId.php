@@ -19,8 +19,25 @@ use Monei\MoneiPayment\Registry\AccountId as RegistryAccountId;
 
 class AccountId extends Value
 {
+    /**
+     * Registry for storing account ID
+     *
+     * @var RegistryAccountId
+     */
     private RegistryAccountId $registryAccountId;
 
+    /**
+     * Constructor
+     *
+     * @param RegistryAccountId $registryAccountId
+     * @param Context $context
+     * @param Registry $registry
+     * @param ScopeConfigInterface $config
+     * @param TypeListInterface $cacheTypeList
+     * @param AbstractResource|null $resource
+     * @param AbstractDb|null $resourceCollection
+     * @param array $data
+     */
     public function __construct(
         RegistryAccountId $registryAccountId,
         Context $context,
@@ -35,6 +52,11 @@ class AccountId extends Value
         $this->registryAccountId = $registryAccountId;
     }
 
+    /**
+     * Process value before saving
+     *
+     * @return AccountId
+     */
     public function beforeSave(): AccountId
     {
         if ($this->getValue()) {

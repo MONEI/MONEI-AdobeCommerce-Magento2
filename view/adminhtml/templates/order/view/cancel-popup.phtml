@@ -12,15 +12,19 @@
             value="<?= $escaper->escapeUrl($block->getCancelUrl()) ?>">
         <input type="hidden"
             id="payment_id"
-            value="<?= $escaper->escapeHtmlAttr($block->getOrder()->getData('monei_payment_id')) ?>" name="payment_id" />
+            value="<?= $escaper->escapeHtmlAttr($block->getMoneiPaymentId()) ?>"
+            name="payment_id" />
         <input type="hidden"
             id="order_id"
-            value="<?= $escaper->escapeHtmlAttr($block->getOrder()->getId()) ?>" name="order_id" />
+            value="<?= $escaper->escapeHtmlAttr($block->getOrderId()) ?>"
+            name="order_id" />
         <div>
             <label for="cancel_reason"><?= $escaper->escapeHtml(__('Cancel reason')) ?></label>
             <select name="cancel_reason" id="cancel_reason" class="admin__control-select">
                 <?php foreach ($block->getCancelReasons() as $option): ?>
-                    <option value="<?= $escaper->escapeHtmlAttr($option['value']) ?>"><?= $escaper->escapeHtml($option['label']) ?></option>
+                    <option value="<?= $escaper->escapeHtmlAttr($option['value']) ?>">
+                        <?= $escaper->escapeHtml($option['label']) ?>
+                    </option>
                 <?php endforeach ?>
             </select>
         </div>

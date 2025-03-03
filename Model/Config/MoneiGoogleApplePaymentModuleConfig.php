@@ -21,7 +21,10 @@ use Monei\MoneiPayment\Api\Config\MoneiGoogleApplePaymentModuleConfigInterface;
  */
 class MoneiGoogleApplePaymentModuleConfig implements MoneiGoogleApplePaymentModuleConfigInterface
 {
-    /** Scope configuration. */
+    /**
+     * Scope configuration.
+     * @var ScopeConfigInterface
+     */
     private ScopeConfigInterface $scopeConfig;
 
     /**
@@ -35,6 +38,12 @@ class MoneiGoogleApplePaymentModuleConfig implements MoneiGoogleApplePaymentModu
         $this->scopeConfig = $scopeConfig;
     }
 
+    /**
+     * Check if the Monei Google Pay and Apple Pay payment methods are enabled.
+     *
+     * @param int|null $storeId Store ID to check configuration for
+     * @return bool True if enabled, false otherwise
+     */
     public function isEnabled(?int $storeId = null): bool
     {
         return (bool) $this->scopeConfig->getValue(
@@ -44,6 +53,12 @@ class MoneiGoogleApplePaymentModuleConfig implements MoneiGoogleApplePaymentModu
         );
     }
 
+    /**
+     * Get the title for the Monei Google Pay and Apple Pay payment methods.
+     *
+     * @param int|null $storeId Store ID to get configuration for
+     * @return string Payment method title
+     */
     public function getTitle(?int $storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
@@ -53,6 +68,12 @@ class MoneiGoogleApplePaymentModuleConfig implements MoneiGoogleApplePaymentModu
         );
     }
 
+    /**
+     * Get the Google Pay specific title.
+     *
+     * @param int|null $storeId Store ID to get configuration for
+     * @return string Google Pay title
+     */
     public function getGoogleTitle(?int $storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
@@ -62,6 +83,12 @@ class MoneiGoogleApplePaymentModuleConfig implements MoneiGoogleApplePaymentModu
         );
     }
 
+    /**
+     * Get the Apple Pay specific title.
+     *
+     * @param int|null $storeId Store ID to get configuration for
+     * @return string Apple Pay title
+     */
     public function getAppleTitle(?int $storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
@@ -71,6 +98,12 @@ class MoneiGoogleApplePaymentModuleConfig implements MoneiGoogleApplePaymentModu
         );
     }
 
+    /**
+     * Check if payment is restricted to specific countries.
+     *
+     * @param int|null $storeId Store ID to get configuration for
+     * @return bool True if restricted to specific countries, false otherwise
+     */
     public function isAllowSpecific(?int $storeId = null): bool
     {
         return (bool) $this->scopeConfig->getValue(
@@ -80,6 +113,12 @@ class MoneiGoogleApplePaymentModuleConfig implements MoneiGoogleApplePaymentModu
         );
     }
 
+    /**
+     * Get comma-separated list of specific country codes allowed for payment.
+     *
+     * @param int|null $storeId Store ID to get configuration for
+     * @return string Comma-separated list of country codes
+     */
     public function getSpecificCountries(?int $storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
@@ -89,6 +128,12 @@ class MoneiGoogleApplePaymentModuleConfig implements MoneiGoogleApplePaymentModu
         );
     }
 
+    /**
+     * Get the sort order for the payment method.
+     *
+     * @param int|null $storeId Store ID to get configuration for
+     * @return int Sort order value
+     */
     public function getSortOrder(?int $storeId = null): int
     {
         return (int) $this->scopeConfig->getValue(
@@ -98,6 +143,12 @@ class MoneiGoogleApplePaymentModuleConfig implements MoneiGoogleApplePaymentModu
         );
     }
 
+    /**
+     * Get the JSON style configuration for the payment method.
+     *
+     * @param int|null $storeId Store ID to get configuration for
+     * @return array Style configuration as an array
+     */
     public function getJsonStyle(?int $storeId = null): array
     {
         $result = (string) $this->scopeConfig->getValue(

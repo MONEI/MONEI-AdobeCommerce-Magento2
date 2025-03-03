@@ -17,6 +17,39 @@ return $config->setRules([
     'no_unused_imports' => true,
     'ordered_imports' => true,
 
+    // Line length configuration
+    'single_line_comment_style' => true,
+    'align_multiline_comment' => true,
+    'binary_operator_spaces' => true,
+    'concat_space' => ['spacing' => 'one'],
+    'blank_line_before_statement' => true,
+    'list_syntax' => ['syntax' => 'short'],
+    'linebreak_after_opening_tag' => true,
+    'lowercase_cast' => true,
+    'magic_constant_casing' => true,
+    'magic_method_casing' => true,
+    'no_extra_blank_lines' => true,
+    'native_function_casing' => true,
+    'native_function_type_declaration_casing' => true,
+    'no_alternative_syntax' => true,
+    'no_blank_lines_after_class_opening' => true,
+    'no_leading_import_slash' => true,
+    'no_trailing_comma_in_singleline_array' => true,
+    'no_unneeded_control_parentheses' => true,
+    'no_useless_else' => true,
+    'no_whitespace_in_blank_line' => true,
+    'normalize_index_brace' => true,
+
+    // The following rule fixes line length issues
+    'heredoc_indentation' => true,
+    'method_argument_space' => ['on_multiline' => 'ensure_fully_multiline'],
+    'method_chaining_indentation' => true,
+    'multiline_whitespace_before_semicolons' => ['strategy' => 'new_line_for_chained_calls'],
+    'no_multiline_whitespace_around_double_arrow' => true,
+    'no_spaces_around_offset' => true,
+    'return_assignment' => true,
+    'whitespace_after_comma_in_array' => true,
+
     // DocBlock generation and formatting rules - More aggressive settings
     'phpdoc_add_missing_param_annotation' => ['only_untyped' => false], // Add missing @param annotations and also for typed parameters
     'phpdoc_align' => false,

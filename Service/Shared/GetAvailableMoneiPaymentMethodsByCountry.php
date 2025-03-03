@@ -13,7 +13,10 @@ namespace Monei\MoneiPayment\Service\Shared;
  */
 class GetAvailableMoneiPaymentMethodsByCountry
 {
-    /** Service to get all available Monei payment methods. */
+    /**
+     * Service to get all available Monei payment methods.
+     * @var GetAvailableMoneiPaymentMethods
+     */
     private GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods;
 
     /**
@@ -38,8 +41,7 @@ class GetAvailableMoneiPaymentMethodsByCountry
         $allPaymentMethods = $this->getAvailableMoneiPaymentMethods->execute();
         $metadataPaymentMethods = $this->getAvailableMoneiPaymentMethods->getMetadataPaymentMethods();
         foreach ($allPaymentMethods as $index => $paymentMethod) {
-            if (isset($metadataPaymentMethods[$paymentMethod], $metadataPaymentMethods[$paymentMethod]['countries'])
-            ) {
+            if (isset($metadataPaymentMethods[$paymentMethod], $metadataPaymentMethods[$paymentMethod]['countries'])) {
                 $countriesAvailable = $metadataPaymentMethods[$paymentMethod]['countries'];
                 if (!\in_array($countryId, $countriesAvailable, true)) {
                     unset($allPaymentMethods[$index]);

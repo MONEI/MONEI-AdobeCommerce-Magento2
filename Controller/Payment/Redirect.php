@@ -33,6 +33,14 @@ class Redirect implements ActionInterface
     /** @var GetMoneiPaymentCodesByMagentoPaymentCodeRedirect */
     private $getMoneiPaymentCodesByMagentoPaymentCodeRedirect;
 
+    /**
+     * Constructor
+     *
+     * @param Session $checkoutSession
+     * @param CreatePaymentInterface $createPayment
+     * @param MagentoRedirect $resultRedirectFactory
+     * @param GetMoneiPaymentCodesByMagentoPaymentCodeRedirect $getMoneiPaymentCodesByMagentoPaymentCodeRedirect
+     */
     public function __construct(
         Session $checkoutSession,
         CreatePaymentInterface $createPayment,
@@ -45,6 +53,11 @@ class Redirect implements ActionInterface
         $this->getMoneiPaymentCodesByMagentoPaymentCodeRedirect = $getMoneiPaymentCodesByMagentoPaymentCodeRedirect;
     }
 
+    /**
+     * Execute action to create payment and redirect to Monei
+     *
+     * @return MagentoRedirect
+     */
     public function execute()
     {
         /**
@@ -54,11 +67,11 @@ class Redirect implements ActionInterface
 
         $data = [
             'amount' => $order->getBaseGrandTotal() * 100,
-            'orderId' => (string) $order->getIncrementId(),
             'currency' => $order->getBaseCurrencyCode(),
+            'orderId' => $order->getIncrementId(),
             'customer' => $this->getCustomerDetails($order),
             'billingDetails' => $this->getAddressDetails($order->getBillingAddress()),
-            'shippingDetails' => $this->getAddressDetails($order->getShippingAddress()),
+            'shippingDetails' => $this->getAddressDetails($order->getBillingAddress()),
         ];
 
         $allowedPaymentMethods = $this->getAllowedPaymentMethods($order);
@@ -80,6 +93,8 @@ class Redirect implements ActionInterface
     }
 
     /**
+     * Get customer details from order for Monei payment
+     *
      * @param OrderInterface $order
      *
      * @return array|string[]
@@ -92,12 +107,14 @@ class Redirect implements ActionInterface
 
         return [
             'email' => $order->getCustomerEmail(),
-            'name' => $order->getCustomerFirstname().' '.$order->getCustomerLastname(),
+            'name' => $order->getCustomerFirstname() . ' ' . $order->getCustomerLastname(),
             'phone' => $this->getCustomerPhone($order),
         ];
     }
 
     /**
+     * Get customer phone number from order
+     *
      * @param OrderInterface $order
      *
      * @return string
@@ -112,6 +129,8 @@ class Redirect implements ActionInterface
     }
 
     /**
+     * Get billing address details for Monei payment
+     *
      * @param Address $address
      *
      * @return array|void
@@ -124,7 +143,7 @@ class Redirect implements ActionInterface
 
         $streetAddress = $address->getStreet();
         $moneiAddress = [
-            'name' => $address->getFirstname().' '.$address->getLastname(),
+            'name' => $address->getFirstname() . ' ' . $address->getLastname(),
             'email' => $address->getEmail(),
             'phone' => $address->getTelephone(),
             'company' => ($address->getCompany() ?? ''),
@@ -149,6 +168,12 @@ class Redirect implements ActionInterface
         return $moneiAddress;
     }
 
+    /**
+     * Get allowed payment methods for the order
+     *
+     * @param OrderInterface $order
+     * @return array
+     */
     private function getAllowedPaymentMethods(OrderInterface $order): array
     {
         $payment = $order->getPayment();

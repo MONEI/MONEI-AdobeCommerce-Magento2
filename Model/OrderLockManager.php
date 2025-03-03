@@ -13,6 +13,10 @@ use Monei\MoneiPayment\Api\OrderLockManagerInterface;
 
 class OrderLockManager implements OrderLockManagerInterface
 {
+    /**
+     * Lock manager for handling order locks.
+     * @var LockManagerInterface
+     */
     private LockManagerInterface $lockManager;
 
     /**
@@ -73,6 +77,6 @@ class OrderLockManager implements OrderLockManagerInterface
      */
     private function getLockName(string $incrementId): string
     {
-        return self::ORDER_LOCKED_PREFIX.$incrementId;
+        return self::ORDER_LOCKED_PREFIX . $incrementId;
     }
 }

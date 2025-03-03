@@ -15,14 +15,14 @@ use Monolog\Logger as MonologLogger;
 class Handler extends Base
 {
     /**
-     * File name.
+     * Path to the log file for Monei payment operations.
      *
      * @var string
      */
     protected $fileName = Logger::LOG_FILE_PATH;
 
     /**
-     * Logger type.
+     * Logging level for Monei payment operations.
      *
      * @var int
      */

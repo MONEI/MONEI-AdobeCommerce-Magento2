@@ -15,7 +15,9 @@ class EnableCard extends Enable
     protected const PAYMENT_METHOD_CODE = Monei::CARD_CODE;
 
     /**
-     * @return EnableBizum
+     * Process value before saving.
+     *
+     * @return EnableCard
      */
     public function beforeSave(): EnableCard
     {
@@ -31,6 +33,11 @@ class EnableCard extends Enable
         return parent::beforeSave();
     }
 
+    /**
+     * Check if payment method is available in Monei account
+     *
+     * @return bool
+     */
     private function isPaymentAvailable(): bool
     {
         $availablePaymentMethods = $this->getAvailablePaymentMethods();

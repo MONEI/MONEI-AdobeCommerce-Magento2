@@ -44,6 +44,12 @@ class SetOrderStatusAndState implements SetOrderStatusAndStateInterface
         $this->moduleConfig = $moduleConfig;
     }
 
+    /**
+     * Set order status and state based on payment data.
+     *
+     * @param array $data Payment data containing orderId and status
+     * @return bool True if the order status was updated successfully
+     */
     public function execute(array $data): bool
     {
         /** @var OrderInterface $order */

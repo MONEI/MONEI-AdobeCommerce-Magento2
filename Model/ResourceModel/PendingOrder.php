@@ -17,6 +17,11 @@ class PendingOrder extends AbstractDb
 {
     public const TABLE_NAME = 'pending_monei_orders';
 
+    /**
+     * Initialize resource model
+     *
+     * @return void
+     */
     protected function _construct(): void
     {
         $this->_init(self::TABLE_NAME, 'entity_id');

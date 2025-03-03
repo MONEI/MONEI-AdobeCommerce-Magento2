@@ -21,14 +21,34 @@ use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
  */
 class GenerateInvoice implements GenerateInvoiceInterface
 {
+    /**
+     * Order factory for creating order instances.
+     * @var OrderInterfaceFactory
+     */
     private OrderInterfaceFactory $orderFactory;
 
+    /**
+     * Transaction factory for managing database transactions.
+     * @var TransactionFactory
+     */
     private TransactionFactory $transactionFactory;
 
+    /**
+     * Order lock manager service.
+     * @var OrderLockManagerInterface
+     */
     private OrderLockManagerInterface $orderLockManager;
 
+    /**
+     * Service for creating vault payments.
+     * @var CreateVaultPayment
+     */
     private CreateVaultPayment $createVaultPayment;
 
+    /**
+     * Logger for payment-related operations.
+     * @var Logger
+     */
     private Logger $logger;
 
     /**
@@ -54,6 +74,15 @@ class GenerateInvoice implements GenerateInvoiceInterface
         $this->logger = $logger;
     }
 
+    /**
+     * Generate an invoice for the specified order.
+     *
+     * Takes payment data including orderId and creates an invoice for that order.
+     * Handles payment processing, transaction management, and vault payment creation if needed.
+     *
+     * @param array $data Payment data containing orderId and other payment details
+     * @return void
+     */
     public function execute(array $data): void
     {
         $incrementId = $data['orderId'];

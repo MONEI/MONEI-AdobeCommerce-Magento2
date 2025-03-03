@@ -13,7 +13,7 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\ActionInterface;
 use Magento\Framework\Controller\Result\Redirect as MagentoRedirect;
 use Magento\Framework\Message\ManagerInterface;
-use Magento\Sales\Api\Data\OrderInterfaceFactory;
+use Magento\Sales\Api\Data\OrderInterface;
 use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
 
 /**
@@ -21,7 +21,11 @@ use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
  */
 class Fail implements ActionInterface
 {
-    /** @var OrderInterfaceFactory */
+    /**
+     * Factory for creating order objects
+     *
+     * @var \Magento\Sales\Api\Data\OrderInterfaceFactory
+     */
     protected $orderFactory;
 
     /** @var Session */
@@ -39,6 +43,16 @@ class Fail implements ActionInterface
     /** @var MagentoRedirect */
     private $resultRedirectFactory;
 
+    /**
+     * Constructor for Fail controller.
+     *
+     * @param Context $context
+     * @param Session $checkoutSession
+     * @param OrderInterfaceFactory $orderFactory
+     * @param SetOrderStatusAndStateInterface $setOrderStatusAndStateService
+     * @param ManagerInterface $messageManager
+     * @param MagentoRedirect $resultRedirectFactory
+     */
     public function __construct(
         Context $context,
         Session $checkoutSession,
@@ -55,6 +69,11 @@ class Fail implements ActionInterface
         $this->resultRedirectFactory = $resultRedirectFactory;
     }
 
+    /**
+     * Execute action for payment failure handling.
+     *
+     * @return MagentoRedirect
+     */
     public function execute()
     {
         $data = $this->context->getRequest()->getParams();

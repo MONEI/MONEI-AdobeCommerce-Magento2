@@ -28,6 +28,15 @@ class CreatePayment extends AbstractService implements CreatePaymentInterface
         'shippingDetails',
     ];
 
+    /**
+     * Execute a payment creation request to the Monei API.
+     *
+     * Creates a new payment by sending a request to the Monei payment API.
+     * The payment can be configured for authorization or capture based on the module configuration.
+     *
+     * @param array $data Payment data including amount, currency, orderId, customer and address details
+     * @return array Response from the API with payment creation results or error details
+     */
     public function execute(array $data): array
     {
         $this->logger->debug(__METHOD__);

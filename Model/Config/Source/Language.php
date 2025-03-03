@@ -32,6 +32,11 @@ class Language implements OptionSourceInterface
         'ru' => 'Russian',
     ];
 
+    /**
+     * Get options for language dropdown
+     *
+     * @return array
+     */
     public function toOptionArray(): array
     {
         $options = [];

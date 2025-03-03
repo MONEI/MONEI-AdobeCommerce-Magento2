@@ -32,6 +32,13 @@ class RefundPayment extends AbstractService implements RefundPaymentInterface
         'requested_by_customer',
     ];
 
+    /**
+     * Execute payment refund request.
+     *
+     * @param array $data Payment data including paymentId, refundReason, and amount
+     * @return array Response from the Monei API
+     * @throws LocalizedException If validation fails
+     */
     public function execute(array $data): array
     {
         $this->logger->debug(__METHOD__);
@@ -56,7 +63,7 @@ class RefundPayment extends AbstractService implements RefundPaymentInterface
 
         $client = $this->createClient($storeId);
         $response = $client->post(
-            'payments/'.$data['paymentId'].'/'.self::METHOD,
+            'payments/' . $data['paymentId'] . '/' . self::METHOD,
             [
                 'headers' => $this->getHeaders($storeId),
                 'json' => $requestBody,

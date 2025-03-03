@@ -21,6 +21,12 @@ class RefundPaymentCommand extends Command
     /** @var RefundPaymentInterface */
     private $service;
 
+    /**
+     * Constructor for RefundPaymentCommand.
+     *
+     * @param RefundPaymentInterface $service Service for refunding payments
+     * @param string|null $name Command name
+     */
     public function __construct(
         RefundPaymentInterface $service,
         ?string $name = null
@@ -29,6 +35,11 @@ class RefundPaymentCommand extends Command
         parent::__construct($name);
     }
 
+    /**
+     * Configure the command.
+     *
+     * @return void
+     */
     protected function configure()
     {
         $this->setName('monei:moneiws:refundpayment');
@@ -37,6 +48,13 @@ class RefundPaymentCommand extends Command
         parent::configure();
     }
 
+    /**
+     * Execute the command to test refund payment functionality.
+     *
+     * @param InputInterface $input Command input
+     * @param OutputInterface $output Command output
+     * @return int Exit code
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $data = [
@@ -47,5 +65,7 @@ class RefundPaymentCommand extends Command
         $result = $this->service->execute($data);
         $output->writeln('Response:');
         $output->writeln(json_encode($result, JSON_PRETTY_PRINT));
+
+        return 0;
     }
 }

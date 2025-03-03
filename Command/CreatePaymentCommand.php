@@ -21,6 +21,12 @@ class CreatePaymentCommand extends Command
     /** @var CreatePaymentInterface */
     private $service;
 
+    /**
+     * Constructor for CreatePaymentCommand.
+     *
+     * @param CreatePaymentInterface $service Service for creating payments
+     * @param string|null $name Command name
+     */
     public function __construct(
         CreatePaymentInterface $service,
         ?string $name = null
@@ -29,6 +35,11 @@ class CreatePaymentCommand extends Command
         parent::__construct($name);
     }
 
+    /**
+     * Configure the command.
+     *
+     * @return void
+     */
     protected function configure()
     {
         $this->setName('monei:moneiws:createpayment');
@@ -37,6 +48,13 @@ class CreatePaymentCommand extends Command
         parent::configure();
     }
 
+    /**
+     * Execute the command to test payment creation functionality.
+     *
+     * @param InputInterface $input Command input
+     * @param OutputInterface $output Command output
+     * @return int Exit code
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $data = [
@@ -80,5 +98,7 @@ class CreatePaymentCommand extends Command
         $result = $this->service->execute($data);
         $output->writeln('Response:');
         $output->writeln(json_encode($result, JSON_PRETTY_PRINT));
+
+        return 0;
     }
 }

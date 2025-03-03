@@ -8,12 +8,16 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Model\Service;
 
-use Magento\Framework\DB\TransactionFactory;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Phrase;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface as TransactionBuilder;
+use Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\CollectionFactory as TransactionCollectionFactory;
+use Magento\Framework\DB\Transaction;
+use Magento\Framework\DB\TransactionFactory;
 use Monei\MoneiPayment\Api\OrderLockManagerInterface;
-use Monei\MoneiPayment\Service\Logger;
+use Monei\MoneiPayment\Logger\Logger;
 
 /**
  * Service for processing orders with proper transaction and locking.
@@ -32,6 +36,14 @@ class OrderProcessor
     /** @var Logger */
     private $logger;
 
+    /**
+     * Constructor
+     *
+     * @param OrderLockManagerInterface $orderLockManager
+     * @param OrderRepositoryInterface $orderRepository
+     * @param TransactionFactory $transactionFactory
+     * @param Logger $logger
+     */
     public function __construct(
         OrderLockManagerInterface $orderLockManager,
         OrderRepositoryInterface $orderRepository,
@@ -45,7 +57,8 @@ class OrderProcessor
     }
 
     /**
-     * Execute a callback function with a lock to prevent race conditions
+     * Execute a callback function with a lock to prevent race conditions.
+     *
      * This method ensures the lock is always released, even if an exception occurs.
      *
      * @param OrderInterface $order
@@ -60,7 +73,7 @@ class OrderProcessor
         $incrementId = $order->getIncrementId();
 
         if (!$incrementId) {
-            throw new LocalizedException(__('Cannot process order without increment ID'));
+            throw new LocalizedException(new Phrase('Cannot process order without increment ID'));
         }
 
         // Check if order is already locked

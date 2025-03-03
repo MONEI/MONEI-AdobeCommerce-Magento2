@@ -17,6 +17,11 @@ use Monei\MoneiPayment\Model\ResourceModel\PendingOrder as PendingOrderResource;
  */
 class Collection extends AbstractCollection
 {
+    /**
+     * Initialize resource model
+     *
+     * @return void
+     */
     protected function _construct(): void
     {
         $this->_init(PendingOrder::class, PendingOrderResource::class);

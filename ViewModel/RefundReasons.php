@@ -19,6 +19,11 @@ class RefundReasons implements ArgumentInterface
     /** @var CancelReason */
     private $reasonsSource;
 
+    /**
+     * Constructor
+     *
+     * @param CancelReason $reasonsSource
+     */
     public function __construct(
         CancelReason $reasonsSource
     ) {

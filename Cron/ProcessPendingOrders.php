@@ -48,6 +48,18 @@ class ProcessPendingOrders
     /** @var CancelPaymentInterface */
     private $cancelPaymentService;
 
+    /**
+     * Constructor.
+     *
+     * @param CollectionFactory $collectionFactory Factory for creating pending order collections
+     * @param OrderInterfaceFactory $orderFactory Factory for creating orders
+     * @param GetPaymentInterface $getPaymentService Service for retrieving payment details
+     * @param GenerateInvoiceInterface $generateInvoiceService Service for generating invoices
+     * @param SetOrderStatusAndStateInterface $setOrderStatusAndStateService Service for setting order status
+     * @param PendingOrderResource $pendingOrderResource Resource model for pending orders
+     * @param DateTime $date Date utility
+     * @param CancelPaymentInterface $cancelPaymentService Service for canceling payments
+     */
     public function __construct(
         CollectionFactory $collectionFactory,
         OrderInterfaceFactory $orderFactory,
@@ -69,7 +81,12 @@ class ProcessPendingOrders
     }
 
     /**
-     * Set order status if order is succeeded or canceled in Monei or cancel it if order is 7 days or older.
+     * Execute cron job to process pending orders.
+     *
+     * Processes orders with Monei payment method that are in a pending state.
+     * Checks payment status and updates order accordingly.
+     *
+     * @return void
      */
     public function execute(): void
     {

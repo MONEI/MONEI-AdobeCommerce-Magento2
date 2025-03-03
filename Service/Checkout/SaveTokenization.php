@@ -22,10 +22,16 @@ use Monei\MoneiPayment\Api\Service\Checkout\SaveTokenizationInterface;
  */
 class SaveTokenization implements SaveTokenizationInterface
 {
-    /** Quote repository for managing quote data. */
+    /**
+     * Quote repository for managing quote data.
+     * @var CartRepositoryInterface
+     */
     private CartRepositoryInterface $quoteRepository;
 
-    /** Checkout session to access current quote. */
+    /**
+     * Checkout session to access current quote.
+     * @var Session
+     */
     private Session $checkoutSession;
 
     /**

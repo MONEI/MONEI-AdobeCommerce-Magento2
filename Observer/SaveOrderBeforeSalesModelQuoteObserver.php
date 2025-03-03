@@ -17,13 +17,29 @@ use Monei\MoneiPayment\Model\Payment\Monei;
 
 class SaveOrderBeforeSalesModelQuoteObserver implements ObserverInterface
 {
+    /**
+     * Service for copying data between objects
+     *
+     * @var Copy
+     */
     private Copy $objectCopyService;
 
+    /**
+     * Constructor
+     *
+     * @param Copy $objectCopyService
+     */
     public function __construct(Copy $objectCopyService)
     {
         $this->objectCopyService = $objectCopyService;
     }
 
+    /**
+     * Execute observer to copy payment data from quote to order
+     *
+     * @param Observer $observer
+     * @return SaveOrderBeforeSalesModelQuoteObserver
+     */
     public function execute(Observer $observer): SaveOrderBeforeSalesModelQuoteObserver
     {
         // @var Order $order

@@ -21,6 +21,12 @@ class CancelPaymentCommand extends Command
     /** @var CancelPaymentInterface */
     private $service;
 
+    /**
+     * Constructor.
+     *
+     * @param CancelPaymentInterface $service Service for canceling payments
+     * @param string|null $name Command name
+     */
     public function __construct(
         CancelPaymentInterface $service,
         ?string $name = null
@@ -29,6 +35,11 @@ class CancelPaymentCommand extends Command
         parent::__construct($name);
     }
 
+    /**
+     * Configure the command.
+     *
+     * @return void
+     */
     protected function configure()
     {
         $this->setName('monei:moneiws:cancelpayment');
@@ -37,6 +48,13 @@ class CancelPaymentCommand extends Command
         parent::configure();
     }
 
+    /**
+     * Execute the command.
+     *
+     * @param InputInterface $input Command input
+     * @param OutputInterface $output Command output
+     * @return int Exit code
+     */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $data = [

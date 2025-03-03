@@ -37,7 +37,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     private const SOURCE = 'callback';
 
     /**
-     * Error message.
+     * Stores error messages that occur during payment processing.
      *
      * @var string
      */
@@ -73,6 +73,20 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     /** @var PaymentProcessor */
     private $paymentProcessor;
 
+    /**
+     * Constructor.
+     *
+     * @param Context $context
+     * @param SerializerInterface $serializer
+     * @param MoneiPaymentModuleConfigInterface $moduleConfig
+     * @param Logger $logger
+     * @param StoreManagerInterface $storeManager
+     * @param GenerateInvoiceInterface $generateInvoiceService
+     * @param SetOrderStatusAndStateInterface $setOrderStatusAndStateService
+     * @param MagentoRedirect $resultRedirectFactory
+     * @param JsonFactory $resultJsonFactory
+     * @param PaymentProcessor $paymentProcessor
+     */
     public function __construct(
         Context $context,
         SerializerInterface $serializer,
@@ -97,6 +111,11 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         $this->paymentProcessor = $paymentProcessor;
     }
 
+    /**
+     * Execute action based on request and return result.
+     *
+     * @return ResultInterface
+     */
     public function execute()
     {
         /** @var Json $result */
@@ -110,7 +129,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
 
             if (!isset($body['orderId'], $body['status'], $body['id'])) {
                 $this->logger->error('Callback request failed: Missing required parameters');
-                $this->logger->error('Request body: '.$content);
+                $this->logger->error('Request body: ' . $content);
                 $responseData = ['success' => false, 'message' => 'Missing required parameters'];
                 $responseCode = 400;
 
@@ -129,8 +148,8 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
                 $responseData['info'] = 'Payment processing was not completed';
             }
         } catch (\Exception $e) {
-            $this->logger->critical('Error in Callback controller: '.$e->getMessage());
-            $this->logger->critical('Request body: '.($content ?? 'not available'));
+            $this->logger->critical('Error in Callback controller: ' . $e->getMessage());
+            $this->logger->critical('Request body: ' . ($content ?? 'not available'));
             $responseData = ['success' => false, 'message' => $e->getMessage()];
             $responseCode = 500;
         }
@@ -138,6 +157,12 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         return $result->setHttpResponseCode($responseCode)->setData($responseData);
     }
 
+    /**
+     * Create CSRF validation exception.
+     *
+     * @param RequestInterface $request
+     * @return InvalidRequestException|null
+     */
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
     {
         /** @var ResponseHttp $response */
@@ -148,6 +173,12 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         return new InvalidRequestException($response);
     }
 
+    /**
+     * Validate for CSRF.
+     *
+     * @param RequestInterface $request
+     * @return bool|null
+     */
     public function validateForCsrf(RequestInterface $request): ?bool
     {
         $header = $request->getHeader('MONEI-Signature');
@@ -156,15 +187,15 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         }
         $body = $request->getContent();
         $this->logger->debug('Callback request received.');
-        $this->logger->debug('Header:'.$this->serializer->serialize($header));
-        $this->logger->debug('Body:'.$body);
+        $this->logger->debug('Header:' . $this->serializer->serialize($header));
+        $this->logger->debug('Body:' . $body);
 
         try {
             $this->verifySignature($body, $header);
         } catch (\Exception $e) {
             $this->errorMessage = $e->getMessage();
             $this->logger->critical($e->getMessage());
-            $this->logger->critical('Request body: '.($body ?? 'not available'));
+            $this->logger->critical('Request body: ' . ($body ?? 'not available'));
 
             return false;
         }
@@ -182,7 +213,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
      */
     private function verifySignature(string $body, array $header): void
     {
-        $hmac = hash_hmac('SHA256', $header['t'].'.'.$body, $this->getApiKey());
+        $hmac = hash_hmac('SHA256', $header['t'] . '.' . $body, $this->getApiKey());
 
         if ($hmac !== $header['v1']) {
             throw new LocalizedException(__('Callback signature verification failed'));

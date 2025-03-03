@@ -17,15 +17,30 @@ use Monei\MoneiPayment\Api\Config\MoneiBizumPaymentModuleConfigInterface;
  */
 class MoneiBizumPaymentModuleConfig implements MoneiBizumPaymentModuleConfigInterface
 {
-    /** Scope configuration. */
+    /**
+     * Scope configuration for accessing store configuration values.
+     *
+     * @var ScopeConfigInterface
+     */
     private ScopeConfigInterface $scopeConfig;
 
+    /**
+     * Constructor for MoneiBizumPaymentModuleConfig.
+     *
+     * @param ScopeConfigInterface $scopeConfig The configuration interface for accessing store configuration values
+     */
     public function __construct(
         ScopeConfigInterface $scopeConfig
     ) {
         $this->scopeConfig = $scopeConfig;
     }
 
+    /**
+     * Check if the Monei Bizum payment method is enabled.
+     *
+     * @param int|null $storeId The store ID to check the configuration for
+     * @return bool True if the payment method is enabled, false otherwise
+     */
     public function isEnabled(?int $storeId = null): bool
     {
         return (bool) $this->scopeConfig->getValue(
@@ -35,6 +50,12 @@ class MoneiBizumPaymentModuleConfig implements MoneiBizumPaymentModuleConfigInte
         );
     }
 
+    /**
+     * Get the title of the Monei Bizum payment method.
+     *
+     * @param int|null $storeId The store ID to check the configuration for
+     * @return string The payment method title
+     */
     public function getTitle(?int $storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
@@ -44,6 +65,12 @@ class MoneiBizumPaymentModuleConfig implements MoneiBizumPaymentModuleConfigInte
         );
     }
 
+    /**
+     * Check if the payment method is restricted to specific countries.
+     *
+     * @param int|null $storeId The store ID to check the configuration for
+     * @return bool True if the payment method is restricted to specific countries
+     */
     public function isAllowSpecific(?int $storeId = null): bool
     {
         return (bool) $this->scopeConfig->getValue(
@@ -53,6 +80,12 @@ class MoneiBizumPaymentModuleConfig implements MoneiBizumPaymentModuleConfigInte
         );
     }
 
+    /**
+     * Get the list of specific countries where the payment method is available.
+     *
+     * @param int|null $storeId The store ID to check the configuration for
+     * @return string Comma-separated list of country codes
+     */
     public function getSpecificCountries(?int $storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
@@ -62,6 +95,12 @@ class MoneiBizumPaymentModuleConfig implements MoneiBizumPaymentModuleConfigInte
         );
     }
 
+    /**
+     * Get the sort order for the Monei Bizum payment method.
+     *
+     * @param int|null $storeId The store ID to check the configuration for
+     * @return int The sort order value
+     */
     public function getSortOrder(?int $storeId = null): int
     {
         return (int) $this->scopeConfig->getValue(
@@ -71,6 +110,12 @@ class MoneiBizumPaymentModuleConfig implements MoneiBizumPaymentModuleConfigInte
         );
     }
 
+    /**
+     * Get the JSON style configuration for the Monei Bizum payment method.
+     *
+     * @param int|null $storeId The store ID to check the configuration for
+     * @return array The JSON style configuration as an array
+     */
     public function getJsonStyle(?int $storeId = null): array
     {
         $result = (string) $this->scopeConfig->getValue(

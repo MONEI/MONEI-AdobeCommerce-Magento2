@@ -14,10 +14,25 @@ use Magento\Vault\Model\Ui\TokenUiComponentInterfaceFactory;
 use Magento\Vault\Model\Ui\TokenUiComponentProviderInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
 
+/**
+ * Provides UI components for saved card tokens in the Vault.
+ *
+ * This class creates UI components for displaying saved card information
+ * from the payment vault during checkout.
+ */
 class TokenUiComponentProvider implements TokenUiComponentProviderInterface
 {
+    /**
+     * Factory for creating token UI components.
+     * @var TokenUiComponentInterfaceFactory
+     */
     private TokenUiComponentInterfaceFactory $componentFactory;
 
+    /**
+     * Constructor for TokenUiComponentProvider.
+     *
+     * @param TokenUiComponentInterfaceFactory $componentFactory Factory for creating token UI components
+     */
     public function __construct(
         TokenUiComponentInterfaceFactory $componentFactory
     ) {
@@ -25,9 +40,13 @@ class TokenUiComponentProvider implements TokenUiComponentProviderInterface
     }
 
     /**
-     * @param PaymentTokenInterface $paymentToken
+     * Get component for rendering saved token during checkout.
      *
-     * @return TokenUiComponentInterface
+     * Creates a UI component that displays saved card information to the customer
+     * based on the token details stored in the vault.
+     *
+     * @param PaymentTokenInterface $paymentToken The saved payment token
+     * @return TokenUiComponentInterface Component used for token rendering
      */
     public function getComponentForToken(PaymentTokenInterface $paymentToken)
     {

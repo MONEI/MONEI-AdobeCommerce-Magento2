@@ -19,6 +19,11 @@ class Mode implements OptionSourceInterface
 
     public const MODE_PRODUCTION = 2;
 
+    /**
+     * Get array of options for payment mode configuration
+     *
+     * @return array Array of options: [['label' => string, 'value' => int]]
+     */
     public function toOptionArray(): array
     {
         return [

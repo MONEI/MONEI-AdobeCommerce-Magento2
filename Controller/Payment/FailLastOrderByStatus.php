@@ -20,10 +20,28 @@ use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
  */
 class FailLastOrderByStatus extends Fail
 {
+    /**
+     * Controller context.
+     * @var Context
+     */
     private Context $context;
 
+    /**
+     * Session manager for handling customer checkout data.
+     * @var Session
+     */
     private Session $checkoutSession;
 
+    /**
+     * Constructor for FailLastOrderByStatus controller.
+     *
+     * @param Context $context Application context
+     * @param Session $checkoutSession Checkout session
+     * @param OrderInterfaceFactory $orderFactory Order factory
+     * @param SetOrderStatusAndStateInterface $setOrderStatusAndStateService Service to set order status
+     * @param ManagerInterface $messageManager Message manager
+     * @param MagentoRedirect $resultRedirectFactory Redirect factory
+     */
     public function __construct(
         Context $context,
         Session $checkoutSession,
@@ -34,9 +52,25 @@ class FailLastOrderByStatus extends Fail
     ) {
         $this->checkoutSession = $checkoutSession;
         $this->context = $context;
-        parent::__construct($context, $checkoutSession, $orderFactory, $setOrderStatusAndStateService, $messageManager, $resultRedirectFactory);
+        parent::__construct(
+            $context,
+            $checkoutSession,
+            $orderFactory,
+            $setOrderStatusAndStateService,
+            $messageManager,
+            $resultRedirectFactory
+        );
     }
 
+    /**
+     * Execute the failure handling for the last real order.
+     *
+     * Takes the last real order from the checkout session and sets its
+     * order ID in the request parameters before delegating to the parent
+     * execute method for standard failure processing.
+     *
+     * @return MagentoRedirect Redirect to the appropriate page after failure handling
+     */
     public function execute()
     {
         $order = $this->checkoutSession->getLastRealOrder();

@@ -15,7 +15,9 @@ class EnableMBWay extends Enable
     protected const PAYMENT_METHOD_CODE = Monei::MBWAY_REDIRECT_CODE;
 
     /**
-     * @return EnableBizum
+     * Process value before saving.
+     *
+     * @return EnableMBWay
      */
     public function beforeSave(): EnableMBWay
     {
@@ -31,6 +33,11 @@ class EnableMBWay extends Enable
         return parent::beforeSave();
     }
 
+    /**
+     * Check if payment method is available in Monei account
+     *
+     * @return bool
+     */
     private function isPaymentAvailable(): bool
     {
         $availablePaymentMethods = $this->getAvailablePaymentMethods();

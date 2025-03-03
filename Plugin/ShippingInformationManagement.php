@@ -21,12 +21,37 @@ use Monei\MoneiPayment\Service\Shared\GetMoneiPaymentCodesByMagentoPaymentCode;
  */
 class ShippingInformationManagement
 {
+    /**
+     * Monei payment module configuration.
+     *
+     * @var MoneiPaymentModuleConfigInterface
+     */
     private MoneiPaymentModuleConfigInterface $moneiPaymentModuleConfig;
 
+    /**
+     * Service to get available Monei payment methods by country.
+     *
+     * @var GetAvailableMoneiPaymentMethodsByCountry
+     */
     private GetAvailableMoneiPaymentMethodsByCountry $getAvailableMoneiPaymentMethodsByCountry;
 
+    /**
+     * Service to get Monei payment codes by Magento payment code.
+     *
+     * @var GetMoneiPaymentCodesByMagentoPaymentCode
+     */
     private GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode;
 
+    /**
+     * Constructor for ShippingInformationManagement plugin.
+     *
+     * @param MoneiPaymentModuleConfigInterface $moneiPaymentModuleConfig
+     *     Configuration for Monei payment module
+     * @param GetAvailableMoneiPaymentMethodsByCountry $getAvailableMoneiPaymentMethodsByCountry
+     *     Service to get available payment methods by country
+     * @param GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode
+     *     Service to get Monei payment codes
+     */
     public function __construct(
         MoneiPaymentModuleConfigInterface $moneiPaymentModuleConfig,
         GetAvailableMoneiPaymentMethodsByCountry $getAvailableMoneiPaymentMethodsByCountry,

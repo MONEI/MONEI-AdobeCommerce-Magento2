@@ -12,6 +12,13 @@ use Magento\Quote\Api\Data\AddressInterface;
 
 class GetAddressDetailsByQuoteAddress
 {
+    /**
+     * Get formatted address details from quote address.
+     *
+     * @param AddressInterface $address Quote address to get details from
+     * @param string|null $email Optional email override
+     * @return array Formatted address details for Monei API
+     */
     public function execute(AddressInterface $address, ?string $email = null): array
     {
         if (!$address->getId()) {
@@ -20,7 +27,7 @@ class GetAddressDetailsByQuoteAddress
 
         $streetAddress = $address->getStreet();
         $moneiAddress = [
-            'name' => $address->getFirstname().' '.$address->getLastname(),
+            'name' => $address->getFirstname() . ' ' . $address->getLastname(),
             'email' => $address->getEmail() ?: $email,
             'phone' => $address->getTelephone(),
             'company' => ($address->getCompany() ?? ''),

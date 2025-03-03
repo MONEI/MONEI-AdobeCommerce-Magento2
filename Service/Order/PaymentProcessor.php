@@ -62,6 +62,21 @@ class PaymentProcessor
     /** @var Logger */
     private $logger;
 
+    /**
+     * Constructor.
+     *
+     * @param ProcessingLock $processingLock Lock manager for concurrent processing
+     * @param OrderRepositoryInterface $orderRepository Order repository
+     * @param OrderInterfaceFactory $orderFactory Order factory
+     * @param MoneiPaymentModuleConfigInterface $moduleConfig Module configuration
+     * @param GenerateInvoiceInterface $generateInvoiceService Invoice generation service
+     * @param SetOrderStatusAndStateInterface $setOrderStatusAndStateService Order status service
+     * @param PendingOrderFactory $pendingOrderFactory Pending order factory
+     * @param PendingOrderResource $pendingOrderResource Pending order resource
+     * @param OrderSender $orderSender Order email sender
+     * @param CreateVaultPayment $createVaultPayment Vault payment creator
+     * @param Logger $logger Logger instance
+     */
     public function __construct(
         ProcessingLock $processingLock,
         OrderRepositoryInterface $orderRepository,
@@ -117,59 +132,63 @@ class PaymentProcessor
         ));
 
         // Use the improved locking pattern to ensure locks are always released
-        return $this->processingLock->executeWithLock($orderId, $paymentId, function () use ($orderId, $paymentId, $status, $paymentData) {
-            try {
-                /** @var Order $order */
-                $order = $this->orderFactory->create()->loadByIncrementId($orderId);
+        return $this->processingLock->executeWithLock(
+            $orderId,
+            $paymentId,
+            function () use ($orderId, $paymentId, $status, $paymentData) {
+                try {
+                    /** @var Order $order */
+                    $order = $this->orderFactory->create()->loadByIncrementId($orderId);
 
-                if (!$order->getId()) {
-                    $this->logger->error(\sprintf('Order %s not found', $orderId));
+                    if (!$order->getId()) {
+                        $this->logger->error(\sprintf('Order %s not found', $orderId));
 
-                    return false;
-                }
-
-                // Check for idempotency - if this payment has already been processed, don't process it again
-                $existingPaymentId = $order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID);
-                if ($existingPaymentId === $paymentId) {
-                    $this->logger->info(\sprintf(
-                        'Payment %s for order %s has already been processed',
-                        $paymentId,
-                        $orderId
-                    ));
-
-                    // If the existing payment has the same status, we don't need to process it again
-                    if ($this->hasOrderCorrectStatus($order, $status)) {
-                        return true;
+                        return false;
                     }
-                }
 
-                // Process payment based on status
-                switch ($status) {
-                    case Monei::ORDER_STATUS_AUTHORIZED:
-                        return $this->processAuthorizedPayment($order, $paymentData);
-
-                    case Monei::ORDER_STATUS_SUCCEEDED:
-                        return $this->processSucceededPayment($order, $paymentData);
-
-                    default:
+                    // Check for idempotency - if this payment has already been processed, don't process it again
+                    $existingPaymentId = $order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID);
+                    if ($existingPaymentId === $paymentId) {
                         $this->logger->info(\sprintf(
-                            'Unhandled payment status %s for order %s',
-                            $status,
+                            'Payment %s for order %s has already been processed',
+                            $paymentId,
                             $orderId
                         ));
 
-                        return false;
-                }
-            } catch (\Exception $e) {
-                $this->logger->error(\sprintf(
-                    'Error processing payment for order %s: %s',
-                    $orderId,
-                    $e->getMessage()
-                ));
+                        // If the existing payment has the same status, we don't need to process it again
+                        if ($this->hasOrderCorrectStatus($order, $status)) {
+                            return true;
+                        }
+                    }
 
-                return false;
+                    // Process payment based on status
+                    switch ($status) {
+                        case Monei::ORDER_STATUS_AUTHORIZED:
+                            return $this->processAuthorizedPayment($order, $paymentData);
+
+                        case Monei::ORDER_STATUS_SUCCEEDED:
+                            return $this->processSucceededPayment($order, $paymentData);
+
+                        default:
+                            $this->logger->info(\sprintf(
+                                'Unhandled payment status %s for order %s',
+                                $status,
+                                $orderId
+                            ));
+
+                            return false;
+                    }
+                } catch (\Exception $e) {
+                    $this->logger->error(\sprintf(
+                        'Error processing payment for order %s: %s',
+                        $orderId,
+                        $e->getMessage()
+                    ));
+
+                    return false;
+                }
             }
-        });
+        );
     }
 
     /**

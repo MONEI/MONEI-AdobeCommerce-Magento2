@@ -16,19 +16,25 @@ use Monei\MoneiPayment\Model\Payment\Monei;
  */
 class IsEnabledGooglePayInMoneiAccount
 {
-    /** Google and Apple Payment module configuration. */
+    /**
+     * Google and Apple Payment module configuration.
+     * @var MoneiGoogleApplePaymentModuleConfigInterface
+     */
     private MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentModuleConfig;
 
-    /** Service to get available Monei payment methods. */
+    /**
+     * Service to get available Monei payment methods.
+     * @var GetAvailableMoneiPaymentMethods
+     */
     private GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods;
 
     /**
      * Constructor for IsEnabledGooglePayInMoneiAccount.
      *
      * @param MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentModuleConfig
-     *                                                                                          Configuration for Google and Apple Pay
-     * @param GetAvailableMoneiPaymentMethods              $getAvailableMoneiPaymentMethods
-     *                                                                                          Service to retrieve available payment methods
+     *        Configuration for Google and Apple Pay
+     * @param GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods
+     *        Service to retrieve available payment methods
      */
     public function __construct(
         MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentModuleConfig,

@@ -15,7 +15,9 @@ class EnableMultibanco extends Enable
     protected const PAYMENT_METHOD_CODE = Monei::MULTIBANCO_REDIRECT_CODE;
 
     /**
-     * @return EnableBizum
+     * Process value before saving.
+     *
+     * @return EnableMultibanco
      */
     public function beforeSave(): EnableMultibanco
     {
@@ -31,6 +33,11 @@ class EnableMultibanco extends Enable
         return parent::beforeSave();
     }
 
+    /**
+     * Check if payment method is available in Monei account
+     *
+     * @return bool
+     */
     private function isPaymentAvailable(): bool
     {
         $availablePaymentMethods = $this->getAvailablePaymentMethods();

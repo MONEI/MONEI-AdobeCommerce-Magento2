@@ -28,33 +28,73 @@ use Monei\MoneiPayment\Service\Shared\IsEnabledGooglePayInMoneiAccount;
  */
 class CheckoutConfigProvider implements ConfigProviderInterface
 {
-    /** URL builder. */
+    /**
+     * URL builder interface for creating URLs.
+     * @var UrlInterface
+     */
     private UrlInterface $urlBuilder;
 
-    /** Monei payment configuration. */
+    /**
+     * Configuration settings for the main Monei payment methods.
+     * @var MoneiPaymentModuleConfigInterface
+     */
     private MoneiPaymentModuleConfigInterface $moneiPaymentConfig;
 
-    /** Monei card payment configuration. */
+    /**
+     * Configuration settings specific to Monei card payments.
+     * @var MoneiCardPaymentModuleConfigInterface
+     */
     private MoneiCardPaymentModuleConfigInterface $moneiCardPaymentConfig;
 
-    /** Monei Google and Apple Pay configuration. */
+    /**
+     * Configuration settings for Google Pay and Apple Pay payment methods.
+     * @var MoneiGoogleApplePaymentModuleConfigInterface
+     */
     private MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentConfig;
 
-    /** Monei Bizum payment configuration. */
+    /**
+     * Configuration settings specific to Bizum payment method.
+     * @var MoneiBizumPaymentModuleConfigInterface
+     */
     private MoneiBizumPaymentModuleConfigInterface $moneiBizumPaymentModuleConfig;
 
-    /** Store manager. */
+    /**
+     * Interface for accessing store-related information.
+     * @var StoreManagerInterface
+     */
     private StoreManagerInterface $storeManager;
 
-    /** All Monei payment configurations. */
+    /**
+     * All Monei payment configurations.
+     * @var AllMoneiPaymentModuleConfigInterface
+     */
     private AllMoneiPaymentModuleConfigInterface $allMoneiPaymentModuleConfig;
 
-    /** Google Pay availability checker. */
+    /**
+     * Google Pay availability checker.
+     * @var IsEnabledGooglePayInMoneiAccount
+     */
     private IsEnabledGooglePayInMoneiAccount $isEnabledGooglePayInMoneiAccount;
 
-    /** Apple Pay availability checker. */
+    /**
+     * Apple Pay availability checker.
+     * @var IsEnabledApplePayInMoneiAccount
+     */
     private IsEnabledApplePayInMoneiAccount $isEnabledApplePayInMoneiAccount;
 
+    /**
+     * Constructor.
+     *
+     * @param UrlInterface $urlBuilder
+     * @param AllMoneiPaymentModuleConfigInterface $allMoneiPaymentModuleConfig
+     * @param MoneiPaymentModuleConfigInterface $moneiPaymentConfig
+     * @param MoneiCardPaymentModuleConfigInterface $moneiCardPaymentConfig
+     * @param MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentConfig
+     * @param MoneiBizumPaymentModuleConfigInterface $moneiBizumPaymentModuleConfig
+     * @param IsEnabledGooglePayInMoneiAccount $isEnabledGooglePayInMoneiAccount
+     * @param IsEnabledApplePayInMoneiAccount $isEnabledApplePayInMoneiAccount
+     * @param StoreManagerInterface $storeManager
+     */
     public function __construct(
         UrlInterface $urlBuilder,
         AllMoneiPaymentModuleConfigInterface $allMoneiPaymentModuleConfig,
@@ -79,6 +119,11 @@ class CheckoutConfigProvider implements ConfigProviderInterface
 
     /**
      * Get configuration for checkout.
+     *
+     * Provides configuration data needed for the checkout process.
+     * Includes account ID, API key, mode settings, and payment method configurations.
+     *
+     * @return array Configuration data for checkout
      */
     public function getConfig(): array
     {

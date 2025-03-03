@@ -23,14 +23,34 @@ use Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote;
  */
 class CreateLoggedMoneiPaymentInSite implements CreateLoggedMoneiPaymentInSiteInterface
 {
+    /**
+     * Quote repository for managing shopping carts.
+     * @var CartRepositoryInterface
+     */
     private CartRepositoryInterface $quoteRepository;
 
+    /**
+     * Checkout session for accessing current quote data.
+     * @var Session
+     */
     private Session $checkoutSession;
 
+    /**
+     * Service for retrieving customer details from quote.
+     * @var GetCustomerDetailsByQuote
+     */
     private GetCustomerDetailsByQuote $getCustomerDetailsByQuote;
 
+    /**
+     * Service for retrieving address details from quote address.
+     * @var GetAddressDetailsByQuoteAddress
+     */
     private GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress;
 
+    /**
+     * Service for creating Monei payments.
+     * @var CreatePayment
+     */
     private CreatePayment $createPayment;
 
     /**
@@ -57,10 +77,12 @@ class CreateLoggedMoneiPaymentInSite implements CreateLoggedMoneiPaymentInSiteIn
     }
 
     /**
-     * @param string $cartId
-     * @param string $email
+     * Creates a Monei payment for a logged-in customer's cart.
      *
-     * @throws LocalizedException
+     * @param string $cartId The ID of the customer's shopping cart
+     * @param string $email The customer's email address
+     * @return array The payment creation result containing payment details
+     * @throws LocalizedException If the quote cannot be retrieved or payment creation fails
      */
     public function execute(string $cartId, string $email): array
     {
@@ -89,7 +111,9 @@ class CreateLoggedMoneiPaymentInSite implements CreateLoggedMoneiPaymentInSiteIn
 
             return [$result];
         } catch (\Exception $e) {
-            throw new LocalizedException(new Phrase('An error occurred rendering the pay with card. Please try again later.'));
+            throw new LocalizedException(
+                new Phrase('An error occurred rendering the pay with card. Please try again later.')
+            );
         }
     }
 }

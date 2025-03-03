@@ -10,6 +10,10 @@ namespace Monei\MoneiPayment\Registry;
 
 class AccountId
 {
+    /**
+     * The Monei account identifier.
+     * @var string|null
+     */
     private ?string $accountId = null;
 
     /**

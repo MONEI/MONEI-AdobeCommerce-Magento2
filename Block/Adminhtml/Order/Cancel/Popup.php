@@ -27,6 +27,16 @@ class Popup extends Template
     /** @var CancelReason */
     private $source;
 
+    /**
+     * Constructor.
+     *
+     * @param Registry $registry Core registry
+     * @param CancelReason $source Cancel reason source model
+     * @param Context $context Block context
+     * @param array $data Additional data
+     * @param JsonHelper|null $jsonHelper JSON helper
+     * @param DirectoryHelper|null $directoryHelper Directory helper
+     */
     public function __construct(
         Registry $registry,
         CancelReason $source,

@@ -19,12 +19,23 @@ class Refund implements CommandInterface
     /** @var RefundPaymentInterface */
     private $refundPaymentService;
 
+    /**
+     * Constructor.
+     *
+     * @param RefundPaymentInterface $refundPaymentService Service for processing refunds
+     */
     public function __construct(
         RefundPaymentInterface $refundPaymentService
     ) {
         $this->refundPaymentService = $refundPaymentService;
     }
 
+    /**
+     * Execute refund command.
+     *
+     * @param array $commandSubject Command subject containing payment and amount
+     * @return void
+     */
     public function execute(array $commandSubject)
     {
         $payment = $commandSubject['payment']->getPayment();

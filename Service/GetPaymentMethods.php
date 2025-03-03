@@ -24,6 +24,7 @@ class GetPaymentMethods extends AbstractService implements GetPaymentMethodsInte
 {
     public const METHOD = 'payment-methods';
 
+    /** @var RegistryAccountId Registry for storing account ID */
     private RegistryAccountId $registryAccountId;
 
     /**
@@ -60,6 +61,11 @@ class GetPaymentMethods extends AbstractService implements GetPaymentMethodsInte
         $this->registryAccountId = $registryAccountId;
     }
 
+    /**
+     * Execute payment methods request.
+     *
+     * @return array List of available payment methods
+     */
     public function execute(): array
     {
         $this->logger->debug(__METHOD__);
@@ -71,12 +77,12 @@ class GetPaymentMethods extends AbstractService implements GetPaymentMethodsInte
             $client = $this->createClient();
 
             $this->logger->debug('------------------ START GET PAYMENT METHODS REQUEST -----------------');
-            $this->logger->debug('Account id = '.$accountId);
+            $this->logger->debug('Account id = ' . $accountId);
             $this->logger->debug('------------------- END GET PAYMENT METHODS REQUEST ------------------');
             $this->logger->debug('');
 
             $response = $client->get(
-                self::METHOD.'?accountId='.$accountId.'&'.time(),
+                self::METHOD . '?accountId=' . $accountId . '&' . time(),
                 [
                     'headers' => $this->getHeaders(),
                 ]

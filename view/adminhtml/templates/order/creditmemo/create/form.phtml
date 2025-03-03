@@ -24,9 +24,9 @@ $refundReasons = $refundReasonsViewModel->getData();
         <div class="admin__page-section-content">
             <?php if (!$_order->getIsVirtual()): ?>
                 <div class="admin__page-section-item order-payment-method">
-            <?php else: ?>
+                <?php else: ?>
                     <div class="admin__page-section-item order-payment-method order-payment-method-virtual">
-            <?php endif; ?>
+                    <?php endif; ?>
 
                     <?php /* Billing Address */ ?>
                     <div class="admin__page-section-item-title">
@@ -35,7 +35,9 @@ $refundReasons = $refundReasonsViewModel->getData();
                     <div class="admin__page-section-item-content">
                         <div class="order-payment-method-title"><?= $block->getChildHtml('order_payment') ?></div>
                         <div class="order-payment-currency">
-                            <?= $escaper->escapeHtml(__('The order was placed using %1.', $_order->getOrderCurrencyCode())) ?>
+                            <?= $escaper->escapeHtml(
+                                __('The order was placed using %1.', $_order->getOrderCurrencyCode())
+                            ) ?>
                         </div>
                         <div class="order-payment-additional">
                             <?= $block->getChildHtml('order_payment_additional') ?>
@@ -50,11 +52,15 @@ $refundReasons = $refundReasonsViewModel->getData();
                                 <span class="title"><?= $escaper->escapeHtml(__('Shipping Information')) ?></span>
                             </div>
                             <div class="admin__page-section-item-content shipping-description-wrapper">
-                                <div class="shipping-description-title"><?= $escaper->escapeHtml($_order->getShippingDescription()) ?></div>
+                                <div class="shipping-description-title">
+                                    <?= $escaper->escapeHtml($_order->getShippingDescription()) ?>
+                                </div>
                                 <div class="shipping-description-content">
                                     <?= $escaper->escapeHtml(__('Total Shipping Charges')) ?>:
 
-                                    <?php if ($block->helper(\Magento\Tax\Helper\Data::class)->displaySalesPriceInclTax($block->getSource()->getStoreId())): ?>
+                                    <?php if ($block->helper(\Magento\Tax\Helper\Data::class)
+                                        ->displaySalesPriceInclTax($block->getSource()->getStoreId())
+                                    ): ?>
                                         <?php $_excl = $block->displayShippingPriceInclTax($_order); ?>
                                     <?php else: ?>
                                         <?php $_excl = $block->displayPriceAttribute('shipping_amount', false, ' '); ?>
@@ -62,7 +68,10 @@ $refundReasons = $refundReasonsViewModel->getData();
                                     <?php $_incl = $block->displayShippingPriceInclTax($_order); ?>
 
                                     <?= /* @noEscape */ $_excl ?>
-                                    <?php if ($block->helper(\Magento\Tax\Helper\Data::class)->displaySalesBothPrices($block->getSource()->getStoreId()) && $_incl != $_excl): ?>
+                                    <?php if ($block->helper(\Magento\Tax\Helper\Data::class)
+                                        ->displaySalesBothPrices($block->getSource()->getStoreId())
+                                        && $_incl != $_excl
+                                    ): ?>
                                         (<?= $escaper->escapeHtml(__('Incl. Tax')) ?> <?= /* @noEscape */ $_incl ?>)
                                     <?php endif; ?>
                                 </div>

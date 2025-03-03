@@ -25,6 +25,18 @@ class ModuleVersion extends Value
     /** @var ResourceInterface */
     protected $moduleResource;
 
+    /**
+     * Constructor for ModuleVersion backend model.
+     *
+     * @param Context $context
+     * @param Registry $registry
+     * @param ScopeConfigInterface $config
+     * @param TypeListInterface $cacheTypeList
+     * @param ResourceInterface $moduleResource
+     * @param AbstractResource|null $resource
+     * @param AbstractDb|null $resourceCollection
+     * @param array $data
+     */
     public function __construct(
         Context $context,
         Registry $registry,
@@ -50,6 +62,8 @@ class ModuleVersion extends Value
 
     /**
      * Inject current installed module version as the config value.
+     *
+     * @return void
      */
     public function afterLoad()
     {
@@ -59,7 +73,9 @@ class ModuleVersion extends Value
     }
 
     /**
-     * @return false|string
+     * Get current installed module version
+     *
+     * @return string|false
      */
     public function getModuleVersion()
     {

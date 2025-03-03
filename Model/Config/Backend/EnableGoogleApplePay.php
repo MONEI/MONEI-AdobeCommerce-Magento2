@@ -15,7 +15,9 @@ class EnableGoogleApplePay extends Enable
     protected const PAYMENT_METHOD_CODE = Monei::GOOGLE_APPLE_CODE;
 
     /**
-     * @return EnableBizum
+     * Process value before saving.
+     *
+     * @return EnableGoogleApplePay
      */
     public function beforeSave(): EnableGoogleApplePay
     {
@@ -31,6 +33,11 @@ class EnableGoogleApplePay extends Enable
         return parent::beforeSave();
     }
 
+    /**
+     * Check if payment method is available in Monei account
+     *
+     * @return bool
+     */
     private function isPaymentAvailable(): bool
     {
         $availablePaymentMethods = $this->getAvailablePaymentMethods();

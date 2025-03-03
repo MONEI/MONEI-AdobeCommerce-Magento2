@@ -26,6 +26,12 @@ class SetOrderStatusAfterInvoice implements ObserverInterface
     /** @var MoneiPaymentModuleConfigInterface */
     private $moduleConfig;
 
+    /**
+     * Constructor
+     *
+     * @param OrderRepositoryInterface $orderRepository
+     * @param MoneiPaymentModuleConfigInterface $moduleConfig
+     */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
         MoneiPaymentModuleConfigInterface $moduleConfig
@@ -34,6 +40,12 @@ class SetOrderStatusAfterInvoice implements ObserverInterface
         $this->moduleConfig = $moduleConfig;
     }
 
+    /**
+     * Execute observer to set order status after invoice generation
+     *
+     * @param Observer $observer
+     * @return void
+     */
     public function execute(Observer $observer): void
     {
         $order = $observer->getOrder();

@@ -14,6 +14,7 @@ use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Phrase;
 use Magento\Sales\Api\CreditmemoManagementInterface;
 use Magento\Sales\Controller\Adminhtml\Order\CreditmemoLoader;
 use Magento\Sales\Helper\Data as SalesData;
@@ -38,12 +39,23 @@ class Save extends Action implements HttpPostActionInterface
     /** @var CreditmemoSender */
     protected $creditmemoSender;
 
-    /** @var ForwardFactory */
+    /**
+     * @var \Magento\Backend\Model\View\Result\ForwardFactory
+     */
     protected $resultForwardFactory;
 
     /** @var SalesData */
     private $salesData;
 
+    /**
+     * Constructor for Save controller.
+     *
+     * @param Action\Context $context
+     * @param CreditmemoLoader $creditmemoLoader
+     * @param CreditmemoSender $creditmemoSender
+     * @param ForwardFactory $resultForwardFactory
+     * @param SalesData|null $salesData
+     */
     public function __construct(
         Action\Context $context,
         CreditmemoLoader $creditmemoLoader,
@@ -59,8 +71,12 @@ class Save extends Action implements HttpPostActionInterface
     }
 
     /**
+     * Save creditmemo action.
+     *
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
+     *
+     * @return Redirect
      */
     public function execute(): Redirect
     {
@@ -79,7 +95,7 @@ class Save extends Action implements HttpPostActionInterface
             if ($creditmemo) {
                 if (!$creditmemo->isValidGrandTotal()) {
                     throw new LocalizedException(
-                        __('The credit memo\'s total must be positive.')
+                        new Phrase('The credit memo\'s total must be positive.')
                     );
                 }
 
@@ -101,7 +117,7 @@ class Save extends Action implements HttpPostActionInterface
                 if (isset($data['do_offline'])) {
                     if (!$data['do_offline'] && !empty($data['refund_customerbalance_return_enable'])) {
                         throw new LocalizedException(
-                            __('Cannot create online refund for Refund to Store Credit.')
+                            new Phrase('Cannot create online refund for Refund to Store Credit.')
                         );
                     }
                 }

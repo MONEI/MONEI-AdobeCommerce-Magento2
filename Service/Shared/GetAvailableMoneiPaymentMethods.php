@@ -15,13 +15,25 @@ use Monei\MoneiPayment\Api\Service\GetPaymentMethodsInterface;
  */
 class GetAvailableMoneiPaymentMethods
 {
-    /** Available payment methods. */
+    /**
+     * Collection of payment methods supported by Monei.
+     *
+     * @var array
+     */
     private array $availablePaymentMethods = [];
 
-    /** Metadata for payment methods. */
+    /**
+     * Metadata for payment methods.
+     *
+     * @var array
+     */
     private array $metadataPaymentMethods = [];
 
-    /** Payment methods service. */
+    /**
+     * Payment methods service.
+     *
+     * @var GetPaymentMethodsInterface
+     */
     private GetPaymentMethodsInterface $getPaymentMethodsService;
 
     /**

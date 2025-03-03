@@ -31,6 +31,13 @@ class CancelPayment extends AbstractService implements CancelPaymentInterface
         'requested_by_customer',
     ];
 
+    /**
+     * Execute payment cancellation request.
+     *
+     * @param array $data Payment data including paymentId and cancellationReason
+     * @return array Response from the Monei API
+     * @throws LocalizedException If validation fails
+     */
     public function execute(array $data): array
     {
         $this->logger->debug(__METHOD__);
@@ -54,7 +61,7 @@ class CancelPayment extends AbstractService implements CancelPaymentInterface
 
         try {
             $response = $client->post(
-                'payments/'.$data['paymentId'].'/'.self::METHOD,
+                'payments/' . $data['paymentId'] . '/' . self::METHOD,
                 [
                     'headers' => $this->getHeaders(),
                     'json' => $requestBody,

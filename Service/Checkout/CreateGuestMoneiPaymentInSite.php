@@ -18,24 +18,65 @@ use Monei\MoneiPayment\Api\Service\Checkout\CreateGuestMoneiPaymentInSiteInterfa
 use Monei\MoneiPayment\Service\CreatePayment;
 use Monei\MoneiPayment\Service\Quote\GetAddressDetailsByQuoteAddress;
 use Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote;
+use Magento\Framework\Phrase;
 
 /**
  * Monei create payment in site REST integration service class.
  */
 class CreateGuestMoneiPaymentInSite implements CreateGuestMoneiPaymentInSiteInterface
 {
+    /**
+     * Quote repository for accessing and saving quotes.
+     *
+     * @var CartRepositoryInterface
+     */
     private CartRepositoryInterface $quoteRepository;
 
+    /**
+     * Checkout session for accessing the current quote.
+     *
+     * @var Session
+     */
     private Session $checkoutSession;
 
+    /**
+     * Service to convert masked quote ID to quote ID.
+     *
+     * @var MaskedQuoteIdToQuoteIdInterface
+     */
     private MaskedQuoteIdToQuoteIdInterface $maskedQuoteIdToQuoteId;
 
+    /**
+     * Service to get customer details from a quote.
+     *
+     * @var GetCustomerDetailsByQuote
+     */
     private GetCustomerDetailsByQuote $getCustomerDetailsByQuote;
 
+    /**
+     * Service to get address details from a quote address.
+     *
+     * @var GetAddressDetailsByQuoteAddress
+     */
     private GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress;
 
+    /**
+     * Service to create a payment in Monei.
+     *
+     * @var CreatePayment
+     */
     private CreatePayment $createPayment;
 
+    /**
+     * Constructor for CreateGuestMoneiPaymentInSite.
+     *
+     * @param CartRepositoryInterface $quoteRepository Repository for accessing and saving quotes
+     * @param Session $checkoutSession Checkout session for accessing the current quote
+     * @param MaskedQuoteIdToQuoteIdInterface $maskedQuoteIdToQuoteId Service to convert masked quote ID to quote ID
+     * @param GetCustomerDetailsByQuote $getCustomerDetailsByQuote Service to get customer details from a quote
+     * @param GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress Service to get address details
+     * @param CreatePayment $createPayment Service to create a payment in Monei
+     */
     public function __construct(
         CartRepositoryInterface $quoteRepository,
         Session $checkoutSession,
@@ -66,29 +107,37 @@ class CreateGuestMoneiPaymentInSite implements CreateGuestMoneiPaymentInSiteInte
         $quoteId = $this->maskedQuoteIdToQuoteId->execute($cartId);
         $quote = $this->checkoutSession->getQuote() ?? $this->quoteRepository->get($quoteId);
         if (!$quote) {
-            throw new LocalizedException(__('An error occurred to retrieve the information about the quote'));
+            throw new LocalizedException(new Phrase('An error occurred to retrieve the information about the quote'));
         }
         // Save the quote in order to avoid that the other processes can reserve the order
-        $quote->reserveOrderId();
+        if (method_exists($quote, 'reserveOrderId')) {
+            $quote->reserveOrderId();
+        }
         $this->quoteRepository->save($quote);
 
         $data = [
-            'amount' => $quote->getBaseGrandTotal() * 100,
-            'currency' => $quote->getBaseCurrencyCode(),
+            'amount' => method_exists($quote, 'getBaseGrandTotal') ? $quote->getBaseGrandTotal() * 100 : 0,
+            'currency' => method_exists($quote, 'getBaseCurrencyCode') ? $quote->getBaseCurrencyCode() : 'EUR',
             'orderId' => $quote->getReservedOrderId(),
             'customer' => $this->getCustomerDetailsByQuote->execute($quote, $email),
             'billingDetails' => $this->getAddressDetailsByQuoteAddress->execute($quote->getBillingAddress(), $email),
-            'shippingDetails' => $this->getAddressDetailsByQuoteAddress->execute($quote->getShippingAddress(), $email),
+            'shippingDetails' => method_exists($quote, 'getShippingAddress') && $quote->getShippingAddress() ?
+                $this->getAddressDetailsByQuoteAddress->execute($quote->getShippingAddress(), $email) :
+                $this->getAddressDetailsByQuoteAddress->execute($quote->getBillingAddress(), $email),
         ];
 
         try {
             $result = $this->createPayment->execute($data);
-            $quote->setData(QuoteInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $result['id'] ?: '');
-            $this->quoteRepository->save($quote);
+            if (method_exists($quote, 'setData')) {
+                $quote->setData(QuoteInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $result['id'] ?: '');
+                $this->quoteRepository->save($quote);
+            }
 
             return [$result];
         } catch (\Exception $e) {
-            throw new LocalizedException(__('An error occurred rendering the pay with card. Please try again later.'));
+            throw new LocalizedException(
+                new Phrase('An error occurred rendering the pay with card. Please try again later.')
+            );
         }
     }
 }
