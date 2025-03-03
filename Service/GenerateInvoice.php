@@ -39,7 +39,7 @@ class GenerateInvoice implements GenerateInvoiceInterface
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function execute(array $data): void
     {

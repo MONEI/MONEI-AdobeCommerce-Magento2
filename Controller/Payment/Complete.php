@@ -113,7 +113,7 @@ class Complete implements ActionInterface
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function execute()
     {

@@ -62,7 +62,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function execute()
     {
@@ -82,7 +82,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
     {
@@ -95,7 +95,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function validateForCsrf(RequestInterface $request): ?bool
     {

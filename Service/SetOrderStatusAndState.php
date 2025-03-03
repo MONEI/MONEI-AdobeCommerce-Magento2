@@ -50,7 +50,7 @@ class SetOrderStatusAndState implements SetOrderStatusAndStateInterface
     }
 
     /**
-     * {@inheritDoc}
+     * @inheritDoc
      */
     public function execute(array $data): bool
     {
