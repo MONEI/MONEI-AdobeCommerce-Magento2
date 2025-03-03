@@ -10,10 +10,10 @@ namespace Monei\MoneiPayment\Controller\Payment;
 
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Action\HttpPostActionInterface;
-use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
-use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\Response\Http as ResponseHttp;
+use Magento\Framework\App\CsrfAwareActionInterface;
+use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Controller\Result\Redirect as MagentoRedirect;
@@ -25,15 +25,17 @@ use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
 use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
-use Monei\MoneiPayment\Service\Logger;
 use Monei\MoneiPayment\Service\Order\PaymentProcessor;
+use Monei\MoneiPayment\Service\Logger;
 
 /**
  * Controller for managing callback from Monei system.
  */
 class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
 {
-    /** Controller source identifier. */
+    /**
+     * Controller source identifier.
+     */
     private const SOURCE = 'callback';
 
     /**
@@ -43,34 +45,54 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
      */
     private $errorMessage = '';
 
-    /** @var Context */
+    /**
+     * @var Context
+     */
     private $context;
 
-    /** @var SerializerInterface */
+    /**
+     * @var SerializerInterface
+     */
     private $serializer;
 
-    /** @var MoneiPaymentModuleConfigInterface */
+    /**
+     * @var MoneiPaymentModuleConfigInterface
+     */
     private $moduleConfig;
 
-    /** @var Logger */
+    /**
+     * @var Logger
+     */
     private $logger;
 
-    /** @var StoreManagerInterface */
+    /**
+     * @var StoreManagerInterface
+     */
     private $storeManager;
 
-    /** @var GenerateInvoiceInterface */
+    /**
+     * @var GenerateInvoiceInterface
+     */
     private $generateInvoiceService;
 
-    /** @var SetOrderStatusAndStateInterface */
+    /**
+     * @var SetOrderStatusAndStateInterface
+     */
     private $setOrderStatusAndStateService;
 
-    /** @var MagentoRedirect */
+    /**
+     * @var MagentoRedirect
+     */
     private $resultRedirectFactory;
 
-    /** @var JsonFactory */
+    /**
+     * @var JsonFactory
+     */
     private $resultJsonFactory;
 
-    /** @var PaymentProcessor */
+    /**
+     * @var PaymentProcessor
+     */
     private $paymentProcessor;
 
     /**

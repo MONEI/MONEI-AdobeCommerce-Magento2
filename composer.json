@@ -1,85 +1,90 @@
 {
-    "name": "monei/module-monei-payment",
-    "version": "1.4.2",
-    "description": "MONEI Payments Adobe Commerce (Magento 2) module",
-    "type": "magento2-module",
-    "keywords": [
-        "monei",
-        "module",
-        "payment",
-        "monei"
-    ],
-    "homepage": "https://github.com/MONEI/MONEI-AdobeCommerce-Magento2",
-    "license": [
-        "proprietary"
-    ],
-    "authors": [
-        {
-            "name": "MONEI",
-            "email": "support@monei.com",
-            "homepage": "https://monei.com",
-            "role": "Developer"
-        }
-    ],
-    "require": {
-        "php": "^8.1.0",
-        "magento/module-payment": "100.4.*",
-        "magento/module-checkout": "100.4.*",
-        "magento/module-sales": "103.0.*",
-        "magento/module-vault": "101.2.*"
-    },
-    "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.38",
-        "magento/magento-coding-standard": "^34.0",
-        "magento/php-compatibility-fork": "^0.1",
-        "phpdocumentor/reflection-docblock": "^5.6",
-        "squizlabs/php_codesniffer": "^3.7"
-    },
-    "conflict": {
-        "magento/product-community-edition": "<2.4.4"
-    },
-    "autoload": {
-        "files": [
-            "registration.php"
-        ],
-        "psr-4": {
-            "Monei\\MoneiPayment\\": ""
-        }
-    },
-    "config": {
-        "sort-packages": true,
-        "platform": {
-            "php": "8.3.0"
-        },
-        "allow-plugins": {
-            "magento/composer-dependency-version-audit-plugin": true,
-            "dealerdirect/phpcodesniffer-composer-installer": true
-        }
-    },
-    "scripts": {
-        "lint": "vendor/bin/phpcs --standard=phpcs.xml .",
-        "fix": "vendor/bin/phpcbf --standard=phpcs.xml .",
-        "cs:check": "vendor/bin/php-cs-fixer check --config=.php-cs-fixer.php .",
-        "cs:fix": "vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php .",
-        "fix:all": [
-            "@fix",
-            "@cs:fix"
-        ],
-        "check:all": [
-            "@cs:check",
-            "@lint"
-        ],
-        "post-install-cmd": [
-            "([ $COMPOSER_DEV_MODE -eq 0 ] || vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/,../../magento/php-compatibility-fork/)"
-        ],
-        "post-update-cmd": [
-            "([ $COMPOSER_DEV_MODE -eq 0 ] || vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/,../../magento/php-compatibility-fork/)"
-        ]
-    },
-    "repositories": {
-        "magento": {
-            "type": "composer",
-            "url": "https://repo.magento.com/"
-        }
+  "name": "monei/module-monei-payment",
+  "version": "1.4.2",
+  "description": "MONEI Payments Adobe Commerce (Magento 2) module",
+  "type": "magento2-module",
+  "keywords": [
+    "monei",
+    "module",
+    "payment",
+    "monei"
+  ],
+  "homepage": "https://github.com/MONEI/MONEI-AdobeCommerce-Magento2",
+  "license": [
+    "proprietary"
+  ],
+  "authors": [
+    {
+      "name": "MONEI",
+      "email": "support@monei.com",
+      "homepage": "https://monei.com",
+      "role": "Developer"
     }
+  ],
+  "require": {
+    "php": "^8.1.0",
+    "magento/module-payment": "100.4.*",
+    "magento/module-checkout": "100.4.*",
+    "magento/module-sales": "103.0.*",
+    "magento/module-vault": "101.2.*"
+  },
+  "require-dev": {
+    "friendsofphp/php-cs-fixer": "^3.38",
+    "magento/magento-coding-standard": "^34.0",
+    "magento/php-compatibility-fork": "^0.1",
+    "phpdocumentor/reflection-docblock": "^5.6",
+    "squizlabs/php_codesniffer": "^3.7"
+  },
+  "conflict": {
+    "magento/product-community-edition": "<2.4.4"
+  },
+  "autoload": {
+    "files": [
+      "registration.php"
+    ],
+    "psr-4": {
+      "Monei\\MoneiPayment\\": ""
+    }
+  },
+  "config": {
+    "sort-packages": true,
+    "platform": {
+      "php": "8.3.0"
+    },
+    "allow-plugins": {
+      "magento/composer-dependency-version-audit-plugin": true,
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    }
+  },
+  "scripts": {
+    "lint": "vendor/bin/phpcs --standard=phpcs.xml .",
+    "fix": "vendor/bin/phpcbf --standard=phpcs.xml .",
+    "cs:check": "vendor/bin/php-cs-fixer check --config=.php-cs-fixer.php .",
+    "cs:fix": "vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php .",
+    "pretty:check": "./pretty-php.phar --check --exclude=node_modules .",
+    "pretty:diff": "./pretty-php.phar --diff --exclude=node_modules .",
+    "pretty:fix": "./pretty-php.phar  --exclude=node_modules .",
+    "fix:all": [
+      "@fix",
+      "@cs:fix",
+      "@pretty:fix"
+    ],
+    "check:all": [
+      "@cs:check",
+      "@lint",
+      "@pretty:check"
+    ],
+    "post-install-cmd": [
+      "([ $COMPOSER_DEV_MODE -eq 0 ] || vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/,../../magento/php-compatibility-fork/)"
+    ],
+    "post-update-cmd": [
+      "([ $COMPOSER_DEV_MODE -eq 0 ] || vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/,../../magento/php-compatibility-fork/)"
+    ]
+  },
+  "repositories": {
+    "magento": {
+      "type": "composer",
+      "url": "https://repo.magento.com/"
+    }
+  }
 }

@@ -70,6 +70,7 @@ class Monei
     ];
 
     public const MONEI_GOOGLE_CODE = 'googlePay';
+
     public const MONEI_APPLE_CODE = 'applePay';
 
     public const MAPPER_MAGENTO_MONEI_PAYMENT_CODE = [

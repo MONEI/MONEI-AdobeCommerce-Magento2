@@ -21,16 +21,24 @@ use Monei\MoneiPayment\Service\Shared\GetMoneiPaymentCodesByMagentoPaymentCodeRe
  */
 class Redirect implements ActionInterface
 {
-    /** @var Session */
+    /**
+     * @var Session
+     */
     private $checkoutSession;
 
-    /** @var CreatePaymentInterface */
+    /**
+     * @var CreatePaymentInterface
+     */
     private $createPayment;
 
-    /** @var MagentoRedirect */
+    /**
+     * @var MagentoRedirect
+     */
     private $resultRedirectFactory;
 
-    /** @var GetMoneiPaymentCodesByMagentoPaymentCodeRedirect */
+    /**
+     * @var GetMoneiPaymentCodesByMagentoPaymentCodeRedirect
+     */
     private $getMoneiPaymentCodesByMagentoPaymentCodeRedirect;
 
     /**
@@ -60,9 +68,7 @@ class Redirect implements ActionInterface
      */
     public function execute()
     {
-        /**
-         * @var OrderInterface $order
-         */
+        /** @var OrderInterface $order */
         $order = $this->checkoutSession->getLastRealOrder();
 
         $data = [

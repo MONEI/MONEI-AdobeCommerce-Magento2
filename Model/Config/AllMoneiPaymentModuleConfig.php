@@ -80,9 +80,9 @@ class AllMoneiPaymentModuleConfig implements AllMoneiPaymentModuleConfigInterfac
      */
     public function isAnyPaymentEnabled($storeId = null): bool
     {
-        return (bool) $this->moneiPaymentModuleConfig->isEnabled($storeId)
-            || (bool) $this->moneiCardPaymentModuleConfig->isEnabled($storeId)
-            || (bool) $this->moneiBizumPaymentModuleConfig->isEnabled($storeId)
-            || (bool) $this->moneiGoogleApplePaymentModuleConfig->isEnabled($storeId);
+        return (bool) $this->moneiPaymentModuleConfig->isEnabled($storeId) ||
+            (bool) $this->moneiCardPaymentModuleConfig->isEnabled($storeId) ||
+            (bool) $this->moneiBizumPaymentModuleConfig->isEnabled($storeId) ||
+            (bool) $this->moneiGoogleApplePaymentModuleConfig->isEnabled($storeId);
     }
 }

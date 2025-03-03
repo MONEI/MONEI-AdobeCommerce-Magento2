@@ -109,6 +109,7 @@ php bin/magento cache:clean
 ### Before You Begin
 
 When testing your integration:
+
 - Use your [test mode](https://docs.monei.com/docs/testing) API Key from [MONEI Dashboard → Settings → API Access](https://dashboard.monei.com/settings/api)
 - Check the status of test payments in your [MONEI Dashboard → Payments](https://dashboard.monei.com/payments) (in test mode)
 
@@ -172,10 +173,10 @@ composer lint
 composer fix
 
 # Run PHP-CS-Fixer check
-composer cs-check
+composer cs:check
 
 # Run PHP-CS-Fixer auto-fix
-composer cs-fix
+composer cs:fix
 
 # Run PHP_CodeSniffer check
 composer phpcs
@@ -183,11 +184,24 @@ composer phpcs
 # Run PHP_CodeSniffer auto-fix
 composer phpcbf
 
+# Run pretty-php check
+composer pretty:check
+
+# Run pretty-php with diff output
+composer pretty:diff
+
+# Run pretty-php auto-fix
+composer pretty:fix
+
+# Run all fixers (PHP_CodeSniffer, PHP-CS-Fixer, and pretty-php)
+composer fix:all
+
 # Check for critical security issues
 ./scripts/check-critical.sh
 ```
 
 The code quality tools check for:
+
 - PHP syntax errors
 - PSR-12 and Magento 2 coding standards
 - Code style and formatting
@@ -249,22 +263,11 @@ The MONEI Payment Module for Adobe Commerce (Magento 2) adheres to Magento Marke
 
 ### Validation
 
-```bash
-# Run complete validation with all severity levels
-composer lint
+We use multiple tools to ensure code quality:
 
-# Check only Marketplace critical issues (severity 10)
-composer lint:marketplace
-
-# Run PHP style validation
-composer lint:style
-
-# Run both marketplace and style validations
-composer validate
-
-# Generate detailed reports in reports/ directory
-composer report
-```
+- **PHP_CodeSniffer**: Checks for PSR-12 and Magento 2 coding standards
+- **PHP-CS-Fixer**: Fixes code style issues automatically
+- **pretty-php**: Formats code for readability and consistency (see [pretty-php documentation](docs/PRETTY-PHP.md))
 
 ### Fixing Code Issues
 
@@ -274,4 +277,3 @@ composer fix
 ```
 
 For detailed information about Magento Marketplace validation, please see [docs/MARKETPLACE_VALIDATION.md](docs/MARKETPLACE_VALIDATION.md).
-

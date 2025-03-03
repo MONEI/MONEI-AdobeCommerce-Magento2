@@ -18,7 +18,9 @@ class CreatePayment extends AbstractService implements CreatePaymentInterface
 {
     public const METHOD = 'payments';
 
-    /** @var array */
+    /**
+     * @var array
+     */
     private $requiredArguments = [
         'amount',
         'currency',

@@ -18,14 +18,18 @@ class RefundPayment extends AbstractService implements RefundPaymentInterface
 {
     public const METHOD = 'refund';
 
-    /** @var array */
+    /**
+     * @var array
+     */
     private $requiredArguments = [
         'paymentId',
         'refundReason',
         'amount',
     ];
 
-    /** @var array */
+    /**
+     * @var array
+     */
     private $refundReasons = [
         'duplicated',
         'fraudulent',
@@ -96,7 +100,7 @@ class RefundPayment extends AbstractService implements RefundPaymentInterface
             } elseif ('refundReason' === $argument && !\in_array($data[$argument], $this->refundReasons, true)) {
                 throw new LocalizedException(
                     __(
-                        '%1 doesn\'t match any allowed reasons %2',
+                        "%1 doesn't match any allowed reasons %2",
                         $argument,
                         $this->serializer->serialize($this->refundReasons)
                     )

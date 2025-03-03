@@ -32,16 +32,24 @@ class Save extends Action implements HttpPostActionInterface
      */
     public const ADMIN_RESOURCE = 'Magento_Sales::sales_creditmemo';
 
-    /** @var CreditmemoLoader */
+    /**
+     * @var CreditmemoLoader
+     */
     protected $creditmemoLoader;
 
-    /** @var CreditmemoSender */
+    /**
+     * @var CreditmemoSender
+     */
     protected $creditmemoSender;
 
-    /** @var \Magento\Backend\Model\View\Result\ForwardFactory */
+    /**
+     * @var \Magento\Backend\Model\View\Result\ForwardFactory
+     */
     protected $resultForwardFactory;
 
-    /** @var SalesData */
+    /**
+     * @var SalesData
+     */
     private $salesData;
 
     /**
@@ -92,7 +100,7 @@ class Save extends Action implements HttpPostActionInterface
             if ($creditmemo) {
                 if (!$creditmemo->isValidGrandTotal()) {
                     throw new LocalizedException(
-                        __('The credit memo\'s total must be positive.')
+                        __("The credit memo's total must be positive.")
                     );
                 }
 
@@ -145,7 +153,7 @@ class Save extends Action implements HttpPostActionInterface
             $this->_getSession()->setFormData($data);
         } catch (\Exception $e) {
             $this->_objectManager->get(LoggerInterface::class)->critical($e);
-            $this->messageManager->addErrorMessage(__('We can\'t save the credit memo right now.'));
+            $this->messageManager->addErrorMessage(__("We can't save the credit memo right now."));
         }
         $resultRedirect->setPath('sales/*/new', ['_current' => true]);
 

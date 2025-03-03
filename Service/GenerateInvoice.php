@@ -12,8 +12,8 @@ use Magento\Framework\DB\TransactionFactory;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\Data\OrderInterfaceFactory;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
-use Monei\MoneiPayment\Api\OrderLockManagerInterface;
 use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
+use Monei\MoneiPayment\Api\OrderLockManagerInterface;
 use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 use Psr\Log\LoggerInterface;
 
@@ -22,19 +22,29 @@ use Psr\Log\LoggerInterface;
  */
 class GenerateInvoice implements GenerateInvoiceInterface
 {
-    /** @var OrderInterfaceFactory */
+    /**
+     * @var OrderInterfaceFactory
+     */
     private $orderFactory;
 
-    /** @var TransactionFactory */
+    /**
+     * @var TransactionFactory
+     */
     private $transactionFactory;
 
-    /** @var OrderLockManagerInterface */
+    /**
+     * @var OrderLockManagerInterface
+     */
     private $orderLockManager;
 
-    /** @var CreateVaultPayment */
+    /**
+     * @var CreateVaultPayment
+     */
     private $createVaultPayment;
 
-    /** @var LoggerInterface */
+    /**
+     * @var LoggerInterface
+     */
     private $logger;
 
     /**
@@ -59,7 +69,7 @@ class GenerateInvoice implements GenerateInvoiceInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      * @param array $data
      * @return void
      */

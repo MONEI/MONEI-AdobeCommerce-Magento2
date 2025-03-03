@@ -18,7 +18,9 @@ use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
  */
 class Monei extends Info
 {
-    /** Payment information fields allowed to be displayed. */
+    /**
+     * Payment information fields allowed to be displayed.
+     */
     private const INFO_PAY_ALLOWED = [
         'last4',
         'brand',

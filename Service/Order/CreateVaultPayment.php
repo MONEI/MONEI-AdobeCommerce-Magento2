@@ -9,7 +9,6 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Service\Order;
 
 use Magento\Sales\Api\Data\OrderPaymentInterface;
-// @phpstan-ignore-next-line
 use Magento\Vault\Api\Data\PaymentTokenFactoryInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;

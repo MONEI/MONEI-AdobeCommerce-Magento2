@@ -8,8 +8,8 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Controller\Adminhtml\Order;
 
-use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
+use Magento\Backend\App\Action;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Exception\LocalizedException;
@@ -29,13 +29,19 @@ class Cancel extends Action
      */
     public const ADMIN_RESOURCE = 'Magento_Sales::cancel';
 
-    /** @var JsonFactory */
+    /**
+     * @var JsonFactory
+     */
     private $resultJsonFactory;
 
-    /** @var CancelPaymentInterface */
+    /**
+     * @var CancelPaymentInterface
+     */
     private $cancelPaymentService;
 
-    /** @var OrderManagementInterface */
+    /**
+     * @var OrderManagementInterface
+     */
     private $orderManagement;
 
     /**
@@ -59,7 +65,7 @@ class Cancel extends Action
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      *
      * @return Json
      */

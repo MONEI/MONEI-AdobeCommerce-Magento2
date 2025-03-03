@@ -13,9 +13,9 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentInSiteInterface;
-use Monei\MoneiPayment\Service\CreatePayment;
 use Monei\MoneiPayment\Service\Quote\GetAddressDetailsByQuoteAddress;
 use Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote;
+use Monei\MoneiPayment\Service\CreatePayment;
 
 /**
  * Monei create payment REST integration service class.

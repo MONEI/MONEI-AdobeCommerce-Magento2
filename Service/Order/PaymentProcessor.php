@@ -12,16 +12,16 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\Data\OrderInterfaceFactory;
 use Magento\Sales\Api\OrderRepositoryInterface;
-use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
+use Magento\Sales\Model\Order;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
 use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
 use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
-use Monei\MoneiPayment\Model\PendingOrderFactory;
 use Monei\MoneiPayment\Model\ResourceModel\PendingOrder as PendingOrderResource;
 use Monei\MoneiPayment\Model\Service\ProcessingLock;
+use Monei\MoneiPayment\Model\PendingOrderFactory;
 use Monei\MoneiPayment\Service\Logger;
 
 /**
@@ -29,37 +29,59 @@ use Monei\MoneiPayment\Service\Logger;
  */
 class PaymentProcessor
 {
-    /** @var ProcessingLock */
+    /**
+     * @var ProcessingLock
+     */
     private $processingLock;
 
-    /** @var OrderRepositoryInterface */
+    /**
+     * @var OrderRepositoryInterface
+     */
     private $orderRepository;
 
-    /** @var OrderInterfaceFactory */
+    /**
+     * @var OrderInterfaceFactory
+     */
     private $orderFactory;
 
-    /** @var MoneiPaymentModuleConfigInterface */
+    /**
+     * @var MoneiPaymentModuleConfigInterface
+     */
     private $moduleConfig;
 
-    /** @var GenerateInvoiceInterface */
+    /**
+     * @var GenerateInvoiceInterface
+     */
     private $generateInvoiceService;
 
-    /** @var SetOrderStatusAndStateInterface */
+    /**
+     * @var SetOrderStatusAndStateInterface
+     */
     private $setOrderStatusAndStateService;
 
-    /** @var PendingOrderFactory */
+    /**
+     * @var PendingOrderFactory
+     */
     private $pendingOrderFactory;
 
-    /** @var PendingOrderResource */
+    /**
+     * @var PendingOrderResource
+     */
     private $pendingOrderResource;
 
-    /** @var OrderSender */
+    /**
+     * @var OrderSender
+     */
     private $orderSender;
 
-    /** @var CreateVaultPayment */
+    /**
+     * @var CreateVaultPayment
+     */
     private $createVaultPayment;
 
-    /** @var Logger */
+    /**
+     * @var Logger
+     */
     private $logger;
 
     /**
@@ -114,7 +136,12 @@ class PaymentProcessor
     public function processPayment(array $paymentData, string $source): bool
     {
         if (!isset($paymentData['orderId'], $paymentData['id'], $paymentData['status'])) {
-            $this->logger->error('[Missing required payment data]', $paymentData);
+            $this->logger->error(
+                sprintf(
+                    '[Payment processing] Missing required data: %s',
+                    json_encode($paymentData, JSON_PRETTY_PRINT)
+                )
+            );
 
             return false;
         }
@@ -123,8 +150,8 @@ class PaymentProcessor
         $paymentId = $paymentData['id'];
         $status = $paymentData['status'];
 
-        $this->logger->info(\sprintf(
-            '[Processing payment] Order %s, payment %s, status %s from %s',
+        $this->logger->info(sprintf(
+            '[Payment processing] Order: %s, Payment ID: %s, Status: %s, Source: %s',
             $orderId,
             $paymentId,
             $status,
@@ -141,7 +168,7 @@ class PaymentProcessor
                     $order = $this->orderFactory->create()->loadByIncrementId($orderId);
 
                     if (!$order->getId()) {
-                        $this->logger->error(\sprintf('[Order not found] Order %s', $orderId));
+                        $this->logger->error(sprintf('[Payment processing] Order not found: %s', $orderId));
 
                         return false;
                     }
@@ -149,8 +176,8 @@ class PaymentProcessor
                     // Check for idempotency - if this payment has already been processed, don't process it again
                     $existingPaymentId = $order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID);
                     if (!empty($existingPaymentId) && $existingPaymentId === $paymentId) {
-                        $this->logger->info(\sprintf(
-                            '[Payment already processed] Order %s, payment %s',
+                        $this->logger->info(sprintf(
+                            '[Payment processing] Already processed - Order: %s, Payment ID: %s',
                             $orderId,
                             $paymentId
                         ));
@@ -164,15 +191,27 @@ class PaymentProcessor
                     // Process payment based on status
                     switch ($status) {
                         case Monei::ORDER_STATUS_AUTHORIZED:
+                            $this->logger->info(sprintf(
+                                '[Payment processing] Processing authorized payment - Order: %s, Payment ID: %s',
+                                $order->getIncrementId(),
+                                $paymentData['id']
+                            ));
+
                             return $this->processAuthorizedPayment($order, $paymentData);
 
                         case Monei::ORDER_STATUS_SUCCEEDED:
+                            $this->logger->info(sprintf(
+                                '[Payment processing] Processing succeeded payment - Order: %s, Payment ID: %s',
+                                $order->getIncrementId(),
+                                $paymentData['id']
+                            ));
+
                             return $this->processSucceededPayment($order, $paymentData);
 
                         default:
                             if (!$this->isValidStatus($status)) {
-                                $this->logger->error(\sprintf(
-                                    '[Invalid payment status] Order %s, status %s',
+                                $this->logger->error(sprintf(
+                                    '[Payment processing] Invalid status - Order: %s, Status: %s',
                                     $orderId,
                                     $status
                                 ));
@@ -180,8 +219,8 @@ class PaymentProcessor
                                 return false;
                             }
 
-                            $this->logger->info(\sprintf(
-                                '[Unhandled payment status] Order %s, status %s',
+                            $this->logger->info(sprintf(
+                                '[Payment processing] Unhandled status - Order: %s, Status: %s',
                                 $orderId,
                                 $status
                             ));
@@ -189,8 +228,8 @@ class PaymentProcessor
                             return false;
                     }
                 } catch (\Exception $e) {
-                    $this->logger->error(\sprintf(
-                        '[Payment processing exception] Order %s, error: %s',
+                    $this->logger->error(sprintf(
+                        '[Payment processing] Exception - Order: %s, Error: %s',
                         $orderId,
                         $e->getMessage()
                     ));
@@ -216,7 +255,9 @@ class PaymentProcessor
 
         $payment = $order->getPayment();
         if (null === $payment) {
-            $this->logger->error(\sprintf('[No payment found] Order %s', $order->getIncrementId()));
+            $this->logger->error(
+                sprintf('[Payment processing] No payment found - Order: %s', $order->getIncrementId())
+            );
 
             return false;
         }
@@ -231,7 +272,8 @@ class PaymentProcessor
             $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, $vaultCreated);
         }
 
-        $order->setStatus($this->moduleConfig->getPreAuthorizedStatus())
+        $order
+            ->setStatus($this->moduleConfig->getPreAuthorizedStatus())
             ->setState(Order::STATE_PENDING_PAYMENT);
         $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $paymentData['id']);
 
@@ -242,8 +284,8 @@ class PaymentProcessor
 
             return true;
         } catch (\Exception $e) {
-            $this->logger->error(\sprintf(
-                '[Error saving authorized payment] Order %s, error: %s',
+            $this->logger->error(sprintf(
+                '[Payment processing] Error saving authorized payment - Order: %s, Error: %s',
                 $order->getIncrementId(),
                 $e->getMessage()
             ));
@@ -269,7 +311,8 @@ class PaymentProcessor
             // Generate invoice if it doesn't exist
             $this->generateInvoiceService->execute($paymentData);
 
-            $order->setStatus($this->moduleConfig->getConfirmedStatus())
+            $order
+                ->setStatus($this->moduleConfig->getConfirmedStatus())
                 ->setState(Order::STATE_NEW);
             $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $paymentData['id']);
             $this->orderRepository->save($order);
@@ -279,8 +322,8 @@ class PaymentProcessor
                 try {
                     $this->orderSender->send($order);
                 } catch (\Exception $e) {
-                    $this->logger->error(\sprintf(
-                        '[Error sending order email] Order %s, error: %s',
+                    $this->logger->error(sprintf(
+                        '[Payment processing] Error sending order email - Order: %s, Error: %s',
                         $order->getIncrementId(),
                         $e->getMessage()
                     ));
@@ -289,8 +332,8 @@ class PaymentProcessor
 
             return true;
         } catch (\Exception $e) {
-            $this->logger->error(\sprintf(
-                '[Error processing succeeded payment] Order %s, error: %s',
+            $this->logger->error(sprintf(
+                '[Payment processing] Error processing succeeded payment - Order: %s, Error: %s',
                 $order->getIncrementId(),
                 $e->getMessage()
             ));
@@ -312,8 +355,8 @@ class PaymentProcessor
                 return Order::STATE_PENDING_PAYMENT === $order->getState();
 
             case Monei::ORDER_STATUS_SUCCEEDED:
-                return $order->getStatus() === $this->moduleConfig->getConfirmedStatus()
-                    && Order::STATE_NEW === $order->getState();
+                return $order->getStatus() === $this->moduleConfig->getConfirmedStatus() &&
+                    Order::STATE_NEW === $order->getState();
 
             default:
                 return false;

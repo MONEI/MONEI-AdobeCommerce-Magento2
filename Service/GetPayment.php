@@ -15,7 +15,9 @@ use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
  */
 class GetPayment extends AbstractService implements GetPaymentInterface
 {
-    /** API endpoint for payment operations. */
+    /**
+     * API endpoint for payment operations.
+     */
     public const METHOD = 'payments';
 
     /**

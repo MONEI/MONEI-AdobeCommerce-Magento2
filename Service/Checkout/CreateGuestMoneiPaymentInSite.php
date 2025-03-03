@@ -15,9 +15,9 @@ use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\MaskedQuoteIdToQuoteIdInterface;
 use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateGuestMoneiPaymentInSiteInterface;
-use Monei\MoneiPayment\Service\CreatePayment;
 use Monei\MoneiPayment\Service\Quote\GetAddressDetailsByQuoteAddress;
 use Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote;
+use Monei\MoneiPayment\Service\CreatePayment;
 
 /**
  * Monei create payment in site REST integration service class.
@@ -120,9 +120,9 @@ class CreateGuestMoneiPaymentInSite implements CreateGuestMoneiPaymentInSiteInte
             'orderId' => $quote->getReservedOrderId(),
             'customer' => $this->getCustomerDetailsByQuote->execute($quote, $email),
             'billingDetails' => $this->getAddressDetailsByQuoteAddress->execute($quote->getBillingAddress(), $email),
-            'shippingDetails' => method_exists($quote, 'getShippingAddress') && $quote->getShippingAddress() ?
-                $this->getAddressDetailsByQuoteAddress->execute($quote->getShippingAddress(), $email) :
-                $this->getAddressDetailsByQuoteAddress->execute($quote->getBillingAddress(), $email),
+            'shippingDetails' => method_exists($quote, 'getShippingAddress') && $quote->getShippingAddress()
+                ? $this->getAddressDetailsByQuoteAddress->execute($quote->getShippingAddress(), $email)
+                : $this->getAddressDetailsByQuoteAddress->execute($quote->getBillingAddress(), $email),
         ];
 
         try {

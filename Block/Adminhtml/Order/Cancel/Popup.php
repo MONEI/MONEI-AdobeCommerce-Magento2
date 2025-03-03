@@ -8,8 +8,8 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Block\Adminhtml\Order\Cancel;
 
-use Magento\Backend\Block\Template;
 use Magento\Backend\Block\Template\Context;
+use Magento\Backend\Block\Template;
 use Magento\Directory\Helper\Data as DirectoryHelper;
 use Magento\Framework\Json\Helper\Data as JsonHelper;
 use Magento\Framework\Registry;
@@ -21,10 +21,14 @@ use Monei\MoneiPayment\Model\Config\Source\CancelReason;
  */
 class Popup extends Template
 {
-    /** @var Registry */
+    /**
+     * @var Registry
+     */
     private $registry;
 
-    /** @var CancelReason */
+    /**
+     * @var CancelReason
+     */
     private $source;
 
     /**

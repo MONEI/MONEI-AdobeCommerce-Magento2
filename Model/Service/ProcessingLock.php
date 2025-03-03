@@ -22,10 +22,14 @@ class ProcessingLock
     // Lock timeout in seconds (5 minutes)
     private const LOCK_TIMEOUT = 300;
 
-    /** @var LockManagerInterface */
+    /**
+     * @var LockManagerInterface
+     */
     private $lockManager;
 
-    /** @var Logger */
+    /**
+     * @var Logger
+     */
     private $logger;
 
     /**

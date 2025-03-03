@@ -14,9 +14,9 @@ use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentVaultInterface;
-use Monei\MoneiPayment\Service\CreatePayment;
 use Monei\MoneiPayment\Service\Quote\GetAddressDetailsByQuoteAddress;
 use Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote;
+use Monei\MoneiPayment\Service\CreatePayment;
 
 /**
  * Service class to create a Monei payment using a saved payment token for logged-in customers.
@@ -121,12 +121,12 @@ class CreateLoggedMoneiPaymentVault implements CreateLoggedMoneiPaymentVaultInte
         $this->quoteRepository->save($quote);
 
         $data = [
-            "amount" => $quote->getBaseGrandTotal() * 100,
-            "currency" => $quote->getBaseCurrencyCode(),
-            "orderId" => $quote->getReservedOrderId(),
-            "customer" => $this->getCustomerDetailsByQuote->execute($quote),
-            "billingDetails" => $this->getAddressDetailsByQuoteAddress->execute($quote->getBillingAddress()),
-            "shippingDetails" => $this->getAddressDetailsByQuoteAddress->execute($quote->getShippingAddress()),
+            'amount' => $quote->getBaseGrandTotal() * 100,
+            'currency' => $quote->getBaseCurrencyCode(),
+            'orderId' => $quote->getReservedOrderId(),
+            'customer' => $this->getCustomerDetailsByQuote->execute($quote),
+            'billingDetails' => $this->getAddressDetailsByQuoteAddress->execute($quote->getBillingAddress()),
+            'shippingDetails' => $this->getAddressDetailsByQuoteAddress->execute($quote->getShippingAddress()),
         ];
 
         try {

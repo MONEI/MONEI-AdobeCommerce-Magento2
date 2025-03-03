@@ -18,13 +18,17 @@ class CancelPayment extends AbstractService implements CancelPaymentInterface
 {
     public const METHOD = 'cancel';
 
-    /** @var array */
+    /**
+     * @var array
+     */
     private $requiredArguments = [
         'paymentId',
         'cancellationReason',
     ];
 
-    /** @var array */
+    /**
+     * @var array
+     */
     private $cancellationReasons = [
         'duplicated',
         'fraudulent',
@@ -93,7 +97,7 @@ class CancelPayment extends AbstractService implements CancelPaymentInterface
             if ('cancellationReason' === $argument && !\in_array($data[$argument], $this->cancellationReasons, true)) {
                 throw new LocalizedException(
                     __(
-                        '%1 doesn\'t match any allowed reasons %2',
+                        "%1 doesn't match any allowed reasons %2",
                         $argument,
                         $this->serializer->serialize($this->cancellationReasons)
                     )

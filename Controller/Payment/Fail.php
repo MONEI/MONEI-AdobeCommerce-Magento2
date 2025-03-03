@@ -28,19 +28,29 @@ class Fail implements ActionInterface
      */
     protected $orderFactory;
 
-    /** @var Session */
+    /**
+     * @var Session
+     */
     private $checkoutSession;
 
-    /** @var SetOrderStatusAndStateInterface */
+    /**
+     * @var SetOrderStatusAndStateInterface
+     */
     private $setOrderStatusAndStateService;
 
-    /** @var Context */
+    /**
+     * @var Context
+     */
     private $context;
 
-    /** @var ManagerInterface */
+    /**
+     * @var ManagerInterface
+     */
     private $messageManager;
 
-    /** @var MagentoRedirect */
+    /**
+     * @var MagentoRedirect
+     */
     private $resultRedirectFactory;
 
     /**

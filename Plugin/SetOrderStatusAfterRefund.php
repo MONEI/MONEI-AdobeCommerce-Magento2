@@ -10,8 +10,8 @@ namespace Monei\MoneiPayment\Plugin;
 
 use Magento\Sales\Api\Data\CreditmemoInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
-use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Service\CreditmemoService;
+use Magento\Sales\Model\Order;
 use Monei\MoneiPayment\Model\Payment\Monei;
 use Psr\Log\LoggerInterface;
 

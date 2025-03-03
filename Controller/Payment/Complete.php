@@ -17,18 +17,20 @@ use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
-use Monei\MoneiPayment\Model\PendingOrderFactory;
 use Monei\MoneiPayment\Model\ResourceModel\PendingOrder as PendingOrderResource;
-use Monei\MoneiPayment\Service\Logger;
+use Monei\MoneiPayment\Model\PendingOrderFactory;
 use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 use Monei\MoneiPayment\Service\Order\PaymentProcessor;
+use Monei\MoneiPayment\Service\Logger;
 
 /**
  * Monei payment complete controller.
  */
 class Complete implements ActionInterface
 {
-    /** Controller source identifier. */
+    /**
+     * Controller source identifier.
+     */
     private const SOURCE = 'complete';
 
     /**
@@ -188,8 +190,8 @@ class Complete implements ActionInterface
 
             // Redirect based on payment status, even if processing failed
             // (we want to show the appropriate page to the customer)
-            if (Monei::ORDER_STATUS_AUTHORIZED === $params['status']
-                || Monei::ORDER_STATUS_SUCCEEDED === $params['status']
+            if (Monei::ORDER_STATUS_AUTHORIZED === $params['status'] ||
+                Monei::ORDER_STATUS_SUCCEEDED === $params['status']
             ) {
                 return $this->resultRedirectFactory->setPath(
                     'checkout/onepage/success',

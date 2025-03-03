@@ -16,7 +16,9 @@ use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
  */
 class CapturePayment extends AbstractService implements CapturePaymentInterface
 {
-    /** API method name for capturing payments. */
+    /**
+     * API method name for capturing payments.
+     */
     public const METHOD = 'capture';
 
     /**

@@ -15,37 +15,53 @@ use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
-use Monei\MoneiPayment\Model\ResourceModel\PendingOrder as PendingOrderResource;
 use Monei\MoneiPayment\Model\ResourceModel\PendingOrder\Collection;
 use Monei\MoneiPayment\Model\ResourceModel\PendingOrder\CollectionFactory;
+use Monei\MoneiPayment\Model\ResourceModel\PendingOrder as PendingOrderResource;
 
 /**
  * Cron job for processing orders with Monei payment method.
  */
 class ProcessPendingOrders
 {
-    /** @var CollectionFactory */
+    /**
+     * @var CollectionFactory
+     */
     private $collectionFactory;
 
-    /** @var OrderInterfaceFactory */
+    /**
+     * @var OrderInterfaceFactory
+     */
     private $orderFactory;
 
-    /** @var GetPaymentInterface */
+    /**
+     * @var GetPaymentInterface
+     */
     private $getPaymentService;
 
-    /** @var GenerateInvoiceInterface */
+    /**
+     * @var GenerateInvoiceInterface
+     */
     private $generateInvoiceService;
 
-    /** @var SetOrderStatusAndStateInterface */
+    /**
+     * @var SetOrderStatusAndStateInterface
+     */
     private $setOrderStatusAndStateService;
 
-    /** @var PendingOrderResource */
+    /**
+     * @var PendingOrderResource
+     */
     private $pendingOrderResource;
 
-    /** @var DateTime */
+    /**
+     * @var DateTime
+     */
     private $date;
 
-    /** @var CancelPaymentInterface */
+    /**
+     * @var CancelPaymentInterface
+     */
     private $cancelPaymentService;
 
     /**

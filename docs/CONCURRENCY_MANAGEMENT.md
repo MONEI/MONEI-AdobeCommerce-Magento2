@@ -24,7 +24,7 @@ public function processPayment(array $paymentData): bool
 {
     $orderId = $paymentData['orderId'];
     $paymentId = $paymentData['id'];
-    
+
     // Use the executeWithLock pattern
     return $this->processingLock->executeWithLock($orderId, $paymentId, function() use ($paymentData) {
         // Your payment processing logic here
@@ -46,7 +46,7 @@ public function updateOrderStatus(string $incrementId, string $status): bool
     return $this->orderProcessor->processOrderById($incrementId, function(OrderInterface $order, $transaction) use ($status) {
         // Update order status
         $order->setStatus($status);
-        
+
         // The transaction and lock are handled automatically
         return true;
     });
@@ -66,12 +66,12 @@ public function doSomethingWithOrder(string $incrementId): void
         // Order is being processed by another request
         return;
     }
-    
+
     try {
         $this->orderLockManager->lock($incrementId);
-        
+
         // Process the order
-        
+
     } finally {
         // Always release the lock
         $this->orderLockManager->unlock($incrementId);
@@ -103,4 +103,4 @@ For webhook callbacks:
 1. **Transaction Isolation Level**: Use appropriate isolation level (SERIALIZABLE for critical operations)
 2. **Distributed Locks**: If running on multiple servers, ensure the lock manager is properly configured
 3. **Lock Timeout**: Configure appropriate lock timeouts to prevent indefinite waits
-4. **Lock Monitoring**: Implement monitoring for lock acquisition failures and long-held locks 
+4. **Lock Monitoring**: Implement monitoring for lock acquisition failures and long-held locks

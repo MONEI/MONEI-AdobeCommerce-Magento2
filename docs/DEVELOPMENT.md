@@ -1,6 +1,7 @@
 # MONEI Payment Module - Developer Documentation
 
 ## Table of Contents
+
 1. [Introduction](#introduction)
 2. [Common Issues and Solutions](#common-issues-and-solutions)
 3. [Code Quality Standards](#code-quality-standards)
@@ -20,6 +21,7 @@ This document is intended for developers working on the MONEI Payment module for
 **Issue**: Classes, methods, and properties should have proper PHPDoc blocks. These are automatically checked by PHP_CodeSniffer.
 
 **Solution**:
+
 ```php
 /**
  * Class description
@@ -50,11 +52,13 @@ class Example
 ```
 
 To check for missing PHPDoc blocks, run:
+
 ```bash
 composer phpcs
 ```
 
 To automatically fix some PHPDoc issues, run:
+
 ```bash
 composer phpcbf
 ```
@@ -64,6 +68,7 @@ composer phpcbf
 **Issue**: PHP 8.1 supports type hints, which should be used for parameters and return types.
 
 **Solution**:
+
 ```php
 /**
  * @param string $param Parameter description
@@ -80,23 +85,24 @@ public function method(string $param): bool
 **Issue**: Class properties and methods should have appropriate access modifiers.
 
 **Solution**: Use `public`, `protected`, or `private` as appropriate:
+
 ```php
 class Example
 {
     private string $internalProperty;
     protected string $inheritableProperty;
     public string $publicProperty;
-    
+
     private function internalMethod(): void
     {
         // Internal method logic
     }
-    
+
     protected function inheritableMethod(): void
     {
         // Method that subclasses may override
     }
-    
+
     public function publicMethod(): void
     {
         // Public API method
@@ -109,6 +115,7 @@ class Example
 **Issue**: Magic methods (`__get`, `__set`, etc.) should be used carefully.
 
 **Solution**: Prefer explicit getters and setters over magic methods when possible:
+
 ```php
 // Instead of using __get and __set
 public function getProperty(): string
@@ -128,6 +135,7 @@ public function setProperty(string $value): self
 **Issue**: Using the generic `array` type hint does not specify the array structure.
 
 **Solution**: Use PHPDoc to specify array structure:
+
 ```php
 /**
  * @param string[] $items Array of strings
@@ -144,6 +152,7 @@ public function processItems(array $items): array
 **Issue**: Hard-coded values create maintenance issues.
 
 **Solution**: Use constants or configuration:
+
 ```php
 // Instead of this:
 public function getUrl()
@@ -192,6 +201,7 @@ The module uses PSR-4 autoloading with the `Monei\MoneiPayment` namespace. Follo
 4. Avoid using the ObjectManager directly
 
 Example:
+
 ```php
 class PaymentProcessor
 {
@@ -238,6 +248,7 @@ protected function _isAllowed(): bool
 3. Use the Magento encryption mechanism for sensitive data
 
 Example:
+
 ```php
 public function getApiKey()
 {
@@ -281,6 +292,7 @@ public function getApiKey()
 3. Use data providers to test with different inputs
 
 Example:
+
 ```php
 /**
  * @covers ::validatePayment
@@ -296,11 +308,11 @@ public function paymentDataProvider()
 {
     return [
         'valid payment' => [
-            ['amount' => 100, 'currency' => 'EUR'], 
+            ['amount' => 100, 'currency' => 'EUR'],
             true
         ],
         'invalid amount' => [
-            ['amount' => -100, 'currency' => 'EUR'], 
+            ['amount' => -100, 'currency' => 'EUR'],
             false
         ],
         // More test cases
@@ -321,11 +333,13 @@ public function paymentDataProvider()
 #### 1. "Class does not exist" errors
 
 **Possible causes:**
+
 - Incorrect namespace
 - Missing autoloader configuration
 - Incorrect case in class name
 
 **Solution:**
+
 - Verify the namespace matches the directory structure
 - Check if the class is imported correctly with `use` statements
 - Verify the class name case matches the file name
@@ -333,11 +347,13 @@ public function paymentDataProvider()
 #### 2. Payment Gateway Connection Issues
 
 **Possible causes:**
+
 - Incorrect API credentials
 - Network issues
 - API endpoint unavailable
 
 **Solution:**
+
 - Verify API credentials in the module configuration
 - Check network connectivity to the API endpoints
 - Review API logs for error details
@@ -362,6 +378,7 @@ composer phpcbf
 
 1. **Magento Logging**:
    Use the Magento logger for debugging:
+
    ```php
    $this->logger->debug('Debug message');
    ```
@@ -381,4 +398,4 @@ composer phpcbf
 
 - [Magento 2 Developer Documentation](https://devdocs.magento.com/)
 - [PHP-FIG Standards](https://www.php-fig.org/psr/)
-- [MONEI API Documentation](https://docs.monei.com/api) 
+- [MONEI API Documentation](https://docs.monei.com/api)
