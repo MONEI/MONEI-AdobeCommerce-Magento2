@@ -36,8 +36,9 @@ class SetOrderStatusAndState implements SetOrderStatusAndStateInterface
     private $moduleConfig;
 
     /**
-     * @param OrderInterfaceFactory    $orderFactory
+     * @param OrderInterfaceFactory $orderFactory
      * @param OrderRepositoryInterface $orderRepository
+     * @param MoneiPaymentModuleConfigInterface $moduleConfig
      */
     public function __construct(
         OrderInterfaceFactory $orderFactory,
@@ -50,7 +51,7 @@ class SetOrderStatusAndState implements SetOrderStatusAndStateInterface
     }
 
     /**
-     * @inheritDoc
+     * @inheritdoc
      */
     public function execute(array $data): bool
     {

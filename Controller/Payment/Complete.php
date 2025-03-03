@@ -23,6 +23,7 @@ use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Model\ResourceModel\PendingOrder as PendingOrderResource;
 use Monei\MoneiPayment\Model\PendingOrderFactory;
 use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
+use Monei\MoneiPayment\Service\Logger;
 
 /**
  * Monei payment complete controller
@@ -74,7 +75,15 @@ class Complete implements ActionInterface
      */
     protected $orderSender;
 
+    /**
+     * @var CreateVaultPayment
+     */
     private CreateVaultPayment $createVaultPayment;
+
+    /**
+     * @var Logger
+     */
+    private Logger $logger;
 
     /**
      * @param Context $context
@@ -87,6 +96,7 @@ class Complete implements ActionInterface
      * @param PendingOrderFactory $pendingOrderFactory
      * @param PendingOrderResource $pendingOrderResource
      * @param CreateVaultPayment $createVaultPayment
+     * @param Logger $logger
      */
     public function __construct(
         Context $context,
@@ -98,7 +108,8 @@ class Complete implements ActionInterface
         MagentoRedirect $resultRedirectFactory,
         PendingOrderFactory $pendingOrderFactory,
         PendingOrderResource $pendingOrderResource,
-        CreateVaultPayment $createVaultPayment
+        CreateVaultPayment $createVaultPayment,
+        Logger $logger
     ) {
         $this->createVaultPayment = $createVaultPayment;
         $this->context = $context;
@@ -110,16 +121,23 @@ class Complete implements ActionInterface
         $this->resultRedirectFactory = $resultRedirectFactory;
         $this->pendingOrderFactory = $pendingOrderFactory;
         $this->pendingOrderResource = $pendingOrderResource;
+        $this->logger = $logger;
     }
 
     /**
-     * @inheritDoc
+     * @inheritdoc
      */
     public function execute()
     {
         $data = $this->context->getRequest()->getParams();
+        $this->logger->debug('[Complete controller]');
+        $this->logger->debug(sprintf('[Order ID] %s', $data['orderId'] ?? 'unknown'));
+        $this->logger->debug(sprintf('[Payment status] %s', $data['status'] ?? 'unknown'));
+        $this->logger->debug('[Payment data] ' . json_encode($data, JSON_PRETTY_PRINT));
+
         switch ($data['status']) {
             case Monei::ORDER_STATUS_AUTHORIZED:
+                $this->logger->debug('[Processing authorized payment]');
                 /** @var $order OrderInterface */
                 $order = $this->orderFactory->create()->loadByIncrementId($data['orderId']);
                 $payment = $order->getPayment();
@@ -141,29 +159,35 @@ class Complete implements ActionInterface
                 $pendingOrder = $this->pendingOrderFactory->create()->setOrderIncrementId($data['orderId']);
                 $this->pendingOrderResource->save($pendingOrder);
                 $this->orderRepository->save($order);
+                $this->logger->debug('[Order status updated] ' . $this->moduleConfig->getPreAuthorizedStatus());
 
                 return $this->resultRedirectFactory->setPath('checkout/onepage/success', ['_secure' => true]);
 
             case Monei::ORDER_STATUS_SUCCEEDED:
+                $this->logger->debug('[Processing succeeded payment]');
                 $this->generateInvoiceService->execute($data);
                 /** @var $order OrderInterface */
                 $order = $this->orderFactory->create()->loadByIncrementId($data['orderId']);
                 $order->setStatus($this->moduleConfig->getConfirmedStatus())->setState(Order::STATE_NEW);
                 $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $data['id']);
                 $this->orderRepository->save($order);
+                $this->logger->debug('[Order status updated] ' . $this->moduleConfig->getConfirmedStatus());
 
                 // send Order email
                 if ($order->getCanSendNewEmailFlag() && !$order->getEmailSent()) {
                     try {
+                        $this->logger->debug('[Sending order email]');
                         $this->orderSender->send($order);
                     } catch (\Exception $e) {
-                        $this->logger->critical($e);
+                        $this->logger->critical('[Email sending error] ' . $e->getMessage());
                     }
                 }
 
                 return $this->resultRedirectFactory->setPath('checkout/onepage/success', ['_secure' => true]);
 
             default:
+                $this->logger->debug('[Unknown payment status] Redirecting to cart');
+
                 return $this->resultRedirectFactory->setPath('checkout/cart', ['_secure' => true]);
         }
     }

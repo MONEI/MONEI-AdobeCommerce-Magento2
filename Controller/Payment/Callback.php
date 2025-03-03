@@ -31,16 +31,61 @@ use Exception;
  */
 class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
 {
+    /**
+     * @var string
+     */
     private string $errorMessage = '';
+
+    /**
+     * @var Context
+     */
     private Context $context;
+
+    /**
+     * @var SerializerInterface
+     */
     private SerializerInterface $serializer;
+
+    /**
+     * @var MoneiPaymentModuleConfigInterface
+     */
     private MoneiPaymentModuleConfigInterface $moduleConfig;
+
+    /**
+     * @var Logger
+     */
     private Logger $logger;
+
+    /**
+     * @var StoreManagerInterface
+     */
     private StoreManagerInterface $storeManager;
+
+    /**
+     * @var GenerateInvoiceInterface
+     */
     private GenerateInvoiceInterface $generateInvoiceService;
+
+    /**
+     * @var SetOrderStatusAndStateInterface
+     */
     private SetOrderStatusAndStateInterface $setOrderStatusAndStateService;
+
+    /**
+     * @var MagentoRedirect
+     */
     private MagentoRedirect $resultRedirectFactory;
 
+    /**
+     * @param Context $context
+     * @param SerializerInterface $serializer
+     * @param MoneiPaymentModuleConfigInterface $moduleConfig
+     * @param Logger $logger
+     * @param StoreManagerInterface $storeManager
+     * @param GenerateInvoiceInterface $generateInvoiceService
+     * @param SetOrderStatusAndStateInterface $setOrderStatusAndStateService
+     * @param MagentoRedirect $resultRedirectFactory
+     */
     public function __construct(
         Context $context,
         SerializerInterface $serializer,
@@ -62,27 +107,34 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     }
 
     /**
-     * @inheritDoc
+     * @inheritdoc
      */
     public function execute()
     {
         $content = $this->context->getRequest()->getContent();
         $body = $this->serializer->unserialize($content);
         if (isset($body['orderId'], $body['status'])) {
+            $this->logger->debug('[Callback controller]');
+            $this->logger->debug(sprintf('[Order ID] %s', $body['orderId']));
+            $this->logger->debug(sprintf('[Payment status] %s', $body['status']));
+
             if ($body['status'] === Monei::ORDER_STATUS_SUCCEEDED) {
                 $this->generateInvoiceService->execute($body);
             }
             $this->setOrderStatusAndStateService->execute($body);
         } else {
-            $this->logger->critical('Callback request failed.');
-            $this->logger->critical('Request body: ' . $content);
+            $this->logger->critical('[Callback error] Request failed');
+            $this->logger->critical('[Request body] ' . json_encode(json_decode($content), JSON_PRETTY_PRINT));
         }
 
         return $this->resultRedirectFactory->setPath('/');
     }
 
     /**
-     * @inheritDoc
+     * @inheritdoc
+     *
+     * @param RequestInterface $request
+     * @return InvalidRequestException|null
      */
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
     {
@@ -95,7 +147,10 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     }
 
     /**
-     * @inheritDoc
+     * @inheritdoc
+     *
+     * @param RequestInterface $request
+     * @return bool|null
      */
     public function validateForCsrf(RequestInterface $request): ?bool
     {
@@ -104,16 +159,16 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
             $header = $this->splitMoneiSignature((string) $header);
         }
         $body = $request->getContent();
-        $this->logger->debug('Callback request received.');
-        $this->logger->debug('Header:' . $this->serializer->serialize($header));
-        $this->logger->debug('Body:' . $body);
+        $this->logger->debug('[Callback validation]');
+        $this->logger->debug('[Signature header] ' . json_encode($header, JSON_PRETTY_PRINT));
+        $this->logger->debug('[Request body] ' . json_encode(json_decode($body), JSON_PRETTY_PRINT));
 
         try {
             $this->verifySignature($body, $header);
         } catch (Exception $e) {
             $this->errorMessage = $e->getMessage();
-            $this->logger->critical($e->getMessage());
-            $this->logger->critical('Request body: ' . $this->serializer->serialize($body));
+            $this->logger->critical('[Signature verification error] ' . $e->getMessage());
+            $this->logger->critical('[Request body] ' . json_encode(json_decode($body), JSON_PRETTY_PRINT));
 
             return false;
         }
@@ -127,6 +182,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
      * @param string $body
      * @param array $header
      * @throws LocalizedException
+     * @return void
      */
     private function verifySignature(string $body, array $header): void
     {
@@ -150,6 +206,12 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         return $this->moduleConfig->getApiKey($currentStoreId);
     }
 
+    /**
+     * Split Monei signature into components
+     *
+     * @param string $signature
+     * @return array
+     */
     private function splitMoneiSignature(string $signature): array
     {
         return array_reduce(explode(',', $signature), function ($result, $part) {

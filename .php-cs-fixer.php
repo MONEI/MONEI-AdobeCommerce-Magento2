@@ -46,7 +46,7 @@ return $config
         'phpdoc_types' => true,
         'phpdoc_var_without_name' => true,
         // Magento 2 specific docblock rules
-        'phpdoc_tag_type' => ['tags' => ['inheritDoc' => 'inline']],
+        'phpdoc_tag_type' => ['tags' => []],  // Disabled inheritDoc formatting
         'general_phpdoc_annotation_remove' => ['annotations' => ['author']],
         // Line length configuration
         'blank_line_before_statement' => true,

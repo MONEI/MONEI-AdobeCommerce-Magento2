@@ -1,3 +1,4 @@
 {
-  "exclude": "/\\/(\\.git|\\.hg|\\.svn|_?build|dist|vendor|node_modules)\\/$/"
+  "exclude": "/\\/(\\.git|\\.hg|\\.svn|_?build|dist|vendor|node_modules)\\/$/",
+  "psr12": true
 }

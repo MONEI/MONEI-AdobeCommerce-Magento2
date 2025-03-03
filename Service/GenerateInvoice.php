@@ -21,11 +21,32 @@ use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
  */
 class GenerateInvoice implements GenerateInvoiceInterface
 {
+    /**
+     * @var OrderInterfaceFactory
+     */
     private OrderInterfaceFactory $orderFactory;
+
+    /**
+     * @var TransactionFactory
+     */
     private TransactionFactory $transactionFactory;
+
+    /**
+     * @var OrderLockManagerInterface
+     */
     private OrderLockManagerInterface $orderLockManager;
+
+    /**
+     * @var CreateVaultPayment
+     */
     private CreateVaultPayment $createVaultPayment;
 
+    /**
+     * @param OrderInterfaceFactory $orderFactory
+     * @param TransactionFactory $transactionFactory
+     * @param OrderLockManagerInterface $orderLockManager
+     * @param CreateVaultPayment $createVaultPayment
+     */
     public function __construct(
         OrderInterfaceFactory $orderFactory,
         TransactionFactory $transactionFactory,
@@ -39,7 +60,10 @@ class GenerateInvoice implements GenerateInvoiceInterface
     }
 
     /**
-     * @inheritDoc
+     * @inheritdoc
+     *
+     * @param array $data
+     * @return void
      */
     public function execute(array $data): void
     {
@@ -81,6 +105,12 @@ class GenerateInvoice implements GenerateInvoiceInterface
         $this->orderLockManager->unlock($incrementId);
     }
 
+    /**
+     * Check if order is already paid
+     *
+     * @param OrderInterface $order
+     * @return bool
+     */
     private function isOrderAlreadyPaid(OrderInterface $order): bool
     {
         $payment = $order->getPayment();

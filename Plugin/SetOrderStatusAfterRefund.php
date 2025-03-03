@@ -70,8 +70,10 @@ class SetOrderStatusAfterRefund
             $order = $this->orderRepository->get($orderId);
 
             // Check if this is a Monei payment and not already closed
-            if (null !== $order->getData('monei_payment_id') &&
-                    'closed' !== $order->getState()) {
+            if (
+                null !== $order->getData('monei_payment_id') &&
+                'closed' !== $order->getState()
+            ) {
                 $orderStatus = Monei::STATUS_MONEI_PARTIALLY_REFUNDED;
                 $orderState = Order::STATE_PROCESSING;
                 $order->setStatus($orderStatus)->setState($orderState);

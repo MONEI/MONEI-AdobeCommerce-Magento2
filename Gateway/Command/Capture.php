@@ -29,7 +29,7 @@ class Capture implements CommandInterface
     }
 
     /**
-     * @inheritDoc
+     * @inheritdoc
      *
      * @param array $commandSubject
      */
