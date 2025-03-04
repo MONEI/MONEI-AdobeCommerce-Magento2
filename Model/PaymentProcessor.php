@@ -25,6 +25,7 @@ use Monei\MoneiPayment\Model\Payment\Status;
 use Monei\MoneiPayment\Service\InvoiceService;
 use Monei\MoneiPayment\Service\Logger;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 
 /**
  * Processes payments and updates order status
@@ -67,6 +68,11 @@ class PaymentProcessor implements PaymentProcessorInterface
     private MoneiPaymentModuleConfigInterface $moduleConfig;
 
     /**
+     * @var OrderSender
+     */
+    private OrderSender $orderSender;
+
+    /**
      * @param OrderRepositoryInterface $orderRepository
      * @param InvoiceService $invoiceService
      * @param LockManagerInterface $lockManager
@@ -74,6 +80,7 @@ class PaymentProcessor implements PaymentProcessorInterface
      * @param MoneiApiClient $moneiApiClient
      * @param PaymentDataProviderInterface $apiPaymentDataProvider
      * @param MoneiPaymentModuleConfigInterface $moduleConfig
+     * @param OrderSender $orderSender
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
@@ -82,7 +89,8 @@ class PaymentProcessor implements PaymentProcessorInterface
         Logger $logger,
         MoneiApiClient $moneiApiClient,
         PaymentDataProviderInterface $apiPaymentDataProvider,
-        MoneiPaymentModuleConfigInterface $moduleConfig
+        MoneiPaymentModuleConfigInterface $moduleConfig,
+        OrderSender $orderSender
     ) {
         $this->orderRepository = $orderRepository;
         $this->invoiceService = $invoiceService;
@@ -91,6 +99,7 @@ class PaymentProcessor implements PaymentProcessorInterface
         $this->moneiApiClient = $moneiApiClient;
         $this->apiPaymentDataProvider = $apiPaymentDataProvider;
         $this->moduleConfig = $moduleConfig;
+        $this->orderSender = $orderSender;
     }
 
     /**
@@ -387,6 +396,17 @@ class PaymentProcessor implements PaymentProcessorInterface
             $order->setState(\Magento\Sales\Model\Order::STATE_PROCESSING);
             $orderStatus = $this->moduleConfig->getConfirmedStatus($order->getStoreId());
             $order->setStatus($orderStatus);
+
+            // Send order email if it hasn't been sent yet
+            if ($order->getCanSendNewEmailFlag() && !$order->getEmailSent()) {
+                try {
+                    $this->logger->debug('[Sending order email]');
+                    $this->orderSender->send($order);
+                } catch (\Exception $e) {
+                    $this->logger->critical('[Email sending error] ' . $e->getMessage());
+                }
+            }
+
             $this->orderRepository->save($order);
 
             $this->logger->info(sprintf(

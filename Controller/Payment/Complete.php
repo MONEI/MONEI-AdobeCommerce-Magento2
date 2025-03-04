@@ -170,15 +170,7 @@ class Complete implements ActionInterface
                 // Process the payment
                 $this->paymentProcessor->processPayment($order, $paymentDTO);
 
-                // If payment is successful, send order email
-                if ($paymentDTO->isSucceeded() && $order->getCanSendNewEmailFlag() && !$order->getEmailSent()) {
-                    try {
-                        $this->logger->debug('[Sending order email]');
-                        $this->orderSender->send($order);
-                    } catch (\Exception $e) {
-                        $this->logger->critical('[Email sending error] ' . $e->getMessage());
-                    }
-                }
+                // Email is now sent from the PaymentProcessor
             } catch (\Exception $e) {
                 $this->logger->error(sprintf(
                     '[Error processing payment] Order %s, payment %s: %s',

@@ -372,6 +372,7 @@
             <argument name="moneiApiClient" xsi:type="object">Monei\MoneiPayment\Model\Api\MoneiApiClient</argument>
             <argument name="apiPaymentDataProvider" xsi:type="object">Monei\MoneiPayment\Api\PaymentDataProviderInterface</argument>
             <argument name="moduleConfig" xsi:type="object">Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface</argument>
+            <argument name="orderSender" xsi:type="object">Magento\Sales\Model\Order\Email\Sender\OrderSender</argument>
         </arguments>
     </type>
 
@@ -381,8 +382,10 @@
             <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
             <argument name="webhookPaymentDataProvider" xsi:type="object">Monei\MoneiPayment\Model\PaymentDataProvider\WebhookPaymentDataProvider</argument>
             <argument name="generateInvoiceService" xsi:type="object">Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface</argument>
+            <argument name="resultJsonFactory" xsi:type="object">Magento\Framework\Controller\Result\JsonFactory</argument>
             <argument name="paymentProcessor" xsi:type="object">Monei\MoneiPayment\Model\PaymentProcessor</argument>
             <argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
+            <argument name="validateWebhookSignatureService" xsi:type="object">Monei\MoneiPayment\Api\Service\ValidateWebhookSignatureInterface</argument>
         </arguments>
     </type>
 
