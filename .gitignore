@@ -26,5 +26,6 @@ node_modules
 .phpunit.result.cache
 /var/cache/*
 /generated/*
+/examples/*
 
 pretty-php.phar

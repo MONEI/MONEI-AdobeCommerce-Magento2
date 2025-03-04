@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Gateway\Command;
 
 use Magento\Payment\Gateway\CommandInterface;
+use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
 use Monei\MoneiPayment\Api\Service\RefundPaymentInterface;
 
 /**
@@ -42,7 +43,7 @@ class Refund implements CommandInterface
         $payment = $commandSubject['payment']->getPayment();
         $order = $payment->getOrder();
         $data = [
-            'paymentId' => $order->getData('monei_payment_id'),
+            'paymentId' => $order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID),
             'amount' => $commandSubject['amount'] * 100,
             'refundReason' => $payment->getCreditmemo()->getData('refund_reason'),
             'storeId' => (int) $order->getStoreId(),

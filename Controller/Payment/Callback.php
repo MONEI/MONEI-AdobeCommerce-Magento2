@@ -113,11 +113,12 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     {
         $content = $this->context->getRequest()->getContent();
         $body = $this->serializer->unserialize($content);
-        if (isset($body['orderId'], $body['status'])) {
-            $this->logger->debug('[Callback controller]');
-            $this->logger->debug(sprintf('[Order ID] %s', $body['orderId']));
-            $this->logger->debug(sprintf('[Payment status] %s', $body['status']));
 
+        // Log the entire body for debugging purposes
+        $this->logger->debug('[Callback controller]');
+        $this->logger->debug('[Request body] ' . json_encode(json_decode($content), JSON_PRETTY_PRINT));
+
+        if (isset($body['orderId'], $body['status'])) {
             if ($body['status'] === Monei::ORDER_STATUS_SUCCEEDED) {
                 $this->generateInvoiceService->execute($body);
             }

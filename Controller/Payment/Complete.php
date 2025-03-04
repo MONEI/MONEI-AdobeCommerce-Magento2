@@ -165,12 +165,12 @@ class Complete implements ActionInterface
 
             case Monei::ORDER_STATUS_SUCCEEDED:
                 $this->logger->debug('[Processing succeeded payment]');
-                $this->generateInvoiceService->execute($data);
                 /** @var $order OrderInterface */
                 $order = $this->orderFactory->create()->loadByIncrementId($data['orderId']);
                 $order->setStatus($this->moduleConfig->getConfirmedStatus())->setState(Order::STATE_NEW);
                 $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $data['id']);
                 $this->orderRepository->save($order);
+                $this->generateInvoiceService->execute($data);
                 $this->logger->debug('[Order status updated] ' . $this->moduleConfig->getConfirmedStatus());
 
                 // send Order email

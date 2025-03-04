@@ -306,4 +306,12 @@
             <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
         </arguments>
     </type>
+
+    <!-- Capture command configuration -->
+    <type name="Monei\MoneiPayment\Gateway\Command\Capture">
+        <arguments>
+            <argument name="capturePaymentService" xsi:type="object">Monei\MoneiPayment\Api\Service\CapturePaymentInterface</argument>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+        </arguments>
+    </type>
 </config>
