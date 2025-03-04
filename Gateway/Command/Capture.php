@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Gateway\Command;
 
 use Magento\Payment\Gateway\CommandInterface;
+use Magento\Framework\Exception\LocalizedException;
 use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
 
 /**
@@ -32,6 +33,7 @@ class Capture implements CommandInterface
      * @inheritdoc
      *
      * @param array $commandSubject
+     * @throws LocalizedException
      */
     public function execute(array $commandSubject)
     {
@@ -41,6 +43,14 @@ class Capture implements CommandInterface
             'amount' => $commandSubject['amount'] * 100
         ];
 
-        $this->capturePaymentService->execute($data);
+        $response = $this->capturePaymentService->execute($data);
+
+        if (isset($response['error']) && $response['error'] === true) {
+            if (isset($response['errorData']['message'])) {
+                throw new LocalizedException(__($response['errorData']['message']));
+            }
+
+            throw new LocalizedException(__($response['errorMessage']));
+        }
     }
 }

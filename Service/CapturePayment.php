@@ -49,6 +49,8 @@ class CapturePayment extends AbstractService implements CapturePaymentInterface
             $this->validate($data);
         } catch (\Exception $e) {
             $this->logger->critical('[Exception] ' . $e->getMessage());
+
+            return ['error' => true, 'errorMessage' => $e->getMessage()];
         }
 
         $requestBody = [
@@ -68,16 +70,33 @@ class CapturePayment extends AbstractService implements CapturePaymentInterface
                     'json' => $requestBody,
                 ]
             );
+
+            $responseBody = (string) $response->getBody();
+            $this->logger->debug('[Capture payment response]');
+            $this->logger->debug(json_encode(json_decode($responseBody), JSON_PRETTY_PRINT));
+
+            return $this->serializer->unserialize($responseBody);
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            $this->logger->critical('[RequestException] ' . $e->getMessage());
+            if ($e->hasResponse()) {
+                $errorResponse = (string) $e->getResponse()->getBody();
+                $this->logger->critical('[Error Response] ' . $errorResponse);
+
+                try {
+                    $errorData = $this->serializer->unserialize($errorResponse);
+
+                    return ['error' => true, 'errorMessage' => $errorData['message'] ?? $e->getMessage(), 'errorData' => $errorData];
+                } catch (\Exception $deserializeException) {
+                    $this->logger->critical('[Deserialize Exception] ' . $deserializeException->getMessage());
+                }
+            }
+
+            return ['error' => true, 'errorMessage' => $e->getMessage()];
         } catch (\Exception $e) {
             $this->logger->critical('[Exception] ' . $e->getMessage());
 
             return ['error' => true, 'errorMessage' => $e->getMessage()];
         }
-
-        $this->logger->debug('[Capture payment response]');
-        $this->logger->debug(json_encode(json_decode((string) $response->getBody()), JSON_PRETTY_PRINT));
-
-        return $this->serializer->unserialize($response->getBody());
     }
 
     /**
