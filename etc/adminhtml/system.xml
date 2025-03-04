@@ -61,17 +61,17 @@
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
         </field>
         <field id="type_of_payment" translate="label comment" sortOrder="70" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
-            <label>Type of payment</label>
-            <comment>If client wants to work with pre-authorized payments or not.</comment>
+            <label>Payment Action</label>
+            <comment>Choose whether to only authorize payments or to authorize and capture them immediately.</comment>
             <source_model>Monei\MoneiPayment\Model\Config\Source\TypeOfPayment</source_model>
           </field>
         <field id="confirmed_status" translate="label comment" type="select" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">
-            <label>Confirmed Status</label>
-            <source_model>Magento\Sales\Model\Config\Source\Order\Status\Processing</source_model>
-              <comment>Selectable with all the processing order statuses</comment>
+            <label>Captured Status</label>
+            <source_model>Monei\MoneiPayment\Model\Config\Source\ProcessingStatus</source_model>
+            <comment>Selectable with all the processing order statuses</comment>
         </field>
         <field id="pre_authorized_status" translate="label comment" type="select" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
-            <label>Pre-authorized Status</label>
+            <label>Authorized Status</label>
             <source_model>Monei\MoneiPayment\Model\Config\Source\PendingStatus</source_model>
             <comment>Selectable with all the pending order statuses</comment>
         </field>

@@ -27,8 +27,8 @@ class TypeOfPayment implements OptionSourceInterface
     public function toOptionArray(): array
     {
         return [
-            ['label' => __('Pre-authorized'), 'value' => self::TYPE_PRE_AUTHORIZED],
-            ['label' => __('Authorized'), 'value' => self::TYPE_AUTHORIZED],
+            ['label' => __('Authorize'), 'value' => self::TYPE_PRE_AUTHORIZED],
+            ['label' => __('Authorize and Capture'), 'value' => self::TYPE_AUTHORIZED],
         ];
     }
 }
