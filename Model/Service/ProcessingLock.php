@@ -8,33 +8,26 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Model\Service;
 
-use Magento\Framework\Lock\LockManagerInterface;
+use Magento\Framework\Exception\LocalizedException;
+use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Service\Logger;
 
 /**
- * Service for managing processing locks to prevent race conditions.
+ * Service for managing processing locks to prevent race conditions
  */
-class ProcessingLock
+class ProcessingLock implements ProcessingLockInterface
 {
-    // Lock prefix for Monei payment processing
-    private const LOCK_PREFIX = 'monei_payment_processing_';
-
-    // Lock timeout in seconds (5 minutes)
-    private const LOCK_TIMEOUT = 300;
-
     /**
      * @var LockManagerInterface
      */
-    private $lockManager;
+    private LockManagerInterface $lockManager;
 
     /**
      * @var Logger
      */
-    private $logger;
+    private Logger $logger;
 
     /**
-     * Constructor.
-     *
      * @param LockManagerInterface $lockManager
      * @param Logger $logger
      */
@@ -47,120 +40,78 @@ class ProcessingLock
     }
 
     /**
-     * Execute a callback function with a lock to prevent race conditions.
-     *
-     * This method ensures the lock is always released, even if an exception occurs.
-     *
-     * @param string   $orderId   Order increment ID
-     * @param string   $paymentId Monei payment ID
-     * @param callable $callback  Function to execute while holding the lock
-     *
-     * @return mixed The result of the callback function, or false if lock couldn't be acquired
+     * @inheritdoc
      */
     public function executeWithLock(string $orderId, string $paymentId, callable $callback)
     {
-        $lockName = $this->getLockName($orderId, $paymentId);
-
-        try {
-            $locked = $this->lockManager->lock($lockName, self::LOCK_TIMEOUT);
-
-            if (!$locked) {
-                $this->logger->info(\sprintf(
-                    '[Payment already processing] Order %s, payment %s',
-                    $orderId,
-                    $paymentId
-                ));
-
-                return false;
-            }
-
-            try {
-                // Execute the callback while holding the lock
-                return $callback();
-            } finally {
-                // Always release the lock, even if an exception occurred in the callback
-                $this->releaseLock($orderId, $paymentId);
-            }
-        } catch (\Exception $e) {
-            $this->logger->error(\sprintf(
-                '[Error in lock management] Order %s: %s',
-                $orderId,
-                $e->getMessage()
-            ));
-
-            return false;
-        }
+        return $this->lockManager->executeWithPaymentLock($orderId, $paymentId, $callback);
     }
 
     /**
-     * Acquire a lock for processing an order payment.
-     *
-     * @param string $orderId   Order increment ID
-     * @param string $paymentId Monei payment ID
-     *
-     * @return bool True if lock acquired, false otherwise
+     * @inheritdoc
      */
-    public function acquireLock(string $orderId, string $paymentId): bool
+    public function executeWithOrderLock(string $incrementId, callable $callback)
     {
-        $lockName = $this->getLockName($orderId, $paymentId);
-        $locked = $this->lockManager->lock($lockName, self::LOCK_TIMEOUT);
-
-        if ($locked) {
-            $this->logger->info(\sprintf(
-                '[Lock acquired] Order %s, payment %s',
-                $orderId,
-                $paymentId
-            ));
-        } else {
-            $this->logger->error(\sprintf(
-                '[Failed to acquire lock] Order %s, payment %s, timeout: %d seconds',
-                $orderId,
-                $paymentId,
-                self::LOCK_TIMEOUT
-            ));
-        }
-
-        return $locked;
+        return $this->lockManager->executeWithOrderLock($incrementId, $callback);
     }
 
     /**
-     * Release a lock for processing an order payment.
-     *
-     * @param string $orderId   Order increment ID
-     * @param string $paymentId Monei payment ID
-     *
-     * @return bool True if lock released, false otherwise
+     * @inheritdoc
+     */
+    public function acquireLock(string $orderId, string $paymentId, int $timeout = LockManagerInterface::DEFAULT_LOCK_TIMEOUT): bool
+    {
+        return $this->lockManager->lockPayment($orderId, $paymentId, $timeout);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function acquireOrderLock(string $incrementId, int $timeout = LockManagerInterface::DEFAULT_LOCK_TIMEOUT): bool
+    {
+        return $this->lockManager->lockOrder($incrementId, $timeout);
+    }
+
+    /**
+     * @inheritdoc
      */
     public function releaseLock(string $orderId, string $paymentId): bool
     {
-        $lockName = $this->getLockName($orderId, $paymentId);
-        $released = $this->lockManager->unlock($lockName);
-
-        if ($released) {
-            $this->logger->info(\sprintf(
-                '[Lock released] Order %s, payment %s',
-                $orderId,
-                $paymentId
-            ));
-        } else {
-            $this->logger->error(\sprintf(
-                '[Failed to release lock] Order %s, payment %s',
-                $orderId,
-                $paymentId
-            ));
-        }
-
-        return $released;
+        return $this->lockManager->unlockPayment($orderId, $paymentId);
     }
 
     /**
-     * Generate a unique lock name for a given order and payment ID.
-     *
-     * @param string $orderId   Order increment ID
-     * @param string $paymentId Monei payment ID
+     * @inheritdoc
      */
-    private function getLockName(string $orderId, string $paymentId): string
+    public function releaseOrderLock(string $incrementId): bool
     {
-        return self::LOCK_PREFIX . $orderId . '_' . $paymentId;
+        return $this->lockManager->unlockOrder($incrementId);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function isLocked(string $orderId, string $paymentId): bool
+    {
+        return $this->lockManager->isPaymentLocked($orderId, $paymentId);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function isOrderLocked(string $incrementId): bool
+    {
+        return $this->lockManager->isOrderLocked($incrementId);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function waitForUnlock(
+        string $orderId,
+        string $paymentId,
+        int $timeout = LockManagerInterface::DEFAULT_MAX_WAIT_TIME,
+        int $interval = LockManagerInterface::DEFAULT_WAIT_INTERVAL
+    ): bool {
+        return $this->lockManager->waitForPaymentUnlock($orderId, $paymentId, $timeout, $interval);
     }
 }

@@ -14,7 +14,10 @@ use Magento\Framework\App\ActionInterface;
 use Magento\Framework\Controller\Result\Redirect as MagentoRedirect;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Sales\Api\Data\OrderInterfaceFactory;
-use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
+use Monei\MoneiPayment\Model\Data\PaymentDTO;
+use Monei\MoneiPayment\Model\Payment\Status;
+use Monei\MoneiPayment\Model\PaymentProcessor;
+use Monei\MoneiPayment\Service\Logger;
 
 /**
  * Monei payment fail controller.
@@ -34,11 +37,6 @@ class Fail implements ActionInterface
     private $checkoutSession;
 
     /**
-     * @var SetOrderStatusAndStateInterface
-     */
-    private $setOrderStatusAndStateService;
-
-    /**
      * @var Context
      */
     private $context;
@@ -54,29 +52,42 @@ class Fail implements ActionInterface
     private $resultRedirectFactory;
 
     /**
+     * @var PaymentProcessor
+     */
+    private $paymentProcessor;
+
+    /**
+     * @var Logger
+     */
+    private $logger;
+
+    /**
      * Constructor for Fail controller.
      *
      * @param Context $context
      * @param Session $checkoutSession
      * @param OrderInterfaceFactory $orderFactory
-     * @param SetOrderStatusAndStateInterface $setOrderStatusAndStateService
      * @param ManagerInterface $messageManager
      * @param MagentoRedirect $resultRedirectFactory
+     * @param PaymentProcessor $paymentProcessor
+     * @param Logger $logger
      */
     public function __construct(
         Context $context,
         Session $checkoutSession,
         OrderInterfaceFactory $orderFactory,
-        SetOrderStatusAndStateInterface $setOrderStatusAndStateService,
         ManagerInterface $messageManager,
-        MagentoRedirect $resultRedirectFactory
+        MagentoRedirect $resultRedirectFactory,
+        PaymentProcessor $paymentProcessor,
+        Logger $logger
     ) {
         $this->context = $context;
         $this->checkoutSession = $checkoutSession;
         $this->orderFactory = $orderFactory;
-        $this->setOrderStatusAndStateService = $setOrderStatusAndStateService;
         $this->messageManager = $messageManager;
         $this->resultRedirectFactory = $resultRedirectFactory;
+        $this->paymentProcessor = $paymentProcessor;
+        $this->logger = $logger;
     }
 
     /**
@@ -88,7 +99,37 @@ class Fail implements ActionInterface
     {
         $data = $this->context->getRequest()->getParams();
         if (isset($data['orderId'])) {
-            $this->setOrderStatusAndStateService->execute($data);
+            try {
+                // Create a payment DTO with failed status
+                $paymentData = [
+                    'id' => $data['paymentId'] ?? 'unknown',
+                    'orderId' => $data['orderId'],
+                    'status' => $data['status'] ?? Status::FAILED,
+                    'amount' => $data['amount'] ?? 0,
+                    'currency' => $data['currency'] ?? 'EUR'
+                ];
+
+                $payment = PaymentDTO::fromArray($paymentData);
+
+                // Load the order
+                $order = $this->orderFactory->create()->loadByIncrementId($data['orderId']);
+
+                // Process the failed payment
+                $this->paymentProcessor->processPayment($order, $payment);
+
+                $this->logger->info(sprintf(
+                    '[Payment failed] Order %s, payment %s',
+                    $data['orderId'],
+                    $paymentData['id']
+                ));
+            } catch (\Exception $e) {
+                $this->logger->error(sprintf(
+                    '[Error processing failed payment] Order %s: %s',
+                    $data['orderId'],
+                    $e->getMessage()
+                ));
+            }
+
             $this->checkoutSession->restoreQuote();
             $this->messageManager->addErrorMessage(
                 __('Something went wrong while processing the payment. Quote was restored.')

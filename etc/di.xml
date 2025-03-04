@@ -35,12 +35,8 @@
                 type="Monei\MoneiPayment\Service\CapturePayment"/>
     <preference for="Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface"
                 type="Monei\MoneiPayment\Service\GenerateInvoice"/>
-    <preference for="Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface"
-                type="Monei\MoneiPayment\Service\SetOrderStatusAndState"/>
     <preference for="Magento\Sales\Controller\Adminhtml\Order\Creditmemo\Save"
                 type="Monei\MoneiPayment\Controller\Adminhtml\Order\Creditmemo\Save"/>
-    <preference for="Monei\MoneiPayment\Api\OrderLockManagerInterface"
-                type="Monei\MoneiPayment\Model\OrderLockManager"/>
 
     <type name="Monei\MoneiPayment\Service\Logger\Handler">
         <arguments>
@@ -300,7 +296,7 @@
     <!-- OrderProcessor service configuration -->
     <type name="Monei\MoneiPayment\Model\Service\OrderProcessor">
         <arguments>
-            <argument name="orderLockManager" xsi:type="object">Monei\MoneiPayment\Api\OrderLockManagerInterface</argument>
+            <argument name="lockManager" xsi:type="object">Monei\MoneiPayment\Api\LockManagerInterface</argument>
             <argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
             <argument name="transactionFactory" xsi:type="object">Magento\Framework\DB\TransactionFactory</argument>
             <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
@@ -312,6 +308,160 @@
         <arguments>
             <argument name="capturePaymentService" xsi:type="object">Monei\MoneiPayment\Api\Service\CapturePaymentInterface</argument>
             <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+        </arguments>
+    </type>
+
+    <!-- Payment Data Providers -->
+    <preference for="Monei\MoneiPayment\Api\PaymentDataProviderInterface" type="Monei\MoneiPayment\Model\PaymentDataProvider\ApiPaymentDataProvider" />
+
+    <!-- Lock Management -->
+    <preference for="Monei\MoneiPayment\Api\LockManagerInterface" type="Monei\MoneiPayment\Model\LockManager" />
+    <preference for="Monei\MoneiPayment\Model\Service\ProcessingLockInterface" type="Monei\MoneiPayment\Model\Service\ProcessingLock" />
+
+    <!-- Type configuration for WebhookPaymentDataProvider -->
+    <type name="Monei\MoneiPayment\Model\PaymentDataProvider\WebhookPaymentDataProvider">
+        <arguments>
+            <argument name="serializer" xsi:type="object">Magento\Framework\Serialize\Serializer\Json</argument>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+            <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Service\Api\MoneiApiClient</argument>
+        </arguments>
+    </type>
+
+    <!-- Type configuration for MoneiApiClient -->
+    <type name="Monei\MoneiPayment\Service\Api\MoneiApiClient">
+        <arguments>
+            <argument name="storeManager" xsi:type="object">Magento\Store\Model\StoreManagerInterface</argument>
+            <argument name="moduleConfig" xsi:type="object">Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface</argument>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+            <argument name="moduleVersion" xsi:type="object">Monei\MoneiPayment\Model\Config\Source\ModuleVersion</argument>
+        </arguments>
+    </type>
+
+    <!-- Type configuration for ApiPaymentDataProvider -->
+    <type name="Monei\MoneiPayment\Model\PaymentDataProvider\ApiPaymentDataProvider">
+        <arguments>
+            <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Service\Api\MoneiApiClient</argument>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+            <argument name="moduleConfig" xsi:type="object">Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface</argument>
+        </arguments>
+    </type>
+
+    <!-- Type configuration for LockManager -->
+    <type name="Monei\MoneiPayment\Model\LockManager">
+        <arguments>
+            <argument name="lockManager" xsi:type="object">Magento\Framework\Lock\Backend\Database</argument>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+        </arguments>
+    </type>
+
+    <!-- Type configuration for ProcessingLock -->
+    <type name="Monei\MoneiPayment\Model\Service\ProcessingLock">
+        <arguments>
+            <argument name="lockManager" xsi:type="object">Monei\MoneiPayment\Api\LockManagerInterface</argument>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+        </arguments>
+    </type>
+
+    <!-- Type configuration for PaymentProcessor -->
+    <type name="Monei\MoneiPayment\Model\PaymentProcessor">
+        <arguments>
+            <argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
+            <argument name="invoiceService" xsi:type="object">Monei\MoneiPayment\Service\InvoiceService</argument>
+            <argument name="lockManager" xsi:type="object">Monei\MoneiPayment\Api\LockManagerInterface</argument>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+            <argument name="moneiApiClient" xsi:type="object">Monei\MoneiPayment\Model\Api\MoneiApiClient</argument>
+            <argument name="apiPaymentDataProvider" xsi:type="object">Monei\MoneiPayment\Api\PaymentDataProviderInterface</argument>
+            <argument name="moduleConfig" xsi:type="object">Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface</argument>
+        </arguments>
+    </type>
+
+    <!-- Type configuration for Callback controller -->
+    <type name="Monei\MoneiPayment\Controller\Payment\Callback">
+        <arguments>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+            <argument name="webhookPaymentDataProvider" xsi:type="object">Monei\MoneiPayment\Model\PaymentDataProvider\WebhookPaymentDataProvider</argument>
+            <argument name="generateInvoiceService" xsi:type="object">Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface</argument>
+            <argument name="paymentProcessor" xsi:type="object">Monei\MoneiPayment\Model\PaymentProcessor</argument>
+            <argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
+        </arguments>
+    </type>
+
+    <!-- Type configuration for Fail controller -->
+    <type name="Monei\MoneiPayment\Controller\Payment\Fail">
+        <arguments>
+            <argument name="paymentProcessor" xsi:type="object">Monei\MoneiPayment\Model\PaymentProcessor</argument>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+        </arguments>
+    </type>
+
+    <!-- Type configuration for FailLastOrderByStatus controller -->
+    <type name="Monei\MoneiPayment\Controller\Payment\FailLastOrderByStatus">
+        <arguments>
+            <argument name="paymentProcessor" xsi:type="object">Monei\MoneiPayment\Model\PaymentProcessor</argument>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+        </arguments>
+    </type>
+
+    <!-- Payment Processing Services -->
+    <preference for="Monei\MoneiPayment\Api\PaymentProcessorInterface" type="Monei\MoneiPayment\Service\ProcessPaymentService" />
+    <preference for="Monei\MoneiPayment\Api\WebhooksHelperInterface" type="Monei\MoneiPayment\Service\WebhooksHelper" />
+    <preference for="Monei\MoneiPayment\Api\Service\ValidateWebhookSignatureInterface" type="Monei\MoneiPayment\Service\ValidateWebhookSignature" />
+
+    <!-- Type configuration for ProcessPaymentService -->
+    <type name="Monei\MoneiPayment\Service\ProcessPaymentService">
+        <arguments>
+            <argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
+            <argument name="lockManager" xsi:type="object">Monei\MoneiPayment\Api\LockManagerInterface</argument>
+            <argument name="invoiceService" xsi:type="object">Monei\MoneiPayment\Service\InvoiceService</argument>
+            <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Model\Api\MoneiApiClient</argument>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+            <argument name="apiPaymentDataProvider" xsi:type="object">Monei\MoneiPayment\Api\PaymentDataProviderInterface</argument>
+            <argument name="moduleConfig" xsi:type="object">Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface</argument>
+        </arguments>
+    </type>
+
+    <!-- Type configuration for WebhooksHelper -->
+    <type name="Monei\MoneiPayment\Service\WebhooksHelper">
+        <arguments>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+            <argument name="moduleConfig" xsi:type="object">Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface</argument>
+            <argument name="webhookPaymentDataProvider" xsi:type="object">Monei\MoneiPayment\Model\PaymentDataProvider\WebhookPaymentDataProvider</argument>
+            <argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
+            <argument name="paymentProcessor" xsi:type="object">Monei\MoneiPayment\Api\PaymentProcessorInterface</argument>
+            <argument name="eventManager" xsi:type="object">Magento\Framework\Event\ManagerInterface</argument>
+            <argument name="validateWebhookSignature" xsi:type="object">Monei\MoneiPayment\Api\Service\ValidateWebhookSignatureInterface</argument>
+        </arguments>
+    </type>
+
+    <!-- Type configuration for ValidateWebhookSignature -->
+    <type name="Monei\MoneiPayment\Service\ValidateWebhookSignature">
+        <arguments>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+        </arguments>
+    </type>
+
+    <!-- Type configuration for InvoiceService -->
+    <type name="Monei\MoneiPayment\Service\InvoiceService">
+        <arguments>
+            <argument name="magentoInvoiceService" xsi:type="object">Magento\Sales\Model\Service\InvoiceService</argument>
+            <argument name="invoiceRepository" xsi:type="object">Magento\Sales\Api\InvoiceRepositoryInterface</argument>
+            <argument name="transactionFactory" xsi:type="object">Magento\Framework\DB\TransactionFactory</argument>
+            <argument name="invoiceSender" xsi:type="object">Magento\Sales\Model\Order\Email\Sender\InvoiceSender</argument>
+            <argument name="lockManager" xsi:type="object">Monei\MoneiPayment\Api\LockManagerInterface</argument>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+            <argument name="moduleConfig" xsi:type="object">Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface</argument>
+        </arguments>
+    </type>
+
+    <!-- Type configuration for CaptureService -->
+    <type name="Monei\MoneiPayment\Service\CaptureService">
+        <arguments>
+            <argument name="moneiApiClient" xsi:type="object">Monei\MoneiPayment\Model\Api\MoneiApiClient</argument>
+            <argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
+            <argument name="invoiceRepository" xsi:type="object">Magento\Sales\Api\InvoiceRepositoryInterface</argument>
+            <argument name="lockManager" xsi:type="object">Monei\MoneiPayment\Api\LockManagerInterface</argument>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+            <argument name="moduleConfig" xsi:type="object">Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface</argument>
         </arguments>
     </type>
 </config>

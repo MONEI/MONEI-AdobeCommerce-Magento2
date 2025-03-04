@@ -10,14 +10,17 @@ namespace Monei\MoneiPayment\Cron;
 
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Sales\Api\Data\OrderInterfaceFactory;
+use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Model\ResourceModel\Order\Collection as OrderCollection;
+use Magento\Sales\Model\ResourceModel\Order\CollectionFactory as OrderCollectionFactory;
+use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
+use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Api\Service\CancelPaymentInterface;
-use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
-use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
-use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
-use Monei\MoneiPayment\Model\Payment\Monei;
-use Monei\MoneiPayment\Model\ResourceModel\PendingOrder\Collection;
-use Monei\MoneiPayment\Model\ResourceModel\PendingOrder\CollectionFactory;
-use Monei\MoneiPayment\Model\ResourceModel\PendingOrder as PendingOrderResource;
+use Monei\MoneiPayment\Model\Payment\Status;
+use Monei\MoneiPayment\Model\PaymentDataProvider\ApiPaymentDataProvider;
+use Monei\MoneiPayment\Model\PaymentProcessor;
+use Monei\MoneiPayment\Service\Logger;
 
 /**
  * Cron job for processing orders with Monei payment method.
@@ -25,9 +28,9 @@ use Monei\MoneiPayment\Model\ResourceModel\PendingOrder as PendingOrderResource;
 class ProcessPendingOrders
 {
     /**
-     * @var CollectionFactory
+     * @var OrderCollectionFactory
      */
-    private $collectionFactory;
+    private $orderCollectionFactory;
 
     /**
      * @var OrderInterfaceFactory
@@ -35,24 +38,24 @@ class ProcessPendingOrders
     private $orderFactory;
 
     /**
-     * @var GetPaymentInterface
+     * @var ApiPaymentDataProvider
      */
-    private $getPaymentService;
+    private $apiPaymentDataProvider;
 
     /**
-     * @var GenerateInvoiceInterface
+     * @var PaymentProcessor
      */
-    private $generateInvoiceService;
+    private $paymentProcessor;
 
     /**
-     * @var SetOrderStatusAndStateInterface
+     * @var OrderRepositoryInterface
      */
-    private $setOrderStatusAndStateService;
+    private $orderRepository;
 
     /**
-     * @var PendingOrderResource
+     * @var LockManagerInterface
      */
-    private $pendingOrderResource;
+    private $lockManager;
 
     /**
      * @var DateTime
@@ -65,35 +68,51 @@ class ProcessPendingOrders
     private $cancelPaymentService;
 
     /**
+     * @var MoneiPaymentModuleConfigInterface
+     */
+    private $moduleConfig;
+
+    /**
+     * @var Logger
+     */
+    private $logger;
+
+    /**
      * Constructor.
      *
-     * @param CollectionFactory $collectionFactory Factory for creating pending order collections
-     * @param OrderInterfaceFactory $orderFactory Factory for creating orders
-     * @param GetPaymentInterface $getPaymentService Service for retrieving payment details
-     * @param GenerateInvoiceInterface $generateInvoiceService Service for generating invoices
-     * @param SetOrderStatusAndStateInterface $setOrderStatusAndStateService Service for setting order status
-     * @param PendingOrderResource $pendingOrderResource Resource model for pending orders
-     * @param DateTime $date Date utility
-     * @param CancelPaymentInterface $cancelPaymentService Service for canceling payments
+     * @param OrderCollectionFactory $orderCollectionFactory
+     * @param OrderInterfaceFactory $orderFactory
+     * @param ApiPaymentDataProvider $apiPaymentDataProvider
+     * @param PaymentProcessor $paymentProcessor
+     * @param OrderRepositoryInterface $orderRepository
+     * @param LockManagerInterface $lockManager
+     * @param DateTime $date
+     * @param CancelPaymentInterface $cancelPaymentService
+     * @param MoneiPaymentModuleConfigInterface $moduleConfig
+     * @param Logger $logger
      */
     public function __construct(
-        CollectionFactory $collectionFactory,
+        OrderCollectionFactory $orderCollectionFactory,
         OrderInterfaceFactory $orderFactory,
-        GetPaymentInterface $getPaymentService,
-        GenerateInvoiceInterface $generateInvoiceService,
-        SetOrderStatusAndStateInterface $setOrderStatusAndStateService,
-        PendingOrderResource $pendingOrderResource,
+        ApiPaymentDataProvider $apiPaymentDataProvider,
+        PaymentProcessor $paymentProcessor,
+        OrderRepositoryInterface $orderRepository,
+        LockManagerInterface $lockManager,
         DateTime $date,
-        CancelPaymentInterface $cancelPaymentService
+        CancelPaymentInterface $cancelPaymentService,
+        MoneiPaymentModuleConfigInterface $moduleConfig,
+        Logger $logger
     ) {
-        $this->collectionFactory = $collectionFactory;
+        $this->orderCollectionFactory = $orderCollectionFactory;
         $this->orderFactory = $orderFactory;
-        $this->getPaymentService = $getPaymentService;
-        $this->generateInvoiceService = $generateInvoiceService;
-        $this->setOrderStatusAndStateService = $setOrderStatusAndStateService;
-        $this->pendingOrderResource = $pendingOrderResource;
+        $this->apiPaymentDataProvider = $apiPaymentDataProvider;
+        $this->paymentProcessor = $paymentProcessor;
+        $this->orderRepository = $orderRepository;
+        $this->lockManager = $lockManager;
         $this->date = $date;
         $this->cancelPaymentService = $cancelPaymentService;
+        $this->moduleConfig = $moduleConfig;
+        $this->logger = $logger;
     }
 
     /**
@@ -106,41 +125,75 @@ class ProcessPendingOrders
      */
     public function execute(): void
     {
-        /** @var Collection $collection */
-        $collection = $this->collectionFactory->create()->load();
+        $this->logger->info('[Cron] Starting to process pending Monei orders');
 
-        foreach ($collection as $item) {
-            $date = $this->date->date();
-            $order = $this->orderFactory->create()->loadByIncrementId($item->getOrderIncrementId());
-            if (Monei::STATUS_MONEI_AUTHORIZED !== $order->getStatus()) {
-                $this->pendingOrderResource->delete($item);
+        // Get orders with Monei payment method in authorized status
+        /** @var OrderCollection $collection */
+        $collection = $this->orderCollectionFactory->create();
+        $collection->addFieldToFilter('status', Status::getMagentoStatus(Status::AUTHORIZED));
+        $collection->addFieldToFilter('monei_payment_id', ['notnull' => true]);
 
+        $this->logger->info(sprintf('[Cron] Found %d pending orders to process', $collection->getSize()));
+
+        foreach ($collection as $order) {
+            $incrementId = $order->getIncrementId();
+            $paymentId = $order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID);
+
+            if (!$paymentId) {
+                $this->logger->warning(sprintf('[Cron] Order %s has no payment ID', $incrementId));
                 continue;
             }
+
+            // Skip if the order is already being processed
+            if ($this->lockManager->isOrderLocked($incrementId)) {
+                $this->logger->info(sprintf('[Cron] Order %s is locked, skipping', $incrementId));
+                continue;
+            }
+
+            $this->logger->info(sprintf('[Cron] Processing order %s with payment ID %s', $incrementId, $paymentId));
 
             $orderDate = $order->getCreatedAt();
-            $diff = (int) (strtotime($date) - strtotime($orderDate)) / (60 * 60 * 24);
-            if ($diff >= 7) {
-                $data = [
-                    'paymentId' => $order->getData('monei_payment_id'),
-                    'cancellationReason' => 'fraudulent',
-                ];
-                $response = $this->cancelPaymentService->execute($data);
-                $this->setOrderStatusAndStateService->execute($response);
-                $this->pendingOrderResource->delete($item);
+            $currentDate = $this->date->date();
+            $daysDiff = (int) (strtotime($currentDate) - strtotime($orderDate)) / (60 * 60 * 24);
+
+            // Cancel payments older than 7 days
+            if ($daysDiff >= 7) {
+                $this->logger->info(sprintf('[Cron] Order %s is %d days old, canceling payment', $incrementId, $daysDiff));
+
+                try {
+                    $data = [
+                        'paymentId' => $paymentId,
+                        'cancellationReason' => 'abandoned',
+                    ];
+                    $this->cancelPaymentService->execute($data);
+
+                    // Process the canceled payment
+                    $this->apiPaymentDataProvider->clearCache($paymentId);
+                    $this->paymentProcessor->processPaymentById($order, $paymentId, $this->apiPaymentDataProvider);
+                } catch (\Exception $e) {
+                    $this->logger->error(sprintf(
+                        '[Cron] Error canceling payment for order %s: %s',
+                        $incrementId,
+                        $e->getMessage()
+                    ));
+                }
 
                 continue;
             }
 
-            $response = $this->getPaymentService->execute($order->getData('monei_payment_id'));
-            if (Monei::ORDER_STATUS_SUCCEEDED === $response['status']) {
-                $this->generateInvoiceService->execute($response);
-                $this->setOrderStatusAndStateService->execute($response);
-                $this->pendingOrderResource->delete($item);
-            } elseif (Monei::ORDER_STATUS_CANCELED === $response['status']) {
-                $this->setOrderStatusAndStateService->execute($response);
-                $this->pendingOrderResource->delete($item);
+            // Process the payment to check its current status
+            try {
+                $this->apiPaymentDataProvider->clearCache($paymentId);
+                $this->paymentProcessor->processPaymentById($order, $paymentId, $this->apiPaymentDataProvider);
+            } catch (\Exception $e) {
+                $this->logger->error(sprintf(
+                    '[Cron] Error processing payment for order %s: %s',
+                    $incrementId,
+                    $e->getMessage()
+                ));
             }
         }
+
+        $this->logger->info('[Cron] Finished processing pending Monei orders');
     }
 }

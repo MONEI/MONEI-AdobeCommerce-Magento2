@@ -26,6 +26,22 @@ class ProcessingStatus extends Status
     {
         $options = parent::toOptionArray();
 
+        // Add Monei-specific status if not already present
+        $moneiSucceededFound = false;
+        foreach ($options as $option) {
+            if (isset($option['value']) && $option['value'] === 'monei_succeeded') {
+                $moneiSucceededFound = true;
+                break;
+            }
+        }
+
+        if (!$moneiSucceededFound) {
+            $options[] = [
+                'value' => 'monei_succeeded',
+                'label' => __('Monei - succeeded')
+            ];
+        }
+
         // Filter out unwanted statuses
         return array_filter($options, function ($option) {
             // Skip if array doesn't have value or label

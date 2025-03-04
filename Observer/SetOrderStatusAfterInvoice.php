@@ -55,12 +55,19 @@ class SetOrderStatusAfterInvoice implements ObserverInterface
     {
         $order = $observer->getOrder();
         $invoice = $observer->getInvoice();
+
+        // Only proceed if this is a Monei payment and the invoice is paid
         if (null !== $order->getData('monei_payment_id') && true === $invoice->getIsPaid()) {
-            $orderStatus = $this->moduleConfig->getConfirmedStatus($order->getStoreId())
+            $confirmedStatus = $this->moduleConfig->getConfirmedStatus($order->getStoreId())
                 ?? Monei::STATUS_MONEI_SUCCEDED;
-            $orderState = Order::STATE_PROCESSING;
-            $order->setStatus($orderStatus)->setState($orderState);
-            $this->orderRepository->save($order);
+
+            // Only update if the order is not already in the confirmed status
+            // This prevents redundancy with the refactored payment processing logic
+            if ($order->getStatus() !== $confirmedStatus) {
+                $orderState = Order::STATE_PROCESSING;
+                $order->setStatus($confirmedStatus)->setState($orderState);
+                $this->orderRepository->save($order);
+            }
         }
     }
 }

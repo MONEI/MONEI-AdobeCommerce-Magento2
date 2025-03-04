@@ -21,6 +21,7 @@ Accept payments through [MONEI](https://monei.com) in your Adobe Commerce (Magen
       - [Option 2: Direct Download from Main Branch](#option-2-direct-download-from-main-branch)
     - [Before You Begin](#before-you-begin)
   - [Configuration](#configuration)
+  - [MONEI PHP SDK](#monei-php-sdk)
   - [Demo](#demo)
   - [Development](#development)
     - [Docker Setup](#docker-setup)
@@ -49,12 +50,14 @@ MONEI Payments for Adobe Commerce (Magento 2) allows you to seamlessly integrate
 - Real-time payment notifications and order status updates
 - Detailed transaction reporting in your MONEI dashboard
 - Customizable payment experience to match your store's design
+- Integration with the official MONEI PHP SDK for reliable API communication
 
 ## Requirements
 
 - PHP: ^8.1.0
 - Magento: >=2.4.5
 - MONEI Account ([Sign up here](https://monei.com/signup))
+- MONEI PHP SDK: ^2.4.3 (automatically installed with Composer)
 
 ## Installation
 
@@ -91,13 +94,24 @@ php magento/bin/magento cache:flush
 1. Download the latest release from the [GitHub repository](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/releases)
 2. Extract the contents to your `app/code/Monei/MoneiPayment` directory
 3. Follow steps 2-4 from the Composer installation instructions
+4. Install the MONEI PHP SDK:
+
+```bash
+composer require monei/monei-php-sdk:^2.4.3
+```
 
 #### Option 2: Direct Download from Main Branch
 
 1. Download the [latest version](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/archive/refs/heads/main.zip) from the main branch
 2. Create a directory called `app/code/Monei/MoneiPayment` inside your Magento 2 project
 3. Unzip the downloaded archive in this directory
-4. Go to your Adobe Commerce (Magento 2) root directory and run:
+4. Install the MONEI PHP SDK:
+
+```bash
+composer require monei/monei-php-sdk:^2.4.3
+```
+
+5. Go to your Adobe Commerce (Magento 2) root directory and run:
 
 ```bash
 php bin/magento module:enable Monei_MoneiPayment
@@ -122,6 +136,19 @@ When testing your integration:
 5. Save the configuration
 
 For detailed configuration instructions, please refer to our [official documentation](https://docs.monei.com/docs/e-commerce/adobe-commerce/).
+
+## MONEI PHP SDK
+
+This module integrates with the official [MONEI PHP SDK](https://github.com/MONEI/monei-php-sdk) version 2.4.3 or higher. The SDK provides a reliable and well-maintained interface to the MONEI API, handling:
+
+- Payment creation, retrieval, and management
+- Webhook signature verification
+- Error handling and exceptions
+- Proper API authentication
+
+The SDK is automatically installed when you install the module via Composer. If you installed the module manually, make sure to install the SDK separately as shown in the installation instructions.
+
+For detailed information on how to use the MONEI PHP SDK in your custom code, see our [SDK Integration Guide](docs/MONEI_PHP_SDK.md).
 
 ## Demo
 

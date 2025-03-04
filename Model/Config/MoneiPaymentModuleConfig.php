@@ -306,11 +306,18 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      */
     public function getConfirmedStatus($storeId = null): string
     {
-        return (string) $this->scopeConfig->getValue(
+        $configuredStatus = $this->scopeConfig->getValue(
             self::CONFIRMED_STATUS,
             ScopeInterface::SCOPE_STORE,
             $storeId
         );
+
+        // If no status is configured or it's empty, return the Monei-specific status
+        if (empty($configuredStatus)) {
+            return 'monei_succeeded';
+        }
+
+        return (string) $configuredStatus;
     }
 
     /**
@@ -375,5 +382,24 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
             ScopeInterface::SCOPE_STORE,
             $storeId
         );
+    }
+
+    /**
+     * Check if invoice emails should be sent.
+     *
+     * @param int|null $storeId The store ID to check the configuration for
+     *
+     * @return bool True if invoice emails should be sent, false otherwise
+     */
+    public function shouldSendInvoiceEmail($storeId = null): bool
+    {
+        // Check if invoice emails are enabled in Magento's global settings
+        $sendInvoiceEmail = $this->scopeConfig->getValue(
+            'sales_email/invoice/enabled',
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+
+        return (bool) $sendInvoiceEmail;
     }
 }

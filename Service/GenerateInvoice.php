@@ -12,7 +12,7 @@ use Magento\Framework\DB\TransactionFactory;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\Data\OrderInterfaceFactory;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
-use Monei\MoneiPayment\Api\OrderLockManagerInterface;
+use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
 use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 
@@ -32,9 +32,9 @@ class GenerateInvoice implements GenerateInvoiceInterface
     private TransactionFactory $transactionFactory;
 
     /**
-     * @var OrderLockManagerInterface
+     * @var LockManagerInterface
      */
-    private OrderLockManagerInterface $orderLockManager;
+    private LockManagerInterface $lockManager;
 
     /**
      * @var CreateVaultPayment
@@ -44,17 +44,17 @@ class GenerateInvoice implements GenerateInvoiceInterface
     /**
      * @param OrderInterfaceFactory $orderFactory
      * @param TransactionFactory $transactionFactory
-     * @param OrderLockManagerInterface $orderLockManager
+     * @param LockManagerInterface $lockManager
      * @param CreateVaultPayment $createVaultPayment
      */
     public function __construct(
         OrderInterfaceFactory $orderFactory,
         TransactionFactory $transactionFactory,
-        OrderLockManagerInterface $orderLockManager,
+        LockManagerInterface $lockManager,
         CreateVaultPayment $createVaultPayment
     ) {
         $this->createVaultPayment = $createVaultPayment;
-        $this->orderLockManager = $orderLockManager;
+        $this->lockManager = $lockManager;
         $this->transactionFactory = $transactionFactory;
         $this->orderFactory = $orderFactory;
     }
@@ -74,35 +74,37 @@ class GenerateInvoice implements GenerateInvoiceInterface
             return;
         }
 
-        $isOrderLocked = $this->orderLockManager->isLocked($incrementId);
+        $isOrderLocked = $this->lockManager->isOrderLocked($incrementId);
         if ($isOrderLocked || $this->isOrderAlreadyPaid($order)) {
             return;
         }
 
-        $this->orderLockManager->lock($incrementId);
-        $payment = $order->getPayment();
-        if ($payment) {
-            $payment->setLastTransId($data['id']);
-        }
-        $invoice = $order->prepareInvoice();
-        if (!$invoice->getAllItems()) {
-            return;
-        }
-        $invoice->register()->capture();
-        $order->addRelatedObject($invoice);
-        if ($payment) {
-            $payment->setCreatedInvoice($invoice);
-            if ($order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION)) {
-                $vaultCreated = $this->createVaultPayment->execute(
-                    $data['id'],
-                    $payment
-                );
-                $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, $vaultCreated);
+        $this->lockManager->lockOrder($incrementId);
+        try {
+            $payment = $order->getPayment();
+            if ($payment) {
+                $payment->setLastTransId($data['id']);
             }
+            $invoice = $order->prepareInvoice();
+            if (!$invoice->getAllItems()) {
+                return;
+            }
+            $invoice->register()->capture();
+            $order->addRelatedObject($invoice);
+            if ($payment) {
+                $payment->setCreatedInvoice($invoice);
+                if ($order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION)) {
+                    $vaultCreated = $this->createVaultPayment->execute(
+                        $data['id'],
+                        $payment
+                    );
+                    $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, $vaultCreated);
+                }
+            }
+            $this->transactionFactory->create()->addObject($invoice)->addObject($invoice->getOrder())->save();
+        } finally {
+            $this->lockManager->unlockOrder($incrementId);
         }
-        $this->transactionFactory->create()->addObject($invoice)->addObject($invoice->getOrder())->save();
-
-        $this->orderLockManager->unlock($incrementId);
     }
 
     /**

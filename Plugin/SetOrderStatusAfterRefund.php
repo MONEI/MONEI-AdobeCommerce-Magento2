@@ -12,7 +12,7 @@ use Magento\Sales\Api\Data\CreditmemoInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Service\CreditmemoService;
 use Magento\Sales\Model\Order;
-use Monei\MoneiPayment\Model\Payment\Monei;
+use Monei\MoneiPayment\Model\Payment\Status;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -74,7 +74,7 @@ class SetOrderStatusAfterRefund
                 null !== $order->getData('monei_payment_id') &&
                 'closed' !== $order->getState()
             ) {
-                $orderStatus = Monei::STATUS_MONEI_PARTIALLY_REFUNDED;
+                $orderStatus = Status::MAGENTO_STATUS_MAP[Status::PARTIALLY_REFUNDED];
                 $orderState = Order::STATE_PROCESSING;
                 $order->setStatus($orderStatus)->setState($orderState);
                 $this->orderRepository->save($order);

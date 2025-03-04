@@ -186,4 +186,11 @@ interface MoneiPaymentModuleConfigInterface
      * @param int|null $storeId
      */
     public function getSortOrder($storeId = null): int;
+
+    /**
+     * Check if invoice emails should be sent.
+     *
+     * @param int|null $storeId
+     */
+    public function shouldSendInvoiceEmail($storeId = null): bool;
 }

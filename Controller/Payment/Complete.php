@@ -18,11 +18,11 @@ use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 use Magento\Sales\Model\Order;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
-use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
-use Monei\MoneiPayment\Model\Payment\Monei;
-use Monei\MoneiPayment\Model\ResourceModel\PendingOrder as PendingOrderResource;
-use Monei\MoneiPayment\Model\PendingOrderFactory;
-use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
+use Monei\MoneiPayment\Api\LockManagerInterface;
+use Monei\MoneiPayment\Model\Data\PaymentDTO;
+use Monei\MoneiPayment\Model\Payment\Status;
+use Monei\MoneiPayment\Model\PaymentDataProvider\ApiPaymentDataProvider;
+use Monei\MoneiPayment\Model\PaymentProcessor;
 use Monei\MoneiPayment\Service\Logger;
 
 /**
@@ -46,11 +46,6 @@ class Complete implements ActionInterface
     private $moduleConfig;
 
     /**
-     * @var GenerateInvoiceInterface
-     */
-    private $generateInvoiceService;
-
-    /**
      * @var Context
      */
     private $context;
@@ -61,24 +56,9 @@ class Complete implements ActionInterface
     private $resultRedirectFactory;
 
     /**
-     * @var PendingOrderFactory
-     */
-    private $pendingOrderFactory;
-
-    /**
-     * @var PendingOrderResource
-     */
-    private $pendingOrderResource;
-
-    /**
      * @var OrderSender
      */
     protected $orderSender;
-
-    /**
-     * @var CreateVaultPayment
-     */
-    private CreateVaultPayment $createVaultPayment;
 
     /**
      * @var Logger
@@ -86,16 +66,30 @@ class Complete implements ActionInterface
     private Logger $logger;
 
     /**
+     * @var PaymentProcessor
+     */
+    private PaymentProcessor $paymentProcessor;
+
+    /**
+     * @var ApiPaymentDataProvider
+     */
+    private ApiPaymentDataProvider $apiPaymentDataProvider;
+
+    /**
+     * @var LockManagerInterface
+     */
+    private LockManagerInterface $lockManager;
+
+    /**
      * @param Context $context
      * @param OrderRepositoryInterface $orderRepository
      * @param OrderSender $orderSender
      * @param OrderInterfaceFactory $orderFactory
      * @param MoneiPaymentModuleConfigInterface $moduleConfig
-     * @param GenerateInvoiceInterface $generateInvoiceService
      * @param MagentoRedirect $resultRedirectFactory
-     * @param PendingOrderFactory $pendingOrderFactory
-     * @param PendingOrderResource $pendingOrderResource
-     * @param CreateVaultPayment $createVaultPayment
+     * @param PaymentProcessor $paymentProcessor
+     * @param ApiPaymentDataProvider $apiPaymentDataProvider
+     * @param LockManagerInterface $lockManager
      * @param Logger $logger
      */
     public function __construct(
@@ -104,23 +98,21 @@ class Complete implements ActionInterface
         OrderSender $orderSender,
         OrderInterfaceFactory $orderFactory,
         MoneiPaymentModuleConfigInterface $moduleConfig,
-        GenerateInvoiceInterface $generateInvoiceService,
         MagentoRedirect $resultRedirectFactory,
-        PendingOrderFactory $pendingOrderFactory,
-        PendingOrderResource $pendingOrderResource,
-        CreateVaultPayment $createVaultPayment,
+        PaymentProcessor $paymentProcessor,
+        ApiPaymentDataProvider $apiPaymentDataProvider,
+        LockManagerInterface $lockManager,
         Logger $logger
     ) {
-        $this->createVaultPayment = $createVaultPayment;
         $this->context = $context;
         $this->orderRepository = $orderRepository;
         $this->orderSender = $orderSender;
         $this->orderFactory = $orderFactory;
         $this->moduleConfig = $moduleConfig;
-        $this->generateInvoiceService = $generateInvoiceService;
         $this->resultRedirectFactory = $resultRedirectFactory;
-        $this->pendingOrderFactory = $pendingOrderFactory;
-        $this->pendingOrderResource = $pendingOrderResource;
+        $this->paymentProcessor = $paymentProcessor;
+        $this->apiPaymentDataProvider = $apiPaymentDataProvider;
+        $this->lockManager = $lockManager;
         $this->logger = $logger;
     }
 
@@ -135,46 +127,51 @@ class Complete implements ActionInterface
         $this->logger->debug(sprintf('[Payment status] %s', $data['status'] ?? 'unknown'));
         $this->logger->debug('[Payment data] ' . json_encode($data, JSON_PRETTY_PRINT));
 
-        switch ($data['status']) {
-            case Monei::ORDER_STATUS_AUTHORIZED:
-                $this->logger->debug('[Processing authorized payment]');
-                /** @var $order OrderInterface */
-                $order = $this->orderFactory->create()->loadByIncrementId($data['orderId']);
-                $payment = $order->getPayment();
-                if ($payment) {
-                    $payment->setLastTransId($data['id']);
-                    if ($order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION)) {
-                        $vaultCreated = $this->createVaultPayment->execute(
-                            $data['id'],
-                            $payment
-                        );
-                        $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, $vaultCreated);
-                    }
-                }
+        // Check if we have the required parameters
+        if (!isset($data['orderId']) || !isset($data['id']) || !isset($data['status'])) {
+            $this->logger->error('[Missing required parameters]');
+            return $this->resultRedirectFactory->setPath('checkout/cart', ['_secure' => true]);
+        }
 
-                $order
-                    ->setStatus($this->moduleConfig->getPreAuthorizedStatus())
-                    ->setState(Order::STATE_PENDING_PAYMENT);
-                $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $data['id']);
-                $pendingOrder = $this->pendingOrderFactory->create()->setOrderIncrementId($data['orderId']);
-                $this->pendingOrderResource->save($pendingOrder);
-                $this->orderRepository->save($order);
-                $this->logger->debug('[Order status updated] ' . $this->moduleConfig->getPreAuthorizedStatus());
+        $orderId = $data['orderId'];
+        $paymentId = $data['id'];
 
-                return $this->resultRedirectFactory->setPath('checkout/onepage/success', ['_secure' => true]);
+        // Load the order
+        /** @var $order OrderInterface */
+        $order = $this->orderFactory->create()->loadByIncrementId($orderId);
+        if (!$order->getId()) {
+            $this->logger->error(sprintf('[Order not found] %s', $orderId));
+            return $this->resultRedirectFactory->setPath('checkout/cart', ['_secure' => true]);
+        }
 
-            case Monei::ORDER_STATUS_SUCCEEDED:
-                $this->logger->debug('[Processing succeeded payment]');
-                /** @var $order OrderInterface */
-                $order = $this->orderFactory->create()->loadByIncrementId($data['orderId']);
-                $order->setStatus($this->moduleConfig->getConfirmedStatus())->setState(Order::STATE_NEW);
-                $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $data['id']);
-                $this->orderRepository->save($order);
-                $this->generateInvoiceService->execute($data);
-                $this->logger->debug('[Order status updated] ' . $this->moduleConfig->getConfirmedStatus());
+        // Check if payment is already being processed by the webhook
+        if ($this->lockManager->isPaymentLocked($orderId, $paymentId)) {
+            $this->logger->info(sprintf(
+                '[Payment already being processed] Order %s, payment %s - waiting for completion',
+                $orderId,
+                $paymentId
+            ));
 
-                // send Order email
-                if ($order->getCanSendNewEmailFlag() && !$order->getEmailSent()) {
+            // Wait for processing to complete
+            $unlocked = $this->lockManager->waitForPaymentUnlock($orderId, $paymentId);
+            if (!$unlocked) {
+                $this->logger->warning(sprintf(
+                    '[Timeout waiting for payment processing] Order %s, payment %s',
+                    $orderId,
+                    $paymentId
+                ));
+            }
+        } else {
+            // Process the payment
+            try {
+                // Create a PaymentDTO from the redirect data
+                $paymentDTO = PaymentDTO::fromArray($data);
+
+                // Process the payment
+                $this->paymentProcessor->processPayment($order, $paymentDTO);
+
+                // If payment is successful, send order email
+                if ($paymentDTO->isSucceeded() && $order->getCanSendNewEmailFlag() && !$order->getEmailSent()) {
                     try {
                         $this->logger->debug('[Sending order email]');
                         $this->orderSender->send($order);
@@ -182,13 +179,21 @@ class Complete implements ActionInterface
                         $this->logger->critical('[Email sending error] ' . $e->getMessage());
                     }
                 }
+            } catch (\Exception $e) {
+                $this->logger->error(sprintf(
+                    '[Error processing payment] Order %s, payment %s: %s',
+                    $orderId,
+                    $paymentId,
+                    $e->getMessage()
+                ));
+            }
+        }
 
-                return $this->resultRedirectFactory->setPath('checkout/onepage/success', ['_secure' => true]);
-
-            default:
-                $this->logger->debug('[Unknown payment status] Redirecting to cart');
-
-                return $this->resultRedirectFactory->setPath('checkout/cart', ['_secure' => true]);
+        // Determine redirect based on payment status
+        if ($data['status'] === Status::SUCCEEDED || $data['status'] === Status::AUTHORIZED) {
+            return $this->resultRedirectFactory->setPath('checkout/onepage/success', ['_secure' => true]);
+        } else {
+            return $this->resultRedirectFactory->setPath('checkout/cart', ['_secure' => true]);
         }
     }
 }

@@ -13,7 +13,7 @@ use Magento\Framework\DB\TransactionFactory;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
-use Monei\MoneiPayment\Api\OrderLockManagerInterface;
+use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Service\Logger;
 
 /**
@@ -22,9 +22,9 @@ use Monei\MoneiPayment\Service\Logger;
 class OrderProcessor
 {
     /**
-     * @var OrderLockManagerInterface
+     * @var LockManagerInterface
      */
-    private $orderLockManager;
+    private $lockManager;
 
     /**
      * @var OrderRepositoryInterface
@@ -44,18 +44,18 @@ class OrderProcessor
     /**
      * Constructor.
      *
-     * @param OrderLockManagerInterface $orderLockManager
+     * @param LockManagerInterface $lockManager
      * @param OrderRepositoryInterface $orderRepository
      * @param TransactionFactory $transactionFactory
      * @param Logger $logger
      */
     public function __construct(
-        OrderLockManagerInterface $orderLockManager,
+        LockManagerInterface $lockManager,
         OrderRepositoryInterface $orderRepository,
         TransactionFactory $transactionFactory,
         Logger $logger
     ) {
-        $this->orderLockManager = $orderLockManager;
+        $this->lockManager = $lockManager;
         $this->orderRepository = $orderRepository;
         $this->transactionFactory = $transactionFactory;
         $this->logger = $logger;
@@ -63,16 +63,12 @@ class OrderProcessor
     }
 
     /**
-     * Execute a callback function with a lock to prevent race conditions.
-     *
-     * This method ensures the lock is always released, even if an exception occurs.
+     * Execute a callback with order locking to prevent race conditions.
      *
      * @param OrderInterface $order
-     * @param callable $callback Function to execute while holding the lock
-     *
+     * @param callable $callback
+     * @return mixed
      * @throws LocalizedException
-     *
-     * @return mixed The result of the callback function, or false if lock couldn't be acquired
      */
     public function executeWithLock(OrderInterface $order, callable $callback)
     {
@@ -86,42 +82,28 @@ class OrderProcessor
 
         $this->logger->debug(sprintf('[Attempting to process] Order %s with lock', $incrementId));
 
-        // Check if order is already locked
-        if ($this->orderLockManager->isLocked($incrementId)) {
-            $this->logger->logOrder($incrementId, '[Order is already being processed] By another request');
-
-            return false;
+        // Try to acquire a lock
+        if (!$this->lockManager->lockOrder($incrementId)) {
+            $this->logger->warning(sprintf('[OrderProcessor] Could not acquire lock for order %s', $incrementId));
+            throw new LocalizedException(__('Order %1 is currently being processed. Please try again later.', $incrementId));
         }
 
-        // Acquire lock
-        $lockAcquired = $this->orderLockManager->lock($incrementId);
-        if (!$lockAcquired) {
-            $this->logger->logOrder($incrementId, '[Could not acquire lock] For order');
-
-            return false;
-        }
-
-        $this->logger->debug(sprintf('[Lock acquired] Order %s', $incrementId));
+        $this->logger->debug(sprintf('[OrderProcessor] Lock acquired for order %s', $incrementId));
 
         try {
-            // Create a database transaction for atomicity
+            // Create a transaction
+            /** @var Transaction $transaction */
             $transaction = $this->transactionFactory->create();
-            $this->logger->debug(sprintf('[Transaction created] Order %s', $incrementId));
 
-            // Call the callback
+            // Execute the callback
             $this->logger->debug(sprintf('[Executing callback] Order %s', $incrementId));
             $result = $callback($order, $transaction);
 
-            // Save the order within the transaction
-            if (false !== $result) {
-                $this->logger->debug(sprintf('[Saving order in transaction] Order %s', $incrementId));
-                // Add order to transaction and save
-                $transaction->addObject($order);
-                $transaction->save();
-                $this->logger->debug(sprintf('[Order saved successfully] Order %s', $incrementId));
-            } else {
-                $this->logger->debug(sprintf('[Callback returned false] Order %s, not saving', $incrementId));
-            }
+            // Save the order
+            $transaction->addObject($order);
+            $transaction->save();
+
+            $this->logger->debug(sprintf('[OrderProcessor] Transaction completed for order %s', $incrementId));
 
             return $result;
         } catch (\Exception $e) {
@@ -133,67 +115,51 @@ class OrderProcessor
 
             throw $e;
         } finally {
-            // Always release the lock, even if an exception occurs
-            $this->orderLockManager->unlock($incrementId);
-            $this->logger->debug(sprintf('[Lock released] Order %s', $incrementId));
+            // Always release the lock
+            $this->lockManager->unlockOrder($incrementId);
+            $this->logger->debug(sprintf('[OrderProcessor] Lock released for order %s', $incrementId));
         }
     }
 
     /**
-     * Load the latest order data and execute a callback with locking.
+     * Process an order by ID with locking.
      *
-     * @param string   $incrementId Order increment ID
-     * @param callable $callback    Function to execute while holding the lock
-     *
+     * @param string $incrementId
+     * @param callable $callback
+     * @return mixed
      * @throws LocalizedException
-     *
-     * @return mixed The result of the callback function, or false if lock couldn't be acquired
      */
     public function processOrderById(string $incrementId, callable $callback)
     {
         $this->logger->debug(sprintf('[Processing order by ID] %s', $incrementId));
 
-        // Check if order is already locked
-        if ($this->orderLockManager->isLocked($incrementId)) {
-            $this->logger->logOrder($incrementId, '[Order is already being processed] By another request');
-
-            return false;
+        // Try to acquire a lock
+        if (!$this->lockManager->lockOrder($incrementId)) {
+            $this->logger->warning(sprintf('[OrderProcessor] Could not acquire lock for order %s', $incrementId));
+            throw new LocalizedException(__('Order %1 is currently being processed. Please try again later.', $incrementId));
         }
 
-        // Acquire lock before loading the order
-        $lockAcquired = $this->orderLockManager->lock($incrementId);
-        if (!$lockAcquired) {
-            $this->logger->logOrder($incrementId, '[Could not acquire lock] For order');
-
-            return false;
-        }
-
-        $this->logger->debug(sprintf('[Lock acquired] Order ID %s', $incrementId));
+        $this->logger->debug(sprintf('[OrderProcessor] Lock acquired for order %s', $incrementId));
 
         try {
-            // Load the latest order data
+            // Load the order
             $this->logger->debug(sprintf('[Loading order data] Order %s', $incrementId));
             $order = $this->orderRepository->get($incrementId);
             $this->logger->debug(sprintf('[Order loaded successfully] Order %s', $incrementId));
 
-            // Create a database transaction for atomicity
+            // Create a transaction
+            /** @var Transaction $transaction */
             $transaction = $this->transactionFactory->create();
-            $this->logger->debug(sprintf('[Transaction created] Order %s', $incrementId));
 
-            // Call the callback
+            // Execute the callback
             $this->logger->debug(sprintf('[Executing callback] Order %s', $incrementId));
             $result = $callback($order, $transaction);
 
-            // Save the order within the transaction
-            if (false !== $result) {
-                $this->logger->debug(sprintf('[Saving order in transaction] Order %s', $incrementId));
-                // Add order to transaction and save
-                $transaction->addObject($order);
-                $transaction->save();
-                $this->logger->debug(sprintf('[Order saved successfully] Order %s', $incrementId));
-            } else {
-                $this->logger->debug(sprintf('[Callback returned false] Order %s, not saving', $incrementId));
-            }
+            // Save the order
+            $transaction->addObject($order);
+            $transaction->save();
+
+            $this->logger->debug(sprintf('[OrderProcessor] Transaction completed for order %s', $incrementId));
 
             return $result;
         } catch (\Exception $e) {
@@ -205,9 +171,9 @@ class OrderProcessor
 
             throw $e;
         } finally {
-            // Always release the lock, even if an exception occurs
-            $this->orderLockManager->unlock($incrementId);
-            $this->logger->debug(sprintf('[Lock released] Order ID %s', $incrementId));
+            // Always release the lock
+            $this->lockManager->unlockOrder($incrementId);
+            $this->logger->debug(sprintf('[OrderProcessor] Lock released for order %s', $incrementId));
         }
     }
 }

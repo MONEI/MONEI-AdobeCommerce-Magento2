@@ -13,7 +13,8 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\Redirect as MagentoRedirect;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Sales\Api\Data\OrderInterfaceFactory;
-use Monei\MoneiPayment\Api\Service\SetOrderStatusAndStateInterface;
+use Monei\MoneiPayment\Model\PaymentProcessor;
+use Monei\MoneiPayment\Service\Logger;
 
 /**
  * Monei payment fail insite controller.
@@ -40,17 +41,19 @@ class FailLastOrderByStatus extends Fail
      * @param Context $context Application context
      * @param Session $checkoutSession Checkout session
      * @param OrderInterfaceFactory $orderFactory Order factory
-     * @param SetOrderStatusAndStateInterface $setOrderStatusAndStateService Service to set order status
      * @param ManagerInterface $messageManager Message manager
      * @param MagentoRedirect $resultRedirectFactory Redirect factory
+     * @param PaymentProcessor $paymentProcessor Payment processor
+     * @param Logger $logger Logger
      */
     public function __construct(
         Context $context,
         Session $checkoutSession,
         OrderInterfaceFactory $orderFactory,
-        SetOrderStatusAndStateInterface $setOrderStatusAndStateService,
         ManagerInterface $messageManager,
-        MagentoRedirect $resultRedirectFactory
+        MagentoRedirect $resultRedirectFactory,
+        PaymentProcessor $paymentProcessor,
+        Logger $logger
     ) {
         $this->checkoutSession = $checkoutSession;
         $this->context = $context;
@@ -58,9 +61,10 @@ class FailLastOrderByStatus extends Fail
             $context,
             $checkoutSession,
             $orderFactory,
-            $setOrderStatusAndStateService,
             $messageManager,
-            $resultRedirectFactory
+            $resultRedirectFactory,
+            $paymentProcessor,
+            $logger
         );
     }
 

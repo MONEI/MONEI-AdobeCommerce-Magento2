@@ -20,6 +20,7 @@ use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Block\Monei\Customer\CardRenderer;
 use Monei\MoneiPayment\Model\Config\Source\Mode;
 use Monei\MoneiPayment\Model\Payment\Monei;
+use Monei\MoneiPayment\Model\Payment\Status;
 use Monei\MoneiPayment\Service\Shared\IsEnabledApplePayInMoneiAccount;
 use Monei\MoneiPayment\Service\Shared\IsEnabledGooglePayInMoneiAccount;
 
@@ -150,9 +151,9 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                     'cancelOrderUrl' => $this->urlBuilder->getUrl('monei/payment/cancel'),
                     'failOrderUrl' => $this->urlBuilder->getUrl('monei/payment/faillastorderbystatus'),
                     'failOrderStatus' => [
-                        Monei::ORDER_STATUS_EXPIRED,
-                        Monei::ORDER_STATUS_CANCELED,
-                        Monei::ORDER_STATUS_FAILED,
+                        Status::EXPIRED,
+                        Status::CANCELED,
+                        Status::FAILED,
                     ],
                 ],
                 Monei::CARD_CODE => [
@@ -160,9 +161,9 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                     'cancelOrderUrl' => $this->urlBuilder->getUrl('monei/payment/cancel'),
                     'failOrderUrl' => $this->urlBuilder->getUrl('monei/payment/faillastorderbystatus'),
                     'failOrderStatus' => [
-                        Monei::ORDER_STATUS_EXPIRED,
-                        Monei::ORDER_STATUS_CANCELED,
-                        Monei::ORDER_STATUS_FAILED,
+                        Status::EXPIRED,
+                        Status::CANCELED,
+                        Status::FAILED,
                     ],
                     'accountId' => $this->moneiPaymentConfig->getAccountId($storeId),
                     'isEnabledTokenization' => $this->moneiCardPaymentConfig->isEnabledTokenization($storeId),
@@ -174,9 +175,9 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                     'cancelOrderUrl' => $this->urlBuilder->getUrl('monei/payment/cancel'),
                     'failOrderUrl' => $this->urlBuilder->getUrl('monei/payment/faillastorderbystatus'),
                     'failOrderStatus' => [
-                        Monei::ORDER_STATUS_EXPIRED,
-                        Monei::ORDER_STATUS_CANCELED,
-                        Monei::ORDER_STATUS_FAILED,
+                        Status::EXPIRED,
+                        Status::CANCELED,
+                        Status::FAILED,
                     ],
                     'accountId' => $this->moneiPaymentConfig->getAccountId($storeId),
                     'jsonStyle' => $this->moneiBizumPaymentModuleConfig->getJsonStyle($storeId),
@@ -190,9 +191,9 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                     'cancelOrderUrl' => $this->urlBuilder->getUrl('monei/payment/cancel'),
                     'failOrderUrl' => $this->urlBuilder->getUrl('monei/payment/faillastorderbystatus'),
                     'failOrderStatus' => [
-                        Monei::ORDER_STATUS_EXPIRED,
-                        Monei::ORDER_STATUS_CANCELED,
-                        Monei::ORDER_STATUS_FAILED,
+                        Status::EXPIRED,
+                        Status::CANCELED,
+                        Status::FAILED,
                     ],
                     'accountId' => $this->moneiPaymentConfig->getAccountId($storeId),
                     'jsonStyle' => $this->moneiGoogleApplePaymentConfig->getJsonStyle($storeId),
@@ -205,9 +206,9 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                     'cancelOrderUrl' => $this->urlBuilder->getUrl('monei/payment/cancel'),
                     'failOrderUrl' => $this->urlBuilder->getUrl('monei/payment/faillastorderbystatus'),
                     'failOrderStatus' => [
-                        Monei::ORDER_STATUS_EXPIRED,
-                        Monei::ORDER_STATUS_CANCELED,
-                        Monei::ORDER_STATUS_FAILED,
+                        Status::EXPIRED,
+                        Status::CANCELED,
+                        Status::FAILED,
                     ],
                     'methodCardCode' => Monei::CARD_CODE,
                 ],
