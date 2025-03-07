@@ -11,9 +11,9 @@ namespace Monei\MoneiPayment\Service;
 use Magento\Framework\Exception\LocalizedException;
 use Monei\MoneiPayment\Api\Service\RefundPaymentInterface;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use OpenAPI\Client\ApiException;
-use OpenAPI\Client\Model\RefundPaymentRequest;
 use OpenAPI\Client\Model\PaymentRefundReason;
+use OpenAPI\Client\Model\RefundPaymentRequest;
+use OpenAPI\Client\ApiException;
 
 /**
  * Monei refund payment service class using the official MONEI PHP SDK.
@@ -87,7 +87,7 @@ class RefundPayment extends AbstractApiService implements RefundPaymentInterface
 
                 // Set amount in cents
                 if (isset($data['amount'])) {
-                    $refundRequest->setAmount((int)round((float)$data['amount'] * 100));
+                    $refundRequest->setAmount((int) round((float) $data['amount'] * 100));
                 }
 
                 // Set refund reason using the SDK enum
@@ -103,6 +103,7 @@ class RefundPayment extends AbstractApiService implements RefundPaymentInterface
                 return $response;
             } catch (ApiException $e) {
                 $this->logger->critical('[API Error] ' . $e->getMessage());
+
                 throw new LocalizedException(__('Failed to refund payment with MONEI API: %1', $e->getMessage()));
             }
         }, ['refundData' => $data]);
@@ -128,6 +129,7 @@ class RefundPayment extends AbstractApiService implements RefundPaymentInterface
 
             $result[$snakeKey] = $value;
         }
+
         return $result;
     }
 }

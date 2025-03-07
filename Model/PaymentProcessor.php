@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -10,10 +9,11 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Model;
 
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Phrase;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 use Magento\Sales\Model\Order;
+use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Api\PaymentDataProviderInterface;
 use Monei\MoneiPayment\Api\PaymentProcessingResultInterface;
@@ -24,8 +24,6 @@ use Monei\MoneiPayment\Model\Data\PaymentProcessingResult;
 use Monei\MoneiPayment\Model\Payment\Status;
 use Monei\MoneiPayment\Service\InvoiceService;
 use Monei\MoneiPayment\Service\Logger;
-use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
-use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 
 /**
  * Processes payments and updates order status
@@ -181,11 +179,12 @@ class PaymentProcessor implements PaymentProcessorInterface
                     $orderId,
                     $paymentId
                 ));
+
                 return false;
             }
 
             // Wait a bit before checking again
-            usleep(200000); // 200ms
+            usleep(200000);  // 200ms
         }
 
         return true;
@@ -231,6 +230,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                     $incrementId,
                     $paymentId
                 ));
+
                 return false;
             }
 
@@ -247,6 +247,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                 $paymentId,
                 $e->getMessage()
             ));
+
             return false;
         }
     }
@@ -271,6 +272,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                     '[Invalid webhook data] Order %s',
                     $order->getIncrementId()
                 ));
+
                 return false;
             }
 
@@ -285,6 +287,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                 $order->getIncrementId(),
                 $e->getMessage()
             ));
+
             return false;
         }
     }
@@ -315,6 +318,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                 $paymentId,
                 $e->getMessage()
             ));
+
             return false;
         }
     }
@@ -383,6 +387,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                     $incrementId,
                     $paymentId
                 ));
+
                 return true;
             }
 
@@ -423,6 +428,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                 $paymentId,
                 $e->getMessage()
             ));
+
             return false;
         }
     }
@@ -447,6 +453,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                     $incrementId,
                     $paymentId
                 ));
+
                 return true;
             }
 
@@ -476,6 +483,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                 $paymentId,
                 $e->getMessage()
             ));
+
             return false;
         }
     }
@@ -500,6 +508,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                     $incrementId,
                     $paymentId
                 ));
+
                 return true;
             }
 
@@ -533,6 +542,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                 $paymentId,
                 $e->getMessage()
             ));
+
             return false;
         }
     }

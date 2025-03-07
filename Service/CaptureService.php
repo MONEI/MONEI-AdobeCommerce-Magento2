@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -14,9 +13,10 @@ use Magento\Sales\Api\Data\InvoiceInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\InvoiceRepositoryInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Model\Api\MoneiApiClient;
-use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use OpenAPI\Client\Model\PaymentStatus;
 
 /**
  * Service for capturing MONEI payments
@@ -105,7 +105,7 @@ class CaptureService
         }
 
         try {
-            $amount = (int)round($invoice->getGrandTotal() * 100);
+            $amount = (int) round($invoice->getGrandTotal() * 100);
             $currency = $order->getOrderCurrencyCode();
 
             $this->logger->info(sprintf(
@@ -118,7 +118,7 @@ class CaptureService
 
             $captureResult = $this->moneiApiClient->capturePayment($paymentId, $amount, $currency);
 
-            if (!isset($captureResult['id']) || $captureResult['status'] !== 'SUCCEEDED') {
+            if (!isset($captureResult['id']) || $captureResult['status'] !== PaymentStatus::SUCCEEDED) {
                 $errorMessage = $captureResult['message'] ?? 'Unknown error';
                 $this->logger->error(sprintf(
                     'Failed to capture payment %s: %s',
@@ -179,7 +179,7 @@ class CaptureService
                 return false;
             }
 
-            $isCaptured = (bool)$payment->getAdditionalInformation('monei_is_captured');
+            $isCaptured = (bool) $payment->getAdditionalInformation('monei_is_captured');
             if ($isCaptured) {
                 return false;
             }
@@ -187,7 +187,7 @@ class CaptureService
             // Check payment status in MONEI
             $paymentInfo = $this->moneiApiClient->getPayment($paymentId);
 
-            return isset($paymentInfo['status']) && $paymentInfo['status'] === 'AUTHORIZED';
+            return isset($paymentInfo['status']) && $paymentInfo['status'] === PaymentStatus::AUTHORIZED;
         } catch (\Exception $e) {
             $this->logger->error(sprintf(
                 'Error checking if payment can be captured for order %s: %s',
@@ -234,7 +234,7 @@ class CaptureService
 
             $voidResult = $this->moneiApiClient->voidPayment($paymentId);
 
-            if (!isset($voidResult['id']) || $voidResult['status'] !== 'CANCELED') {
+            if (!isset($voidResult['id']) || $voidResult['status'] !== PaymentStatus::CANCELED) {
                 $errorMessage = $voidResult['message'] ?? 'Unknown error';
                 $this->logger->error(sprintf(
                     'Failed to void payment %s: %s',
@@ -289,7 +289,7 @@ class CaptureService
                 return false;
             }
 
-            $isVoided = (bool)$payment->getAdditionalInformation('monei_is_voided');
+            $isVoided = (bool) $payment->getAdditionalInformation('monei_is_voided');
             if ($isVoided) {
                 return false;
             }
@@ -297,7 +297,7 @@ class CaptureService
             // Check payment status in MONEI
             $paymentInfo = $this->moneiApiClient->getPayment($paymentId);
 
-            return isset($paymentInfo['status']) && $paymentInfo['status'] === 'AUTHORIZED';
+            return isset($paymentInfo['status']) && $paymentInfo['status'] === PaymentStatus::AUTHORIZED;
         } catch (\Exception $e) {
             $this->logger->error(sprintf(
                 'Error checking if payment can be voided for order %s: %s',

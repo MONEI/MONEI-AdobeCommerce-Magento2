@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -10,7 +9,8 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Model\Data;
 
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Phrase;
+use Monei\MoneiPayment\Model\Payment\Status;
+use OpenAPI\Client\Model\PaymentStatus;
 
 /**
  * Data Transfer Object for MONEI payment data
@@ -224,7 +224,7 @@ class PaymentDTO
      */
     public function isSucceeded(): bool
     {
-        return strtoupper($this->status) === 'SUCCEEDED';
+        return strtoupper($this->status) === PaymentStatus::SUCCEEDED;
     }
 
     /**
@@ -234,7 +234,7 @@ class PaymentDTO
      */
     public function isAuthorized(): bool
     {
-        return strtoupper($this->status) === 'AUTHORIZED';
+        return strtoupper($this->status) === PaymentStatus::AUTHORIZED;
     }
 
     /**
@@ -244,7 +244,7 @@ class PaymentDTO
      */
     public function isFailed(): bool
     {
-        return strtoupper($this->status) === 'FAILED';
+        return strtoupper($this->status) === PaymentStatus::FAILED;
     }
 
     /**
@@ -254,7 +254,7 @@ class PaymentDTO
      */
     public function isCanceled(): bool
     {
-        return strtoupper($this->status) === 'CANCELED';
+        return strtoupper($this->status) === PaymentStatus::CANCELED;
     }
 
     /**
@@ -264,7 +264,7 @@ class PaymentDTO
      */
     public function isExpired(): bool
     {
-        return strtoupper($this->status) === 'EXPIRED';
+        return strtoupper($this->status) === PaymentStatus::EXPIRED;
     }
 
     /**
@@ -274,7 +274,7 @@ class PaymentDTO
      */
     public function isRefunded(): bool
     {
-        return strtoupper($this->status) === 'REFUNDED';
+        return strtoupper($this->status) === PaymentStatus::REFUNDED;
     }
 
     /**
@@ -284,6 +284,6 @@ class PaymentDTO
      */
     public function isPartiallyRefunded(): bool
     {
-        return strtoupper($this->status) === 'PARTIALLY_REFUNDED';
+        return strtoupper($this->status) === PaymentStatus::PARTIALLY_REFUNDED;
     }
 }

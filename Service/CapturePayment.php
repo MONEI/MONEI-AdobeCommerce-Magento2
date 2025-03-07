@@ -10,10 +10,9 @@ namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\Exception\LocalizedException;
 use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
-use Monei\MoneiPayment\Service\Logger;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use OpenAPI\Client\ApiException;
 use OpenAPI\Client\Model\CapturePaymentRequest;
+use OpenAPI\Client\ApiException;
 
 /**
  * Monei capture payment service class using the official MONEI PHP SDK.
@@ -76,7 +75,7 @@ class CapturePayment extends AbstractApiService implements CapturePaymentInterfa
 
                 // Set amount in cents
                 if (isset($data['amount'])) {
-                    $captureRequest->setAmount((int)round((float)$data['amount'] * 100));
+                    $captureRequest->setAmount((int) round((float) $data['amount'] * 100));
                 }
 
                 // Capture the payment using the SDK and request object
@@ -86,6 +85,7 @@ class CapturePayment extends AbstractApiService implements CapturePaymentInterfa
                 return $this->moneiApiClient->convertResponseToArray($payment);
             } catch (ApiException $e) {
                 $this->logger->critical('[API Error] ' . $e->getMessage());
+
                 throw new LocalizedException(__('Failed to capture payment with MONEI API: %1', $e->getMessage()));
             }
         }, ['captureData' => $data]);

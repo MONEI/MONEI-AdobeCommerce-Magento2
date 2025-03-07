@@ -92,6 +92,6 @@
   "php.validate.run": "onType",
   "editor.formatOnSave": false,
   "[php]": {
-    "editor.defaultFormatter": "bmewburn.vscode-intelephense-client"
+    "editor.defaultFormatter": "lkrms.pretty-php"
   }
 }

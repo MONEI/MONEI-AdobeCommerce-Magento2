@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -12,15 +11,15 @@ namespace Monei\MoneiPayment\Service;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Api\PaymentDataProviderInterface;
 use Monei\MoneiPayment\Api\PaymentProcessingResultInterface;
 use Monei\MoneiPayment\Api\PaymentProcessorInterface;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
 use Monei\MoneiPayment\Model\Data\PaymentProcessingResult;
-use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Model\Payment\Status;
-use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 
 /**
  * Service for processing MONEI payments
@@ -388,6 +387,7 @@ class ProcessPaymentService implements PaymentProcessorInterface
     {
         try {
             $payment = $this->apiPaymentDataProvider->getPaymentData($paymentId);
+
             return $payment->getRawData();
         } catch (LocalizedException $e) {
             throw new \Exception($e->getMessage(), $e->getCode(), $e);

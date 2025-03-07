@@ -15,8 +15,8 @@ use Magento\Sales\Model\ResourceModel\Order\Collection as OrderCollection;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory as OrderCollectionFactory;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
-use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Api\Service\CancelPaymentInterface;
+use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Model\Payment\Status;
 use Monei\MoneiPayment\Model\PaymentDataProvider\ApiPaymentDataProvider;
 use Monei\MoneiPayment\Model\PaymentProcessor;
@@ -141,12 +141,14 @@ class ProcessPendingOrders
 
             if (!$paymentId) {
                 $this->logger->warning(sprintf('[Cron] Order %s has no payment ID', $incrementId));
+
                 continue;
             }
 
             // Skip if the order is already being processed
             if ($this->lockManager->isOrderLocked($incrementId)) {
                 $this->logger->info(sprintf('[Cron] Order %s is locked, skipping', $incrementId));
+
                 continue;
             }
 

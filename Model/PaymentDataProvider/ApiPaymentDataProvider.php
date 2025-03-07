@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -10,7 +9,6 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Model\PaymentDataProvider;
 
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Phrase;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\PaymentDataProviderInterface;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
@@ -84,6 +82,7 @@ class ApiPaymentDataProvider implements PaymentDataProviderInterface
             $this->logger->error('Error fetching payment data from API: ' . $e->getMessage(), [
                 'payment_id' => $paymentId
             ]);
+
             throw new LocalizedException(__('Failed to fetch payment data: %1', $e->getMessage()));
         }
     }
@@ -100,6 +99,7 @@ class ApiPaymentDataProvider implements PaymentDataProviderInterface
                 $this->logger->error('Missing required field in API response: ' . $field, [
                     'data' => $data
                 ]);
+
                 return false;
             }
         }

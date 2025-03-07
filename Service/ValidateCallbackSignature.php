@@ -10,7 +10,6 @@ namespace Monei\MoneiPayment\Service;
 
 use Monei\MoneiPayment\Api\Service\ValidateCallbackSignatureInterface;
 use Monei\MoneiPayment\Model\Api\MoneiApiClient;
-use Monei\MoneiPayment\Service\Logger;
 
 /**
  * Service for validating MONEI payment callback signatures
@@ -54,6 +53,7 @@ class ValidateCallbackSignature implements ValidateCallbackSignatureInterface
 
         if (empty($signature)) {
             $this->logger->warning('[Callback] Missing signature header');
+
             return false;
         }
 
@@ -67,6 +67,7 @@ class ValidateCallbackSignature implements ValidateCallbackSignatureInterface
             $webhookSecret = $this->apiClient->getWebhookSecret();
             if (empty($webhookSecret)) {
                 $this->logger->warning('[Callback] No webhook secret available');
+
                 return false;
             }
 
@@ -75,6 +76,7 @@ class ValidateCallbackSignature implements ValidateCallbackSignatureInterface
             $this->logger->error('[Callback] Error validating signature: ' . $e->getMessage(), [
                 'exception' => $e
             ]);
+
             return false;
         }
     }
@@ -92,6 +94,7 @@ class ValidateCallbackSignature implements ValidateCallbackSignatureInterface
         // Extract timestamp and signatures from the header
         if (!preg_match('/t=(\d+),v1=([a-f0-9]+)/', $signature, $matches)) {
             $this->logger->warning('[Callback] Invalid signature format');
+
             return false;
         }
 
@@ -100,8 +103,9 @@ class ValidateCallbackSignature implements ValidateCallbackSignatureInterface
 
         // Check if the timestamp is too old (older than 5 minutes)
         $now = time();
-        if ($now - (int)$timestamp > 300) {
+        if ($now - (int) $timestamp > 300) {
             $this->logger->warning('[Callback] Signature timestamp too old');
+
             return false;
         }
 

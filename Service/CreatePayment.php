@@ -13,13 +13,13 @@ use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
 use Monei\MoneiPayment\Model\Config\Source\TypeOfPayment;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use OpenAPI\Client\ApiException;
+use OpenAPI\Client\Model\Address;
 use OpenAPI\Client\Model\CreatePaymentRequest;
 use OpenAPI\Client\Model\PaymentBillingDetails;
 use OpenAPI\Client\Model\PaymentCustomer;
 use OpenAPI\Client\Model\PaymentShippingDetails;
-use OpenAPI\Client\Model\Address;
 use OpenAPI\Client\Model\PaymentTransactionType;
+use OpenAPI\Client\ApiException;
 
 /**
  * Monei create payment service class using the official MONEI PHP SDK.
@@ -85,7 +85,7 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
             try {
                 // Create payment request object according to SDK
                 $paymentRequest = new CreatePaymentRequest([
-                    'amount' => (int)round((float)$data['amount'] * 100), // Convert to cents
+                    'amount' => (int) round((float) $data['amount'] * 100),  // Convert to cents
                     'currency' => $data['currency'],
                     'order_id' => $data['order_id'],
                     // Add URLs from our configuration
@@ -145,6 +145,7 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
                 return $this->moneiApiClient->convertResponseToArray($payment);
             } catch (ApiException $e) {
                 $this->logger->critical('[API Error] ' . $e->getMessage());
+
                 throw new LocalizedException(__('Failed to create payment with MONEI API: %1', $e->getMessage()));
             }
         }, ['paymentData' => $data]);

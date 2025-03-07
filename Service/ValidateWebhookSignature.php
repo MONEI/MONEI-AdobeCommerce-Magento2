@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -38,6 +37,7 @@ class ValidateWebhookSignature implements ValidateWebhookSignatureInterface
         try {
             if (empty($signature) || empty($secret)) {
                 $this->logger->warning('[Webhook] Missing signature or secret');
+
                 return false;
             }
 
@@ -61,13 +61,15 @@ class ValidateWebhookSignature implements ValidateWebhookSignatureInterface
 
             if (!$timestamp || !$signatureValue) {
                 $this->logger->warning('[Webhook] Invalid signature format');
+
                 return false;
             }
 
             // Verify timestamp to prevent replay attacks
             $now = time();
-            if (abs($now - (int)$timestamp) > 300) { // 5 minutes tolerance
+            if (abs($now - (int) $timestamp) > 300) {  // 5 minutes tolerance
                 $this->logger->warning('[Webhook] Timestamp too old');
+
                 return false;
             }
 
@@ -77,12 +79,14 @@ class ValidateWebhookSignature implements ValidateWebhookSignatureInterface
 
             if (!hash_equals($expectedSignature, $signatureValue)) {
                 $this->logger->warning('[Webhook] Signature verification failed');
+
                 return false;
             }
 
             return true;
         } catch (\Exception $e) {
             $this->logger->error('[Webhook] Error verifying signature: ' . $e->getMessage(), ['exception' => $e]);
+
             return false;
         }
     }

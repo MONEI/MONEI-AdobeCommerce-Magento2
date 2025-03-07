@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -10,7 +9,6 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Model\PaymentDataProvider;
 
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Phrase;
 use Magento\Framework\Serialize\SerializerInterface;
 use Monei\MoneiPayment\Api\PaymentDataProviderInterface;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
@@ -87,6 +85,7 @@ class WebhookPaymentDataProvider implements PaymentDataProviderInterface
             $this->logger->error('Error extracting payment data from webhook: ' . $e->getMessage(), [
                 'request_body' => $requestBody
             ]);
+
             throw new LocalizedException(__('Failed to parse webhook data: %1', $e->getMessage()));
         }
     }
@@ -111,9 +110,11 @@ class WebhookPaymentDataProvider implements PaymentDataProviderInterface
             $this->logger->debug('Webhook signature verified successfully');
         } catch (LocalizedException $e) {
             $this->logger->error('Webhook signature verification failed: ' . $e->getMessage());
+
             throw $e;
         } catch (\Exception $e) {
             $this->logger->error('Error during webhook signature verification: ' . $e->getMessage());
+
             throw new LocalizedException(__('Failed to verify webhook signature: %1', $e->getMessage()));
         }
     }
@@ -130,6 +131,7 @@ class WebhookPaymentDataProvider implements PaymentDataProviderInterface
                 $this->logger->error('Missing required field in webhook data: ' . $field, [
                     'data' => $data
                 ]);
+
                 return false;
             }
         }

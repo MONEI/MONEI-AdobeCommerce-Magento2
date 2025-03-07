@@ -8,7 +8,6 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Model\Service;
 
-use Magento\Framework\Exception\LocalizedException;
 use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Service\Logger;
 

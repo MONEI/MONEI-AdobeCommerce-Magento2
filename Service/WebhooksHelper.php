@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -11,13 +10,12 @@ namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Event\ManagerInterface as EventManagerInterface;
-use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use Monei\MoneiPayment\Api\Service\ValidateWebhookSignatureInterface;
 use Monei\MoneiPayment\Api\PaymentDataProviderInterface;
 use Monei\MoneiPayment\Api\PaymentProcessorInterface;
-use Monei\MoneiPayment\Api\Service\ValidateWebhookSignatureInterface;
 use Monei\MoneiPayment\Api\WebhooksHelperInterface;
-use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
 
 /**
@@ -99,6 +97,7 @@ class WebhooksHelper implements WebhooksHelperInterface
             // Verify webhook signature if available
             if ($signatureHeader && !$this->verifyWebhookSignature($payload, ['Monei-Signature' => $signatureHeader])) {
                 $this->logger->error('[Webhook] Invalid signature');
+
                 return;
             }
 
@@ -125,18 +124,21 @@ class WebhooksHelper implements WebhooksHelperInterface
             $signatureHeader = $headers['Monei-Signature'] ?? '';
             if (empty($signatureHeader)) {
                 $this->logger->warning('[Webhook] Missing signature header');
+
                 return false;
             }
 
             $webhookSecret = $this->moduleConfig->getWebhookSecret();
             if (empty($webhookSecret)) {
                 $this->logger->warning('[Webhook] Webhook secret not configured');
+
                 return false;
             }
 
             return $this->validateWebhookSignature->validate($payload, $signatureHeader, $webhookSecret);
         } catch (\Exception $e) {
             $this->logger->error('[Webhook] Error verifying signature: ' . $e->getMessage(), ['exception' => $e]);
+
             return false;
         }
     }
@@ -169,6 +171,7 @@ class WebhooksHelper implements WebhooksHelperInterface
             $orderId = $paymentDTO->getOrderId();
             if (empty($orderId)) {
                 $this->logger->warning('[Webhook] Missing order ID in payment data');
+
                 return;
             }
 
@@ -176,6 +179,7 @@ class WebhooksHelper implements WebhooksHelperInterface
             $order = $this->orderRepository->get($orderId);
             if (!$order || !$order->getEntityId()) {
                 $this->logger->warning('[Webhook] Order not found: ' . $orderId);
+
                 return;
             }
 

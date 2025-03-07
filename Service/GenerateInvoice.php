@@ -8,14 +8,13 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service;
 
-use Magento\Framework\DB\Transaction;
 use Magento\Framework\DB\TransactionFactory;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory as OrderInterfaceFactory;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
-use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
+use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 
 /**
@@ -87,6 +86,7 @@ class GenerateInvoice implements GenerateInvoiceInterface
         }
 
         $this->lockManager->lockOrder($incrementId);
+
         try {
             $payment = $order->getPayment();
             if ($payment && $paymentData) {

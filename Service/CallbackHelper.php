@@ -10,16 +10,14 @@ namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Event\ManagerInterface as EventManagerInterface;
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
-use Monei\MoneiPayment\Api\PaymentDataProviderInterface;
-use Monei\MoneiPayment\Api\PaymentProcessorInterface;
 use Monei\MoneiPayment\Api\Service\CallbackHelperInterface;
 use Monei\MoneiPayment\Api\Service\ValidateCallbackSignatureInterface;
-use Monei\MoneiPayment\Model\Api\MoneiApiClient;
+use Monei\MoneiPayment\Api\PaymentDataProviderInterface;
+use Monei\MoneiPayment\Api\PaymentProcessorInterface;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
+use OpenAPI\Client\Model\PaymentStatus;
 
 /**
  * Helper service for processing MONEI payment callbacks
@@ -103,6 +101,7 @@ class CallbackHelper implements CallbackHelperInterface
             // Verify callback signature if available
             if ($signatureHeader && !$this->verifyCallbackSignature($payload, ['MONEI-Signature' => $signatureHeader])) {
                 $this->logger->warning('[Callback] Invalid signature');
+
                 return;
             }
 
@@ -140,6 +139,7 @@ class CallbackHelper implements CallbackHelperInterface
             $signatureHeader = $headers['MONEI-Signature'] ?? '';
             if (empty($signatureHeader)) {
                 $this->logger->warning('[Callback] Missing MONEI-Signature header');
+
                 return false;
             }
 
@@ -152,6 +152,7 @@ class CallbackHelper implements CallbackHelperInterface
             $this->logger->error('[Callback] Error verifying signature: ' . $e->getMessage(), [
                 'exception' => $e
             ]);
+
             return false;
         }
     }
@@ -196,6 +197,7 @@ class CallbackHelper implements CallbackHelperInterface
             $orderId = $paymentDTO->getOrderId();
             if (!$orderId) {
                 $this->logger->warning('[Callback] Missing order ID in payment data');
+
                 return;
             }
 
@@ -203,6 +205,7 @@ class CallbackHelper implements CallbackHelperInterface
             $order = $this->orderRepository->get($orderId);
             if (!$order || !$order->getEntityId()) {
                 $this->logger->warning('[Callback] Order not found: ' . $orderId);
+
                 return;
             }
 
@@ -214,17 +217,21 @@ class CallbackHelper implements CallbackHelperInterface
 
             // Process payment based on status
             switch ($status) {
-                case 'SUCCEEDED':
+                case PaymentStatus::SUCCEEDED:
                     $this->paymentProcessor->processPayment($order, $paymentDTO);
+
                     break;
-                case 'FAILED':
+                case PaymentStatus::FAILED:
                     $this->paymentProcessor->processPayment($order, $paymentDTO);
+
                     break;
-                case 'CANCELED':
+                case PaymentStatus::CANCELED:
                     $this->paymentProcessor->processPayment($order, $paymentDTO);
+
                     break;
-                case 'AUTHORIZED':
+                case PaymentStatus::AUTHORIZED:
                     $this->paymentProcessor->processPayment($order, $paymentDTO);
+
                     break;
                 default:
                     $this->logger->warning('[Callback] Unhandled payment status: ' . $status);

@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -101,6 +100,7 @@ class LockManager implements LockManagerInterface
     public function isOrderLocked(string $incrementId): bool
     {
         $lockName = $this->getOrderLockName($incrementId);
+
         return $this->lockManager->isLocked($lockName);
     }
 
@@ -168,6 +168,7 @@ class LockManager implements LockManagerInterface
     public function isPaymentLocked(string $orderId, string $paymentId): bool
     {
         $lockName = $this->getPaymentLockName($orderId, $paymentId);
+
         return $this->lockManager->isLocked($lockName);
     }
 
@@ -199,6 +200,7 @@ class LockManager implements LockManagerInterface
                     $paymentId,
                     microtime(true) - $startTime
                 ));
+
                 return true;
             }
 

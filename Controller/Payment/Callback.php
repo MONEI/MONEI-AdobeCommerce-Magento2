@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -9,26 +8,29 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Controller\Payment;
 
-use Exception;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Action\HttpPostActionInterface;
-use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
+use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\RequestInterface;
-use Magento\Framework\App\Response\Http as ResponseHttp;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
+use Magento\Framework\DB\Transaction;
+use Magento\Framework\DB\TransactionFactory;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
 use Monei\MoneiPayment\Api\Service\ValidateCallbackSignatureInterface;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
+use Monei\MoneiPayment\Model\Payment\Status;
 use Monei\MoneiPayment\Model\PaymentDataProvider\CallbackPaymentDataProvider;
 use Monei\MoneiPayment\Model\PaymentProcessor;
-use Monei\MoneiPayment\Service\Logger;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
+use Monei\MoneiPayment\Service\Logger;
+use OpenAPI\Client\Model\PaymentStatus;
+use Exception;
 
 /**
  * Controller for managing callbacks from Monei system
@@ -81,6 +83,11 @@ class Callback extends Action implements CsrfAwareActionInterface, HttpPostActio
     private MoneiApiClient $apiClient;
 
     /**
+     * @var TransactionFactory
+     */
+    private TransactionFactory $transactionFactory;
+
+    /**
      * @param Context $context
      * @param Logger $logger
      * @param \Monei\MoneiPayment\Model\PaymentDataProvider\CallbackPaymentDataProvider $callbackPaymentDataProvider
@@ -90,6 +97,7 @@ class Callback extends Action implements CsrfAwareActionInterface, HttpPostActio
      * @param OrderRepositoryInterface $orderRepository
      * @param ValidateCallbackSignatureInterface $validateCallbackSignatureService
      * @param MoneiApiClient $apiClient
+     * @param TransactionFactory $transactionFactory
      */
     public function __construct(
         Context $context,
@@ -100,7 +108,8 @@ class Callback extends Action implements CsrfAwareActionInterface, HttpPostActio
         PaymentProcessor $paymentProcessor,
         OrderRepositoryInterface $orderRepository,
         ValidateCallbackSignatureInterface $validateCallbackSignatureService,
-        MoneiApiClient $apiClient
+        MoneiApiClient $apiClient,
+        TransactionFactory $transactionFactory
     ) {
         parent::__construct($context);
         $this->logger = $logger;
@@ -111,10 +120,14 @@ class Callback extends Action implements CsrfAwareActionInterface, HttpPostActio
         $this->orderRepository = $orderRepository;
         $this->validateCallbackSignatureService = $validateCallbackSignatureService;
         $this->apiClient = $apiClient;
+        $this->transactionFactory = $transactionFactory;
     }
 
     /**
      * Execute action based on request
+     *
+     * This endpoint handles asynchronous payment callback notifications from MONEI.
+     * It returns an immediate 200 OK to acknowledge receipt, then processes the payment data.
      *
      * @return Json
      */
@@ -127,37 +140,56 @@ class Callback extends Action implements CsrfAwareActionInterface, HttpPostActio
             // Return 200 OK immediately to acknowledge receipt
             http_response_code(200);
 
-            $content = $this->getRequest()->getContent();
-            $signatureHeader = $this->getRequest()->getHeader('MONEI-Signature');
+            $content = (string) $this->getRequest()->getContent();
+            $signatureHeader = $this->getRequest()->getHeaders()->get('MONEI-Signature');
 
             // Validate signature if present
             if ($signatureHeader && !$this->validateSignature($content, $signatureHeader)) {
                 $this->logger->warning('[Callback] Invalid signature');
+
                 return $this->resultJsonFactory->create()->setData(['error' => 'Invalid signature']);
             }
 
             // Extract payment data from callback
-            $paymentData = $this->callbackPaymentDataProvider->extractFromCallback($content, $signatureHeader ?? '');
+            try {
+                $paymentData = $this->callbackPaymentDataProvider->extractFromCallback($content, $signatureHeader ?? '');
+            } catch (LocalizedException $e) {
+                $this->logger->error('[Callback] Failed to extract payment data: ' . $e->getMessage(), [
+                    'exception' => $e
+                ]);
+
+                return $this->resultJsonFactory->create()->setData(['error' => 'Invalid payment data: ' . $e->getMessage()]);
+            }
 
             // Process the payment
             $this->processPayment($paymentData);
 
             $this->logger->debug('[Callback] Payment callback processed successfully');
+
             return $this->resultJsonFactory->create()->setData(['received' => true]);
+        } catch (NoSuchEntityException $e) {
+            $this->logger->error('[Callback] Order not found: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
+
+            return $this->resultJsonFactory->create()->setData(['error' => 'Order not found']);
         } catch (\Exception $e) {
             $this->logger->error('[Callback] Error processing callback: ' . $e->getMessage(), [
                 'exception' => $e
             ]);
-            return $this->resultJsonFactory->create()->setData(['error' => $e->getMessage()]);
+
+            return $this->resultJsonFactory->create()->setData(['error' => 'Internal error processing callback']);
         }
     }
 
     /**
      * Process payment from callback data
      *
-     * @param PaymentDTO $paymentData
-     * @throws LocalizedException
-     * @throws NoSuchEntityException
+     * This method handles the business logic of updating order status based on payment status.
+     * It uses a database transaction to ensure data integrity during updates.
+     *
+     * @param PaymentDTO $paymentData Payment data received from MONEI
+     * @return void
      */
     private function processPayment(PaymentDTO $paymentData): void
     {
@@ -165,6 +197,7 @@ class Callback extends Action implements CsrfAwareActionInterface, HttpPostActio
             $orderId = $paymentData->getOrderId();
             if (!$orderId) {
                 $this->logger->warning('[Callback] Missing order ID in payment data');
+
                 return;
             }
 
@@ -172,6 +205,7 @@ class Callback extends Action implements CsrfAwareActionInterface, HttpPostActio
             $order = $this->orderRepository->get($orderId);
             if (!$order || !$order->getEntityId()) {
                 $this->logger->warning('[Callback] Order not found: ' . $orderId);
+
                 return;
             }
 
@@ -181,28 +215,33 @@ class Callback extends Action implements CsrfAwareActionInterface, HttpPostActio
                 'payment_id' => $paymentData->getId()
             ]);
 
-            // Process payment based on status
-            switch ($status) {
-                case 'SUCCEEDED':
-                    $this->paymentProcessor->processPayment($order, $paymentData);
-                    // Generate invoice if needed
-                    $this->generateInvoiceService->execute($order, $paymentData);
-                    break;
+            // Validate that the status is a known MONEI status
+            if (!in_array($status, PaymentStatus::getAllowableEnumValues(), true)) {
+                $this->logger->warning('[Callback] Unknown payment status: ' . $status);
 
-                case 'FAILED':
-                    $this->paymentProcessor->processPayment($order, $paymentData);
-                    break;
+                return;
+            }
 
-                case 'CANCELED':
-                    $this->paymentProcessor->processPayment($order, $paymentData);
-                    break;
+            // Start a database transaction for atomic operations
+            /** @var Transaction $transaction */
+            $transaction = $this->transactionFactory->create();
 
-                case 'AUTHORIZED':
-                    $this->paymentProcessor->processPayment($order, $paymentData);
-                    break;
+            try {
+                // Process payment based on status
+                $this->paymentProcessor->processPayment($order, $paymentData);
 
-                default:
-                    $this->logger->warning('[Callback] Unhandled payment status: ' . $status);
+                // Generate invoice only for successful payments
+                if ($status === PaymentStatus::SUCCEEDED) {
+                    $this->generateInvoiceService->execute($order, $paymentData->getRawData());
+                }
+
+                // Commit the transaction
+                $transaction->save();
+            } catch (\Exception $e) {
+                // Roll back any changes if an error occurred
+                $transaction->rollback();
+
+                throw $e;
             }
         } catch (\Exception $e) {
             $this->logger->error('[Callback] Error processing payment: ' . $e->getMessage(), [
@@ -214,9 +253,11 @@ class Callback extends Action implements CsrfAwareActionInterface, HttpPostActio
     /**
      * Validate callback signature
      *
-     * @param string $payload
-     * @param string $signature
-     * @return bool
+     * Verifies that the callback is authentic by checking the signature provided by MONEI.
+     *
+     * @param string $payload The request body content
+     * @param string $signature The MONEI-Signature header value
+     * @return bool True if signature is valid, false otherwise
      */
     private function validateSignature(string $payload, string $signature): bool
     {
@@ -226,6 +267,7 @@ class Callback extends Action implements CsrfAwareActionInterface, HttpPostActio
             $this->logger->error('[Callback] Error validating signature: ' . $e->getMessage(), [
                 'exception' => $e
             ]);
+
             return false;
         }
     }
@@ -239,7 +281,7 @@ class Callback extends Action implements CsrfAwareActionInterface, HttpPostActio
      */
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
     {
-        return null; // Skip CSRF validation for callback requests
+        return null;  // Skip CSRF validation for callback requests
     }
 
     /**
@@ -251,8 +293,8 @@ class Callback extends Action implements CsrfAwareActionInterface, HttpPostActio
      */
     public function validateForCsrf(RequestInterface $request): ?bool
     {
-        $content = $request->getContent();
-        $signatureHeader = $request->getHeader('MONEI-Signature');
+        $content = (string) $request->getContent();
+        $signatureHeader = $request->getHeaders()->get('MONEI-Signature');
 
         $this->logger->debug('---------------------------------------------');
         $this->logger->debug('[Callback validation] Validating request');

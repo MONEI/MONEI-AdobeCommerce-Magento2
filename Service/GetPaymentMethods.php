@@ -89,9 +89,11 @@ class GetPaymentMethods extends AbstractApiService implements GetPaymentMethodsI
                 return $this->moneiApiClient->convertResponseToArray($methods);
             } catch (ApiException $e) {
                 $this->logger->critical('[API Error] ' . $e->getMessage());
+
                 throw new LocalizedException(__('Failed to get payment methods from MONEI API: %1', $e->getMessage()));
             } catch (\Exception $e) {
                 $this->logger->critical('[Error] ' . $e->getMessage());
+
                 throw new LocalizedException(__('Failed to get payment methods from MONEI API: %1', $e->getMessage()));
             }
         }, ['accountId' => $accountId]);

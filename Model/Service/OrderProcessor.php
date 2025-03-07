@@ -85,6 +85,7 @@ class OrderProcessor
         // Try to acquire a lock
         if (!$this->lockManager->lockOrder($incrementId)) {
             $this->logger->warning(sprintf('[OrderProcessor] Could not acquire lock for order %s', $incrementId));
+
             throw new LocalizedException(__('Order %1 is currently being processed. Please try again later.', $incrementId));
         }
 
@@ -136,6 +137,7 @@ class OrderProcessor
         // Try to acquire a lock
         if (!$this->lockManager->lockOrder($incrementId)) {
             $this->logger->warning(sprintf('[OrderProcessor] Could not acquire lock for order %s', $incrementId));
+
             throw new LocalizedException(__('Order %1 is currently being processed. Please try again later.', $incrementId));
         }
 

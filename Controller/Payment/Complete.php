@@ -11,19 +11,18 @@ namespace Monei\MoneiPayment\Controller\Payment;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\ActionInterface;
 use Magento\Framework\Controller\Result\Redirect as MagentoRedirect;
-use Magento\Sales\Api\Data\OrderInterface;
-use Magento\Sales\Api\Data\OrderInterfaceFactory;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 use Magento\Sales\Model\Order;
+use Magento\Sales\Model\OrderFactory;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
-use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
 use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
 use Monei\MoneiPayment\Model\Payment\Status;
 use Monei\MoneiPayment\Model\PaymentDataProvider\ApiPaymentDataProvider;
 use Monei\MoneiPayment\Model\PaymentProcessor;
 use Monei\MoneiPayment\Service\Logger;
+use OpenAPI\Client\Model\PaymentStatus;
 
 /**
  * Monei payment complete controller
@@ -36,7 +35,7 @@ class Complete implements ActionInterface
     private $orderRepository;
 
     /**
-     * @var OrderInterfaceFactory
+     * @var OrderFactory
      */
     private $orderFactory;
 
@@ -84,7 +83,7 @@ class Complete implements ActionInterface
      * @param Context $context
      * @param OrderRepositoryInterface $orderRepository
      * @param OrderSender $orderSender
-     * @param OrderInterfaceFactory $orderFactory
+     * @param OrderFactory $orderFactory
      * @param MoneiPaymentModuleConfigInterface $moduleConfig
      * @param MagentoRedirect $resultRedirectFactory
      * @param PaymentProcessor $paymentProcessor
@@ -96,7 +95,7 @@ class Complete implements ActionInterface
         Context $context,
         OrderRepositoryInterface $orderRepository,
         OrderSender $orderSender,
-        OrderInterfaceFactory $orderFactory,
+        OrderFactory $orderFactory,
         MoneiPaymentModuleConfigInterface $moduleConfig,
         MagentoRedirect $resultRedirectFactory,
         PaymentProcessor $paymentProcessor,
@@ -130,6 +129,7 @@ class Complete implements ActionInterface
         // Check if we have the required parameters
         if (!isset($data['orderId']) || !isset($data['id']) || !isset($data['status'])) {
             $this->logger->error('[Missing required parameters]');
+
             return $this->resultRedirectFactory->setPath('checkout/cart', ['_secure' => true]);
         }
 
@@ -137,10 +137,11 @@ class Complete implements ActionInterface
         $paymentId = $data['id'];
 
         // Load the order
-        /** @var $order OrderInterface */
+        /** @var Order $order */
         $order = $this->orderFactory->create()->loadByIncrementId($orderId);
         if (!$order->getId()) {
             $this->logger->error(sprintf('[Order not found] %s', $orderId));
+
             return $this->resultRedirectFactory->setPath('checkout/cart', ['_secure' => true]);
         }
 
@@ -152,14 +153,25 @@ class Complete implements ActionInterface
                 $paymentId
             ));
 
-            // Wait for processing to complete
-            $unlocked = $this->lockManager->waitForPaymentUnlock($orderId, $paymentId);
+            // Wait for processing to complete (max 5 seconds)
+            $maxWaitTime = 5;  // seconds
+            $unlocked = $this->lockManager->waitForPaymentUnlock($orderId, $paymentId, $maxWaitTime);
+
             if (!$unlocked) {
                 $this->logger->warning(sprintf(
                     '[Timeout waiting for payment processing] Order %s, payment %s',
                     $orderId,
                     $paymentId
                 ));
+                // Continue anyway - let's see the current order state
+            } else {
+                $this->logger->info(sprintf(
+                    '[Payment processing completed by webhook] Order %s, payment %s',
+                    $orderId,
+                    $paymentId
+                ));
+                // Refresh order data
+                $order = $this->orderFactory->create()->loadByIncrementId($orderId);
             }
         } else {
             // Process the payment
@@ -182,7 +194,7 @@ class Complete implements ActionInterface
         }
 
         // Determine redirect based on payment status
-        if ($data['status'] === Status::SUCCEEDED || $data['status'] === Status::AUTHORIZED) {
+        if ($data['status'] === PaymentStatus::SUCCEEDED || $data['status'] === PaymentStatus::AUTHORIZED) {
             return $this->resultRedirectFactory->setPath('checkout/onepage/success', ['_secure' => true]);
         } else {
             return $this->resultRedirectFactory->setPath('checkout/cart', ['_secure' => true]);

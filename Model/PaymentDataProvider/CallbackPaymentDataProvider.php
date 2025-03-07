@@ -75,6 +75,7 @@ class CallbackPaymentDataProvider implements PaymentDataProviderInterface
                     'exception' => $e,
                     'payload' => $payload
                 ]);
+
                 throw new LocalizedException(__('Invalid JSON payload: %1', $e->getMessage()));
             }
 
@@ -87,6 +88,7 @@ class CallbackPaymentDataProvider implements PaymentDataProviderInterface
                 $this->logger->error('[Callback] Missing data field in payload', [
                     'payload' => $payload
                 ]);
+
                 throw new LocalizedException(__('Missing data field in callback payload'));
             }
 
@@ -94,6 +96,7 @@ class CallbackPaymentDataProvider implements PaymentDataProviderInterface
                 $this->logger->error('[Callback] Missing payment ID in payload', [
                     'payload' => $payload
                 ]);
+
                 throw new LocalizedException(__('Missing payment ID in callback payload'));
             }
 
@@ -124,6 +127,7 @@ class CallbackPaymentDataProvider implements PaymentDataProviderInterface
                 'exception' => $e,
                 'payload' => $payload
             ]);
+
             throw new LocalizedException(__('Error extracting payment data: %1', $e->getMessage()));
         }
     }

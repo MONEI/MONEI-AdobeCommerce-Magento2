@@ -54,15 +54,17 @@ abstract class AbstractApiService
             $response = $apiCall();
 
             $this->logger->debug('[API Response]', [
-                'data' => is_array($response) ? $response : ['response' => (string)$response]
+                'data' => is_array($response) ? $response : ['response' => (string) $response]
             ]);
 
             return is_array($response) ? $response : ['response' => $response];
         } catch (LocalizedException $e) {
             $this->logger->critical("[API Error] {$e->getMessage()}");
+
             throw $e;
         } catch (\Exception $e) {
             $this->logger->critical("[Error] {$e->getMessage()}");
+
             throw new LocalizedException(__('Failed to execute %1: %2', $methodName, $e->getMessage()));
         }
     }
@@ -111,6 +113,7 @@ abstract class AbstractApiService
 
             $result[$snakeKey] = $value;
         }
+
         return $result;
     }
 }

@@ -59,6 +59,7 @@ class GetPayment extends AbstractApiService implements GetPaymentInterface
                 return $this->moneiApiClient->convertResponseToArray($payment);
             } catch (ApiException $e) {
                 $this->logger->critical('[API Error] ' . $e->getMessage());
+
                 throw new LocalizedException(__('Failed to get payment from MONEI API: %1', $e->getMessage()));
             }
         }, ['payment_id' => $payment_id]);

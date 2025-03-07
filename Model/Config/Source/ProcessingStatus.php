@@ -31,6 +31,7 @@ class ProcessingStatus extends Status
         foreach ($options as $option) {
             if (isset($option['value']) && $option['value'] === 'monei_succeeded') {
                 $moneiSucceededFound = true;
+
                 break;
             }
         }
@@ -49,7 +50,7 @@ class ProcessingStatus extends Status
                 return true;
             }
 
-            $label = strtolower((string)$option['label']);
+            $label = strtolower((string) $option['label']);
 
             // Exclude statuses containing "partially refunded" or "fraud"
             return (strpos($label, 'partially refunded') === false &&

@@ -11,9 +11,9 @@ namespace Monei\MoneiPayment\Service;
 use Magento\Framework\Exception\LocalizedException;
 use Monei\MoneiPayment\Api\Service\CancelPaymentInterface;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use OpenAPI\Client\ApiException;
 use OpenAPI\Client\Model\CancelPaymentRequest;
 use OpenAPI\Client\Model\PaymentCancellationReason;
+use OpenAPI\Client\ApiException;
 
 /**
  * Monei cancel payment service class using the official MONEI PHP SDK.
@@ -91,6 +91,7 @@ class CancelPayment extends AbstractApiService implements CancelPaymentInterface
                 return $response;
             } catch (ApiException $e) {
                 $this->logger->critical('[API Error] ' . $e->getMessage());
+
                 throw new LocalizedException(__('Failed to cancel payment with MONEI API: %1', $e->getMessage()));
             }
         }, ['cancelData' => $data]);

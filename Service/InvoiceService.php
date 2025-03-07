@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -12,12 +11,12 @@ namespace Monei\MoneiPayment\Service;
 use Magento\Framework\DB\TransactionFactory;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\InvoiceRepositoryInterface;
-use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Email\Sender\InvoiceSender;
 use Magento\Sales\Model\Order\Invoice;
 use Magento\Sales\Model\Service\InvoiceService as MagentoInvoiceService;
-use Monei\MoneiPayment\Api\LockManagerInterface;
+use Magento\Sales\Model\Order;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use Monei\MoneiPayment\Api\LockManagerInterface;
 
 /**
  * Service for invoice operations
@@ -109,9 +108,10 @@ class InvoiceService
                     // If order already has an invoice, don't create a new one
                     if (!$order->canInvoice()) {
                         $this->logger->info(
-                            "Order already has an invoice, skipping invoice creation",
+                            'Order already has an invoice, skipping invoice creation',
                             ['order_id' => $order->getIncrementId()]
                         );
+
                         return null;
                     }
 
@@ -120,9 +120,10 @@ class InvoiceService
 
                     if (!$invoice->getTotalQty()) {
                         $this->logger->warning(
-                            "Cannot create invoice with zero items",
+                            'Cannot create invoice with zero items',
                             ['order_id' => $order->getIncrementId()]
                         );
+
                         return null;
                     }
 
@@ -145,15 +146,16 @@ class InvoiceService
                     // Handle already captured payments gracefully
                     if ($this->isAlreadyCapturedError($e)) {
                         $this->logger->info(
-                            "Payment was already captured, no need to create an invoice",
+                            'Payment was already captured, no need to create an invoice',
                             ['order_id' => $order->getIncrementId()]
                         );
+
                         return null;
                     }
 
                     // Log the error with full details
                     $this->logger->error(
-                        "Error during invoice processing: " . $e->getMessage(),
+                        'Error during invoice processing: ' . $e->getMessage(),
                         ['order_id' => $order->getIncrementId(), 'exception' => $e]
                     );
 
@@ -215,6 +217,7 @@ class InvoiceService
     private function isAlreadyCapturedError(\Exception $e): bool
     {
         $message = strtolower($e->getMessage());
+
         return (
             strpos($message, 'already been captured') !== false ||
             strpos($message, 'has already been paid') !== false ||
@@ -246,9 +249,10 @@ class InvoiceService
                 // If order already has an invoice, don't create a new one
                 if (!$order->canInvoice()) {
                     $this->logger->info(
-                        "Order already has an invoice, skipping pending invoice creation",
+                        'Order already has an invoice, skipping pending invoice creation',
                         ['order_id' => $order->getIncrementId()]
                     );
+
                     return null;
                 }
 
@@ -268,7 +272,7 @@ class InvoiceService
                 }
 
                 $this->logger->info(
-                    "Created pending invoice for authorized payment",
+                    'Created pending invoice for authorized payment',
                     ['order_id' => $order->getIncrementId(), 'payment_id' => $paymentId]
                 );
 
@@ -307,9 +311,10 @@ class InvoiceService
 
                     if (!$order->canInvoice()) {
                         $this->logger->info(
-                            "Cannot create partial invoice - order already fully invoiced",
+                            'Cannot create partial invoice - order already fully invoiced',
                             ['order_id' => $order->getIncrementId()]
                         );
+
                         return null;
                     }
 
@@ -337,7 +342,7 @@ class InvoiceService
                     return $invoice;
                 } catch (\Exception $e) {
                     $this->logger->error(
-                        "Error during partial invoice processing: " . $e->getMessage(),
+                        'Error during partial invoice processing: ' . $e->getMessage(),
                         ['order_id' => $order->getIncrementId(), 'exception' => $e]
                     );
 
@@ -363,6 +368,7 @@ class InvoiceService
                 return true;
             }
         }
+
         return false;
     }
 }

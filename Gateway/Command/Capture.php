@@ -8,11 +8,11 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Gateway\Command;
 
-use Magento\Payment\Gateway\CommandInterface;
 use Magento\Framework\Exception\LocalizedException;
-use Monei\MoneiPayment\Model\Payment\Monei;
-use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
+use Magento\Payment\Gateway\CommandInterface;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
+use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
+use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Model\Payment\Status;
 use Psr\Log\LoggerInterface;
 
@@ -21,10 +21,14 @@ use Psr\Log\LoggerInterface;
  */
 class Capture implements CommandInterface
 {
-    /** @var CapturePaymentInterface */
+    /**
+     * @var CapturePaymentInterface
+     */
     private $capturePaymentService;
 
-    /** @var LoggerInterface */
+    /**
+     * @var LoggerInterface
+     */
     private $logger;
 
     /**
@@ -40,8 +44,6 @@ class Capture implements CommandInterface
     }
 
     /**
-     *
-     *
      * @param array $commandSubject
      * @throws LocalizedException
      */
@@ -67,6 +69,7 @@ class Capture implements CommandInterface
                 $moneiStatus,
                 $isAlreadyCaptured ? 'true' : 'false'
             ));
+
             return;
         }
 
@@ -86,6 +89,7 @@ class Capture implements CommandInterface
         // Ensure we have a valid payment ID
         if (empty($paymentId)) {
             $this->logger->critical('[Missing payment ID] Cannot capture payment without a valid payment ID');
+
             throw new LocalizedException(__('Cannot capture payment: Missing payment ID'));
         }
 

@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -12,9 +11,9 @@ namespace Monei\MoneiPayment\Service\Api;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\StoreManagerInterface;
-use Monei\MoneiPayment\Service\Logger;
-use Monei\MoneiPayment\Model\Config\Source\ModuleVersion;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use Monei\MoneiPayment\Model\Config\Source\ModuleVersion;
+use Monei\MoneiPayment\Service\Logger;
 use Monei\MoneiClient;
 
 /**
@@ -79,7 +78,7 @@ class MoneiApiClient
     public function getMoneiSdk(?int $storeId = null): MoneiClient
     {
         $currentStoreId = $storeId ?: $this->storeManager->getStore()->getId();
-        $cacheKey = (string)$currentStoreId;
+        $cacheKey = (string) $currentStoreId;
 
         if (!isset($this->instances[$cacheKey])) {
             $apiKey = $this->getApiKey($currentStoreId);
@@ -117,7 +116,7 @@ class MoneiApiClient
         }
 
         // Last resort - should rarely be needed
-        return (array)$response;
+        return (array) $response;
     }
 
     /**
@@ -128,7 +127,8 @@ class MoneiApiClient
      */
     private function getApiUrl(int $storeId): string
     {
-        $isTestMode = $this->moduleConfig->getMode($storeId) === 0; // 0 = Test, 1 = Production
+        $isTestMode = $this->moduleConfig->getMode($storeId) === 0;  // 0 = Test, 1 = Production
+
         return $isTestMode
             ? $this->moduleConfig->getTestUrl($storeId)
             : $this->moduleConfig->getProductionUrl($storeId);
@@ -143,7 +143,7 @@ class MoneiApiClient
      */
     private function getApiKey(int $storeId): string
     {
-        $isTestMode = $this->moduleConfig->getMode($storeId) === 0; // 0 = Test, 1 = Production
+        $isTestMode = $this->moduleConfig->getMode($storeId) === 0;  // 0 = Test, 1 = Production
         $apiKey = $isTestMode
             ? $this->moduleConfig->getTestApiKey($storeId)
             : $this->moduleConfig->getProductionApiKey($storeId);
