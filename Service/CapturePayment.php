@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -9,17 +8,17 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service;
 
-use Exception;
 use Magento\Framework\Exception\LocalizedException;
 use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
+use Monei\MoneiPayment\Service\Api\MoneiApiClient;
+use OpenAPI\Client\ApiException;
+use OpenAPI\Client\Model\CapturePaymentRequest;
 
 /**
- * Monei capture payment REST integration service class.
+ * Monei capture payment service class using the official MONEI PHP SDK.
  */
-class CapturePayment extends AbstractService implements CapturePaymentInterface
+class CapturePayment extends AbstractApiService implements CapturePaymentInterface
 {
-    public const METHOD = 'capture';
-
     /**
      * @var array
      */
@@ -29,64 +28,86 @@ class CapturePayment extends AbstractService implements CapturePaymentInterface
     ];
 
     /**
-     * @inheritDoc
+     * @var MoneiApiClient
+     */
+    private $moneiApiClient;
+
+    /**
+     * @param Logger $logger
+     * @param MoneiApiClient $moneiApiClient
+     */
+    public function __construct(
+        Logger $logger,
+        MoneiApiClient $moneiApiClient
+    ) {
+        parent::__construct($logger);
+        $this->moneiApiClient = $moneiApiClient;
+    }
+
+    /**
+     * Execute a payment capture request to the Monei API.
+     *
+     * Captures an authorized payment using the official MONEI SDK.
+     * Requires a payment ID and amount to capture.
+     *
+     * @param array $data Data for the capture request containing paymentId and amount
+     *
+     * @return array Response from the API with capture results or error details
      */
     public function execute(array $data): array
     {
-        $this->logger->debug(__METHOD__);
-        try {
-            $this->validate($data);
-        } catch (Exception $e) {
-            $this->logger->critical($e->getMessage());
-        }
+        return $this->executeApiCall(__METHOD__, function () use ($data) {
+            // Validate the request parameters
+            $this->validateParams($data, $this->requiredArguments, [
+                'amount' => function ($value) {
+                    return is_numeric($value);
+                }
+            ]);
 
-        $requestBody = [
-            'amount' => $data['amount']
-        ];
+            try {
+                // Get the SDK client
+                $moneiSdk = $this->moneiApiClient->getMoneiSdk($data['storeId'] ?? null);
 
-        $this->logger->debug('------------------ START CAPTURE PAYMENT REQUEST -----------------');
-        $this->logger->debug($this->serializer->serialize($data));
-        $this->logger->debug('------------------- END CAPTURE PAYMENT REQUEST ------------------');
-        $this->logger->debug('');
+                // Create capture request with SDK model
+                $captureRequest = new CapturePaymentRequest();
 
-        $client = $this->createClient();
-        try {
-            $response = $client->post(
-                'payments/' . $data['paymentId'] . '/' . self::METHOD,
-                [
-                    'headers' => $this->getHeaders(),
-                    'json'    => $requestBody,
-                ]
-            );
-        } catch (Exception $e) {
-            return ['error' => true, 'errorMessage' => $e->getMessage()];
-        }
+                // Set amount in cents
+                if (isset($data['amount'])) {
+                    $captureRequest->setAmount((int)round((float)$data['amount'] * 100));
+                }
 
-        $this->logger->debug('----------------- START CAPTURE PAYMENT RESPONSE -----------------');
-        $this->logger->debug((string) $response->getBody());
-        $this->logger->debug('------------------ END CAPTURE PAYMENT RESPONSE ------------------');
-        $this->logger->debug('');
+                // Capture the payment using the SDK and request object
+                $payment = $moneiSdk->payments->capture($data['paymentId'], $captureRequest);
 
-        return $this->serializer->unserialize($response->getBody());
+                // Convert response to array
+                return $this->moneiApiClient->convertResponseToArray($payment);
+            } catch (ApiException $e) {
+                $this->logger->critical('[API Error] ' . $e->getMessage());
+                throw new LocalizedException(__('Failed to capture payment with MONEI API: %1', $e->getMessage()));
+            }
+        }, ['captureData' => $data]);
     }
 
     /**
      * Validate request required parameters.
      *
-     * @param array $data
-     * @return void
+     * Checks if all required parameters are present and have appropriate values.
+     * Throws exceptions if validation fails.
+     *
+     * @param array $data Request data to validate
+     *
+     * @throws LocalizedException If validation fails
      */
     private function validate(array $data): void
     {
         foreach ($this->requiredArguments as $argument) {
             if (!isset($data[$argument]) || null === $data[$argument]) {
-                $this->throwRequiredArgumentException($argument);
-            } elseif ($argument === 'amount' && !is_numeric($data[$argument])) {
                 throw new LocalizedException(
-                    __(
-                        '%1 should be numeric value',
-                        $argument
-                    )
+                    __('Required parameter "%1" is missing or empty.', $argument)
+                );
+            } elseif ('amount' === $argument && !is_numeric($data[$argument])) {
+                throw new LocalizedException(
+                    __('%1 should be numeric value', $argument)
                 );
             }
         }

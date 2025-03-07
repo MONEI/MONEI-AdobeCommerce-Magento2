@@ -1,0 +1,71 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Magento: Clear Cache",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/../../../.. && bin/magento cache:clean",
+      "problemMatcher": []
+    },
+    {
+      "label": "Magento: Flush Cache",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/../../../.. && bin/magento cache:flush",
+      "problemMatcher": []
+    },
+    {
+      "label": "Magento: Setup Upgrade",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/../../../.. && bin/magento setup:upgrade",
+      "problemMatcher": []
+    },
+    {
+      "label": "Magento: Deploy Static Content",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/../../../.. && bin/magento setup:static-content:deploy -f",
+      "problemMatcher": []
+    },
+    {
+      "label": "Magento: Compile DI",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/../../../.. && bin/magento setup:di:compile",
+      "problemMatcher": []
+    },
+    {
+      "label": "Magento: Enable Developer Mode",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/../../../.. && bin/magento deploy:mode:set developer",
+      "problemMatcher": []
+    },
+    {
+      "label": "Magento: Enable Production Mode",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/../../../.. && bin/magento deploy:mode:set production",
+      "problemMatcher": []
+    },
+    {
+      "label": "Module: Run PHP CodeSniffer",
+      "type": "shell",
+      "command": "cd ${workspaceFolder} && vendor/bin/phpcs --standard=phpcs.xml .",
+      "problemMatcher": []
+    },
+    {
+      "label": "Module: Fix PHP CodeSniffer Issues",
+      "type": "shell",
+      "command": "cd ${workspaceFolder} && vendor/bin/phpcbf --standard=phpcs.xml .",
+      "problemMatcher": []
+    },
+    {
+      "label": "Module: Run PHP-CS-Fixer Check",
+      "type": "shell",
+      "command": "cd ${workspaceFolder} && vendor/bin/php-cs-fixer check --config=.php-cs-fixer.php .",
+      "problemMatcher": []
+    },
+    {
+      "label": "Module: Fix PHP-CS-Fixer Issues",
+      "type": "shell",
+      "command": "cd ${workspaceFolder} && vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php .",
+      "problemMatcher": []
+    }
+  ]
+}

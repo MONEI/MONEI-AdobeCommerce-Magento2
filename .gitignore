@@ -1,22 +1,38 @@
+# IDE and Editor files
 .idea/*
-node_modules
 .DS_Store
-.composer.lock
+
+# Composer
+/vendor/
+composer.lock
+auth.json
+
+# Node.js
+node_modules
 
 # Yarn
-/build/.pnp.*
-/build/.yarn/*
-!/build/.yarn/patches
-!/build/.yarn/plugins
-!/build/.yarn/releases
-!/build/.yarn/sdks
-!/build/.yarn/versions
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
 
 # Cache files
 .php-cs-fixer.cache
 .phpcs-cache
 .php_cs.cache
 .phpunit.result.cache
-stubs/cache/*
 /var/cache/*
 /generated/*
+/examples/*
+
+pretty-php.phar
+
+# Development symlinks
+/dev/vendor_symlink
+/dev/magento_symlink
+
+# Temporary files
+/tmp/*

@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -9,86 +8,145 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service;
 
-use Exception;
+use Magento\Framework\Exception\LocalizedException;
+use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
 use Monei\MoneiPayment\Model\Config\Source\TypeOfPayment;
+use Monei\MoneiPayment\Service\Api\MoneiApiClient;
+use OpenAPI\Client\ApiException;
+use OpenAPI\Client\Model\CreatePaymentRequest;
+use OpenAPI\Client\Model\PaymentBillingDetails;
+use OpenAPI\Client\Model\PaymentCustomer;
+use OpenAPI\Client\Model\PaymentShippingDetails;
+use OpenAPI\Client\Model\Address;
+use OpenAPI\Client\Model\PaymentTransactionType;
 
 /**
- * Monei create payment REST integration service class.
+ * Monei create payment service class using the official MONEI PHP SDK.
  */
-class CreatePayment extends AbstractService implements CreatePaymentInterface
+class CreatePayment extends AbstractApiService implements CreatePaymentInterface
 {
-    public const METHOD = 'payments';
-
     /**
      * @var array
      */
     private $requiredArguments = [
         'amount',
         'currency',
-        'orderId',
+        'order_id',
         'customer',
-        'billingDetails',
-        'shippingDetails'
+        'billing_details',
+        'shipping_details',
     ];
 
     /**
-     * @inheritDoc
+     * @var MoneiPaymentModuleConfigInterface
      */
-    public function execute(array $data): array
-    {
-        $this->logger->debug(__METHOD__);
+    private $moduleConfig;
 
-        try {
-            $this->validate($data);
-        } catch (Exception $e) {
-            $this->logger->critical($e->getMessage());
-        }
-        $data = array_merge($data, $this->getUrls());
-        if ($this->moduleConfig->getTypeOfPayment() === TypeOfPayment::TYPE_PRE_AUTHORIZED) {
-            $data['transactionType'] = 'AUTH';
-        }
+    /**
+     * @var MoneiApiClient
+     */
+    private $moneiApiClient;
 
-        $this->logger->debug('------------------ START CREATE PAYMENT REQUEST -----------------');
-        $this->logger->debug($this->serializer->serialize($data));
-        $this->logger->debug('------------------- END CREATE PAYMENT REQUEST ------------------');
-        $this->logger->debug('');
-
-        $client = $this->createClient();
-        try {
-            $response = $client->post(
-                self::METHOD,
-                [
-                    'headers' => $this->getHeaders(),
-                    'json'    => $data,
-                ]
-            );
-        } catch (Exception $e) {
-            $this->logger->critical($e->getMessage());
-
-            return ['error' => true, 'orderId' => $data['orderId']];
-        }
-
-        $this->logger->debug('----------------- START CREATE PAYMENT RESPONSE -----------------');
-        $this->logger->debug((string) $response->getBody());
-        $this->logger->debug('------------------ END CREATE PAYMENT RESPONSE ------------------');
-        $this->logger->debug('');
-
-        return $this->serializer->unserialize($response->getBody());
+    /**
+     * @param Logger $logger
+     * @param MoneiApiClient $moneiApiClient
+     * @param MoneiPaymentModuleConfigInterface $moduleConfig
+     */
+    public function __construct(
+        Logger $logger,
+        MoneiApiClient $moneiApiClient,
+        MoneiPaymentModuleConfigInterface $moduleConfig
+    ) {
+        parent::__construct($logger);
+        $this->moneiApiClient = $moneiApiClient;
+        $this->moduleConfig = $moduleConfig;
     }
 
     /**
-     * Validate request required parameters.
+     * Execute a payment creation request to the Monei API.
      *
-     * @param array $data
-     * @return void
+     * Creates a new payment using the official MONEI SDK.
+     * The payment can be configured for authorization or capture based on the module configuration.
+     *
+     * @param array $data Payment data including amount, currency, order_id, customer and address details
+     *
+     * @return array Response from the API with payment creation results or error details
      */
-    private function validate(array $data): void
+    public function execute(array $data): array
     {
-        foreach ($this->requiredArguments as $argument) {
-            if (!isset($data[$argument]) || null === $data[$argument]) {
-                $this->throwRequiredArgumentException($argument);
+        // Convert any camelCase keys to snake_case to ensure consistency
+        $data = $this->convertKeysToSnakeCase($data);
+
+        return $this->executeApiCall(__METHOD__, function () use ($data) {
+            // Validate the request data
+            $this->validateParams($data, $this->requiredArguments);
+
+            try {
+                // Create payment request object according to SDK
+                $paymentRequest = new CreatePaymentRequest([
+                    'amount' => (int)round((float)$data['amount'] * 100), // Convert to cents
+                    'currency' => $data['currency'],
+                    'order_id' => $data['order_id'],
+                    // Add URLs from our configuration
+                    'complete_url' => $this->moduleConfig->getUrl() . '/monei/payment/complete',
+                    'callback_url' => $this->moduleConfig->getUrl() . '/monei/payment/callback',
+                    'cancel_url' => $this->moduleConfig->getUrl() . '/monei/payment/cancel',
+                    'fail_url' => $this->moduleConfig->getUrl() . '/monei/payment/fail'
+                ]);
+
+                // Set transaction type if necessary using the SDK enum
+                if (TypeOfPayment::TYPE_PRE_AUTHORIZED === $this->moduleConfig->getTypeOfPayment()) {
+                    $paymentRequest->setTransactionType(PaymentTransactionType::AUTH);
+                }
+
+                // Set customer information
+                if (isset($data['customer'])) {
+                    $paymentRequest->setCustomer(new PaymentCustomer([
+                        'email' => $data['customer']['email'] ?? null,
+                        'name' => $data['customer']['name'] ?? null,
+                        'phone' => $data['customer']['phone'] ?? null
+                    ]));
+                }
+
+                // Set billing details
+                if (isset($data['billing_details']) && isset($data['billing_details']['address'])) {
+                    $billingAddress = new Address($data['billing_details']['address']);
+                    $paymentRequest->setBillingDetails(new PaymentBillingDetails([
+                        'address' => $billingAddress
+                    ]));
+                }
+
+                // Set shipping details
+                if (isset($data['shipping_details']) && isset($data['shipping_details']['address'])) {
+                    $shippingAddress = new Address($data['shipping_details']['address']);
+                    $paymentRequest->setShippingDetails(new PaymentShippingDetails([
+                        'address' => $shippingAddress
+                    ]));
+                }
+
+                // Set description if available
+                if (isset($data['description'])) {
+                    $paymentRequest->setDescription($data['description']);
+                }
+
+                // Set metadata if available
+                if (isset($data['metadata']) && is_array($data['metadata'])) {
+                    $paymentRequest->setMetadata($data['metadata']);
+                }
+
+                // Get the SDK client
+                $moneiSdk = $this->moneiApiClient->getMoneiSdk();
+
+                // Create the payment using the request object
+                $payment = $moneiSdk->payments->create($paymentRequest);
+
+                // Convert response to array
+                return $this->moneiApiClient->convertResponseToArray($payment);
+            } catch (ApiException $e) {
+                $this->logger->critical('[API Error] ' . $e->getMessage());
+                throw new LocalizedException(__('Failed to create payment with MONEI API: %1', $e->getMessage()));
             }
-        }
+        }, ['paymentData' => $data]);
     }
 }

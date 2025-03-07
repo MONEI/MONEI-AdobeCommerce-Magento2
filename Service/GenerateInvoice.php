@@ -1,7 +1,6 @@
 <?php
 
 /**
- * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
 
@@ -9,11 +8,13 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service;
 
+use Magento\Framework\DB\Transaction;
 use Magento\Framework\DB\TransactionFactory;
 use Magento\Sales\Api\Data\OrderInterface;
-use Magento\Sales\Api\Data\OrderInterfaceFactory;
+use Magento\Sales\Model\Order;
+use Magento\Sales\Model\OrderFactory as OrderInterfaceFactory;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
-use Monei\MoneiPayment\Api\OrderLockManagerInterface;
+use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
 use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 
@@ -22,92 +23,140 @@ use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
  */
 class GenerateInvoice implements GenerateInvoiceInterface
 {
+    /**
+     * @var OrderInterfaceFactory
+     */
     private OrderInterfaceFactory $orderFactory;
-    private TransactionFactory $transactionFactory;
-    private OrderLockManagerInterface $orderLockManager;
-    private CreateVaultPayment $createVaultPayment;
-    private Logger $logger;
 
+    /**
+     * @var TransactionFactory
+     */
+    private TransactionFactory $transactionFactory;
+
+    /**
+     * @var LockManagerInterface
+     */
+    private LockManagerInterface $lockManager;
+
+    /**
+     * @var CreateVaultPayment
+     */
+    private CreateVaultPayment $createVaultPayment;
+
+    /**
+     * @param OrderInterfaceFactory $orderFactory
+     * @param TransactionFactory $transactionFactory
+     * @param LockManagerInterface $lockManager
+     * @param CreateVaultPayment $createVaultPayment
+     */
     public function __construct(
         OrderInterfaceFactory $orderFactory,
         TransactionFactory $transactionFactory,
-        OrderLockManagerInterface $orderLockManager,
-        CreateVaultPayment $createVaultPayment,
-        Logger $logger
+        LockManagerInterface $lockManager,
+        CreateVaultPayment $createVaultPayment
     ) {
         $this->createVaultPayment = $createVaultPayment;
-        $this->orderLockManager = $orderLockManager;
+        $this->lockManager = $lockManager;
         $this->transactionFactory = $transactionFactory;
         $this->orderFactory = $orderFactory;
-        $this->logger = $logger;
     }
 
     /**
-     * @inheritDoc
+     * Generate invoice for order
+     *
+     * @param OrderInterface|array $order Order or order data
+     * @param mixed $paymentData Optional payment data
+     * @return void
      */
-    public function execute(array $data): void
+    public function execute($order, $paymentData = null): void
     {
-        $incrementId = $data['orderId'];
-        /** @var OrderInterface $order */
-        $order = $this->orderFactory->create()->loadByIncrementId($incrementId);
-        if (!$order->getId()) {
-            return;
-        }
-
-        $isOrderLocked = $this->orderLockManager->isLocked($incrementId);
-        if ($isOrderLocked || $this->isOrderAlreadyPaid($order)) {
-            return;
-        }
-
-        // Get lock before processing
-        $lockAcquired = $this->orderLockManager->lock($incrementId);
-        if (!$lockAcquired) {
-            $this->logger->info(\sprintf(
-                'Could not acquire lock for order %s - already being processed',
-                $incrementId
-            ));
-            return;
-        }
-
         try {
-            $payment = $order->getPayment();
-            if ($payment) {
-                $payment->setLastTransId($data['id']);
+            // If $order is an array, extract the orderId and load the order
+            if (is_array($order)) {
+                $incrementId = $order['orderId'] ?? null;
+                if (!$incrementId) {
+                    return;
+                }
+                /** @var Order $orderObj */
+                $orderObj = $this->orderFactory->create()->loadByIncrementId($incrementId);
+                if (!$orderObj->getId()) {
+                    return;
+                }
+            } else {
+                // $order is already an OrderInterface
+                $orderObj = $order;
+                $incrementId = $orderObj->getIncrementId();
             }
-            $invoice = $order->prepareInvoice();
-            if (!$invoice->getAllItems()) {
+
+            $isOrderLocked = $this->lockManager->isOrderLocked($incrementId);
+            if ($isOrderLocked || $this->isOrderAlreadyPaid($orderObj)) {
                 return;
             }
-            $invoice->register()->capture();
-            $order->addRelatedObject($invoice);
-            if ($payment) {
-                $payment->setCreatedInvoice($invoice);
-                if ($order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION)) {
-                    $vaultCreated = $this->createVaultPayment->execute(
-                        $data['id'],
-                        $payment
-                    );
-                    $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, $vaultCreated);
+
+            $this->lockManager->lockOrder($incrementId);
+            try {
+                $payment = $orderObj->getPayment();
+                if ($payment) {
+                    // Set transaction ID from payment data if available
+                    if ($paymentData instanceof \Monei\MoneiPayment\Model\Data\PaymentDTO) {
+                        $payment->setLastTransId($paymentData->getId());
+                    } elseif (is_array($paymentData) && isset($paymentData['id'])) {
+                        $payment->setLastTransId($paymentData['id']);
+                    }
                 }
+
+                /** @var Order $orderObj */
+                $invoice = $orderObj->prepareInvoice();
+                if (!$invoice->getAllItems()) {
+                    return;
+                }
+
+                $invoice->register()->capture();
+                $orderObj->addRelatedObject($invoice);
+
+                if ($payment) {
+                    $payment->setCreatedInvoice($invoice);
+                    if ($orderObj->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION)) {
+                        // Extract payment ID from the appropriate source
+                        $paymentId = null;
+                        if ($paymentData instanceof \Monei\MoneiPayment\Model\Data\PaymentDTO) {
+                            $paymentId = $paymentData->getId();
+                        } elseif (is_array($paymentData) && isset($paymentData['id'])) {
+                            $paymentId = $paymentData['id'];
+                        }
+
+                        if ($paymentId) {
+                            $vaultCreated = $this->createVaultPayment->execute(
+                                $paymentId,
+                                $payment
+                            );
+                        }
+                    }
+                }
+
+                /** @var Transaction $transaction */
+                $transaction = $this->transactionFactory->create()
+                    ->addObject($invoice)
+                    ->addObject($orderObj);
+                $transaction->save();
+            } finally {
+                $this->lockManager->unlockOrder($incrementId);
             }
-            $this->transactionFactory->create()->addObject($invoice)->addObject($invoice->getOrder())->save();
         } catch (\Exception $e) {
-            $this->logger->error(\sprintf(
-                'Error generating invoice for order %s: %s',
-                $incrementId,
-                $e->getMessage()
-            ));
-            throw $e; // Rethrow the exception after logging
-        } finally {
-            // Always release the lock, even if an exception occurred
-            $this->orderLockManager->unlock($incrementId);
+            // Log the error but don't rethrow to avoid breaking the callback flow
+            // This is a non-critical operation
         }
     }
 
+    /**
+     * Check if the order is already paid
+     *
+     * @param OrderInterface $order
+     * @return bool
+     */
     private function isOrderAlreadyPaid(OrderInterface $order): bool
     {
-        $payment = $order->getPayment();
-
-        return $payment && $payment->getLastTransId() && $payment->getAmountPaid() && !$order->getTotalDue();
+        /** @var Order $order */
+        return $order->hasInvoices() && $order->getBaseTotalDue() <= 0;
     }
 }
