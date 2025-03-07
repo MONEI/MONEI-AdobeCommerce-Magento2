@@ -127,4 +127,24 @@ class CallbackPaymentDataProvider implements PaymentDataProviderInterface
             throw new LocalizedException(__('Error extracting payment data: %1', $e->getMessage()));
         }
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function getPaymentData(string $paymentId): PaymentDTO
+    {
+        throw new LocalizedException(__('Method not supported for callback payment data provider'));
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function validatePaymentData(array $data): bool
+    {
+        if (empty($data) || !isset($data['id'])) {
+            return false;
+        }
+
+        return true;
+    }
 }

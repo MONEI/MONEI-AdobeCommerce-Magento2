@@ -10,6 +10,7 @@ namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\Exception\LocalizedException;
 use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
+use Monei\MoneiPayment\Service\Logger;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use OpenAPI\Client\ApiException;
 use OpenAPI\Client\Model\CapturePaymentRequest;

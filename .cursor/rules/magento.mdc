@@ -1,0 +1,5 @@
+---
+description: Running magento commands
+globs: 
+---
+This module is located inside `magento/src/app/code/Monei/MoneiPayment`, to run magento command change directory to `magento` and run the command, for examle: `bin/magento setup:di:compile` without `php`

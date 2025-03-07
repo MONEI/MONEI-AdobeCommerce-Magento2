@@ -15,7 +15,6 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory as OrderInterfaceFactory;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
 use Monei\MoneiPayment\Api\LockManagerInterface;
-use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
 use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 
@@ -27,28 +26,12 @@ class GenerateInvoice implements GenerateInvoiceInterface
     /**
      * @var OrderInterfaceFactory
      */
-    /**
-     * @var OrderInterfaceFactory
-     */
     private OrderInterfaceFactory $orderFactory;
 
     /**
      * @var TransactionFactory
      */
-
-    /**
-     * @var TransactionFactory
-     */
     private TransactionFactory $transactionFactory;
-
-    /**
-     * @var LockManagerInterface
-     */
-    private LockManagerInterface $lockManager;
-
-    /**
-     * @var CreateVaultPayment
-     */
 
     /**
      * @var LockManagerInterface
@@ -66,41 +49,36 @@ class GenerateInvoice implements GenerateInvoiceInterface
      * @param LockManagerInterface $lockManager
      * @param CreateVaultPayment $createVaultPayment
      */
-
-    /**
-     * @param OrderInterfaceFactory $orderFactory
-     * @param TransactionFactory $transactionFactory
-     * @param LockManagerInterface $lockManager
-     * @param CreateVaultPayment $createVaultPayment
-     */
     public function __construct(
         OrderInterfaceFactory $orderFactory,
         TransactionFactory $transactionFactory,
         LockManagerInterface $lockManager,
         CreateVaultPayment $createVaultPayment
-        LockManagerInterface $lockManager,
-        CreateVaultPayment $createVaultPayment
     ) {
-        $this->createVaultPayment = $createVaultPayment;
-        $this->lockManager = $lockManager;
-        $this->lockManager = $lockManager;
-        $this->transactionFactory = $transactionFactory;
         $this->orderFactory = $orderFactory;
+        $this->transactionFactory = $transactionFactory;
+        $this->lockManager = $lockManager;
+        $this->createVaultPayment = $createVaultPayment;
     }
 
     /**
      * @inheritdoc
      *
-     * @param array $data
+     * @param OrderInterface|string $order Order object or increment ID
+     * @param array|null $paymentData Payment data from MONEI
      * @return void
      */
     public function execute($order, $paymentData = null): void
     {
-        $incrementId = $data['orderId'];
-        /** @var OrderInterface $order */
-        $order = $this->orderFactory->create()->loadByIncrementId($incrementId);
-        if (!$order->getId()) {
-            return;
+        if (!is_object($order)) {
+            $incrementId = $order;
+            /** @var OrderInterface $order */
+            $order = $this->orderFactory->create()->loadByIncrementId($incrementId);
+            if (!$order->getId()) {
+                return;
+            }
+        } else {
+            $incrementId = $order->getIncrementId();
         }
 
         $isOrderLocked = $this->lockManager->isOrderLocked($incrementId);
@@ -111,8 +89,8 @@ class GenerateInvoice implements GenerateInvoiceInterface
         $this->lockManager->lockOrder($incrementId);
         try {
             $payment = $order->getPayment();
-            if ($payment) {
-                $payment->setLastTransId($data['id']);
+            if ($payment && $paymentData) {
+                $payment->setLastTransId($paymentData['id']);
             }
             $invoice = $order->prepareInvoice();
             if (!$invoice->getAllItems()) {
@@ -122,9 +100,9 @@ class GenerateInvoice implements GenerateInvoiceInterface
             $order->addRelatedObject($invoice);
             if ($payment) {
                 $payment->setCreatedInvoice($invoice);
-                if ($order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION)) {
+                if ($order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION) && $paymentData) {
                     $vaultCreated = $this->createVaultPayment->execute(
-                        $data['id'],
+                        $paymentData['id'],
                         $payment
                     );
                     $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, $vaultCreated);

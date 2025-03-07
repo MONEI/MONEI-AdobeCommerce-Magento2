@@ -114,7 +114,7 @@ class RefundPayment extends AbstractApiService implements RefundPaymentInterface
      * @param array $data Input data with possible camelCase keys
      * @return array Data with all keys in snake_case
      */
-    private function convertKeysToSnakeCase(array $data): array
+    protected function convertKeysToSnakeCase(array $data): array
     {
         $result = [];
         foreach ($data as $key => $value) {

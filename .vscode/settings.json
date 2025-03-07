@@ -1,10 +1,10 @@
 {
   "intelephense.environment.includePaths": [
-    "../../../../vendor",
-    "../../../../lib",
-    "../../../../generated",
-    "../../../../app/code",
-    "../../../../app/design"
+    "${workspaceFolder}/../../../../../vendor",
+    "${workspaceFolder}/../../../../../lib",
+    "${workspaceFolder}/../../../../../generated",
+    "${workspaceFolder}/../../../../../app/code",
+    "${workspaceFolder}/../../../../../app/design"
   ],
   "intelephense.files.associations": [
     "*.php",

@@ -4,67 +4,181 @@
     {
       "label": "Magento: Clear Cache",
       "type": "shell",
-      "command": "cd ${workspaceFolder}/../../../.. && bin/magento cache:clean",
+      "command": "cd ${workspaceFolder}/../../../../.. && bin/magento cache:clean",
+      "group": "magento",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true
+      },
       "problemMatcher": []
     },
     {
       "label": "Magento: Flush Cache",
       "type": "shell",
-      "command": "cd ${workspaceFolder}/../../../.. && bin/magento cache:flush",
+      "command": "cd ${workspaceFolder}/../../../../.. && bin/magento cache:flush",
+      "group": "magento",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true
+      },
       "problemMatcher": []
     },
     {
       "label": "Magento: Setup Upgrade",
       "type": "shell",
-      "command": "cd ${workspaceFolder}/../../../.. && bin/magento setup:upgrade",
+      "command": "cd ${workspaceFolder}/../../../../.. && bin/magento setup:upgrade",
+      "group": "magento",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true
+      },
       "problemMatcher": []
     },
     {
       "label": "Magento: Deploy Static Content",
       "type": "shell",
-      "command": "cd ${workspaceFolder}/../../../.. && bin/magento setup:static-content:deploy -f",
+      "command": "cd ${workspaceFolder}/../../../../.. && bin/magento setup:static-content:deploy -f",
+      "group": "magento",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true
+      },
       "problemMatcher": []
     },
     {
       "label": "Magento: Compile DI",
       "type": "shell",
-      "command": "cd ${workspaceFolder}/../../../.. && bin/magento setup:di:compile",
+      "command": "cd ${workspaceFolder}/../../../../.. && bin/magento setup:di:compile",
+      "group": "magento",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true
+      },
       "problemMatcher": []
     },
     {
       "label": "Magento: Enable Developer Mode",
       "type": "shell",
-      "command": "cd ${workspaceFolder}/../../../.. && bin/magento deploy:mode:set developer",
+      "command": "cd ${workspaceFolder}/../../../../.. && bin/magento deploy:mode:set developer",
+      "group": "magento",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true
+      },
       "problemMatcher": []
     },
     {
       "label": "Magento: Enable Production Mode",
       "type": "shell",
-      "command": "cd ${workspaceFolder}/../../../.. && bin/magento deploy:mode:set production",
+      "command": "cd ${workspaceFolder}/../../../../.. && bin/magento deploy:mode:set production",
+      "group": "magento",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Magento: Show Current Mode",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/../../../../.. && bin/magento deploy:mode:show",
+      "group": "magento",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Magento: Reindex All",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/../../../../.. && bin/magento indexer:reindex",
+      "group": "magento",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Magento: Show Indexer Status",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/../../../../.. && bin/magento indexer:status",
+      "group": "magento",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Magento: Full Deployment",
+      "type": "shell",
+      "command": "cd ${workspaceFolder}/../../../../.. && bin/magento setup:upgrade && bin/magento setup:di:compile && bin/magento setup:static-content:deploy -f && bin/magento cache:flush",
+      "group": "magento",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true
+      },
       "problemMatcher": []
     },
     {
       "label": "Module: Run PHP CodeSniffer",
       "type": "shell",
       "command": "cd ${workspaceFolder} && vendor/bin/phpcs --standard=phpcs.xml .",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true
+      },
       "problemMatcher": []
     },
     {
       "label": "Module: Fix PHP CodeSniffer Issues",
       "type": "shell",
       "command": "cd ${workspaceFolder} && vendor/bin/phpcbf --standard=phpcs.xml .",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true
+      },
       "problemMatcher": []
     },
     {
       "label": "Module: Run PHP-CS-Fixer Check",
       "type": "shell",
       "command": "cd ${workspaceFolder} && vendor/bin/php-cs-fixer check --config=.php-cs-fixer.php .",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true
+      },
       "problemMatcher": []
     },
     {
       "label": "Module: Fix PHP-CS-Fixer Issues",
       "type": "shell",
       "command": "cd ${workspaceFolder} && vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php .",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "clear": true
+      },
       "problemMatcher": []
     }
   ]
