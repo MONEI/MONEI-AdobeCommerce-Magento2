@@ -23,9 +23,11 @@
     ],
     "require": {
         "php": "^8.1.0",
-        "magento/module-payment": "100.4.*",
         "magento/module-checkout": "100.4.*",
-        "magento/module-sales": "103.0.*"
+        "magento/module-payment": "100.4.*",
+        "magento/module-sales": "103.0.*",
+        "monei/monei-php-sdk": "^2.6",
+        "monolog/monolog": "^2.10"
     },
     "require-dev": {
         "squizlabs/php_codesniffer": "^3.7",
@@ -44,7 +46,11 @@
         }
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "magento/composer-dependency-version-audit-plugin": true
+        }
     },
     "scripts": {
         "lint": "ERRORS_ONLY=1 bash scripts/lint.sh",
