@@ -82,8 +82,8 @@ class GetPaymentMethods extends AbstractApiService implements GetPaymentMethodsI
                     $moneiSdk = $this->moneiApiClient->getMoneiSdk();
                 }
 
-                // Get the payment methods - using listAll() method as specified in the MONEI SDK
-                $methods = $moneiSdk->paymentMethods->listAll();
+                // Get the payment methods - using get() method as specified in the MONEI SDK
+                $methods = $moneiSdk->paymentMethods->get($accountId);
 
                 // Convert response to array
                 return $this->moneiApiClient->convertResponseToArray($methods);

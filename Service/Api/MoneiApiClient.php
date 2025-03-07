@@ -81,7 +81,7 @@ class MoneiApiClient
         $cacheKey = (string) $currentStoreId;
 
         if (!isset($this->instances[$cacheKey])) {
-            $apiKey = $this->getApiKey($currentStoreId);
+            $apiKey = $this->getApiKey((int) $currentStoreId);
 
             // Initialize the MoneiClient from the SDK
             $monei = new MoneiClient($apiKey);
@@ -112,26 +112,19 @@ class MoneiApiClient
         }
 
         if (method_exists($response, 'jsonSerialize')) {
-            return $response->jsonSerialize();
+            // First try direct jsonSerialize
+            $result = $response->jsonSerialize();
+
+            // If result isn't an array, use json_encode/decode approach
+            if (!is_array($result)) {
+                $result = json_decode(json_encode($response), true);
+            }
+
+            return $result;
         }
 
-        // Last resort - should rarely be needed
-        return (array) $response;
-    }
-
-    /**
-     * Get MONEI API URL based on the sandbox mode setting
-     *
-     * @param int $storeId
-     * @return string
-     */
-    private function getApiUrl(int $storeId): string
-    {
-        $isTestMode = $this->moduleConfig->getMode($storeId) === 0;  // 0 = Test, 1 = Production
-
-        return $isTestMode
-            ? $this->moduleConfig->getTestUrl($storeId)
-            : $this->moduleConfig->getProductionUrl($storeId);
+        // JSON encode/decode approach as last resort
+        return json_decode(json_encode($response), true);
     }
 
     /**
@@ -143,10 +136,16 @@ class MoneiApiClient
      */
     private function getApiKey(int $storeId): string
     {
-        $isTestMode = $this->moduleConfig->getMode($storeId) === 0;  // 0 = Test, 1 = Production
+        $isTestMode = $this->moduleConfig->getMode($storeId) === 1;  // 1 = Test, 0 = Production
         $apiKey = $isTestMode
             ? $this->moduleConfig->getTestApiKey($storeId)
             : $this->moduleConfig->getProductionApiKey($storeId);
+
+        $this->logger->info('API Key: ' . $apiKey);
+        $this->logger->info('Is Test Mode: ' . $this->moduleConfig->getMode($storeId));
+        $this->logger->info('Store ID: ' . $storeId);
+        $this->logger->info('Test API Key: ' . $this->moduleConfig->getTestApiKey($storeId));
+        $this->logger->info('Production API Key: ' . $this->moduleConfig->getProductionApiKey($storeId));
 
         if (empty($apiKey)) {
             throw new LocalizedException(
