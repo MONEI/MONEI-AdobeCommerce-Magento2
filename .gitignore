@@ -29,3 +29,10 @@ node_modules
 /examples/*
 
 pretty-php.phar
+
+# Development symlinks
+/dev/vendor_symlink
+/dev/magento_symlink
+
+# Temporary files
+/tmp/*

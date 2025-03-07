@@ -10,118 +10,89 @@ namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\Exception\LocalizedException;
 use Monei\MoneiPayment\Api\Service\CancelPaymentInterface;
+use Monei\MoneiPayment\Service\Api\MoneiApiClient;
+use OpenAPI\Client\ApiException;
+use OpenAPI\Client\Model\CancelPaymentRequest;
+use OpenAPI\Client\Model\PaymentCancellationReason;
 
 /**
- * Monei cancel payment REST integration service class.
+ * Monei cancel payment service class using the official MONEI PHP SDK.
  */
-class CancelPayment extends AbstractService implements CancelPaymentInterface
+class CancelPayment extends AbstractApiService implements CancelPaymentInterface
 {
-    public const METHOD = 'cancel';
-
     /**
      * @var array
      */
     private $requiredArguments = [
-        'paymentId',
-        'cancellationReason',
+        'payment_id',
+        'cancellation_reason',
     ];
 
     /**
      * @var array
      */
     private $cancellationReasons = [
-        'duplicated',
-        'fraudulent',
-        'requested_by_customer',
+        PaymentCancellationReason::DUPLICATED,
+        PaymentCancellationReason::FRAUDULENT,
+        PaymentCancellationReason::REQUESTED_BY_CUSTOMER,
     ];
+
+    /**
+     * @var MoneiApiClient
+     */
+    private $moneiApiClient;
+
+    /**
+     * @param Logger $logger
+     * @param MoneiApiClient $moneiApiClient
+     */
+    public function __construct(
+        Logger $logger,
+        MoneiApiClient $moneiApiClient
+    ) {
+        parent::__construct($logger);
+        $this->moneiApiClient = $moneiApiClient;
+    }
 
     /**
      * Execute payment cancellation request.
      *
-     * @param array $data Payment data including paymentId and cancellationReason
-     *
-     * @throws LocalizedException If validation fails
+     * @param array $data Payment data including payment_id and cancellation_reason
      *
      * @return array Response from the Monei API
      */
     public function execute(array $data): array
     {
-        $this->logger->debug('[Method] ' . __METHOD__);
-
-        try {
-            $this->validate($data);
-        } catch (\Exception $e) {
-            $this->logger->critical('[Exception] ' . $e->getMessage());
-
-            return ['error' => true, 'errorMessage' => $e->getMessage()];
-        }
-
-        $requestBody = [
-            'cancellationReason' => $data['cancellationReason']
-        ];
-
-        $this->logger->debug('[Cancel payment request]');
-        $this->logger->debug(json_encode(json_decode($this->serializer->serialize($data)), JSON_PRETTY_PRINT));
-
-        $client = $this->createClient();
-
-        try {
-            $response = $client->post(
-                'payments/' . $data['paymentId'] . '/' . self::METHOD,
-                [
-                    'headers' => $this->getHeaders(),
-                    'json' => $requestBody,
-                ]
-            );
-
-            $responseBody = (string) $response->getBody();
-            $this->logger->debug('[Cancel payment response]');
-            $this->logger->debug(json_encode(json_decode($responseBody), JSON_PRETTY_PRINT));
-
-            return $this->serializer->unserialize($responseBody);
-        } catch (\GuzzleHttp\Exception\RequestException $e) {
-            $this->logger->critical('[RequestException] ' . $e->getMessage());
-            if ($e->hasResponse()) {
-                $errorResponse = (string) $e->getResponse()->getBody();
-                $this->logger->critical('[Error Response] ' . $errorResponse);
-
-                try {
-                    $errorData = $this->serializer->unserialize($errorResponse);
-
-                    return ['error' => true, 'errorMessage' => $errorData['message'] ?? $e->getMessage(), 'errorData' => $errorData];
-                } catch (\Exception $deserializeException) {
-                    $this->logger->critical('[Deserialize Exception] ' . $deserializeException->getMessage());
+        return $this->executeApiCall(__METHOD__, function () use ($data) {
+            // Validate the request parameters
+            $this->validateParams($data, $this->requiredArguments, [
+                'cancellation_reason' => function ($value) {
+                    return in_array($value, $this->cancellationReasons, true);
                 }
-            }
+            ]);
 
-            return ['error' => true, 'errorMessage' => $e->getMessage()];
-        } catch (\Exception $e) {
-            $this->logger->critical('[Exception] ' . $e->getMessage());
+            try {
+                // Get the SDK client
+                $moneiSdk = $this->moneiApiClient->getMoneiSdk();
 
-            return ['error' => true, 'errorMessage' => $e->getMessage()];
-        }
-    }
+                // Create cancel request with SDK model
+                $cancelRequest = new CancelPaymentRequest();
 
-    /**
-     * Validate request required parameters.
-     *
-     * @param array $data
-     */
-    private function validate(array $data): void
-    {
-        foreach ($this->requiredArguments as $argument) {
-            if (!isset($data[$argument]) || null === $data[$argument]) {
-                $this->throwRequiredArgumentException($argument);
+                // Set cancellation reason using the SDK enum
+                $cancelRequest->setCancellationReason($data['cancellation_reason']);
+
+                // Cancel the payment using the SDK and request object
+                $payment = $moneiSdk->payments->cancel($data['payment_id'], $cancelRequest);
+
+                // Convert response to array and add cancellation reason for reference
+                $response = $this->moneiApiClient->convertResponseToArray($payment);
+                $response['cancellation_reason'] = $data['cancellation_reason'];
+
+                return $response;
+            } catch (ApiException $e) {
+                $this->logger->critical('[API Error] ' . $e->getMessage());
+                throw new LocalizedException(__('Failed to cancel payment with MONEI API: %1', $e->getMessage()));
             }
-            if ('cancellationReason' === $argument && !\in_array($data[$argument], $this->cancellationReasons, true)) {
-                throw new LocalizedException(
-                    __(
-                        "Cancellation reason '%1' is not valid. Allowed reasons: %2",
-                        $data[$argument],
-                        implode(', ', $this->cancellationReasons)
-                    )
-                );
-            }
-        }
+        }, ['cancelData' => $data]);
     }
 }

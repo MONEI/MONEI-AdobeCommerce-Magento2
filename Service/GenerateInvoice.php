@@ -8,10 +8,13 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service;
 
+use Magento\Framework\DB\Transaction;
 use Magento\Framework\DB\TransactionFactory;
 use Magento\Sales\Api\Data\OrderInterface;
-use Magento\Sales\Api\Data\OrderInterfaceFactory;
+use Magento\Sales\Model\Order;
+use Magento\Sales\Model\OrderFactory as OrderInterfaceFactory;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
+use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
 use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
@@ -24,12 +27,28 @@ class GenerateInvoice implements GenerateInvoiceInterface
     /**
      * @var OrderInterfaceFactory
      */
+    /**
+     * @var OrderInterfaceFactory
+     */
     private OrderInterfaceFactory $orderFactory;
 
     /**
      * @var TransactionFactory
      */
+
+    /**
+     * @var TransactionFactory
+     */
     private TransactionFactory $transactionFactory;
+
+    /**
+     * @var LockManagerInterface
+     */
+    private LockManagerInterface $lockManager;
+
+    /**
+     * @var CreateVaultPayment
+     */
 
     /**
      * @var LockManagerInterface
@@ -47,13 +66,23 @@ class GenerateInvoice implements GenerateInvoiceInterface
      * @param LockManagerInterface $lockManager
      * @param CreateVaultPayment $createVaultPayment
      */
+
+    /**
+     * @param OrderInterfaceFactory $orderFactory
+     * @param TransactionFactory $transactionFactory
+     * @param LockManagerInterface $lockManager
+     * @param CreateVaultPayment $createVaultPayment
+     */
     public function __construct(
         OrderInterfaceFactory $orderFactory,
         TransactionFactory $transactionFactory,
         LockManagerInterface $lockManager,
         CreateVaultPayment $createVaultPayment
+        LockManagerInterface $lockManager,
+        CreateVaultPayment $createVaultPayment
     ) {
         $this->createVaultPayment = $createVaultPayment;
+        $this->lockManager = $lockManager;
         $this->lockManager = $lockManager;
         $this->transactionFactory = $transactionFactory;
         $this->orderFactory = $orderFactory;
@@ -65,7 +94,7 @@ class GenerateInvoice implements GenerateInvoiceInterface
      * @param array $data
      * @return void
      */
-    public function execute(array $data): void
+    public function execute($order, $paymentData = null): void
     {
         $incrementId = $data['orderId'];
         /** @var OrderInterface $order */
@@ -115,8 +144,7 @@ class GenerateInvoice implements GenerateInvoiceInterface
      */
     private function isOrderAlreadyPaid(OrderInterface $order): bool
     {
-        $payment = $order->getPayment();
-
-        return $payment && $payment->getLastTransId() && $payment->getAmountPaid() && !$order->getTotalDue();
+        /** @var Order $order */
+        return $order->hasInvoices() && $order->getBaseTotalDue() <= 0;
     }
 }

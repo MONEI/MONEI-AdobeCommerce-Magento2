@@ -12,41 +12,43 @@ namespace Monei\MoneiPayment\Service\Api;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\StoreManagerInterface;
-use Monei\ApiErrorException;
-use Monei\Monei;
-use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
-use Monei\MoneiPayment\Model\Config\Source\ModuleVersion;
 use Monei\MoneiPayment\Service\Logger;
+use Monei\MoneiPayment\Model\Config\Source\ModuleVersion;
+use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use Monei\MoneiClient;
 
 /**
- * Client for interacting with the MONEI API
+ * Client factory for MONEI Payment Gateway SDK
+ *
+ * This class provides initialization and configuration for the MONEI PHP SDK,
+ * handling store-specific configuration and caching SDK instances.
  */
 class MoneiApiClient
 {
     /**
      * @var StoreManagerInterface
      */
-    private StoreManagerInterface $storeManager;
+    private $storeManager;
 
     /**
      * @var MoneiPaymentModuleConfigInterface
      */
-    private MoneiPaymentModuleConfigInterface $moduleConfig;
+    private $moduleConfig;
 
     /**
      * @var Logger
      */
-    private Logger $logger;
+    private $logger;
 
     /**
      * @var ModuleVersion
      */
-    private ModuleVersion $moduleVersion;
+    private $moduleVersion;
 
     /**
      * @var array
      */
-    private array $sdkInstances = [];
+    private $instances = [];
 
     /**
      * @param StoreManagerInterface $storeManager
@@ -67,233 +69,73 @@ class MoneiApiClient
     }
 
     /**
-     * Get payment details from MONEI API
-     *
-     * @param string $paymentId
-     * @param int|null $storeId
-     * @return array
-     * @throws LocalizedException
-     */
-    public function getPayment(string $paymentId, ?int $storeId = null): array
-    {
-        try {
-            $monei = $this->getMoneiSdk($storeId);
-            $payment = $monei->payments->retrieve($paymentId);
-
-            return $payment->toArray();
-        } catch (ApiErrorException $e) {
-            $this->logger->critical('[API Error] ' . $e->getMessage());
-            throw new LocalizedException(__('Failed to get payment from MONEI API: %1', $e->getMessage()));
-        } catch (\Exception $e) {
-            $this->logger->critical('[Error] ' . $e->getMessage());
-            throw new LocalizedException(__('Failed to get payment from MONEI API: %1', $e->getMessage()));
-        }
-    }
-
-    /**
-     * Create a new payment with MONEI API
-     *
-     * @param array $paymentData
-     * @param int|null $storeId
-     * @return array
-     * @throws LocalizedException
-     */
-    public function createPayment(array $paymentData, ?int $storeId = null): array
-    {
-        try {
-            $monei = $this->getMoneiSdk($storeId);
-            $payment = $monei->payments->create($paymentData);
-
-            return $payment->toArray();
-        } catch (ApiErrorException $e) {
-            $this->logger->critical('[API Error] ' . $e->getMessage());
-            throw new LocalizedException(__('Failed to create payment with MONEI API: %1', $e->getMessage()));
-        } catch (\Exception $e) {
-            $this->logger->critical('[Error] ' . $e->getMessage());
-            throw new LocalizedException(__('Failed to create payment with MONEI API: %1', $e->getMessage()));
-        }
-    }
-
-    /**
-     * Capture a payment with MONEI API
-     *
-     * @param string $paymentId
-     * @param float|null $amount
-     * @param int|null $storeId
-     * @return array
-     * @throws LocalizedException
-     */
-    public function capturePayment(string $paymentId, ?float $amount = null, ?int $storeId = null): array
-    {
-        try {
-            $monei = $this->getMoneiSdk($storeId);
-            $captureData = [];
-
-            if ($amount !== null) {
-                $captureData['amount'] = (int)round($amount * 100);
-            }
-
-            $payment = $monei->payments->capture($paymentId, $captureData);
-
-            return $payment->toArray();
-        } catch (ApiErrorException $e) {
-            $this->logger->critical('[API Error] ' . $e->getMessage());
-            throw new LocalizedException(__('Failed to capture payment with MONEI API: %1', $e->getMessage()));
-        } catch (\Exception $e) {
-            $this->logger->critical('[Error] ' . $e->getMessage());
-            throw new LocalizedException(__('Failed to capture payment with MONEI API: %1', $e->getMessage()));
-        }
-    }
-
-    /**
-     * Refund a payment with MONEI API
-     *
-     * @param string $paymentId
-     * @param float|null $amount
-     * @param int|null $storeId
-     * @return array
-     * @throws LocalizedException
-     */
-    public function refundPayment(string $paymentId, ?float $amount = null, ?int $storeId = null): array
-    {
-        try {
-            $monei = $this->getMoneiSdk($storeId);
-            $refundData = [];
-
-            if ($amount !== null) {
-                $refundData['amount'] = (int)round($amount * 100);
-            }
-
-            $payment = $monei->payments->refund($paymentId, $refundData);
-
-            return $payment->toArray();
-        } catch (ApiErrorException $e) {
-            $this->logger->critical('[API Error] ' . $e->getMessage());
-            throw new LocalizedException(__('Failed to refund payment with MONEI API: %1', $e->getMessage()));
-        } catch (\Exception $e) {
-            $this->logger->critical('[Error] ' . $e->getMessage());
-            throw new LocalizedException(__('Failed to refund payment with MONEI API: %1', $e->getMessage()));
-        }
-    }
-
-    /**
-     * Cancel a payment with MONEI API
-     *
-     * @param string $paymentId
-     * @param int|null $storeId
-     * @return array
-     * @throws LocalizedException
-     */
-    public function cancelPayment(string $paymentId, ?int $storeId = null): array
-    {
-        try {
-            $monei = $this->getMoneiSdk($storeId);
-            $payment = $monei->payments->cancel($paymentId);
-
-            return $payment->toArray();
-        } catch (ApiErrorException $e) {
-            $this->logger->critical('[API Error] ' . $e->getMessage());
-            throw new LocalizedException(__('Failed to cancel payment with MONEI API: %1', $e->getMessage()));
-        } catch (\Exception $e) {
-            $this->logger->critical('[Error] ' . $e->getMessage());
-            throw new LocalizedException(__('Failed to cancel payment with MONEI API: %1', $e->getMessage()));
-        }
-    }
-
-    /**
-     * Get available payment methods from MONEI API
+     * Get or create instance of MONEI SDK
      *
      * @param int|null $storeId
-     * @return array
-     * @throws LocalizedException
-     */
-    public function getPaymentMethods(?int $storeId = null): array
-    {
-        try {
-            $monei = $this->getMoneiSdk($storeId);
-            $methods = $monei->paymentMethods->all();
-
-            return $methods;
-        } catch (ApiErrorException $e) {
-            $this->logger->critical('[API Error] ' . $e->getMessage());
-            throw new LocalizedException(__('Failed to get payment methods from MONEI API: %1', $e->getMessage()));
-        } catch (\Exception $e) {
-            $this->logger->critical('[Error] ' . $e->getMessage());
-            throw new LocalizedException(__('Failed to get payment methods from MONEI API: %1', $e->getMessage()));
-        }
-    }
-
-    /**
-     * Verify webhook signature
-     *
-     * @param string $payload
-     * @param string $signatureHeader
-     * @param int|null $storeId
-     * @return bool
-     * @throws LocalizedException
-     */
-    public function verifyWebhookSignature(string $payload, string $signatureHeader, ?int $storeId = null): bool
-    {
-        try {
-            $monei = $this->getMoneiSdk($storeId);
-            $event = $monei->webhooks->constructEvent($payload, $signatureHeader);
-
-            return $event !== null;
-        } catch (ApiErrorException $e) {
-            $this->logger->critical('[API Error] ' . $e->getMessage());
-            throw new LocalizedException(__('Failed to verify webhook signature: %1', $e->getMessage()));
-        } catch (\Exception $e) {
-            $this->logger->critical('[Error] ' . $e->getMessage());
-            throw new LocalizedException(__('Failed to verify webhook signature: %1', $e->getMessage()));
-        }
-    }
-
-    /**
-     * Get the MONEI SDK instance
-     *
-     * @param int|null $storeId
-     * @return Monei
+     * @return MoneiClient
      * @throws LocalizedException
      * @throws NoSuchEntityException
      */
-    public function getMoneiSdk(?int $storeId = null): Monei
+    public function getMoneiSdk(?int $storeId = null): MoneiClient
     {
         $currentStoreId = $storeId ?: $this->storeManager->getStore()->getId();
         $cacheKey = (string)$currentStoreId;
 
-        if (!isset($this->sdkInstances[$cacheKey])) {
+        if (!isset($this->instances[$cacheKey])) {
             $apiKey = $this->getApiKey($currentStoreId);
-            $apiUrl = $this->getApiUrl($currentStoreId);
 
-            $monei = new Monei($apiKey, [
-                'api_base' => $apiUrl,
-                'app_info' => [
-                    'name' => 'MONEI/Magento2',
-                    'version' => $this->moduleVersion->getModuleVersion(),
-                    'url' => 'https://github.com/MONEI/MONEI-AdobeCommerce-Magento2',
-                ],
-            ]);
+            // Initialize the MoneiClient from the SDK
+            $monei = new MoneiClient($apiKey);
 
-            $this->sdkInstances[$cacheKey] = $monei;
+            // Set custom User-Agent header to identify the integration
+            $monei->setUserAgent('MONEI/Magento2/' . $this->moduleVersion->getModuleVersion());
+
+            $this->instances[$cacheKey] = $monei;
         }
 
-        return $this->sdkInstances[$cacheKey];
+        return $this->instances[$cacheKey];
     }
 
     /**
-     * Get the API URL based on the store configuration
+     * Convert response object to array
+     *
+     * @param mixed $response
+     * @return array
+     */
+    public function convertResponseToArray($response): array
+    {
+        if (is_array($response)) {
+            return $response;
+        }
+
+        if (method_exists($response, 'toArray')) {
+            return $response->toArray();
+        }
+
+        if (method_exists($response, 'jsonSerialize')) {
+            return $response->jsonSerialize();
+        }
+
+        // Last resort - should rarely be needed
+        return (array)$response;
+    }
+
+    /**
+     * Get MONEI API URL based on the sandbox mode setting
      *
      * @param int $storeId
      * @return string
      */
     private function getApiUrl(int $storeId): string
     {
-        $isSandbox = $this->moduleConfig->isSandboxMode($storeId);
-        return $isSandbox ? 'https://api.sandbox.monei.com' : 'https://api.monei.com';
+        $isTestMode = $this->moduleConfig->getMode($storeId) === 0; // 0 = Test, 1 = Production
+        return $isTestMode
+            ? $this->moduleConfig->getTestUrl($storeId)
+            : $this->moduleConfig->getProductionUrl($storeId);
     }
 
     /**
-     * Get the API key based on the store configuration
+     * Get API key based on sandbox mode
      *
      * @param int $storeId
      * @return string
@@ -301,10 +143,10 @@ class MoneiApiClient
      */
     private function getApiKey(int $storeId): string
     {
-        $isSandbox = $this->moduleConfig->isSandboxMode($storeId);
-        $apiKey = $isSandbox
-            ? $this->moduleConfig->getSandboxApiKey($storeId)
-            : $this->moduleConfig->getLiveApiKey($storeId);
+        $isTestMode = $this->moduleConfig->getMode($storeId) === 0; // 0 = Test, 1 = Production
+        $apiKey = $isTestMode
+            ? $this->moduleConfig->getTestApiKey($storeId)
+            : $this->moduleConfig->getProductionApiKey($storeId);
 
         if (empty($apiKey)) {
             throw new LocalizedException(

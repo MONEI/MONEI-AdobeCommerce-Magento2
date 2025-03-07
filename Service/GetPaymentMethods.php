@@ -8,97 +8,92 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service;
 
-use GuzzleHttp\ClientFactory;
-use Magento\Framework\Serialize\SerializerInterface;
-use Magento\Framework\UrlInterface;
-use Magento\Store\Model\StoreManagerInterface;
+use Magento\Framework\Exception\LocalizedException;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentMethodsInterface;
-use Monei\MoneiPayment\Model\Config\Source\ModuleVersion;
 use Monei\MoneiPayment\Registry\AccountId as RegistryAccountId;
+use Monei\MoneiPayment\Service\Api\MoneiApiClient;
+use OpenAPI\Client\ApiException;
 
 /**
- * Monei get payment REST integration service class.
+ * Monei get payment methods service class using the official MONEI PHP SDK.
  */
-class GetPaymentMethods extends AbstractService implements GetPaymentMethodsInterface
+class GetPaymentMethods extends AbstractApiService implements GetPaymentMethodsInterface
 {
-    public const METHOD = 'payment-methods';
-
-    /** @var RegistryAccountId Registry for storing account ID */
-    private RegistryAccountId $registryAccountId;
+    /**
+     * @var MoneiPaymentModuleConfigInterface
+     */
+    private $moduleConfig;
 
     /**
-     * Constructor.
-     *
-     * @param RegistryAccountId $registryAccountId
-     * @param ClientFactory $clientFactory Class from GuzzleHttp namespace
-     * @param MoneiPaymentModuleConfigInterface $moduleConfig
-     * @param StoreManagerInterface $storeManager
-     * @param UrlInterface $urlBuilder
-     * @param SerializerInterface $serializer
+     * @var RegistryAccountId
+     */
+    private $registryAccountId;
+
+    /**
+     * @var MoneiApiClient
+     */
+    private $moneiApiClient;
+
+    /**
      * @param Logger $logger
-     * @param ModuleVersion $moduleVersion
+     * @param MoneiApiClient $moneiApiClient
+     * @param MoneiPaymentModuleConfigInterface $moduleConfig
+     * @param RegistryAccountId $registryAccountId
      */
     public function __construct(
-        RegistryAccountId $registryAccountId,
-        ClientFactory $clientFactory,
-        MoneiPaymentModuleConfigInterface $moduleConfig,
-        StoreManagerInterface $storeManager,
-        UrlInterface $urlBuilder,
-        SerializerInterface $serializer,
         Logger $logger,
-        ModuleVersion $moduleVersion
+        MoneiApiClient $moneiApiClient,
+        MoneiPaymentModuleConfigInterface $moduleConfig,
+        RegistryAccountId $registryAccountId
     ) {
-        parent::__construct(
-            $clientFactory,
-            $moduleConfig,
-            $storeManager,
-            $urlBuilder,
-            $serializer,
-            $logger,
-            $moduleVersion
-        );
+        parent::__construct($logger);
+        $this->moneiApiClient = $moneiApiClient;
+        $this->moduleConfig = $moduleConfig;
         $this->registryAccountId = $registryAccountId;
     }
 
     /**
-     * Execute payment methods request.
+     * Get available payment methods using the official MONEI SDK
      *
-     * @param string|null $accountId
+     * @param string|null $accountId Optional account ID to filter payment methods
      *
      * @return array List of available payment methods
      */
     public function execute(string $accountId = null): array
     {
-        $this->logger->debug('[Method] ' . __METHOD__);
+        return $this->executeApiCall(__METHOD__, function () use ($accountId) {
+            try {
+                // Determine account ID if not provided
+                if ($accountId === null) {
+                    $storeId = null;
+                    $accountId = $this->moduleConfig->getAccountId($storeId);
+                }
 
-        if ($accountId === null) {
-            $storeId = null;
-            $accountId = $this->moduleConfig->getAccountId($storeId);
-        }
+                // Store the account ID in registry for later use
+                if (!empty($accountId)) {
+                    $this->registryAccountId->set($accountId);
 
-        $this->logger->debug('[Get payment methods request]');
-        $this->logger->debug('[Account ID] ' . $accountId);
+                    // When using Account ID, set the accountId parameter in SDK
+                    // This requires also setting the User-Agent
+                    $moneiSdk = $this->moneiApiClient->getMoneiSdk();
+                    $moneiSdk->setAccountId($accountId);
+                } else {
+                    $moneiSdk = $this->moneiApiClient->getMoneiSdk();
+                }
 
-        try {
-            $response = $this->createClient()->get(
-                self::METHOD,
-                [
-                    'headers' => $this->getHeaders(),
-                    'query' => [
-                        'accountId' => $accountId
-                    ]
-                ]
-            );
-        } catch (\Exception $e) {
-            $this->logger->critical('[Exception] ' . $e->getMessage());
+                // Get the payment methods - using listAll() method as specified in the MONEI SDK
+                $methods = $moneiSdk->paymentMethods->listAll();
 
-            throw $e;
-        }
-
-        $this->logger->debug('[Get payment methods response]');
-        $this->logger->debug(json_encode(json_decode((string) $response->getBody()), JSON_PRETTY_PRINT));
-
-        return $this->serializer->unserialize($response->getBody());
+                // Convert response to array
+                return $this->moneiApiClient->convertResponseToArray($methods);
+            } catch (ApiException $e) {
+                $this->logger->critical('[API Error] ' . $e->getMessage());
+                throw new LocalizedException(__('Failed to get payment methods from MONEI API: %1', $e->getMessage()));
+            } catch (\Exception $e) {
+                $this->logger->critical('[Error] ' . $e->getMessage());
+                throw new LocalizedException(__('Failed to get payment methods from MONEI API: %1', $e->getMessage()));
+            }
+        }, ['accountId' => $accountId]);
     }
 }
