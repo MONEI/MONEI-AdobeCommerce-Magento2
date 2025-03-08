@@ -180,8 +180,8 @@ class Logger extends MonologLogger
     private function sanitizeData(array $data): array
     {
         foreach ($data as $key => $value) {
-            // Mask sensitive fields
-            if (in_array(strtolower($key), array_map('strtolower', $this->sensitiveFields))) {
+            // Mask sensitive fields - ensure key is a string before using strtolower
+            if (is_string($key) && in_array(strtolower($key), array_map('strtolower', $this->sensitiveFields))) {
                 $data[$key] = self::MASKED_VALUE;
 
                 continue;
