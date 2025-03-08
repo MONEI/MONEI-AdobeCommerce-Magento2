@@ -152,8 +152,10 @@ class MoneiApiClient
     public function resetSdkInstance(?int $storeId = null): void
     {
         if ($storeId !== null) {
-            unset($this->instances[(string) $storeId]);
-
+            $key = (string) $storeId;
+            if (array_key_exists($key, $this->instances)) {
+                unset($this->instances[$key]);
+            }
             return;
         }
 

@@ -344,7 +344,13 @@
         </arguments>
     </type>
     
-    <!-- Type configurations for standardized SDK services -->
+    <!-- Quote Services -->
+    <preference for="Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface" 
+                type="Monei\MoneiPayment\Service\Quote\GetAddressDetailsByQuoteAddress"/>
+    <preference for="Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface" 
+                type="Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote"/>
+
+<!-- Type configurations for standardized SDK services -->
     <type name="Monei\MoneiPayment\Service\CreatePayment">
         <arguments>
             <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
@@ -380,8 +386,8 @@
             <argument name="quoteRepository" xsi:type="object">Magento\Quote\Api\CartRepositoryInterface</argument>
             <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session</argument>
             <argument name="maskedQuoteIdToQuoteId" xsi:type="object">Magento\Quote\Model\MaskedQuoteIdToQuoteIdInterface</argument>
-            <argument name="getCustomerDetailsByQuote" xsi:type="object">Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote</argument>
-            <argument name="getAddressDetailsByQuoteAddress" xsi:type="object">Monei\MoneiPayment\Service\Quote\GetAddressDetailsByQuoteAddress</argument>
+            <argument name="getCustomerDetailsByQuote" xsi:type="object">Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface</argument>
+            <argument name="getAddressDetailsByQuoteAddress" xsi:type="object">Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface</argument>
             <argument name="moduleConfig" xsi:type="object">Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface</argument>
         </arguments>
     </type>

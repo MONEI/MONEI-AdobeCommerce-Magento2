@@ -56,7 +56,7 @@ class CancelPaymentCommand extends Command
      *
      * @return int Exit code
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $data = [
             'paymentId' => '8a437c2d2423283bc940c786196098cae3653dc4',
@@ -65,5 +65,7 @@ class CancelPaymentCommand extends Command
         $result = $this->service->execute($data);
         $output->writeln('Response:');
         $output->writeln(json_encode($result, JSON_PRETTY_PRINT));
+        
+        return Command::SUCCESS;
     }
 }

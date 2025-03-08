@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Service\Shared;
 
 use Monei\MoneiPayment\Api\Service\GetPaymentMethodsInterface;
+use OpenAPI\Client\Model\PaymentMethods;
 
 /**
  * Get Monei payment method configuration class.
@@ -55,9 +56,10 @@ class GetAvailableMoneiPaymentMethods
     public function execute(): array
     {
         if (!$this->availablePaymentMethods) {
-            $availablePaymentMethods = $this->getPaymentMethodsService->execute();
-            $this->availablePaymentMethods = $availablePaymentMethods['paymentMethods'] ?? [];
-            $this->metadataPaymentMethods = $availablePaymentMethods['metadata'] ?? [];
+            /** @var PaymentMethods $response */
+            $response = $this->getPaymentMethodsService->execute();
+            $this->availablePaymentMethods = $response->getPaymentMethods() ?? [];
+            $this->metadataPaymentMethods = $response->getMetadata() ?? [];
         }
 
         return $this->availablePaymentMethods;
@@ -71,9 +73,10 @@ class GetAvailableMoneiPaymentMethods
     public function getMetadataPaymentMethods(): array
     {
         if (!$this->metadataPaymentMethods) {
-            $availablePaymentMethods = $this->getPaymentMethodsService->execute();
-            $this->availablePaymentMethods = $availablePaymentMethods['paymentMethods'] ?? [];
-            $this->metadataPaymentMethods = $availablePaymentMethods['metadata'] ?? [];
+            /** @var PaymentMethods $response */
+            $response = $this->getPaymentMethodsService->execute();
+            $this->availablePaymentMethods = $response->getPaymentMethods() ?? [];
+            $this->metadataPaymentMethods = $response->getMetadata() ?? [];
         }
 
         return $this->metadataPaymentMethods;

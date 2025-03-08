@@ -9,16 +9,15 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Service\Quote;
 
 use Magento\Quote\Api\Data\AddressInterface;
+use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
 
-class GetAddressDetailsByQuoteAddress
+/**
+ * Service to get formatted address details from quote address
+ */
+class GetAddressDetailsByQuoteAddress implements GetAddressDetailsByQuoteAddressInterface
 {
     /**
-     * Get formatted address details from quote address.
-     *
-     * @param AddressInterface $address Quote address to get details from
-     * @param string|null $email Optional email override
-     *
-     * @return array Formatted address details for Monei API
+     * @inheritdoc
      */
     public function execute(AddressInterface $address, ?string $email = null): array
     {
@@ -42,14 +41,41 @@ class GetAddressDetailsByQuoteAddress
             ],
         ];
 
-        if (!$moneiAddress['company']) {
+        // Remove empty fields
+        if (empty($moneiAddress['company'])) {
             unset($moneiAddress['company']);
         }
 
-        if (!$moneiAddress['address']['line2']) {
+        if (empty($moneiAddress['address']['line2'])) {
             unset($moneiAddress['address']['line2']);
         }
 
         return $moneiAddress;
+    }
+
+    /**
+     * Get formatted billing address details from quote address.
+     *
+     * @param AddressInterface $address Quote address to get details from
+     * @param string|null $email Optional email override
+     *
+     * @return array Formatted billing address details for Monei API
+     */
+    public function executeBilling(AddressInterface $address, ?string $email = null): array
+    {
+        return $this->execute($address, $email);
+    }
+
+    /**
+     * Get formatted shipping address details from quote address.
+     *
+     * @param AddressInterface $address Quote address to get details from
+     * @param string|null $email Optional email override
+     *
+     * @return array Formatted shipping address details for Monei API
+     */
+    public function executeShipping(AddressInterface $address, ?string $email = null): array
+    {
+        return $this->execute($address, $email);
     }
 }

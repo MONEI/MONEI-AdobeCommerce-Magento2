@@ -1,0 +1,24 @@
+parameters:
+    level: 0
+    paths:
+        - .
+    excludePaths:
+        - vendor/
+        - build/
+        - .git/
+        - node_modules/
+    ignoreErrors:
+        # Magento framework and related errors
+        - '#Call to an undefined method [a-zA-Z0-9\\_]+::set[A-Z][a-zA-Z0-9\\_]+\(\)#'
+        - '#Call to an undefined method [a-zA-Z0-9\\_]+::get[A-Z][a-zA-Z0-9\\_]+\(\)#'
+        - '#Access to an undefined property [a-zA-Z0-9\\_]+::\$[a-zA-Z0-9\\_]+#'
+        - '#Parameter \#[0-9]+ \$[a-zA-Z0-9\\_]+ of method [a-zA-Z0-9\\_\\\:]+::[a-zA-Z0-9\\_]+\(\) expects [a-zA-Z0-9\\_\\\|]+, [a-zA-Z0-9\\_\\\|]+ given#'
+        - '#Access to undefined constant Magento\\Sales\\Api\\Data\\InvoiceInterface::CAPTURE_ONLINE#'
+        - 
+            message: '#Property [a-zA-Z0-9\\_\\\\]+::\$[a-zA-Z0-9\\_]+ has unknown class [a-zA-Z0-9\\_\\\\]+ as its type#'
+            path: '*'
+        - 
+            message: '#Parameter \$[a-zA-Z0-9\\_]+ of method [a-zA-Z0-9\\_\\\\]+::[a-zA-Z0-9\\_]+\(\) has invalid type [a-zA-Z0-9\\_\\\\]+#'
+            path: '*'
+        - '#Cannot unset offset numeric-string on array#'
+    reportUnmatchedIgnoredErrors: false

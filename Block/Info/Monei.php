@@ -12,6 +12,8 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\View\Element\Template;
 use Magento\Payment\Block\Info;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
+use OpenAPI\Client\Model\Payment;
+use OpenAPI\Client\Model\PaymentPaymentMethod;
 
 /**
  * Monei payment info block.
@@ -75,17 +77,59 @@ class Monei extends Info
             return null;
         }
 
-        $paymentData = $this->paymentService->execute($monei_payment_id);
-        if (!\array_key_exists('paymentMethod', $paymentData)) {
+        /** @var Payment $payment */
+        $payment = $this->paymentService->execute($monei_payment_id);
+        $paymentMethod = $payment->getPaymentMethod();
+        
+        if (!$paymentMethod instanceof PaymentPaymentMethod) {
             return null;
         }
 
-        return $this->processPaymentMethodData($paymentData['paymentMethod']);
+        return $this->processPaymentMethodObject($paymentMethod);
     }
 
     /**
+     * Process payment method object.
+     *
+     * @param PaymentPaymentMethod $paymentMethod Payment method object
+     *
+     * @return array|null Processed payment method data
+     */
+    private function processPaymentMethodObject(PaymentPaymentMethod $paymentMethod): ?array
+    {
+        $result = [];
+
+        // Add the type of payment method
+        $result['type'] = $paymentMethod->getType();
+
+        // Process card data if available
+        $card = $paymentMethod->getCard();
+        if ($card) {
+            $result['brand'] = $card->getBrand();
+            $result['last4'] = $card->getLast4();
+            $result['type'] = $card->getType();
+            if ($card->getExpiration()) {
+                $result['expiration'] = date('m/y', $card->getExpiration());
+            }
+            if ($card->getCardholderName()) {
+                $result['name'] = $card->getCardholderName();
+            }
+        }
+
+        // Process bizum data if available
+        $bizum = $paymentMethod->getBizum();
+        if ($bizum && $bizum->getPhoneNumber()) {
+            $result['phoneNumber'] = $bizum->getPhoneNumber();
+        }
+
+        return $result;
+    }
+    
+    /**
      * Process payment method data.
      *
+     * @deprecated Use processPaymentMethodObject instead
+     * @see processPaymentMethodObject() For the new implementation using SDK objects
      * @param array|null $paymentMethodData Payment method data
      *
      * @return array|null Processed payment method data

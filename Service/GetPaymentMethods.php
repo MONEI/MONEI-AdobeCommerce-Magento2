@@ -15,6 +15,7 @@ use Monei\MoneiPayment\Api\Service\GetPaymentMethodsInterface;
 use Monei\MoneiPayment\Registry\AccountId as RegistryAccountId;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
+use OpenAPI\Client\Model\PaymentMethods;
 
 /**
  * Monei get payment methods service class using the official MONEI PHP SDK.
@@ -61,10 +62,10 @@ class GetPaymentMethods extends AbstractApiService implements GetPaymentMethodsI
      *
      * @param string|null $accountId Optional account ID to filter payment methods
      *
-     * @return array List of available payment methods
+     * @return PaymentMethods MONEI SDK payment methods object
      * @throws LocalizedException If payment methods cannot be retrieved
      */
-    public function execute(string $accountId = null): array
+    public function execute(string $accountId = null): PaymentMethods
     {
         // Determine account ID if not provided
         if ($accountId === null) {

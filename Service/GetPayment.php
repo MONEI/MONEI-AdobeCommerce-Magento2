@@ -13,6 +13,7 @@ use Monei\MoneiClient;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
+use OpenAPI\Client\Model\Payment;
 
 /**
  * Monei get payment service class using the official MONEI PHP SDK.
@@ -41,22 +42,24 @@ class GetPayment extends AbstractApiService implements GetPaymentInterface
      *
      * @param string $payment_id The ID of the payment to retrieve
      *
-     * @return array Response from the API with payment details
+     * @return Payment Response from the API with payment details as Payment object
      * @throws LocalizedException If the payment cannot be retrieved
      */
-    public function execute(string $payment_id): array
+    public function execute(string $payment_id): Payment
     {
         if (empty($payment_id)) {
             throw new LocalizedException(__('Payment ID is required to retrieve payment details'));
         }
 
         // Use standardized SDK call pattern with the executeMoneiSdkCall method
-        return $this->executeMoneiSdkCall(
+        $response = $this->executeMoneiSdkCall(
             'getPayment',
             function (MoneiClient $moneiSdk) use ($payment_id) {
                 return $moneiSdk->payments->get($payment_id);
             },
             ['payment_id' => $payment_id]
         );
+        
+        return $response;
     }
 }

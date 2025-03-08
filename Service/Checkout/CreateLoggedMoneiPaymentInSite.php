@@ -18,8 +18,8 @@ use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentInSiteInterf
 use Monei\MoneiPayment\Service\AbstractApiService;
 use Monei\MoneiPayment\Service\CreatePayment;
 use Monei\MoneiPayment\Service\Logger;
-use Monei\MoneiPayment\Service\Quote\GetAddressDetailsByQuoteAddress;
-use Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote;
+use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
+use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
 
 /**
  * Monei create payment REST integration service class for logged-in customers.
@@ -46,16 +46,16 @@ class CreateLoggedMoneiPaymentInSite extends AbstractApiService implements Creat
     /**
      * Service for retrieving customer details from quote.
      *
-     * @var GetCustomerDetailsByQuote
+     * @var GetCustomerDetailsByQuoteInterface
      */
-    private GetCustomerDetailsByQuote $getCustomerDetailsByQuote;
+    private GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote;
 
     /**
      * Service for retrieving address details from quote address.
      *
-     * @var GetAddressDetailsByQuoteAddress
+     * @var GetAddressDetailsByQuoteAddressInterface
      */
-    private GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress;
+    private GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress;
 
     /**
      * Service for creating Monei payments.
@@ -70,16 +70,16 @@ class CreateLoggedMoneiPaymentInSite extends AbstractApiService implements Creat
      * @param Logger $logger Logger for tracking operations
      * @param CartRepositoryInterface $quoteRepository Repository for accessing and saving quotes
      * @param Session $checkoutSession Checkout session for accessing the current quote
-     * @param GetCustomerDetailsByQuote $getCustomerDetailsByQuote Service to get customer details from a quote
-     * @param GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress Service to get address details
+     * @param GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote Service to get customer details from a quote
+     * @param GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress Service to get address details
      * @param CreatePayment $createPayment Service for creating MONEI payments
      */
     public function __construct(
         Logger $logger,
         CartRepositoryInterface $quoteRepository,
         Session $checkoutSession,
-        GetCustomerDetailsByQuote $getCustomerDetailsByQuote,
-        GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress,
+        GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote,
+        GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress,
         CreatePayment $createPayment
     ) {
         parent::__construct($logger);

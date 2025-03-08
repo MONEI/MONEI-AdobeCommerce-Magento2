@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Command;
 
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
+use OpenAPI\Client\Model\Payment;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -56,11 +57,23 @@ class GetPaymentCommand extends Command
      *
      * @return int Exit code
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $data = 'c5fbae6a0ffd8035a6563be76d9acdfa0a892f50';
+        /** @var Payment $result */
         $result = $this->service->execute($data);
+        
         $output->writeln('Response:');
-        $output->writeln(json_encode($result, JSON_PRETTY_PRINT));
+        $output->writeln('Payment ID: ' . $result->getId());
+        $output->writeln('Amount: ' . $result->getAmount());
+        $output->writeln('Currency: ' . $result->getCurrency());
+        $output->writeln('Status: ' . $result->getStatus());
+        $output->writeln('Order ID: ' . $result->getOrderId());
+        
+        // You can still output the full JSON if needed
+        $output->writeln('Full JSON:');
+        $output->writeln($result->__toString());
+        
+        return Command::SUCCESS;
     }
 }

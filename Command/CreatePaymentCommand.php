@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Command;
 
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
+use OpenAPI\Client\Model\Payment;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -56,7 +57,7 @@ class CreatePaymentCommand extends Command
      *
      * @return int Exit code
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $data = [
             'amount' => 110,
@@ -96,10 +97,21 @@ class CreatePaymentCommand extends Command
                 ],
             ],
         ];
+        
+        /** @var Payment $result */
         $result = $this->service->execute($data);
+        
         $output->writeln('Response:');
-        $output->writeln(json_encode($result, JSON_PRETTY_PRINT));
+        $output->writeln('Payment ID: ' . $result->getId());
+        $output->writeln('Amount: ' . $result->getAmount());
+        $output->writeln('Currency: ' . $result->getCurrency());
+        $output->writeln('Status: ' . $result->getStatus());
+        $output->writeln('Order ID: ' . $result->getOrderId());
+        
+        // Full object as JSON
+        $output->writeln('Full JSON:');
+        $output->writeln($result->__toString());
 
-        return 0;
+        return Command::SUCCESS;
     }
 }

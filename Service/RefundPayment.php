@@ -12,6 +12,7 @@ use Magento\Framework\Exception\LocalizedException;
 use Monei\MoneiPayment\Api\Service\RefundPaymentInterface;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use OpenAPI\Client\ApiException;
+use OpenAPI\Client\Model\Payment;
 use OpenAPI\Client\Model\PaymentRefundReason;
 use OpenAPI\Client\Model\RefundPaymentRequest;
 
@@ -60,9 +61,10 @@ class RefundPayment extends AbstractApiService implements RefundPaymentInterface
      *
      * @param array $data Payment data including payment_id, refund_reason, and amount
      *
-     * @return array Response from the Monei API
+     * @return Payment Response from the Monei API as Payment object
+     * @throws LocalizedException If refund fails
      */
-    public function execute(array $data): array
+    public function execute(array $data): Payment
     {
         // Convert any camelCase keys to snake_case to ensure consistency
         $data = $this->convertKeysToSnakeCase($data);
@@ -95,12 +97,14 @@ class RefundPayment extends AbstractApiService implements RefundPaymentInterface
 
                 // Refund the payment using the SDK and request object
                 $payment = $moneiSdk->payments->refund($data['payment_id'], $refundRequest);
+                
+                // Log refund reason - just for reference
+                $this->logger->debug('Refund completed', [
+                    'payment_id' => $data['payment_id'],
+                    'refund_reason' => $data['refund_reason']
+                ]);
 
-                // Convert response to array and add refund reason for reference
-                $response = $this->moneiApiClient->convertResponseToArray($payment);
-                $response['refund_reason'] = $data['refund_reason'];
-
-                return $response;
+                return $payment;
             } catch (ApiException $e) {
                 $this->logger->critical('[API Error] ' . $e->getMessage());
 

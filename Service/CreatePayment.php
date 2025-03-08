@@ -17,6 +17,7 @@ use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use OpenAPI\Client\Model\Address;
 use OpenAPI\Client\Model\CreatePaymentRequest;
+use OpenAPI\Client\Model\Payment;
 use OpenAPI\Client\Model\PaymentBillingDetails;
 use OpenAPI\Client\Model\PaymentCustomer;
 use OpenAPI\Client\Model\PaymentShippingDetails;
@@ -76,10 +77,10 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
      *
      * @param array $data Payment data including amount, currency, order_id, customer and address details
      *
-     * @return array Response from the API with payment creation results
+     * @return Payment Response from the API with payment creation results as Payment object
      * @throws LocalizedException If payment creation fails
      */
-    public function execute(array $data): array
+    public function execute(array $data): Payment
     {
         // Convert any camelCase keys to snake_case to ensure consistency
         $data = $this->convertKeysToSnakeCase($data);
@@ -91,7 +92,7 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
         $paymentRequest = $this->buildPaymentRequest($data);
 
         // Execute the SDK call with the standardized pattern
-        return $this->executeMoneiSdkCall(
+        $response = $this->executeMoneiSdkCall(
             'createPayment',
             function (MoneiClient $moneiSdk) use ($paymentRequest) {
                 return $moneiSdk->payments->create($paymentRequest);
@@ -102,6 +103,8 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
                 'currency' => $data['currency']
             ]
         );
+        
+        return $response;
     }
 
     /**

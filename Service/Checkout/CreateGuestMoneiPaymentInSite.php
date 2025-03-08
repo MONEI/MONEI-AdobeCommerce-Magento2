@@ -23,8 +23,8 @@ use Monei\MoneiPayment\Service\AbstractApiService;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\Logger;
-use Monei\MoneiPayment\Service\Quote\GetAddressDetailsByQuoteAddress;
-use Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote;
+use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
+use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
 use OpenAPI\Client\Model\CreatePaymentRequest;
 use OpenAPI\Client\Model\PaymentTransactionType;
 
@@ -60,16 +60,16 @@ class CreateGuestMoneiPaymentInSite extends AbstractApiService implements Create
     /**
      * Service to get customer details from a quote.
      *
-     * @var GetCustomerDetailsByQuote
+     * @var GetCustomerDetailsByQuoteInterface
      */
-    private GetCustomerDetailsByQuote $getCustomerDetailsByQuote;
+    private GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote;
 
     /**
      * Service to get address details from a quote address.
      *
-     * @var GetAddressDetailsByQuoteAddress
+     * @var GetAddressDetailsByQuoteAddressInterface
      */
-    private GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress;
+    private GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress;
 
     /**
      * Module configuration.
@@ -87,8 +87,8 @@ class CreateGuestMoneiPaymentInSite extends AbstractApiService implements Create
      * @param CartRepositoryInterface $quoteRepository Repository for accessing and saving quotes
      * @param Session $checkoutSession Checkout session for accessing the current quote
      * @param MaskedQuoteIdToQuoteIdInterface $maskedQuoteIdToQuoteId Service to convert masked quote ID to quote ID
-     * @param GetCustomerDetailsByQuote $getCustomerDetailsByQuote Service to get customer details from a quote
-     * @param GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress Service to get address details
+     * @param GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote Service to get customer details from a quote
+     * @param GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress Service to get address details
      * @param MoneiPaymentModuleConfigInterface $moduleConfig Module configuration
      */
     public function __construct(
@@ -98,8 +98,8 @@ class CreateGuestMoneiPaymentInSite extends AbstractApiService implements Create
         CartRepositoryInterface $quoteRepository,
         Session $checkoutSession,
         MaskedQuoteIdToQuoteIdInterface $maskedQuoteIdToQuoteId,
-        GetCustomerDetailsByQuote $getCustomerDetailsByQuote,
-        GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress,
+        GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote,
+        GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress,
         MoneiPaymentModuleConfigInterface $moduleConfig
     ) {
         parent::__construct($logger, $exceptionHandler, $apiClient);

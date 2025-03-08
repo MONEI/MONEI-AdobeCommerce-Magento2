@@ -100,7 +100,7 @@ abstract class AbstractApiService
     }
 
     /**
-     * Execute MONEI SDK call with standardized error handling and response formatting
+     * Execute MONEI SDK call with standardized error handling
      *
      * This is the preferred method for making SDK calls when using the standardized pattern.
      *
@@ -109,7 +109,7 @@ abstract class AbstractApiService
      * @param array $logContext Additional context data for logging
      * @param int|null $storeId Store ID to use for configuration, defaults to current store
      *
-     * @return array Response from the API converted to array
+     * @return mixed Raw response from the API (typically an SDK object)
      * @throws LocalizedException If API call fails
      * @throws \InvalidArgumentException If required dependencies are missing
      */
@@ -118,7 +118,7 @@ abstract class AbstractApiService
         callable $sdkCall,
         array $logContext = [],
         ?int $storeId = null
-    ): array {
+    ) {
         // Verify required dependencies
         if (!$this->apiClient || !$this->exceptionHandler) {
             throw new \InvalidArgumentException(
@@ -135,14 +135,14 @@ abstract class AbstractApiService
 
             // Execute the SDK call
             $response = $sdkCall($moneiSdk);
-
-            // Convert the response to array
-            $result = $this->apiClient->convertResponseToArray($response);
-
+            
+            // For logging purposes, we'll convert to array but return the original object
+            $responseArray = $this->apiClient->convertResponseToArray($response);
+            
             // Log success with standardized format
-            $this->logger->logApiResponse($operation, $result);
+            $this->logger->logApiResponse($operation, $responseArray);
 
-            return $result;
+            return $response;
         } catch (ApiException $e) {
             // Let the exception handler process the API exception
             $this->exceptionHandler->handle($e, $operation, $logContext);

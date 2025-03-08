@@ -19,8 +19,8 @@ use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentVaultInterfa
 use Monei\MoneiPayment\Service\AbstractApiService;
 use Monei\MoneiPayment\Service\CreatePayment;
 use Monei\MoneiPayment\Service\Logger;
-use Monei\MoneiPayment\Service\Quote\GetAddressDetailsByQuoteAddress;
-use Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote;
+use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
+use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
 
 /**
  * Service class to create a Monei payment using a saved payment token for logged-in customers.
@@ -47,16 +47,16 @@ class CreateLoggedMoneiPaymentVault extends AbstractApiService implements Create
     /**
      * Service to get customer details from quote.
      *
-     * @var GetCustomerDetailsByQuote
+     * @var GetCustomerDetailsByQuoteInterface
      */
-    private GetCustomerDetailsByQuote $getCustomerDetailsByQuote;
+    private GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote;
 
     /**
      * Service to get address details from quote address.
      *
-     * @var GetAddressDetailsByQuoteAddress
+     * @var GetAddressDetailsByQuoteAddressInterface
      */
-    private GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress;
+    private GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress;
 
     /**
      * Payment token management for handling saved payment methods.
@@ -78,8 +78,8 @@ class CreateLoggedMoneiPaymentVault extends AbstractApiService implements Create
      * @param Logger $logger Logger for tracking operations
      * @param CartRepositoryInterface $quoteRepository Repository for managing quote data
      * @param Session $checkoutSession Checkout session for accessing the current quote
-     * @param GetCustomerDetailsByQuote $getCustomerDetailsByQuote Service to retrieve customer details
-     * @param GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress Service to retrieve address details
+     * @param GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote Service to retrieve customer details
+     * @param GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress Service to retrieve address details
      * @param PaymentTokenManagementInterface $tokenManagement For handling saved payment methods
      * @param CreatePayment $createPayment Service to create payment in Monei
      */
@@ -87,8 +87,8 @@ class CreateLoggedMoneiPaymentVault extends AbstractApiService implements Create
         Logger $logger,
         CartRepositoryInterface $quoteRepository,
         Session $checkoutSession,
-        GetCustomerDetailsByQuote $getCustomerDetailsByQuote,
-        GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress,
+        GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote,
+        GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress,
         PaymentTokenManagementInterface $tokenManagement,
         CreatePayment $createPayment
     ) {
