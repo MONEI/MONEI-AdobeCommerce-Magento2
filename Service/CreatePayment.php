@@ -85,7 +85,7 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
             try {
                 // Create payment request object according to SDK
                 $paymentRequest = new CreatePaymentRequest([
-                    'amount' => (int) round((float) $data['amount'] * 100),  // Convert to cents
+                    'amount' => $data['amount'],  // Convert to cents
                     'currency' => $data['currency'],
                     'order_id' => $data['order_id'],
                     // Add URLs from our configuration

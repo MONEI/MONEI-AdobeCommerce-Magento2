@@ -47,15 +47,13 @@ abstract class AbstractApiService
         $this->logger->debug("[Method] {$methodName}");
 
         if (!empty($logData)) {
-            $this->logger->debug('[Request data]', $logData);
+            $this->logger->debug('[Request data] ' . json_encode($logData, JSON_PRETTY_PRINT));
         }
 
         try {
             $response = $apiCall();
 
-            $this->logger->debug('[API Response]', [
-                'data' => is_array($response) ? $response : ['response' => (string) $response]
-            ]);
+            $this->logger->debug('[API Response] ' . json_encode($response, JSON_PRETTY_PRINT));
 
             return is_array($response) ? $response : ['response' => $response];
         } catch (LocalizedException $e) {
