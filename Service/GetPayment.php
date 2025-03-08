@@ -10,10 +10,10 @@ namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\Exception\LocalizedException;
 use Monei\Model\Payment;
+use Monei\MoneiClient;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use Monei\MoneiClient;
 
 /**
  * Monei get payment service class using the official MONEI PHP SDK.

@@ -17,6 +17,7 @@ define([
     'mage/storage',
     'mage/url',
     'moneijs',
+    'Monei_MoneiPayment/js/utils/error-handler'
 ], function (
     ko,
     $,
@@ -30,7 +31,8 @@ define([
     globalMessageList,
     storage,
     url,
-    monei
+    monei,
+    errorHandler
 ) {
     'use strict';
 
@@ -174,10 +176,9 @@ define([
                 );
             }).fail(function (response) {
                     var error = JSON.parse(response.responseText);
-                    globalMessageList.addErrorMessage({
-                        message: error.message
-                    });
+                    errorHandler.handleApiError(error);
                     fullScreenLoader.stopLoader();
+                    self.isPlaceOrderActionAllowed(true);
                 }
             );
 
@@ -208,9 +209,7 @@ define([
                     redirectOnSuccessAction.execute();
                 }
             }).catch(function (error) {
-                globalMessageList.addErrorMessage({
-                    message: error.message
-                });
+                errorHandler.handleApiError(error);
                 self.redirectToCancelOrder();
             });
         },

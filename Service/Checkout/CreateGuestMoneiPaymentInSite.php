@@ -16,17 +16,17 @@ use Magento\Quote\Model\MaskedQuoteIdToQuoteIdInterface;
 use Magento\Quote\Model\Quote;
 use Monei\Model\CreatePaymentRequest;
 use Monei\Model\PaymentTransactionType;
+use Monei\MoneiClient;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateGuestMoneiPaymentInSiteInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
 use Monei\MoneiPayment\Model\Config\Source\TypeOfPayment;
+use Monei\MoneiPayment\Service\AbstractApiService;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use Monei\MoneiPayment\Service\AbstractApiService;
 use Monei\MoneiPayment\Service\Logger;
-use Monei\MoneiClient;
 
 /**
  * Monei create payment in site REST integration service class.
@@ -135,10 +135,10 @@ class CreateGuestMoneiPaymentInSite extends AbstractApiService implements Create
         if (!empty($existingPaymentId)) {
             // Return the existing payment ID to avoid creating a duplicate payment
             $this->logger->info("Using existing payment ID", [
-                'payment_id' => $existingPaymentId, 
+                'payment_id' => $existingPaymentId,
                 'order_id' => $quote->getReservedOrderId()
             ]);
-            
+
             // Return a mock result with just the ID
             return [['id' => $existingPaymentId]];
         }

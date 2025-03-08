@@ -10,12 +10,12 @@ namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\Exception\LocalizedException;
 use Monei\Model\PaymentMethods;
+use Monei\MoneiClient;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentMethodsInterface;
 use Monei\MoneiPayment\Registry\AccountId as RegistryAccountId;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use Monei\MoneiClient;
 
 /**
  * Monei get payment methods service class using the official MONEI PHP SDK.

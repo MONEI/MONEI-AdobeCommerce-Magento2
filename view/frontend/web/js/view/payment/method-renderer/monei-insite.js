@@ -12,9 +12,10 @@ define(
         'Magento_Checkout/js/model/url-builder',
         'Magento_Ui/js/model/messageList',
         'mage/url',
-        'Magento_Checkout/js/model/full-screen-loader'
+        'Magento_Checkout/js/model/full-screen-loader',
+        'Monei_MoneiPayment/js/utils/error-handler'
     ],
-    function (Component, $, storage, customer, quote, urlBuilder, globalMessageList, url, fullScreenLoader) {
+    function (Component, $, storage, customer, quote, urlBuilder, globalMessageList, url, fullScreenLoader, errorHandler) {
         'use strict';
 
         return Component.extend({
@@ -123,21 +124,7 @@ define(
              * @param {Object} error The error response object
              */
             handleApiError: function(error) {
-                var errorMessage = error.message;
-                
-                // Check if there are parameters to format into the message
-                if (error.parameters && error.parameters.length > 0) {
-                    // Replace %1, %2, etc. with parameters
-                    errorMessage = error.message.replace(/%(\d+)/g, function(match, number) {
-                        return error.parameters[number - 1] !== undefined 
-                            ? error.parameters[number - 1] 
-                            : match;
-                    });
-                }
-
-                globalMessageList.addErrorMessage({
-                    message: errorMessage
-                });
+                errorHandler.handleApiError(error);
             },
         });
     });

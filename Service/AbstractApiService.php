@@ -10,10 +10,10 @@ namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
-use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\ApiException;
 use Monei\MoneiClient;
+use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
+use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 
 /**
  * Abstract base class for MONEI API services

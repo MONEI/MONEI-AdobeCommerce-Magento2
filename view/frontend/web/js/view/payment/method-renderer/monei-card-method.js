@@ -16,9 +16,11 @@ define(
         'Magento_Checkout/js/action/redirect-on-success',
         'Magento_Ui/js/model/messageList',
         'Magento_Checkout/js/model/full-screen-loader',
-        'Magento_Vault/js/view/payment/vault-enabler'
+        'Magento_Vault/js/view/payment/vault-enabler',
+        'Monei_MoneiPayment/js/utils/error-handler'
     ],
-    function (ko, $, Component, additionalValidators, storage, customer, quote, urlBuilder, monei, redirectOnSuccessAction, globalMessageList, fullScreenLoader, VaultEnabler) {
+    function (ko, $, Component, additionalValidators, storage, customer, quote, urlBuilder, monei, 
+              redirectOnSuccessAction, globalMessageList, fullScreenLoader, VaultEnabler, errorHandler) {
         'use strict';
 
         return Component.extend({
@@ -64,12 +66,9 @@ define(
                     serviceUrl = urlBuilder.createUrl('/checkout/savemoneitokenization',{})
 
                 this.checkedVault.subscribe(function (val) {
-                    var payload,
-                        isVaultChecked = val ? 1 : 0;
-
-                    payload = {
+                    var payload = {
                         cartId: quote.getQuoteId(),
-                        isVaultChecked: isVaultChecked
+                        isVaultChecked: val ? 1 : 0
                     };
 
                     storage.post(
@@ -82,11 +81,7 @@ define(
                     ).fail(
                         function (response) {
                             self.checkedVault(quote.getMoneiVaultChecked() ?? false);
-
-                            var error = JSON.parse(response.responseText);
-                            globalMessageList.addErrorMessage({
-                                message: error.message
-                            });
+                            self.handleApiError(JSON.parse(response.responseText));
                         }
                     );
                 });
@@ -239,7 +234,7 @@ define(
                 }).then(function (result) {
                     if (self.failOrderStatus.includes(result.status)) {
                         globalMessageList.addErrorMessage({
-                            message: result.statusMessage
+                            message: $.mage.__(result.statusMessage)
                         });
                         self.redirectToFailOrder(result.status);
                     }else if (result.nextAction && result.nextAction.type === 'COMPLETE') {

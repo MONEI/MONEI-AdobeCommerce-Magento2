@@ -10,9 +10,10 @@ define(
         'moneijs',
         'Magento_Checkout/js/action/redirect-on-success',
         'Magento_Ui/js/model/messageList',
-        'Magento_Checkout/js/model/full-screen-loader'
+        'Magento_Checkout/js/model/full-screen-loader',
+        'Monei_MoneiPayment/js/utils/error-handler'
     ],
-    function ($, Component, additionalValidators, monei, redirectOnSuccessAction, globalMessageList, fullScreenLoader) {
+    function ($, Component, additionalValidators, monei, redirectOnSuccessAction, globalMessageList, fullScreenLoader, errorHandler) {
         'use strict';
 
         return Component.extend({
@@ -109,9 +110,7 @@ define(
                         }
                     })
                     .catch(function (error) {
-                        globalMessageList.addErrorMessage({
-                            message: error.message
-                        });
+                        errorHandler.handleApiError(error);
                         self.redirectToCancelOrder();
                     });
             }

@@ -59,3 +59,4 @@
 "The order has been successfully canceled.","El pedido se ha cancelado correctamente."
 "Order cancellation failed: %1","La cancelación del pedido ha fallado: %1"
 "An unexpected error occurred during payment cancellation. Please check the logs for more details.","Se produjo un error inesperado durante la cancelación del pago. Por favor, consulte los registros para más detalles."
+"An error occurred during the payment process","Se produjo un error durante el proceso de pago"

@@ -8,8 +8,8 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Controller\Adminhtml\Order;
 
-use Magento\Backend\App\Action\Context;
 use Magento\Backend\App\Action;
+use Magento\Backend\App\Action\Context;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Exception\LocalizedException;
