@@ -13,12 +13,14 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
+use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentVaultInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
-use Monei\MoneiPayment\Service\AbstractApiService;
+use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
+use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\CreatePayment;
 use Monei\MoneiPayment\Service\Logger;
 
@@ -28,22 +30,8 @@ use Monei\MoneiPayment\Service\Logger;
  * This class handles the creation of payments using saved card details (vault) for authenticated customers,
  * retrieving the necessary customer, billing, and shipping information from the quote.
  */
-class CreateLoggedMoneiPaymentVault extends AbstractApiService implements CreateLoggedMoneiPaymentVaultInterface
+class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements CreateLoggedMoneiPaymentVaultInterface
 {
-    /**
-     * Quote repository for managing quote data.
-     *
-     * @var CartRepositoryInterface
-     */
-    private CartRepositoryInterface $quoteRepository;
-
-    /**
-     * Checkout session to access current quote.
-     *
-     * @var Session
-     */
-    private Session $checkoutSession;
-
     /**
      * Service to get customer details from quote.
      *
@@ -76,6 +64,8 @@ class CreateLoggedMoneiPaymentVault extends AbstractApiService implements Create
      * Constructor for CreateLoggedMoneiPaymentVault.
      *
      * @param Logger $logger Logger for tracking operations
+     * @param ApiExceptionHandler|null $exceptionHandler Exception handler for API calls
+     * @param MoneiApiClient|null $apiClient MONEI API client
      * @param CartRepositoryInterface $quoteRepository Repository for managing quote data
      * @param Session $checkoutSession Checkout session for accessing the current quote
      * @param GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote Service to retrieve customer details
@@ -85,6 +75,8 @@ class CreateLoggedMoneiPaymentVault extends AbstractApiService implements Create
      */
     public function __construct(
         Logger $logger,
+        ?ApiExceptionHandler $exceptionHandler,
+        ?MoneiApiClient $apiClient,
         CartRepositoryInterface $quoteRepository,
         Session $checkoutSession,
         GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote,
@@ -92,9 +84,7 @@ class CreateLoggedMoneiPaymentVault extends AbstractApiService implements Create
         PaymentTokenManagementInterface $tokenManagement,
         CreatePayment $createPayment
     ) {
-        parent::__construct($logger);
-        $this->quoteRepository = $quoteRepository;
-        $this->checkoutSession = $checkoutSession;
+        parent::__construct($logger, $exceptionHandler, $apiClient, $quoteRepository, $checkoutSession);
         $this->getCustomerDetailsByQuote = $getCustomerDetailsByQuote;
         $this->getAddressDetailsByQuoteAddress = $getAddressDetailsByQuoteAddress;
         $this->tokenManagement = $tokenManagement;
@@ -107,10 +97,10 @@ class CreateLoggedMoneiPaymentVault extends AbstractApiService implements Create
      * @param string $cartId     The ID of the cart to process
      * @param string $publicHash The public hash of the saved payment token
      *
-     * @return array Payment creation result array containing payment details and token
+     * @return array Payment creation result containing payment details
      * @throws LocalizedException If there are issues retrieving the quote, token, or creating the payment
      */
-    public function execute(string $cartId, string $publicHash): array
+    public function execute(string $cartId, string $publicHash)
     {
         // First, resolve the quote and validate payment token
         list($quote, $paymentToken) = $this->resolveQuoteAndToken($cartId, $publicHash);
@@ -119,23 +109,28 @@ class CreateLoggedMoneiPaymentVault extends AbstractApiService implements Create
         $quote->reserveOrderId();
         $this->quoteRepository->save($quote);
 
+        // Check if the quote already has a payment ID to prevent double payment
+        $existingPayment = $this->checkExistingPayment($quote);
+        if ($existingPayment !== null) {
+            return $existingPayment;
+        }
+
         return $this->executeApiCall(__METHOD__, function () use ($quote, $paymentToken) {
             // Prepare payment data
-            $paymentData = $this->preparePaymentData($quote);
+            $paymentData = $this->preparePaymentData($quote, $paymentToken);
 
             // Create payment
             $result = $this->createPayment->execute($paymentData);
-
+            $paymentId = $result->getId() ?? '';
+            
             // Save payment ID to quote for future reference
-            $quote->setData(QuoteInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $result['id'] ?? '');
-            $this->quoteRepository->save($quote);
+            $this->savePaymentIdToQuote($quote, $paymentId);
 
-            // Add token information to response for the frontend
-            $result['paymentToken'] = $paymentToken->getGatewayToken();
-
-            return [$result];
+            // Return a properly formatted array with payment properties as expected by the frontend
+            return $this->createPaymentResult($paymentId, [
+                'paymentToken' => $paymentToken->getGatewayToken()
+            ]);
         }, [
-            'cartId' => $cartId,
             'publicHash' => $publicHash,
             'customerId' => $quote->getCustomerId(),
             'quote_id' => $quote->getId(),
@@ -154,16 +149,8 @@ class CreateLoggedMoneiPaymentVault extends AbstractApiService implements Create
     private function resolveQuoteAndToken(string $cartId, string $publicHash): array
     {
         try {
-            // For logged-in users, try to get from session first, then fallback to repository
-            $quote = $this->checkoutSession->getQuote();
-
-            if (!$quote || !$quote->getId()) {
-                $quote = $this->quoteRepository->get($cartId);
-            }
-
-            if (!$quote || !$quote->getId()) {
-                throw new LocalizedException(__('Could not load quote information'));
-            }
+            // Use the parent class method to resolve the quote
+            $quote = $this->resolveQuote($cartId);
 
             // Verify customer is logged in
             if (!$quote->getCustomerId()) {
@@ -195,12 +182,13 @@ class CreateLoggedMoneiPaymentVault extends AbstractApiService implements Create
     }
 
     /**
-     * Prepare payment data from quote
+     * Prepare payment data from quote and token
      *
      * @param Quote $quote The quote to prepare payment data from
+     * @param PaymentTokenInterface $paymentToken The vault payment token to use
      * @return array Payment data ready for the CreatePayment service
      */
-    private function preparePaymentData(Quote $quote): array
+    private function preparePaymentData(Quote $quote, PaymentTokenInterface $paymentToken): array
     {
         // Get shipping address or fallback to billing if shipping is not available
         $shippingAddress = $quote->getShippingAddress();
@@ -208,18 +196,21 @@ class CreateLoggedMoneiPaymentVault extends AbstractApiService implements Create
             $shippingAddress = $quote->getBillingAddress();
         }
 
-        return [
-            'amount' => (int) ($quote->getBaseGrandTotal() * 100),  // Convert to cents
-            'currency' => $quote->getBaseCurrencyCode(),
-            'order_id' => $quote->getReservedOrderId(),
-            'customer' => $this->getCustomerDetailsByQuote->execute($quote),
-            'billing_details' => $this->getAddressDetailsByQuoteAddress->executeBilling($quote->getBillingAddress()),
-            'shipping_details' => $this->getAddressDetailsByQuoteAddress->executeShipping($shippingAddress),
-            // Add an indicator that we're using a saved token/card
-            'metadata' => [
-                'payment_source' => 'vault',
-                'customer_id' => (string) $quote->getCustomerId()
-            ]
+        // Start with the base payment data
+        $paymentData = $this->prepareBasePaymentData($quote);
+        
+        // Add customer-specific data
+        $paymentData['customer'] = $this->getCustomerDetailsByQuote->execute($quote);
+        $paymentData['billing_details'] = $this->getAddressDetailsByQuoteAddress->executeBilling($quote->getBillingAddress());
+        $paymentData['shipping_details'] = $this->getAddressDetailsByQuoteAddress->executeShipping($shippingAddress);
+        $paymentData['metadata'] = [
+            'magento_module' => 'monei_magento2',
+            'payment_type' => 'vault',
+            'quote_id' => $quote->getId(),
+            'customer_id' => (string) $quote->getCustomerId(),
+            'token_id' => $paymentToken->getEntityId()
         ];
+
+        return $paymentData;
     }
 }

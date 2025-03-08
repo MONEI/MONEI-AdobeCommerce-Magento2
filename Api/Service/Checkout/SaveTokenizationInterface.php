@@ -16,7 +16,7 @@ interface SaveTokenizationInterface
      * @param string $cartId
      * @param int $isVaultChecked
      *
-     * @return array
+     * @return mixed[]
      */
-    public function execute(string $cartId, int $isVaultChecked = 0): array;
+    public function execute(string $cartId, int $isVaultChecked = 0);
 }

@@ -1,0 +1,173 @@
+<?php
+
+/**
+ * @copyright Copyright © Monei (https://monei.com)
+ */
+
+declare(strict_types=1);
+
+namespace Monei\MoneiPayment\Service\Checkout;
+
+use Magento\Checkout\Model\Session;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Quote\Api\CartRepositoryInterface;
+use Magento\Quote\Model\Quote;
+use Monei\MoneiPayment\Api\Data\QuoteInterface;
+use Monei\MoneiPayment\Service\AbstractApiService;
+use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
+use Monei\MoneiPayment\Service\Api\MoneiApiClient;
+use Monei\MoneiPayment\Service\CreatePayment;
+use Monei\MoneiPayment\Service\Logger;
+
+/**
+ * Abstract base class for checkout payment services
+ *
+ * Provides common functionality for handling quotes, checkout sessions,
+ * and payment creation across different types of checkout flows.
+ */
+abstract class AbstractCheckoutService extends AbstractApiService
+{
+    /**
+     * Quote repository for managing quote data
+     *
+     * @var CartRepositoryInterface
+     */
+    protected CartRepositoryInterface $quoteRepository;
+
+    /**
+     * Checkout session for accessing the current quote
+     *
+     * @var Session
+     */
+    protected Session $checkoutSession;
+
+    /**
+     * Base constructor for checkout services
+     *
+     * @param Logger $logger Logger for tracking operations
+     * @param ApiExceptionHandler|null $exceptionHandler Exception handler for API calls
+     * @param MoneiApiClient|null $apiClient MONEI API client
+     * @param CartRepositoryInterface $quoteRepository Repository for accessing quotes
+     * @param Session $checkoutSession Checkout session for accessing the current quote
+     */
+    public function __construct(
+        Logger $logger,
+        ?ApiExceptionHandler $exceptionHandler,
+        ?MoneiApiClient $apiClient,
+        CartRepositoryInterface $quoteRepository,
+        Session $checkoutSession
+    ) {
+        parent::__construct($logger, $exceptionHandler, $apiClient);
+        $this->quoteRepository = $quoteRepository;
+        $this->checkoutSession = $checkoutSession;
+    }
+
+    /**
+     * Resolves a quote from a cart ID with standardized error handling
+     *
+     * @param string $cartId The cart/quote ID to resolve
+     * @param bool $useSessionFirst Whether to try getting the quote from session first
+     * @return Quote The resolved quote
+     * @throws LocalizedException If the quote cannot be resolved
+     */
+    protected function resolveQuote(string $cartId, bool $useSessionFirst = true): Quote
+    {
+        try {
+            $quote = null;
+
+            // Try to get from session first if requested
+            if ($useSessionFirst) {
+                $quote = $this->checkoutSession->getQuote();
+                if ($quote && $quote->getId()) {
+                    return $quote;
+                }
+            }
+
+            // Get from repository as fallback or primary source
+            $quote = $this->quoteRepository->get($cartId);
+
+            if (!$quote || !$quote->getId()) {
+                throw new LocalizedException(__('Could not load quote information'));
+            }
+
+            return $quote;
+        } catch (NoSuchEntityException $e) {
+            $this->logger->error('Quote not found: ' . $e->getMessage(), ['cartId' => $cartId]);
+            throw new LocalizedException(__('Quote not found for this cart ID'));
+        } catch (\Exception $e) {
+            $this->logger->error('Error resolving quote: ' . $e->getMessage(), ['cartId' => $cartId]);
+            throw new LocalizedException(__('An error occurred while retrieving quote information'));
+        }
+    }
+
+    /**
+     * Checks if a quote already has a payment ID to prevent duplicate payments
+     *
+     * @param Quote $quote The quote to check
+     * @return array|null Returns payment data array if payment exists, null otherwise
+     */
+    protected function checkExistingPayment(Quote $quote): ?array
+    {
+        $existingPaymentId = $quote->getData(QuoteInterface::ATTR_FIELD_MONEI_PAYMENT_ID);
+        if (!empty($existingPaymentId)) {
+            // Log the reuse of existing payment ID
+            $this->logger->info("Using existing payment ID", [
+                'payment_id' => $existingPaymentId,
+                'order_id' => $quote->getReservedOrderId()
+            ]);
+
+            // Return an array with the payment ID as expected by the frontend
+            return [['id' => $existingPaymentId]];
+        }
+
+        return null;
+    }
+
+    /**
+     * Prepares base payment data common to all payment types
+     *
+     * @param Quote $quote The quote to prepare payment data from
+     * @return array Base payment data
+     */
+    protected function prepareBasePaymentData(Quote $quote): array
+    {
+        return [
+            'amount' => (int) ($quote->getBaseGrandTotal() * 100),  // Convert to cents
+            'currency' => $quote->getBaseCurrencyCode(),
+            'order_id' => $quote->getReservedOrderId()
+        ];
+    }
+
+    /**
+     * Saves the payment ID to the quote for future reference
+     *
+     * @param Quote $quote The quote to update
+     * @param string $paymentId The payment ID to save
+     * @return void
+     */
+    protected function savePaymentIdToQuote(Quote $quote, string $paymentId): void
+    {
+        if (!empty($paymentId)) {
+            $quote->setData(QuoteInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $paymentId);
+            $this->quoteRepository->save($quote);
+        }
+    }
+
+    /**
+     * Creates a standardized result array with payment ID for frontend
+     *
+     * @param string $paymentId The payment ID
+     * @param array $additionalData Additional data to include in response
+     * @return array Formatted payment result
+     */
+    protected function createPaymentResult(string $paymentId, array $additionalData = []): array
+    {
+        $result = ['id' => $paymentId];
+        if (!empty($additionalData)) {
+            $result = array_merge($result, $additionalData);
+        }
+
+        return [$result];
+    }
+}

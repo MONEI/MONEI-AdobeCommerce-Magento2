@@ -60,10 +60,17 @@ class Logger extends MonologLogger
      */
     public function logApiRequest(string $operation, array $data = []): void
     {
-        $this->debug(
-            "API Request: {$operation}",
-            empty($data) ? [] : ['request' => $this->sanitizeData($data)]
-        );
+        if (empty($data)) {
+            $this->debug("API Request: {$operation}", []);
+            return;
+        }
+
+        // Sanitize sensitive data
+        $sanitizedData = $this->sanitizeData($data);
+
+        // Pretty-print the JSON for the log
+        $prettyJson = json_encode(['request' => $sanitizedData], self::JSON_OPTIONS);
+        $this->debug("API Request: {$operation} " . $prettyJson);
     }
 
     /**
@@ -75,7 +82,12 @@ class Logger extends MonologLogger
      */
     public function logApiResponse(string $operation, array $data): void
     {
-        $this->debug("API Response: {$operation}", ['response' => $this->sanitizeData($data)]);
+        // Sanitize sensitive data
+        $sanitizedData = $this->sanitizeData($data);
+
+        // Pretty-print the JSON for the log
+        $prettyJson = json_encode(['response' => $sanitizedData], self::JSON_OPTIONS);
+        $this->debug("API Response: {$operation} " . $prettyJson);
     }
 
     /**
@@ -88,7 +100,12 @@ class Logger extends MonologLogger
      */
     public function logApiError(string $operation, string $message, array $context = []): void
     {
-        $this->critical("API Error: {$operation} - {$message}", $this->sanitizeData($context));
+        // Sanitize sensitive data
+        $sanitizedData = $this->sanitizeData($context);
+        
+        // Pretty-print the JSON for the log
+        $prettyJson = json_encode($sanitizedData, self::JSON_OPTIONS);
+        $this->critical("API Error: {$operation} - {$message} " . $prettyJson);
     }
 
     /**
@@ -108,10 +125,13 @@ class Logger extends MonologLogger
         ];
 
         if (!empty($data)) {
+            // Sanitize sensitive data
             $context['data'] = $this->sanitizeData($data);
         }
 
-        $this->info("Payment {$type}", $context);
+        // Pretty-print the JSON for the log
+        $prettyJson = json_encode($context, self::JSON_OPTIONS);
+        $this->info("Payment {$type} " . $prettyJson);
     }
 
     /**
@@ -119,7 +139,7 @@ class Logger extends MonologLogger
      */
     public function debug($message, array $context = []): void
     {
-        parent::debug($message, $this->formatContext($context));
+        parent::debug($message, $context);
     }
 
     /**
@@ -127,7 +147,7 @@ class Logger extends MonologLogger
      */
     public function info($message, array $context = []): void
     {
-        parent::info($message, $this->formatContext($context));
+        parent::info($message, $context);
     }
 
     /**
@@ -135,7 +155,7 @@ class Logger extends MonologLogger
      */
     public function warning($message, array $context = []): void
     {
-        parent::warning($message, $this->formatContext($context));
+        parent::warning($message, $context);
     }
 
     /**
@@ -143,7 +163,7 @@ class Logger extends MonologLogger
      */
     public function error($message, array $context = []): void
     {
-        parent::error($message, $this->formatContext($context));
+        parent::error($message, $context);
     }
 
     /**
@@ -151,24 +171,19 @@ class Logger extends MonologLogger
      */
     public function critical($message, array $context = []): void
     {
-        parent::critical($message, $this->formatContext($context));
+        parent::critical($message, $context);
     }
-
+    
     /**
-     * Format context array for consistent logging
+     * Check if a string is a valid JSON
      *
-     * @param array $context
-     * @return array
+     * @param string $string
+     * @return bool
      */
-    private function formatContext(array $context): array
+    private function isJson(string $string): bool
     {
-        foreach ($context as $key => $value) {
-            if (is_array($value) || is_object($value)) {
-                $context[$key] = json_encode($value, self::JSON_OPTIONS);
-            }
-        }
-
-        return $context;
+        json_decode($string);
+        return json_last_error() === JSON_ERROR_NONE;
     }
 
     /**

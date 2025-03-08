@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Url;
 use Monei\Model\Address;
 use Monei\Model\CreatePaymentRequest;
 use Monei\Model\Payment;
@@ -54,19 +55,29 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
     private MoneiPaymentModuleConfigInterface $moduleConfig;
 
     /**
+     * URL Builder
+     *
+     * @var Url
+     */
+    private Url $urlBuilder;
+
+    /**
      * @param Logger $logger Logger for tracking operations
      * @param ApiExceptionHandler $exceptionHandler Exception handler for MONEI API errors
      * @param MoneiApiClient $apiClient API client factory for MONEI SDK
      * @param MoneiPaymentModuleConfigInterface $moduleConfig Module configuration provider
+     * @param Url $urlBuilder URL builder for creating frontend URLs
      */
     public function __construct(
         Logger $logger,
         ApiExceptionHandler $exceptionHandler,
         MoneiApiClient $apiClient,
-        MoneiPaymentModuleConfigInterface $moduleConfig
+        MoneiPaymentModuleConfigInterface $moduleConfig,
+        Url $urlBuilder
     ) {
         parent::__construct($logger, $exceptionHandler, $apiClient);
         $this->moduleConfig = $moduleConfig;
+        $this->urlBuilder = $urlBuilder;
     }
 
     /**
@@ -90,6 +101,12 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
 
         // Build the payment request from the data
         $paymentRequest = $this->buildPaymentRequest($data);
+
+        // Log the raw request data
+        $this->logger->debug(
+            'Raw Request Data: createPayment',
+            ['request_body' => json_encode($paymentRequest, Logger::JSON_OPTIONS)]
+        );
 
         // Execute the SDK call with the standardized pattern
         $response = $this->executeMoneiSdkCall(
@@ -115,16 +132,29 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
      */
     private function buildPaymentRequest(array $data): CreatePaymentRequest
     {
+        // Generate URLs using the standard Magento URL builder with secure URLs
+        $completeUrl = $this->urlBuilder->getUrl('monei/payment/complete', ['_secure' => true]);
+        $callbackUrl = $this->urlBuilder->getUrl('monei/payment/callback', ['_secure' => true]);
+        $cancelUrl = $this->urlBuilder->getUrl('monei/payment/cancel', ['_secure' => true]);
+        $failUrl = $this->urlBuilder->getUrl('monei/payment/fail', ['_secure' => true]);
+
+        // Log the generated URLs
+        $this->logger->debug('Generated Payment URLs', [
+            'complete_url' => $completeUrl,
+            'callback_url' => $callbackUrl,
+            'cancel_url' => $cancelUrl,
+            'fail_url' => $failUrl
+        ]);
+
         // Create base payment request with required fields
         $paymentRequest = new CreatePaymentRequest([
             'amount' => $data['amount'],  // Already converted to cents
             'currency' => $data['currency'],
             'order_id' => $data['order_id'],
-            // Add URLs from our configuration
-            'complete_url' => $this->moduleConfig->getUrl() . '/monei/payment/complete',
-            'callback_url' => $this->moduleConfig->getUrl() . '/monei/payment/callback',
-            'cancel_url' => $this->moduleConfig->getUrl() . '/monei/payment/cancel',
-            'fail_url' => $this->moduleConfig->getUrl() . '/monei/payment/fail'
+            'complete_url' => $completeUrl,
+            'callback_url' => $callbackUrl,
+            'cancel_url' => $cancelUrl,
+            'fail_url' => $failUrl
         ]);
 
         // Set transaction type if necessary using the SDK enum
@@ -176,11 +206,6 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
         if (isset($data['metadata']) && is_array($data['metadata'])) {
             $paymentRequest->setMetadata($data['metadata']);
         }
-
-        // Add module version to metadata
-        $metadata = $paymentRequest->getMetadata() ?: [];
-        $metadata['magento_module'] = 'monei_magento2';
-        $paymentRequest->setMetadata($metadata);
 
         return $paymentRequest;
     }

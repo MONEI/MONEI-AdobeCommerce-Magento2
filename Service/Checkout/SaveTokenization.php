@@ -13,6 +13,9 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\SaveTokenizationInterface;
+use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
+use Monei\MoneiPayment\Service\Api\MoneiApiClient;
+use Monei\MoneiPayment\Service\Logger;
 
 /**
  * Service to save the payment tokenization flag on the customer's quote.
@@ -20,34 +23,25 @@ use Monei\MoneiPayment\Api\Service\Checkout\SaveTokenizationInterface;
  * This service handles saving the customer's preference for storing their payment
  * method details for future purchases (tokenization).
  */
-class SaveTokenization implements SaveTokenizationInterface
+class SaveTokenization extends AbstractCheckoutService implements SaveTokenizationInterface
 {
-    /**
-     * Quote repository for managing quote data.
-     *
-     * @var CartRepositoryInterface
-     */
-    private CartRepositoryInterface $quoteRepository;
-
-    /**
-     * Checkout session to access current quote.
-     *
-     * @var Session
-     */
-    private Session $checkoutSession;
-
     /**
      * Constructor for SaveTokenization.
      *
+     * @param Logger $logger Logger for tracking operations
+     * @param ApiExceptionHandler|null $exceptionHandler Exception handler for API calls
+     * @param MoneiApiClient|null $apiClient MONEI API client
      * @param CartRepositoryInterface $quoteRepository Repository for managing quote data
-     * @param Session                 $checkoutSession Checkout session for accessing the current quote
+     * @param Session $checkoutSession Checkout session for accessing the current quote
      */
     public function __construct(
+        Logger $logger,
+        ?ApiExceptionHandler $exceptionHandler,
+        ?MoneiApiClient $apiClient,
         CartRepositoryInterface $quoteRepository,
         Session $checkoutSession
     ) {
-        $this->checkoutSession = $checkoutSession;
-        $this->quoteRepository = $quoteRepository;
+        parent::__construct($logger, $exceptionHandler, $apiClient, $quoteRepository, $checkoutSession);
     }
 
     /**
@@ -60,20 +54,24 @@ class SaveTokenization implements SaveTokenizationInterface
      *
      * @return array Empty array on success
      */
-    public function execute(string $cartId, int $isVaultChecked = 0): array
+    public function execute(string $cartId, int $isVaultChecked = 0)
     {
-        $quote = $this->checkoutSession->getQuote() ?? $this->quoteRepository->get($cartId);
-        if (!$quote) {
-            throw new LocalizedException(__('An error occurred to retrieve the information about the quote'));
-        }
-
         try {
+            // Use the parent class method to resolve the quote
+            $quote = $this->resolveQuote($cartId);
+            
+            // Save the tokenization flag
             $quote->setData(QuoteInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, $isVaultChecked);
             $this->quoteRepository->save($quote);
 
             return [];
         } catch (\Exception $e) {
-            throw new LocalizedException(__('An error occurred trying save the card.'));
+            $this->logger->error('Error saving tokenization flag: ' . $e->getMessage(), [
+                'cartId' => $cartId,
+                'isVaultChecked' => $isVaultChecked
+            ]);
+            
+            throw new LocalizedException(__('An error occurred trying to save the card.'));
         }
     }
 }
