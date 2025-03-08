@@ -13,8 +13,8 @@ use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory as OrderInterfaceFactory;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
-use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface;
+use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 
 /**

@@ -9,12 +9,12 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\Exception\LocalizedException;
+use Monei\Model\Payment;
+use Monei\Model\PaymentRefundReason;
+use Monei\Model\RefundPaymentRequest;
 use Monei\MoneiPayment\Api\Service\RefundPaymentInterface;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use OpenAPI\Client\ApiException;
-use OpenAPI\Client\Model\Payment;
-use OpenAPI\Client\Model\PaymentRefundReason;
-use OpenAPI\Client\Model\RefundPaymentRequest;
+use Monei\ApiException;
 
 /**
  * Monei refund payment service class using the official MONEI PHP SDK.
@@ -97,7 +97,7 @@ class RefundPayment extends AbstractApiService implements RefundPaymentInterface
 
                 // Refund the payment using the SDK and request object
                 $payment = $moneiSdk->payments->refund($data['payment_id'], $refundRequest);
-                
+
                 // Log refund reason - just for reference
                 $this->logger->debug('Refund completed', [
                     'payment_id' => $data['payment_id'],

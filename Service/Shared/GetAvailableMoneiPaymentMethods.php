@@ -8,8 +8,8 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service\Shared;
 
+use Monei\Model\PaymentMethods;
 use Monei\MoneiPayment\Api\Service\GetPaymentMethodsInterface;
-use OpenAPI\Client\Model\PaymentMethods;
 
 /**
  * Get Monei payment method configuration class.

@@ -10,10 +10,10 @@ namespace Monei\MoneiPayment\Service\Order;
 
 use Magento\Sales\Api\Data\OrderPaymentInterface;
 use Magento\Vault\Api\Data\PaymentTokenFactoryInterface;
+use Monei\Model\Payment;
+use Monei\Model\PaymentPaymentMethod;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
-use OpenAPI\Client\Model\Payment;
-use OpenAPI\Client\Model\PaymentPaymentMethod;
 
 class CreateVaultPayment
 {
@@ -56,17 +56,17 @@ class CreateVaultPayment
         if (Monei::CARD_CODE !== $payment->getMethod()) {
             return false;
         }
-        
+
         /** @var Payment $moneiPayment */
         $moneiPayment = $this->getPayment->execute($moneiPaymentId);
         $paymentToken = $this->paymentTokenFactory->create();
-        
+
         /** @var PaymentPaymentMethod $paymentMethod */
         $paymentMethod = $moneiPayment->getPaymentMethod();
         if (!$paymentMethod) {
             return false;
         }
-        
+
         $detailsCard = $paymentMethod->getCard();
         if (!$detailsCard) {
             return false;
@@ -74,10 +74,10 @@ class CreateVaultPayment
 
         $paymentToken->setGatewayToken($moneiPayment->getPaymentToken());
         $paymentToken->setType(Monei::VAULT_TYPE);
-        
+
         $expiration = $detailsCard->getExpiration();
         $paymentToken->setExpiresAt(date('Y-m-d h:i:s', strtotime('+1 month', $expiration)));
-        
+
         $paymentToken->setTokenDetails(
             json_encode(
                 [

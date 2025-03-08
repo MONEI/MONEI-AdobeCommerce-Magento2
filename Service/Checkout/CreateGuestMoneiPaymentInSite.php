@@ -14,19 +14,19 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\MaskedQuoteIdToQuoteIdInterface;
 use Magento\Quote\Model\Quote;
-use Monei\MoneiClient;
+use Monei\Model\CreatePaymentRequest;
+use Monei\Model\PaymentTransactionType;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateGuestMoneiPaymentInSiteInterface;
-use Monei\MoneiPayment\Model\Config\Source\TypeOfPayment;
-use Monei\MoneiPayment\Service\AbstractApiService;
-use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
-use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use Monei\MoneiPayment\Service\Logger;
 use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
-use OpenAPI\Client\Model\CreatePaymentRequest;
-use OpenAPI\Client\Model\PaymentTransactionType;
+use Monei\MoneiPayment\Model\Config\Source\TypeOfPayment;
+use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
+use Monei\MoneiPayment\Service\Api\MoneiApiClient;
+use Monei\MoneiPayment\Service\AbstractApiService;
+use Monei\MoneiPayment\Service\Logger;
+use Monei\MoneiClient;
 
 /**
  * Monei create payment in site REST integration service class.
@@ -200,7 +200,7 @@ class CreateGuestMoneiPaymentInSite extends AbstractApiService implements Create
     {
         // Create the base payment request with required fields
         $paymentRequest = new CreatePaymentRequest([
-            'amount' => (int)($quote->getBaseGrandTotal() * 100), // Convert to cents
+            'amount' => (int) ($quote->getBaseGrandTotal() * 100),  // Convert to cents
             'currency' => $quote->getBaseCurrencyCode(),
             'order_id' => $quote->getReservedOrderId(),
             'complete_url' => $this->moduleConfig->getUrl() . '/monei/payment/complete',

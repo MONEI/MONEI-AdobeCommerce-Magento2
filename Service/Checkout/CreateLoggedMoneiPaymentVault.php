@@ -16,11 +16,11 @@ use Magento\Quote\Model\Quote;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentVaultInterface;
+use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
+use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
 use Monei\MoneiPayment\Service\AbstractApiService;
 use Monei\MoneiPayment\Service\CreatePayment;
 use Monei\MoneiPayment\Service\Logger;
-use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
-use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
 
 /**
  * Service class to create a Monei payment using a saved payment token for logged-in customers.
@@ -209,7 +209,7 @@ class CreateLoggedMoneiPaymentVault extends AbstractApiService implements Create
         }
 
         return [
-            'amount' => (int)($quote->getBaseGrandTotal() * 100), // Convert to cents
+            'amount' => (int) ($quote->getBaseGrandTotal() * 100),  // Convert to cents
             'currency' => $quote->getBaseCurrencyCode(),
             'order_id' => $quote->getReservedOrderId(),
             'customer' => $this->getCustomerDetailsByQuote->execute($quote),
@@ -218,7 +218,7 @@ class CreateLoggedMoneiPaymentVault extends AbstractApiService implements Create
             // Add an indicator that we're using a saved token/card
             'metadata' => [
                 'payment_source' => 'vault',
-                'customer_id' => (string)$quote->getCustomerId()
+                'customer_id' => (string) $quote->getCustomerId()
             ]
         ];
     }

@@ -9,11 +9,11 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\Exception\LocalizedException;
+use Monei\Model\CancelPaymentRequest;
+use Monei\Model\PaymentCancellationReason;
 use Monei\MoneiPayment\Api\Service\CancelPaymentInterface;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use OpenAPI\Client\ApiException;
-use OpenAPI\Client\Model\CancelPaymentRequest;
-use OpenAPI\Client\Model\PaymentCancellationReason;
+use Monei\ApiException;
 
 /**
  * Monei cancel payment service class using the official MONEI PHP SDK.

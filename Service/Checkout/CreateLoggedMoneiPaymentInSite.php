@@ -15,11 +15,11 @@ use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
 use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentInSiteInterface;
+use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
+use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
 use Monei\MoneiPayment\Service\AbstractApiService;
 use Monei\MoneiPayment\Service\CreatePayment;
 use Monei\MoneiPayment\Service\Logger;
-use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
-use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
 
 /**
  * Monei create payment REST integration service class for logged-in customers.
@@ -175,7 +175,7 @@ class CreateLoggedMoneiPaymentInSite extends AbstractApiService implements Creat
         }
 
         return [
-            'amount' => (int)($quote->getBaseGrandTotal() * 100), // Convert to cents
+            'amount' => (int) ($quote->getBaseGrandTotal() * 100),  // Convert to cents
             'currency' => $quote->getBaseCurrencyCode(),
             'order_id' => $quote->getReservedOrderId(),
             'customer' => $this->getCustomerDetailsByQuote->execute($quote),

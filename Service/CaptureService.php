@@ -13,10 +13,10 @@ use Magento\Sales\Api\Data\InvoiceInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\InvoiceRepositoryInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Monei\Model\PaymentStatus;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Model\Api\MoneiApiClient;
-use OpenAPI\Client\Model\PaymentStatus;
 
 /**
  * Service for capturing MONEI payments

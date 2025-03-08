@@ -9,11 +9,11 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\Exception\LocalizedException;
-use Monei\MoneiClient;
+use Monei\Model\Payment;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use OpenAPI\Client\Model\Payment;
+use Monei\MoneiClient;
 
 /**
  * Monei get payment service class using the official MONEI PHP SDK.
@@ -59,7 +59,7 @@ class GetPayment extends AbstractApiService implements GetPaymentInterface
             },
             ['payment_id' => $payment_id]
         );
-        
+
         return $response;
     }
 }

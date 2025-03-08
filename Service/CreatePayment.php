@@ -9,19 +9,19 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\Exception\LocalizedException;
-use Monei\MoneiClient;
+use Monei\Model\Address;
+use Monei\Model\CreatePaymentRequest;
+use Monei\Model\Payment;
+use Monei\Model\PaymentBillingDetails;
+use Monei\Model\PaymentCustomer;
+use Monei\Model\PaymentShippingDetails;
+use Monei\Model\PaymentTransactionType;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
 use Monei\MoneiPayment\Model\Config\Source\TypeOfPayment;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use OpenAPI\Client\Model\Address;
-use OpenAPI\Client\Model\CreatePaymentRequest;
-use OpenAPI\Client\Model\Payment;
-use OpenAPI\Client\Model\PaymentBillingDetails;
-use OpenAPI\Client\Model\PaymentCustomer;
-use OpenAPI\Client\Model\PaymentShippingDetails;
-use OpenAPI\Client\Model\PaymentTransactionType;
+use Monei\MoneiClient;
 
 /**
  * Monei create payment service class using the official MONEI PHP SDK.
@@ -103,7 +103,7 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
                 'currency' => $data['currency']
             ]
         );
-        
+
         return $response;
     }
 

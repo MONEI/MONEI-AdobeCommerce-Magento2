@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Model\Payment;
 
-use OpenAPI\Client\Model\PaymentStatus;
+use Monei\Model\PaymentStatus;
 
 /**
  * Payment status constants from MONEI SDK

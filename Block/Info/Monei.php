@@ -11,9 +11,9 @@ namespace Monei\MoneiPayment\Block\Info;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\View\Element\Template;
 use Magento\Payment\Block\Info;
+use Monei\Model\Payment;
+use Monei\Model\PaymentPaymentMethod;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
-use OpenAPI\Client\Model\Payment;
-use OpenAPI\Client\Model\PaymentPaymentMethod;
 
 /**
  * Monei payment info block.
@@ -80,7 +80,7 @@ class Monei extends Info
         /** @var Payment $payment */
         $payment = $this->paymentService->execute($monei_payment_id);
         $paymentMethod = $payment->getPaymentMethod();
-        
+
         if (!$paymentMethod instanceof PaymentPaymentMethod) {
             return null;
         }
@@ -124,7 +124,7 @@ class Monei extends Info
 
         return $result;
     }
-    
+
     /**
      * Process payment method data.
      *

@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Api\Service;
 
-use OpenAPI\Client\Model\Payment;
+use Monei\Model\Payment;
 
 /**
  * Monei refund payment REST integration service interface.

@@ -10,10 +10,10 @@ namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Monei\MoneiClient;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use OpenAPI\Client\ApiException;
+use Monei\ApiException;
+use Monei\MoneiClient;
 
 /**
  * Abstract base class for MONEI API services
@@ -135,10 +135,10 @@ abstract class AbstractApiService
 
             // Execute the SDK call
             $response = $sdkCall($moneiSdk);
-            
+
             // For logging purposes, we'll convert to array but return the original object
             $responseArray = $this->apiClient->convertResponseToArray($response);
-            
+
             // Log success with standardized format
             $this->logger->logApiResponse($operation, $responseArray);
 

@@ -12,9 +12,10 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\ActionInterface;
 use Magento\Framework\Controller\Result\Redirect as MagentoRedirect;
 use Magento\Sales\Api\OrderRepositoryInterface;
-use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
+use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
+use Monei\Model\PaymentStatus;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
@@ -22,7 +23,6 @@ use Monei\MoneiPayment\Model\Payment\Status;
 use Monei\MoneiPayment\Model\PaymentDataProvider\ApiPaymentDataProvider;
 use Monei\MoneiPayment\Model\PaymentProcessor;
 use Monei\MoneiPayment\Service\Logger;
-use OpenAPI\Client\Model\PaymentStatus;
 
 /**
  * Monei payment complete controller

@@ -65,7 +65,7 @@ class CancelPaymentCommand extends Command
         $result = $this->service->execute($data);
         $output->writeln('Response:');
         $output->writeln(json_encode($result, JSON_PRETTY_PRINT));
-        
+
         return Command::SUCCESS;
     }
 }

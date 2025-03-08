@@ -11,11 +11,11 @@ namespace Monei\MoneiPayment\Service\Api;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\StoreManagerInterface;
-use Monei\MoneiClient;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Model\Config\Source\ModuleVersion;
 use Monei\MoneiPayment\Service\Logger;
-use OpenAPI\Client\ApiException;
+use Monei\ApiException;
+use Monei\MoneiClient;
 
 /**
  * Client factory for MONEI Payment Gateway SDK
@@ -156,6 +156,7 @@ class MoneiApiClient
             if (array_key_exists($key, $this->instances)) {
                 unset($this->instances[$key]);
             }
+
             return;
         }
 

@@ -9,8 +9,8 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Model\Data;
 
 use Magento\Framework\Exception\LocalizedException;
+use Monei\Model\PaymentStatus;
 use Monei\MoneiPayment\Model\Payment\Status;
-use OpenAPI\Client\Model\PaymentStatus;
 
 /**
  * Data Transfer Object for MONEI payment data

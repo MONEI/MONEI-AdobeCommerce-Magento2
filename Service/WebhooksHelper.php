@@ -12,9 +12,9 @@ use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Event\ManagerInterface as EventManagerInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use Monei\MoneiPayment\Api\Service\ValidateWebhookSignatureInterface;
 use Monei\MoneiPayment\Api\PaymentDataProviderInterface;
 use Monei\MoneiPayment\Api\PaymentProcessorInterface;
-use Monei\MoneiPayment\Api\Service\ValidateWebhookSignatureInterface;
 use Monei\MoneiPayment\Api\WebhooksHelperInterface;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
 

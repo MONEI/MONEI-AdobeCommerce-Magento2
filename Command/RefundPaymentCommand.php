@@ -8,8 +8,8 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Command;
 
+use Monei\Model\Payment;
 use Monei\MoneiPayment\Api\Service\RefundPaymentInterface;
-use OpenAPI\Client\Model\Payment;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -64,17 +64,17 @@ class RefundPaymentCommand extends Command
             'refundReason' => 'requested_by_customer',
             'amount' => 10,
         ];
-        
+
         /** @var Payment $result */
         $result = $this->service->execute($data);
-        
+
         $output->writeln('Response:');
         $output->writeln('Payment ID: ' . $result->getId());
         $output->writeln('Amount: ' . $result->getAmount());
         $output->writeln('Currency: ' . $result->getCurrency());
         $output->writeln('Status: ' . $result->getStatus());
         $output->writeln('Refunded Amount: ' . $result->getRefundedAmount());
-        
+
         // Full object as JSON
         $output->writeln('Full JSON:');
         $output->writeln($result->__toString());

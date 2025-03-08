@@ -13,10 +13,10 @@ use Magento\Framework\App\ActionInterface;
 use Magento\Framework\Controller\Result\Redirect as MagentoRedirect;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Model\Order\Address;
+use Monei\Model\Payment;
+use Monei\Model\PaymentNextAction;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
 use Monei\MoneiPayment\Service\Shared\GetMoneiPaymentCodesByMagentoPaymentCodeRedirect;
-use OpenAPI\Client\Model\Payment;
-use OpenAPI\Client\Model\PaymentNextAction;
 
 /**
  * Monei payment redirect controller.
@@ -90,9 +90,10 @@ class Redirect implements ActionInterface
         /** @var Payment $payment */
         $payment = $this->createPayment->execute($data);
         $nextAction = $payment->getNextAction();
-        
+
         if ($nextAction instanceof PaymentNextAction && $nextAction->getRedirectUrl()) {
             $this->resultRedirectFactory->setUrl($nextAction->getRedirectUrl());
+
             return $this->resultRedirectFactory;
         }
 

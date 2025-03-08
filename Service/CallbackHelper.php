@@ -11,13 +11,13 @@ namespace Monei\MoneiPayment\Service;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Event\ManagerInterface as EventManagerInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Monei\Model\PaymentStatus;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
-use Monei\MoneiPayment\Api\PaymentDataProviderInterface;
-use Monei\MoneiPayment\Api\PaymentProcessorInterface;
 use Monei\MoneiPayment\Api\Service\CallbackHelperInterface;
 use Monei\MoneiPayment\Api\Service\ValidateCallbackSignatureInterface;
+use Monei\MoneiPayment\Api\PaymentDataProviderInterface;
+use Monei\MoneiPayment\Api\PaymentProcessorInterface;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
-use OpenAPI\Client\Model\PaymentStatus;
 
 /**
  * Helper service for processing MONEI payment callbacks
