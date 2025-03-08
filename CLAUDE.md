@@ -5,6 +5,8 @@
 # Code quality
 composer lint              # Run all code quality checks
 composer fix               # Fix coding standards automatically
+composer fix:all           # Fix all coding standards
+composer check:all         # Run all code quality checks
 composer cs:check          # Run PHP-CS-Fixer check
 composer cs:fix            # Run PHP-CS-Fixer auto-fix
 composer pretty:check      # Check formatting with pretty-php

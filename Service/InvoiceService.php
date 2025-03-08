@@ -187,8 +187,7 @@ class InvoiceService
         // You can add this method to MoneiPaymentModuleConfig if needed
         try {
             // Try to use the method if it exists
-            if (
-                method_exists($this->moduleConfig, 'shouldSendInvoiceEmail') &&
+            if (method_exists($this->moduleConfig, 'shouldSendInvoiceEmail') &&
                 $this->moduleConfig->shouldSendInvoiceEmail()
             ) {
                 $this->invoiceSender->send($invoice);
@@ -361,8 +360,7 @@ class InvoiceService
     private function hasPartialCapture(Order $order): bool
     {
         foreach ($order->getInvoiceCollection() as $invoice) {
-            if (
-                $invoice->getState() == Invoice::STATE_PAID &&
+            if ($invoice->getState() == Invoice::STATE_PAID &&
                 $invoice->getBaseGrandTotal() < $order->getBaseGrandTotal()
             ) {
                 return true;

@@ -116,6 +116,9 @@ define(
                     this.renderCard();
 
                     fullScreenLoader.stopLoader();
+                } else {
+                    // Ensure button is enabled if card input already exists
+                    this.isPlaceOrderActionAllowed(true);
                 }
             },
 
@@ -247,9 +250,7 @@ define(
                         redirectOnSuccessAction.execute();
                     }
                 }).catch(function (error) {
-                    globalMessageList.addErrorMessage({
-                        message: error.message
-                    });
+                    self.handleApiError(error);
                     self.redirectToCancelOrder();
                 });
             },

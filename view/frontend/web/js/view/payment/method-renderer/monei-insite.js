@@ -65,11 +65,9 @@ define(
                 ).fail(
                     function (response) {
                         var error = JSON.parse(response.responseText);
-
-                        globalMessageList.addErrorMessage({
-                            message: error.message
-                        });
+                        self.handleApiError(error);
                         fullScreenLoader.stopLoader();
+                        self.isPlaceOrderActionAllowed(true);
                     }
                 );
 
@@ -117,6 +115,29 @@ define(
                 }
 
                 return title;
+            },
+            
+            /**
+             * Handle API error responses with proper message formatting
+             * 
+             * @param {Object} error The error response object
+             */
+            handleApiError: function(error) {
+                var errorMessage = error.message;
+                
+                // Check if there are parameters to format into the message
+                if (error.parameters && error.parameters.length > 0) {
+                    // Replace %1, %2, etc. with parameters
+                    errorMessage = error.message.replace(/%(\d+)/g, function(match, number) {
+                        return error.parameters[number - 1] !== undefined 
+                            ? error.parameters[number - 1] 
+                            : match;
+                    });
+                }
+
+                globalMessageList.addErrorMessage({
+                    message: errorMessage
+                });
             },
         });
     });

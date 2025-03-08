@@ -126,8 +126,7 @@ class ShippingInformationManagement
             $moneiPaymentCodes = $this->getMoneiPaymentCodesByMagentoPaymentCode->execute(
                 $paymentMethod->getCode()
             );
-            if (
-                !$moneiPaymentCodes ||
+            if (!$moneiPaymentCodes ||
                 $this->isPaymentMethodAllowed($moneiPaymentCodes, $availableMoneiPaymentMethodsByCountry)
             ) {
                 $filteredPaymentMethods[] = $paymentMethod;

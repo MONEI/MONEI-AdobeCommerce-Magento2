@@ -62,6 +62,12 @@ class ApiExceptionHandler
         // Extract error details
         $errorMessage = $errorBody['message'] ?? $e->getMessage();
         $errorCode = $errorBody['code'] ?? $statusCode;
+        
+        // Check if there are parameters in the error message
+        if (isset($errorBody['parameters']) && is_array($errorBody['parameters']) && !empty($errorBody['parameters'][0])) {
+            // Use the first parameter as the actual error message
+            $errorMessage = $errorBody['parameters'][0];
+        }
 
         $errorContext = array_merge($context, [
             'status_code' => $statusCode,

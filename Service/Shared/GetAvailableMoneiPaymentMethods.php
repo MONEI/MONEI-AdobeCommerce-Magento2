@@ -26,9 +26,9 @@ class GetAvailableMoneiPaymentMethods
     /**
      * Metadata for payment methods.
      *
-     * @var array
+     * @var \Monei\Model\PaymentMethodsMetadata|array
      */
-    private array $metadataPaymentMethods = [];
+    private $metadataPaymentMethods = [];
 
     /**
      * Payment methods service.
@@ -68,9 +68,9 @@ class GetAvailableMoneiPaymentMethods
     /**
      * Get metadata for payment methods.
      *
-     * @return array Metadata for payment methods
+     * @return \Monei\Model\PaymentMethodsMetadata|array Metadata for payment methods
      */
-    public function getMetadataPaymentMethods(): array
+    public function getMetadataPaymentMethods()
     {
         if (!$this->metadataPaymentMethods) {
             /** @var PaymentMethods $response */

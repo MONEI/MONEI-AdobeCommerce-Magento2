@@ -108,6 +108,19 @@ class CreateLoggedMoneiPaymentInSite extends AbstractApiService implements Creat
         $quote->reserveOrderId();
         $this->quoteRepository->save($quote);
 
+        // Check if the quote already has a payment ID to prevent double payment
+        $existingPaymentId = $quote->getData(QuoteInterface::ATTR_FIELD_MONEI_PAYMENT_ID);
+        if (!empty($existingPaymentId)) {
+            // Return the existing payment ID to avoid creating a duplicate payment
+            $this->logger->info("Using existing payment ID", [
+                'payment_id' => $existingPaymentId, 
+                'order_id' => $quote->getReservedOrderId()
+            ]);
+            
+            // Return a mock result with just the ID
+            return [['id' => $existingPaymentId]];
+        }
+        
         return $this->executeApiCall(__METHOD__, function () use ($quote) {
             // Prepare payment data
             $paymentData = $this->preparePaymentData($quote);
