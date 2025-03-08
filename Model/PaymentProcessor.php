@@ -575,23 +575,62 @@ class PaymentProcessor implements PaymentProcessorInterface
     }
 
     /**
-     * Get order by increment ID
+     * Get order by increment ID or entity ID
      *
-     * @param string $incrementId
+     * @param string $orderId
      * @return OrderInterface|null
      */
-    private function getOrderByIncrementId(string $incrementId): ?OrderInterface
+    private function getOrderByIncrementId(string $orderId): ?OrderInterface
     {
         try {
-            $searchCriteria = $this->orderRepository->create()->addFilter('increment_id', $incrementId);
+            // First try to load the order directly as it might be an entity ID
+            try {
+                $order = $this->orderRepository->get($orderId);
+                if ($order && $order->getEntityId()) {
+                    $this->logger->debug(sprintf(
+                        '[Order found directly] Entity ID %s',
+                        $orderId
+                    ));
+                    return $order;
+                }
+            } catch (\Exception $e) {
+                // If loading by entity ID failed, continue with increment ID search
+                $this->logger->debug(sprintf(
+                    '[Not an entity ID] %s: %s',
+                    $orderId,
+                    $e->getMessage()
+                ));
+            }
+            
+            // Create search criteria using the increment_id field
+            $searchCriteriaBuilder = $this->orderRepository->create();
+            $searchCriteria = $searchCriteriaBuilder->addFilter('increment_id', $orderId)->create();
+            
+            // Get the order list
             $orderList = $this->orderRepository->getList($searchCriteria);
             $orders = $orderList->getItems();
-
-            return reset($orders) ?: null;
+            
+            // Return the first order if found
+            if (count($orders) > 0) {
+                $order = reset($orders);
+                $this->logger->debug(sprintf(
+                    '[Order found by increment ID] %s (Entity ID: %s)',
+                    $orderId,
+                    $order->getEntityId()
+                ));
+                return $order;
+            }
+            
+            $this->logger->warning(sprintf(
+                '[Order not found] No order found for ID: %s',
+                $orderId
+            ));
+            
+            return null;
         } catch (\Exception $e) {
             $this->logger->error(sprintf(
-                '[Error loading order] Increment ID %s: %s',
-                $incrementId,
+                '[Error loading order] ID %s: %s',
+                $orderId,
                 $e->getMessage()
             ));
 

@@ -27,10 +27,10 @@ interface CallbackHelperInterface
      * Verify the signature of a callback
      *
      * @param string $payload The raw request body
-     * @param array $headers Request headers
+     * @param string $signature The signature from the request header
      * @return bool True if signature is valid, false otherwise
      */
-    public function verifyCallbackSignature(string $payload, array $headers): bool;
+    public function verifyCallbackSignature(string $payload, string $signature): bool;
 
     /**
      * Dispatch payment callback events

@@ -16,8 +16,9 @@ use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\PaymentDataProviderInterface;
 use Monei\MoneiPayment\Api\PaymentProcessorInterface;
 use Monei\MoneiPayment\Api\Service\CallbackHelperInterface;
-use Monei\MoneiPayment\Api\Service\ValidateCallbackSignatureInterface;
+use Monei\MoneiPayment\Model\Api\MoneiApiClient;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
+use Magento\Framework\Api\SearchCriteriaBuilder;
 
 /**
  * Helper service for processing MONEI payment callbacks
@@ -55,9 +56,14 @@ class CallbackHelper implements CallbackHelperInterface
     private EventManagerInterface $eventManager;
 
     /**
-     * @var ValidateCallbackSignatureInterface
+     * @var MoneiApiClient
      */
-    private ValidateCallbackSignatureInterface $validateCallbackSignature;
+    private MoneiApiClient $apiClient;
+
+    /**
+     * @var SearchCriteriaBuilder
+     */
+    private SearchCriteriaBuilder $searchCriteriaBuilder;
 
     /**
      * @param Logger $logger
@@ -66,7 +72,8 @@ class CallbackHelper implements CallbackHelperInterface
      * @param OrderRepositoryInterface $orderRepository
      * @param PaymentProcessorInterface $paymentProcessor
      * @param EventManagerInterface $eventManager
-     * @param ValidateCallbackSignatureInterface $validateCallbackSignature
+     * @param MoneiApiClient $apiClient
+     * @param SearchCriteriaBuilder $searchCriteriaBuilder
      */
     public function __construct(
         Logger $logger,
@@ -75,7 +82,8 @@ class CallbackHelper implements CallbackHelperInterface
         OrderRepositoryInterface $orderRepository,
         PaymentProcessorInterface $paymentProcessor,
         EventManagerInterface $eventManager,
-        ValidateCallbackSignatureInterface $validateCallbackSignature
+        MoneiApiClient $apiClient,
+        SearchCriteriaBuilder $searchCriteriaBuilder
     ) {
         $this->logger = $logger;
         $this->moduleConfig = $moduleConfig;
@@ -83,7 +91,8 @@ class CallbackHelper implements CallbackHelperInterface
         $this->orderRepository = $orderRepository;
         $this->paymentProcessor = $paymentProcessor;
         $this->eventManager = $eventManager;
-        $this->validateCallbackSignature = $validateCallbackSignature;
+        $this->apiClient = $apiClient;
+        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
     }
 
     /**
@@ -95,18 +104,11 @@ class CallbackHelper implements CallbackHelperInterface
     public function processCallback(RequestInterface $request): void
     {
         try {
-            $payload = $request->getContent();
-            $signatureHeader = $request->getHeader('MONEI-Signature');
+            // @phpstan-ignore-next-line
+            $payload = (string)$request->getContent();
 
-            // Verify callback signature if available
-            if ($signatureHeader && !$this->verifyCallbackSignature($payload, ['MONEI-Signature' => $signatureHeader])) {
-                $this->logger->warning('[Callback] Invalid signature');
-
-                return;
-            }
-
-            // Extract payment data from callback
-            $paymentDTO = $this->callbackPaymentDataProvider->extractFromCallback($payload, $signatureHeader ?? '');
+            // Extract payment data from callback using the provider
+            $paymentDTO = $this->callbackPaymentDataProvider->getPaymentData($payload);
             $paymentData = $paymentDTO->getRawData();
 
             // Dispatch event with the callback data
@@ -127,32 +129,35 @@ class CallbackHelper implements CallbackHelperInterface
     }
 
     /**
-     * Verify the signature of a callback
+     * Verify the signature of a callback using MONEI SDK
      *
      * @param string $payload The raw request body
-     * @param array $headers Request headers
+     * @param string $signature The signature from the request header
      * @return bool True if signature is valid, false otherwise
      */
-    public function verifyCallbackSignature(string $payload, array $headers): bool
+    public function verifyCallbackSignature(string $payload, string $signature): bool
     {
         try {
-            $signatureHeader = $headers['MONEI-Signature'] ?? '';
-            if (empty($signatureHeader)) {
-                $this->logger->warning('[Callback] Missing MONEI-Signature header');
+            $this->logger->debug('[Callback] Verifying signature', [
+                'payload_length' => strlen($payload),
+                'signature' => $signature
+            ]);
 
-                return false;
-            }
+            // Use the SDK to verify the signature
+            $verificationResult = $this->apiClient->getMoneiSdk()->verifySignature($payload, $signature);
 
-            // Get the webhook secret from configuration
-            $webhookSecret = $this->moduleConfig->getWebhookSecret();
+            // The API client returns a valid payment object, check if it's valid
+            $result = !empty($verificationResult);
 
-            // Validate the signature
-            return $this->validateCallbackSignature->validate($payload, $signatureHeader, $webhookSecret);
+            $this->logger->debug('[Callback] Signature verification result', [
+                'is_valid' => $result ? 'true' : 'false'
+            ]);
+
+            return $result;
         } catch (\Exception $e) {
             $this->logger->error('[Callback] Error verifying signature: ' . $e->getMessage(), [
                 'exception' => $e
             ]);
-
             return false;
         }
     }
@@ -197,48 +202,77 @@ class CallbackHelper implements CallbackHelperInterface
             $orderId = $paymentDTO->getOrderId();
             if (!$orderId) {
                 $this->logger->warning('[Callback] Missing order ID in payment data');
-
                 return;
             }
 
-            // Load the order
-            $order = $this->orderRepository->get($orderId);
-            if (!$order || !$order->getEntityId()) {
-                $this->logger->warning('[Callback] Order not found: ' . $orderId);
+            $incrementId = null;
+            $entityId = null;
 
+            // Try to determine if orderId is an increment ID or entity ID
+            if (is_numeric($orderId)) {
+                try {
+                    // Try to load as entity ID first
+                    $order = $this->orderRepository->get($orderId);
+                    if ($order && $order->getEntityId()) {
+                        $entityId = $orderId;
+                        $incrementId = $order->getIncrementId();
+                    }
+                } catch (\Exception $e) {
+                    // Ignore and try as increment ID below
+                }
+            }
+
+            if (!$entityId) {
+                // Load order by increment ID (assuming orderId is increment ID)
+                try {
+                    $searchCriteria = $this->searchCriteriaBuilder
+                        ->addFilter('increment_id', $orderId)
+                        ->create();
+                    $orderList = $this->orderRepository->getList($searchCriteria);
+                    $orders = $orderList->getItems();
+
+                    if (count($orders) > 0) {
+                        $order = reset($orders);
+                        $entityId = $order->getEntityId();
+                        $incrementId = $orderId;
+                    }
+                } catch (\Exception $e) {
+                    $this->logger->error('[Callback] Error searching for order: ' . $e->getMessage(), [
+                        'exception' => $e,
+                        'order_id' => $orderId
+                    ]);
+                }
+            }
+
+            if (!$entityId) {
+                $this->logger->warning('[Callback] Order not found for ID: ' . $orderId);
                 return;
             }
 
             $status = $paymentDTO->getStatus();
             $this->logger->debug('[Callback] Processing payment with status: ' . $status, [
-                'order_id' => $order->getIncrementId(),
+                'increment_id' => $incrementId,
+                'entity_id' => $entityId,
                 'payment_id' => $paymentDTO->getId()
             ]);
 
             // Process payment based on status
             switch ($status) {
                 case PaymentStatus::SUCCEEDED:
-                    $this->paymentProcessor->processPayment($order, $paymentDTO);
-
-                    break;
                 case PaymentStatus::FAILED:
-                    $this->paymentProcessor->processPayment($order, $paymentDTO);
-
-                    break;
                 case PaymentStatus::CANCELED:
-                    $this->paymentProcessor->processPayment($order, $paymentDTO);
-
-                    break;
                 case PaymentStatus::AUTHORIZED:
-                    $this->paymentProcessor->processPayment($order, $paymentDTO);
-
+                    // Always use the order increment ID for payment processing
+                    $this->paymentProcessor->process($incrementId, $paymentDTO->getId(), $paymentDTO->getRawData());
                     break;
                 default:
                     $this->logger->warning('[Callback] Unhandled payment status: ' . $status);
             }
         } catch (\Exception $e) {
             $this->logger->error('[Callback] Error processing payment: ' . $e->getMessage(), [
-                'exception' => $e
+                'exception' => $e,
+                'payment_id' => $paymentDTO->getId(),
+                'order_id' => $paymentDTO->getOrderId()
             ]);
         }
     }

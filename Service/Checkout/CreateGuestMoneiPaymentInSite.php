@@ -133,16 +133,10 @@ class CreateGuestMoneiPaymentInSite extends AbstractCheckoutService implements C
             // Build the payment request from the quote and email
             $paymentData = $this->buildPaymentRequest($quote, $email);
 
-            // Log the raw request data for debugging
-            $this->logger->debug(
-                'Raw Request Data: createGuestPayment',
-                ['request_body' => json_encode($paymentData, Logger::JSON_OPTIONS)]
-            );
-            
             // Create the payment using the centralized CreatePayment service
             $result = $this->createPayment->execute($paymentData);
             $paymentId = $result->getId() ?? '';
-            
+
             // Save payment ID to quote for future reference
             $this->savePaymentIdToQuote($quote, $paymentId);
 
@@ -204,10 +198,10 @@ class CreateGuestMoneiPaymentInSite extends AbstractCheckoutService implements C
 
         // Get shipping address or fallback to billing if shipping is not available
         $shippingAddress = $quote->getShippingAddress() ?: $quote->getBillingAddress();
-        
+
         // Start with the base payment data
         $paymentData = $this->prepareBasePaymentData($quote);
-        
+
         // Add customer-specific data
         $paymentData['customer'] = $this->getCustomerDetailsByQuote->execute($quote, $email);
         $paymentData['billing_details'] = $this->getAddressDetailsByQuoteAddress->executeBilling($quote->getBillingAddress(), $email);

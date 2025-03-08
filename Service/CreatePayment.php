@@ -103,9 +103,9 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
         $paymentRequest = $this->buildPaymentRequest($data);
 
         // Log the raw request data
-        $this->logger->debug(
+        $this->logger->logApiRequest(
             'Raw Request Data: createPayment',
-            ['request_body' => json_encode($paymentRequest, Logger::JSON_OPTIONS)]
+            $paymentRequest->jsonSerialize()
         );
 
         // Execute the SDK call with the standardized pattern
@@ -132,29 +132,15 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
      */
     private function buildPaymentRequest(array $data): CreatePaymentRequest
     {
-        // Generate URLs using the standard Magento URL builder with secure URLs
-        $completeUrl = $this->urlBuilder->getUrl('monei/payment/complete', ['_secure' => true]);
-        $callbackUrl = $this->urlBuilder->getUrl('monei/payment/callback', ['_secure' => true]);
-        $cancelUrl = $this->urlBuilder->getUrl('monei/payment/cancel', ['_secure' => true]);
-        $failUrl = $this->urlBuilder->getUrl('monei/payment/fail', ['_secure' => true]);
-
-        // Log the generated URLs
-        $this->logger->debug('Generated Payment URLs', [
-            'complete_url' => $completeUrl,
-            'callback_url' => $callbackUrl,
-            'cancel_url' => $cancelUrl,
-            'fail_url' => $failUrl
-        ]);
-
         // Create base payment request with required fields
         $paymentRequest = new CreatePaymentRequest([
             'amount' => $data['amount'],  // Already converted to cents
             'currency' => $data['currency'],
             'order_id' => $data['order_id'],
-            'complete_url' => $completeUrl,
-            'callback_url' => $callbackUrl,
-            'cancel_url' => $cancelUrl,
-            'fail_url' => $failUrl
+            'complete_url' => $this->urlBuilder->getUrl('monei/payment/complete'),
+            'callback_url' => $this->urlBuilder->getUrl('monei/payment/callback'),
+            'cancel_url' => $this->urlBuilder->getUrl('monei/payment/cancel'),
+            'fail_url' => $this->urlBuilder->getUrl('monei/payment/fail')
         ]);
 
         // Set transaction type if necessary using the SDK enum
@@ -164,20 +150,7 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
 
         // Set customer information if available
         if (isset($data['customer'])) {
-            $customer = new PaymentCustomer();
-
-            if (isset($data['customer']['email'])) {
-                $customer->setEmail($data['customer']['email']);
-            }
-
-            if (isset($data['customer']['name'])) {
-                $customer->setName($data['customer']['name']);
-            }
-
-            if (isset($data['customer']['phone'])) {
-                $customer->setPhone($data['customer']['phone']);
-            }
-
+            $customer = new PaymentCustomer($data['customer']);
             $paymentRequest->setCustomer($customer);
         }
 
