@@ -327,6 +327,13 @@
         </arguments>
     </type>
 
+    <!-- Type configuration for ApiExceptionHandler -->
+    <type name="Monei\MoneiPayment\Service\Api\ApiExceptionHandler">
+        <arguments>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+        </arguments>
+    </type>
+
     <!-- Type configuration for MoneiApiClient -->
     <type name="Monei\MoneiPayment\Service\Api\MoneiApiClient">
         <arguments>
@@ -334,6 +341,48 @@
             <argument name="moduleConfig" xsi:type="object">Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface</argument>
             <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
             <argument name="moduleVersion" xsi:type="object">Monei\MoneiPayment\Model\Config\Source\ModuleVersion</argument>
+        </arguments>
+    </type>
+    
+    <!-- Type configurations for standardized SDK services -->
+    <type name="Monei\MoneiPayment\Service\CreatePayment">
+        <arguments>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+            <argument name="exceptionHandler" xsi:type="object">Monei\MoneiPayment\Service\Api\ApiExceptionHandler</argument>
+            <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Service\Api\MoneiApiClient</argument>
+            <argument name="moduleConfig" xsi:type="object">Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface</argument>
+        </arguments>
+    </type>
+    
+    <type name="Monei\MoneiPayment\Service\GetPayment">
+        <arguments>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+            <argument name="exceptionHandler" xsi:type="object">Monei\MoneiPayment\Service\Api\ApiExceptionHandler</argument>
+            <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Service\Api\MoneiApiClient</argument>
+        </arguments>
+    </type>
+    
+    <type name="Monei\MoneiPayment\Service\GetPaymentMethods">
+        <arguments>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+            <argument name="exceptionHandler" xsi:type="object">Monei\MoneiPayment\Service\Api\ApiExceptionHandler</argument>
+            <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Service\Api\MoneiApiClient</argument>
+            <argument name="moduleConfig" xsi:type="object">Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface</argument>
+            <argument name="registryAccountId" xsi:type="object">Monei\MoneiPayment\Registry\AccountId</argument>
+        </arguments>
+    </type>
+    
+    <type name="Monei\MoneiPayment\Service\Checkout\CreateGuestMoneiPaymentInSite">
+        <arguments>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+            <argument name="exceptionHandler" xsi:type="object">Monei\MoneiPayment\Service\Api\ApiExceptionHandler</argument>
+            <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Service\Api\MoneiApiClient</argument>
+            <argument name="quoteRepository" xsi:type="object">Magento\Quote\Api\CartRepositoryInterface</argument>
+            <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session</argument>
+            <argument name="maskedQuoteIdToQuoteId" xsi:type="object">Magento\Quote\Model\MaskedQuoteIdToQuoteIdInterface</argument>
+            <argument name="getCustomerDetailsByQuote" xsi:type="object">Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote</argument>
+            <argument name="getAddressDetailsByQuoteAddress" xsi:type="object">Monei\MoneiPayment\Service\Quote\GetAddressDetailsByQuoteAddress</argument>
+            <argument name="moduleConfig" xsi:type="object">Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface</argument>
         </arguments>
     </type>
 

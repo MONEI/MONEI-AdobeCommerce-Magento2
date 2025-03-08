@@ -9,6 +9,11 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Monei\MoneiClient;
+use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
+use Monei\MoneiPayment\Service\Api\MoneiApiClient;
+use OpenAPI\Client\ApiException;
 
 /**
  * Abstract base class for MONEI API services
@@ -19,17 +24,39 @@ use Magento\Framework\Exception\LocalizedException;
 abstract class AbstractApiService
 {
     /**
-     * @var \Monei\MoneiPayment\Service\Logger
+     * Logger for service operations
+     *
+     * @var Logger
      */
-    protected $logger;
+    protected Logger $logger;
 
     /**
-     * @param \Monei\MoneiPayment\Service\Logger $logger
+     * Exception handler for MONEI API errors
+     *
+     * @var ApiExceptionHandler|null
+     */
+    protected ?ApiExceptionHandler $exceptionHandler = null;
+
+    /**
+     * MONEI API client factory
+     *
+     * @var MoneiApiClient|null
+     */
+    protected ?MoneiApiClient $apiClient = null;
+
+    /**
+     * @param Logger $logger Logger for tracking operations
+     * @param ApiExceptionHandler|null $exceptionHandler Exception handler for MONEI API errors
+     * @param MoneiApiClient|null $apiClient MONEI API client factory
      */
     public function __construct(
-        \Monei\MoneiPayment\Service\Logger $logger
+        Logger $logger,
+        ?ApiExceptionHandler $exceptionHandler = null,
+        ?MoneiApiClient $apiClient = null
     ) {
         $this->logger = $logger;
+        $this->exceptionHandler = $exceptionHandler;
+        $this->apiClient = $apiClient;
     }
 
     /**
@@ -44,26 +71,92 @@ abstract class AbstractApiService
      */
     protected function executeApiCall(string $methodName, callable $apiCall, array $logData = []): array
     {
-        $this->logger->debug("[Method] {$methodName}");
-
-        if (!empty($logData)) {
-            $this->logger->debug('[Request data] ' . json_encode($logData, JSON_PRETTY_PRINT));
-        }
+        // Log request with standardized format
+        $this->logger->logApiRequest($methodName, $logData);
 
         try {
+            // Execute the API call
             $response = $apiCall();
 
-            $this->logger->debug('[API Response] ' . json_encode($response, JSON_PRETTY_PRINT));
+            // Convert response to array if needed
+            $result = is_array($response) ? $response : ['response' => $response];
 
-            return is_array($response) ? $response : ['response' => $response];
+            // Log response with standardized format
+            $this->logger->logApiResponse($methodName, $result);
+
+            return $result;
         } catch (LocalizedException $e) {
-            $this->logger->critical("[API Error] {$e->getMessage()}");
+            $this->logger->logApiError($methodName, $e->getMessage(), $logData);
 
             throw $e;
         } catch (\Exception $e) {
-            $this->logger->critical("[Error] {$e->getMessage()}");
+            $this->logger->logApiError($methodName, $e->getMessage(), [
+                'exception' => get_class($e),
+                'request_data' => $logData
+            ]);
 
             throw new LocalizedException(__('Failed to execute %1: %2', $methodName, $e->getMessage()));
+        }
+    }
+
+    /**
+     * Execute MONEI SDK call with standardized error handling and response formatting
+     *
+     * This is the preferred method for making SDK calls when using the standardized pattern.
+     *
+     * @param string $operation Name of the operation (for logging)
+     * @param callable $sdkCall Callable that performs the API call, receives MoneiClient as parameter
+     * @param array $logContext Additional context data for logging
+     * @param int|null $storeId Store ID to use for configuration, defaults to current store
+     *
+     * @return array Response from the API converted to array
+     * @throws LocalizedException If API call fails
+     * @throws \InvalidArgumentException If required dependencies are missing
+     */
+    protected function executeMoneiSdkCall(
+        string $operation,
+        callable $sdkCall,
+        array $logContext = [],
+        ?int $storeId = null
+    ): array {
+        // Verify required dependencies
+        if (!$this->apiClient || !$this->exceptionHandler) {
+            throw new \InvalidArgumentException(
+                'Cannot execute MONEI SDK call: MoneiApiClient or ApiExceptionHandler is missing.'
+            );
+        }
+
+        // Log request with standardized format
+        $this->logger->logApiRequest($operation, $logContext);
+
+        try {
+            // Get the SDK client
+            $moneiSdk = $this->apiClient->getMoneiSdk($storeId);
+
+            // Execute the SDK call
+            $response = $sdkCall($moneiSdk);
+
+            // Convert the response to array
+            $result = $this->apiClient->convertResponseToArray($response);
+
+            // Log success with standardized format
+            $this->logger->logApiResponse($operation, $result);
+
+            return $result;
+        } catch (ApiException $e) {
+            // Let the exception handler process the API exception
+            $this->exceptionHandler->handle($e, $operation, $logContext);
+        } catch (NoSuchEntityException $e) {
+            $this->logger->logApiError($operation, "Store configuration error: {$e->getMessage()}", $logContext);
+
+            throw new LocalizedException(__('Store configuration issue: %1', $e->getMessage()));
+        } catch (\Exception $e) {
+            $this->logger->logApiError($operation, "Unexpected error: {$e->getMessage()}", [
+                'exception' => get_class($e),
+                'context' => $logContext
+            ]);
+
+            throw new LocalizedException(__('An unexpected error occurred: %1', $e->getMessage()));
         }
     }
 

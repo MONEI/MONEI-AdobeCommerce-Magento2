@@ -8,11 +8,12 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Controller\Payment;
 
+use Exception;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Action\HttpPostActionInterface;
-use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\CsrfAwareActionInterface;
+use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
@@ -30,7 +31,6 @@ use Monei\MoneiPayment\Model\PaymentProcessor;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\Logger;
 use OpenAPI\Client\Model\PaymentStatus;
-use Exception;
 
 /**
  * Controller for managing callbacks from Monei system

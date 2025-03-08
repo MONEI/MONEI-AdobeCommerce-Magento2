@@ -10,17 +10,24 @@ namespace Monei\MoneiPayment\Service\Checkout;
 
 use Magento\Checkout\Model\Session;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Api\CartRepositoryInterface;
+use Magento\Quote\Model\Quote;
 use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentInSiteInterface;
+use Monei\MoneiPayment\Service\AbstractApiService;
+use Monei\MoneiPayment\Service\CreatePayment;
+use Monei\MoneiPayment\Service\Logger;
 use Monei\MoneiPayment\Service\Quote\GetAddressDetailsByQuoteAddress;
 use Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote;
-use Monei\MoneiPayment\Service\CreatePayment;
 
 /**
- * Monei create payment REST integration service class.
+ * Monei create payment REST integration service class for logged-in customers.
+ *
+ * Handles payment creation for customers who are logged into their accounts,
+ * utilizing their stored customer information.
  */
-class CreateLoggedMoneiPaymentInSite implements CreateLoggedMoneiPaymentInSiteInterface
+class CreateLoggedMoneiPaymentInSite extends AbstractApiService implements CreateLoggedMoneiPaymentInSiteInterface
 {
     /**
      * Quote repository for managing shopping carts.
@@ -60,24 +67,27 @@ class CreateLoggedMoneiPaymentInSite implements CreateLoggedMoneiPaymentInSiteIn
     /**
      * Constructor.
      *
-     * @param CartRepositoryInterface $quoteRepository
-     * @param Session $checkoutSession
-     * @param GetCustomerDetailsByQuote $getCustomerDetailsByQuote
-     * @param GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress
-     * @param CreatePayment $createPayment
+     * @param Logger $logger Logger for tracking operations
+     * @param CartRepositoryInterface $quoteRepository Repository for accessing and saving quotes
+     * @param Session $checkoutSession Checkout session for accessing the current quote
+     * @param GetCustomerDetailsByQuote $getCustomerDetailsByQuote Service to get customer details from a quote
+     * @param GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress Service to get address details
+     * @param CreatePayment $createPayment Service for creating MONEI payments
      */
     public function __construct(
+        Logger $logger,
         CartRepositoryInterface $quoteRepository,
         Session $checkoutSession,
         GetCustomerDetailsByQuote $getCustomerDetailsByQuote,
         GetAddressDetailsByQuoteAddress $getAddressDetailsByQuoteAddress,
         CreatePayment $createPayment
     ) {
-        $this->createPayment = $createPayment;
-        $this->getAddressDetailsByQuoteAddress = $getAddressDetailsByQuoteAddress;
-        $this->getCustomerDetailsByQuote = $getCustomerDetailsByQuote;
-        $this->checkoutSession = $checkoutSession;
+        parent::__construct($logger);
         $this->quoteRepository = $quoteRepository;
+        $this->checkoutSession = $checkoutSession;
+        $this->getCustomerDetailsByQuote = $getCustomerDetailsByQuote;
+        $this->getAddressDetailsByQuoteAddress = $getAddressDetailsByQuoteAddress;
+        $this->createPayment = $createPayment;
     }
 
     /**
@@ -86,40 +96,91 @@ class CreateLoggedMoneiPaymentInSite implements CreateLoggedMoneiPaymentInSiteIn
      * @param string $cartId The ID of the customer's shopping cart
      * @param string $email The customer's email address
      *
-     * @throws LocalizedException If the quote cannot be retrieved or payment creation fails
-     *
      * @return array The payment creation result containing payment details
+     * @throws LocalizedException If the quote cannot be retrieved or payment creation fails
      */
     public function execute(string $cartId, string $email): array
     {
-        $quote = $this->checkoutSession->getQuote() ?? $this->quoteRepository->get($cartId);
-        if (!$quote) {
-            throw new LocalizedException(__('An error occurred to retrieve the information about the quote'));
-        }
+        // First, resolve the quote from cart ID
+        $quote = $this->resolveQuote($cartId);
 
-        // Save the quote in order to avoid that the other processes can reserve the order
+        // Reserve order ID to prevent race conditions
         $quote->reserveOrderId();
         $this->quoteRepository->save($quote);
 
-        $data = [
-            'amount' => $quote->getBaseGrandTotal() * 100,
-            'currency' => $quote->getBaseCurrencyCode(),
-            'orderId' => $quote->getReservedOrderId(),
-            'customer' => $this->getCustomerDetailsByQuote->execute($quote),
-            'billingDetails' => $this->getAddressDetailsByQuoteAddress->execute($quote->getBillingAddress()),
-            'shippingDetails' => $this->getAddressDetailsByQuoteAddress->execute($quote->getShippingAddress()),
-        ];
+        return $this->executeApiCall(__METHOD__, function () use ($quote) {
+            // Prepare payment data
+            $paymentData = $this->preparePaymentData($quote);
 
-        try {
-            $result = $this->createPayment->execute($data);
-            $quote->setData(QuoteInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $result['id'] ?: '');
+            // Create payment
+            $result = $this->createPayment->execute($paymentData);
+
+            // Save payment ID to quote for future reference
+            $quote->setData(QuoteInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $result['id'] ?? '');
             $this->quoteRepository->save($quote);
 
             return [$result];
+        }, [
+            'cartId' => $cartId,
+            'quote_id' => $quote->getId(),
+            'reserved_order_id' => $quote->getReservedOrderId()
+        ]);
+    }
+
+    /**
+     * Resolve a quote from cart ID
+     *
+     * @param string $cartId Cart ID
+     * @return Quote The resolved quote
+     * @throws LocalizedException If the quote cannot be resolved
+     */
+    private function resolveQuote(string $cartId): Quote
+    {
+        try {
+            // For logged-in users, try to get from session first, then fallback to repository
+            $quote = $this->checkoutSession->getQuote();
+
+            if (!$quote || !$quote->getId()) {
+                $quote = $this->quoteRepository->get($cartId);
+            }
+
+            if (!$quote || !$quote->getId()) {
+                throw new LocalizedException(__('Could not load quote information'));
+            }
+
+            return $quote;
+        } catch (NoSuchEntityException $e) {
+            $this->logger->error('Quote not found: ' . $e->getMessage(), ['cartId' => $cartId]);
+
+            throw new LocalizedException(__('Quote not found for this cart ID'));
         } catch (\Exception $e) {
-            throw new LocalizedException(
-                __('An error occurred rendering the pay with card. Please try again later.')
-            );
+            $this->logger->error('Error resolving quote: ' . $e->getMessage(), ['cartId' => $cartId]);
+
+            throw new LocalizedException(__('An error occurred while retrieving quote information'));
         }
+    }
+
+    /**
+     * Prepare payment data from quote
+     *
+     * @param Quote $quote The quote to prepare payment data from
+     * @return array Payment data ready for the CreatePayment service
+     */
+    private function preparePaymentData(Quote $quote): array
+    {
+        // Get shipping address or fallback to billing if shipping is not available
+        $shippingAddress = $quote->getShippingAddress();
+        if (!$shippingAddress || !$shippingAddress->getId()) {
+            $shippingAddress = $quote->getBillingAddress();
+        }
+
+        return [
+            'amount' => (int)($quote->getBaseGrandTotal() * 100), // Convert to cents
+            'currency' => $quote->getBaseCurrencyCode(),
+            'order_id' => $quote->getReservedOrderId(),
+            'customer' => $this->getCustomerDetailsByQuote->execute($quote),
+            'billing_details' => $this->getAddressDetailsByQuoteAddress->executeBilling($quote->getBillingAddress()),
+            'shipping_details' => $this->getAddressDetailsByQuoteAddress->executeShipping($shippingAddress),
+        ];
     }
 }

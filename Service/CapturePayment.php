@@ -11,8 +11,8 @@ namespace Monei\MoneiPayment\Service;
 use Magento\Framework\Exception\LocalizedException;
 use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use OpenAPI\Client\Model\CapturePaymentRequest;
 use OpenAPI\Client\ApiException;
+use OpenAPI\Client\Model\CapturePaymentRequest;
 
 /**
  * Monei capture payment service class using the official MONEI PHP SDK.

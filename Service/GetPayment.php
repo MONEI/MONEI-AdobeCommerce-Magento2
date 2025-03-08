@@ -9,30 +9,29 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\Exception\LocalizedException;
+use Monei\MoneiClient;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
+use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use OpenAPI\Client\ApiException;
 
 /**
  * Monei get payment service class using the official MONEI PHP SDK.
+ *
+ * Retrieves payment details by ID from the MONEI API.
  */
 class GetPayment extends AbstractApiService implements GetPaymentInterface
 {
     /**
-     * @var MoneiApiClient
-     */
-    private $moneiApiClient;
-
-    /**
-     * @param Logger $logger
-     * @param MoneiApiClient $moneiApiClient
+     * @param Logger $logger Logger for tracking operations
+     * @param ApiExceptionHandler $exceptionHandler Exception handler for MONEI API errors
+     * @param MoneiApiClient $apiClient API client factory for MONEI SDK
      */
     public function __construct(
         Logger $logger,
-        MoneiApiClient $moneiApiClient
+        ApiExceptionHandler $exceptionHandler,
+        MoneiApiClient $apiClient
     ) {
-        parent::__construct($logger);
-        $this->moneiApiClient = $moneiApiClient;
+        parent::__construct($logger, $exceptionHandler, $apiClient);
     }
 
     /**
@@ -42,26 +41,22 @@ class GetPayment extends AbstractApiService implements GetPaymentInterface
      *
      * @param string $payment_id The ID of the payment to retrieve
      *
-     * @return array Response from the API with payment details or error information
-     * @throws LocalizedException
+     * @return array Response from the API with payment details
+     * @throws LocalizedException If the payment cannot be retrieved
      */
     public function execute(string $payment_id): array
     {
-        return $this->executeApiCall(__METHOD__, function () use ($payment_id) {
-            try {
-                // Get the SDK client directly
-                $moneiSdk = $this->moneiApiClient->getMoneiSdk();
+        if (empty($payment_id)) {
+            throw new LocalizedException(__('Payment ID is required to retrieve payment details'));
+        }
 
-                // Use the SDK to get the payment with the correct get() method
-                $payment = $moneiSdk->payments->get($payment_id);
-
-                // Convert response to array
-                return $this->moneiApiClient->convertResponseToArray($payment);
-            } catch (ApiException $e) {
-                $this->logger->critical('[API Error] ' . $e->getMessage());
-
-                throw new LocalizedException(__('Failed to get payment from MONEI API: %1', $e->getMessage()));
-            }
-        }, ['payment_id' => $payment_id]);
+        // Use standardized SDK call pattern with the executeMoneiSdkCall method
+        return $this->executeMoneiSdkCall(
+            'getPayment',
+            function (MoneiClient $moneiSdk) use ($payment_id) {
+                return $moneiSdk->payments->get($payment_id);
+            },
+            ['payment_id' => $payment_id]
+        );
     }
 }
