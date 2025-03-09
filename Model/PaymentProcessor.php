@@ -10,10 +10,12 @@ namespace Monei\MoneiPayment\Model;
 
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Phrase;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
+use Magento\Sales\Model\OrderFactory;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Api\PaymentDataProviderInterface;
@@ -83,9 +85,9 @@ class PaymentProcessor implements PaymentProcessorInterface, PaymentDataProvider
     private GetPaymentInterface $getPaymentInterface;
 
     /**
-     * @var \Magento\Sales\Model\OrderFactory
+     * @var OrderFactory
      */
-    private \Magento\Sales\Model\OrderFactory $orderFactory;
+    private OrderFactory $orderFactory;
 
     /**
      * @param OrderRepositoryInterface $orderRepository
@@ -98,7 +100,7 @@ class PaymentProcessor implements PaymentProcessorInterface, PaymentDataProvider
      * @param OrderSender $orderSender
      * @param SearchCriteriaBuilder $searchCriteriaBuilder
      * @param GetPaymentInterface $getPaymentInterface
-     * @param \Magento\Sales\Model\OrderFactory $orderFactory
+     * @param OrderFactory $orderFactory
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
@@ -111,7 +113,7 @@ class PaymentProcessor implements PaymentProcessorInterface, PaymentDataProvider
         OrderSender $orderSender,
         SearchCriteriaBuilder $searchCriteriaBuilder,
         GetPaymentInterface $getPaymentInterface,
-        \Magento\Sales\Model\OrderFactory $orderFactory
+        OrderFactory $orderFactory
     ) {
         $this->orderRepository = $orderRepository;
         $this->invoiceService = $invoiceService;

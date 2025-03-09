@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Cron;
 
 use Magento\Framework\Stdlib\DateTime\DateTime;
-use Magento\Sales\Api\Data\OrderInterfaceFactory;
+use Magento\Sales\Model\OrderFactory as OrderInterfaceFactory;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\ResourceModel\Order\Collection as OrderCollection;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory as OrderCollectionFactory;
