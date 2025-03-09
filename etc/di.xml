@@ -475,19 +475,35 @@
     <type name="Monei\MoneiPayment\Controller\Payment\Callback">
         <arguments>
             <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
-            <argument name="webhookPaymentDataProvider" xsi:type="object">Monei\MoneiPayment\Model\PaymentDataProvider\WebhookPaymentDataProvider</argument>
-            <argument name="generateInvoiceService" xsi:type="object">Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface</argument>
             <argument name="resultJsonFactory" xsi:type="object">Magento\Framework\Controller\Result\JsonFactory</argument>
-            <argument name="paymentProcessor" xsi:type="object">Monei\MoneiPayment\Model\PaymentProcessor</argument>
+            <argument name="webhookPaymentDataProvider" xsi:type="object">Monei\MoneiPayment\Model\PaymentDataProvider\WebhookPaymentDataProvider</argument>
+            <argument name="paymentProcessor" xsi:type="object">Monei\MoneiPayment\Api\PaymentProcessorInterface</argument>
+            <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Model\Api\MoneiApiClient</argument>
             <argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
-            <argument name="validateWebhookSignatureService" xsi:type="object">Monei\MoneiPayment\Api\Service\ValidateWebhookSignatureInterface</argument>
         </arguments>
     </type>
 
+    <!-- Type configuration for Complete controller -->
+    <type name="Monei\MoneiPayment\Controller\Payment\Complete">
+        <arguments>
+            <argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
+            <argument name="orderFactory" xsi:type="object">Magento\Sales\Model\OrderFactory</argument>
+            <argument name="resultRedirectFactory" xsi:type="object">Magento\Framework\Controller\Result\RedirectFactory</argument>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+            <argument name="paymentProcessor" xsi:type="object">Monei\MoneiPayment\Api\PaymentProcessorInterface</argument>
+            <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Model\Api\MoneiApiClient</argument>
+            <argument name="getPaymentService" xsi:type="object">Monei\MoneiPayment\Api\Service\GetPaymentInterface</argument>
+        </arguments>
+    </type>
+    
     <!-- Type configuration for Fail controller -->
     <type name="Monei\MoneiPayment\Controller\Payment\Fail">
         <arguments>
-            <argument name="paymentProcessor" xsi:type="object">Monei\MoneiPayment\Model\PaymentProcessor</argument>
+            <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session</argument>
+            <argument name="orderFactory" xsi:type="object">Magento\Sales\Api\Data\OrderInterfaceFactory</argument>
+            <argument name="messageManager" xsi:type="object">Magento\Framework\Message\ManagerInterface</argument>
+            <argument name="resultRedirectFactory" xsi:type="object">Magento\Framework\Controller\Result\RedirectFactory</argument>
+            <argument name="paymentProcessor" xsi:type="object">Monei\MoneiPayment\Api\PaymentProcessorInterface</argument>
             <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
         </arguments>
     </type>

@@ -15,8 +15,10 @@ $paymentInfo = $block->getPaymentInfo();
     <?php
     // Prepare combined payment method display
     $paymentMethodDisplay = '';
+    $methodType = $paymentInfo['method'] ?? '';
 
     if (isset($paymentInfo['brand']) && !empty($paymentInfo['brand'])) {
+        // Card payment display
         $brand = strtolower($paymentInfo['brand']);
         $paymentMethodDisplay = ucfirst($paymentInfo['brand']);
 
@@ -28,9 +30,32 @@ $paymentInfo = $block->getPaymentInfo();
         if (isset($paymentInfo['last4']) && !empty($paymentInfo['last4'])) {
             $paymentMethodDisplay .= ' •••• ' . $paymentInfo['last4'];
         }
-    } elseif (isset($paymentInfo['method']) && !empty($paymentInfo['method'])) {
-        $method = $paymentInfo['method'];
-        $paymentMethodDisplay = ucfirst($method);
+        
+        if (isset($paymentInfo['expiration']) && !empty($paymentInfo['expiration'])) {
+            $paymentMethodDisplay .= ' (exp: ' . $paymentInfo['expiration'] . ')';
+        }
+    } elseif (!empty($methodType)) {
+        // For non-card methods, format the method name nicely
+        switch ($methodType) {
+            case 'bizum':
+                $paymentMethodDisplay = 'Bizum';
+                break;
+            case 'paypal':
+                $paymentMethodDisplay = 'PayPal';
+                break;
+            case 'mbway':
+                $paymentMethodDisplay = 'MB WAY';
+                break;
+            case 'sepa':
+                $paymentMethodDisplay = 'SEPA Direct Debit';
+                break;
+            case 'multibanco':
+                $paymentMethodDisplay = 'Multibanco';
+                break;
+            default:
+                // Fallback: Convert camelCase to Title Case with spaces
+                $paymentMethodDisplay = ucfirst(preg_replace('/([a-z])([A-Z])/', '$1 $2', $methodType));
+        }
     }
     ?>
 
@@ -71,6 +96,13 @@ $paymentInfo = $block->getPaymentInfo();
                     <td><?= $escaper->escapeHtml($paymentInfo['cardholderName']) ?></td>
                 </tr>
             <?php endif; ?>
+            
+            <?php if (isset($paymentInfo['cardholderEmail']) && !empty($paymentInfo['cardholderEmail'])): ?>
+                <tr>
+                    <th><?= $escaper->escapeHtml(__('Cardholder Email')) ?></th>
+                    <td><?= $escaper->escapeHtml($paymentInfo['cardholderEmail']) ?></td>
+                </tr>
+            <?php endif; ?>
 
             <?php if (isset($paymentInfo['bank']) && !empty($paymentInfo['bank'])): ?>
                 <tr>
@@ -86,10 +118,36 @@ $paymentInfo = $block->getPaymentInfo();
                 </tr>
             <?php endif; ?>
 
+            <?php if (isset($paymentInfo['iban']) && !empty($paymentInfo['iban'])): ?>
+                <tr>
+                    <th><?= $escaper->escapeHtml(__('IBAN')) ?></th>
+                    <td><?= $escaper->escapeHtml($paymentInfo['iban']) ?></td>
+                </tr>
+            <?php endif; ?>
+            
+            <?php if (isset($paymentInfo['accountName']) && !empty($paymentInfo['accountName'])): ?>
+                <tr>
+                    <th><?= $escaper->escapeHtml(__('Account Holder')) ?></th>
+                    <td><?= $escaper->escapeHtml($paymentInfo['accountName']) ?></td>
+                </tr>
+            <?php endif; ?>
+
             <?php if (isset($paymentInfo['country']) && !empty($paymentInfo['country'])): ?>
                 <tr>
                     <th><?= $escaper->escapeHtml(__('Country')) ?></th>
                     <td><?= $escaper->escapeHtml($paymentInfo['country']) ?></td>
+                </tr>
+            <?php endif; ?>
+            
+            <?php if (isset($paymentInfo['threeDSecure']) && $paymentInfo['threeDSecure']): ?>
+                <tr>
+                    <th><?= $escaper->escapeHtml(__('3D Secure')) ?></th>
+                    <td>
+                        <?= $escaper->escapeHtml(__('Yes')) ?>
+                        <?php if (isset($paymentInfo['threeDSecureVersion']) && !empty($paymentInfo['threeDSecureVersion'])): ?>
+                            (v<?= $escaper->escapeHtml($paymentInfo['threeDSecureVersion']) ?>)
+                        <?php endif; ?>
+                    </td>
                 </tr>
             <?php endif; ?>
         </tbody>

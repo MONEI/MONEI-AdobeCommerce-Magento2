@@ -11,6 +11,7 @@ namespace Monei\MoneiPayment\Controller\Payment;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\Redirect as MagentoRedirect;
+use Magento\Framework\Controller\Result\RedirectFactory;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Sales\Api\Data\OrderInterfaceFactory;
 use Monei\MoneiPayment\Model\PaymentProcessor;

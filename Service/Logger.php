@@ -55,14 +55,25 @@ class Logger extends MonologLogger
      * Log API request with standardized format
      *
      * @param string $operation Operation name
-     * @param array $data Request data
+     * @param array|object $data Request data
      * @return void
      */
-    public function logApiRequest(string $operation, array $data = []): void
+    public function logApiRequest(string $operation, $data = []): void
     {
         if (empty($data)) {
             $this->debug("API Request: {$operation}", []);
             return;
+        }
+        
+        // Convert object to array if necessary
+        if (is_object($data)) {
+            if (method_exists($data, 'toArray')) {
+                $data = $data->toArray();
+            } elseif (method_exists($data, '__toArray')) {
+                $data = $data->__toArray();
+            } else {
+                $data = (array)$data;
+            }
         }
 
         // Sanitize sensitive data
@@ -77,11 +88,22 @@ class Logger extends MonologLogger
      * Log API response with standardized format
      *
      * @param string $operation Operation name
-     * @param array $data Response data
+     * @param array|object $data Response data
      * @return void
      */
-    public function logApiResponse(string $operation, array $data): void
+    public function logApiResponse(string $operation, $data): void
     {
+        // Convert object to array if necessary
+        if (is_object($data)) {
+            if (method_exists($data, 'toArray')) {
+                $data = $data->toArray();
+            } elseif (method_exists($data, '__toArray')) {
+                $data = $data->__toArray();
+            } else {
+                $data = (array)$data;
+            }
+        }
+        
         // Sanitize sensitive data
         $sanitizedData = $this->sanitizeData($data);
 
@@ -114,10 +136,10 @@ class Logger extends MonologLogger
      * @param string $type Event type (create, capture, refund, etc.)
      * @param string $orderId Order ID
      * @param ?string $paymentId Payment ID
-     * @param array $data Additional data
+     * @param array|object $data Additional data
      * @return void
      */
-    public function logPaymentEvent(string $type, string $orderId, ?string $paymentId = null, array $data = []): void
+    public function logPaymentEvent(string $type, string $orderId, ?string $paymentId = null, $data = []): void
     {
         $context = [
             'order_id' => $orderId,
@@ -189,21 +211,36 @@ class Logger extends MonologLogger
     /**
      * Sanitize sensitive data for logging
      *
-     * @param array $data
+     * @param array|object $data
      * @return array
      */
-    private function sanitizeData(array $data): array
+    private function sanitizeData($data): array
     {
+        // If data is an object, convert it to an array
+        if (is_object($data)) {
+            if (method_exists($data, 'toArray')) {
+                $data = $data->toArray();
+            } elseif (method_exists($data, '__toArray')) {
+                $data = $data->__toArray();
+            } else {
+                $data = (array)$data;
+            }
+        }
+        
+        // If not an array by now, return empty array
+        if (!is_array($data)) {
+            return [];
+        }
+        
         foreach ($data as $key => $value) {
             // Mask sensitive fields - ensure key is a string before using strtolower
             if (is_string($key) && in_array(strtolower($key), array_map('strtolower', $this->sensitiveFields))) {
                 $data[$key] = self::MASKED_VALUE;
-
                 continue;
             }
 
-            // Recurse into arrays
-            if (is_array($value)) {
+            // Recurse into arrays and objects
+            if (is_array($value) || is_object($value)) {
                 $data[$key] = $this->sanitizeData($value);
             }
         }

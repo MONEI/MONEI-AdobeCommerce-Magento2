@@ -28,9 +28,14 @@ class PaymentDTO
     private string $status;
 
     /**
-     * @var float
+     * @var float Amount in currency units (e.g., euros, dollars)
      */
     private float $amount;
+    
+    /**
+     * @var int Original amount in cents from API
+     */
+    private int $amountInCents;
 
     /**
      * @var string
@@ -53,7 +58,7 @@ class PaymentDTO
     private ?string $updatedAt;
 
     /**
-     * @var array|null
+     * @var array|null Metadata from payment (converted to array if received as object)
      */
     private ?array $metadata;
 
@@ -67,33 +72,44 @@ class PaymentDTO
      *
      * @param string $id
      * @param string $status
-     * @param float $amount
+     * @param int $amountInCents Amount in smallest currency unit (cents)
      * @param string $currency
      * @param string $orderId
-     * @param string|null $createdAt
-     * @param string|null $updatedAt
-     * @param array|null $metadata
+     * @param string|int|null $createdAt Timestamp as string or integer
+     * @param string|int|null $updatedAt Timestamp as string or integer
+     * @param array|object|null $metadata Metadata can be array or object (converted to array)
      * @param array $rawData
      */
     public function __construct(
         string $id,
         string $status,
-        float $amount,
+        int $amountInCents,
         string $currency,
         string $orderId,
-        ?string $createdAt = null,
-        ?string $updatedAt = null,
-        ?array $metadata = null,
+        $createdAt = null,
+        $updatedAt = null,
+        $metadata = null,
         array $rawData = []
     ) {
         $this->id = $id;
         $this->status = $status;
-        $this->amount = $amount;
+        $this->amountInCents = $amountInCents;
+        // Convert cents to standard currency units (divide by 100)
+        $this->amount = $amountInCents / 100.0;
         $this->currency = $currency;
         $this->orderId = $orderId;
-        $this->createdAt = $createdAt;
-        $this->updatedAt = $updatedAt;
-        $this->metadata = $metadata;
+        
+        // Convert timestamps to strings if they are integers
+        $this->createdAt = is_int($createdAt) ? (string)$createdAt : $createdAt;
+        $this->updatedAt = is_int($updatedAt) ? (string)$updatedAt : $updatedAt;
+        
+        // Convert metadata object to array if needed
+        if (is_object($metadata)) {
+            $this->metadata = (array)$metadata;
+        } else {
+            $this->metadata = $metadata;
+        }
+        
         $this->rawData = $rawData;
     }
 
@@ -109,20 +125,37 @@ class PaymentDTO
         // Validate required fields
         $requiredFields = ['id', 'status', 'amount', 'currency', 'orderId'];
         foreach ($requiredFields as $field) {
-            if (!isset($data[$field]) || empty($data[$field])) {
+            if (!isset($data[$field]) || (is_string($data[$field]) && empty($data[$field]))) {
                 throw new LocalizedException(__('Missing required field: %1', $field));
+            }
+        }
+        
+        // Convert timestamps to strings if they are integers
+        $createdAt = isset($data['createdAt']) ? (is_int($data['createdAt']) ? (string)$data['createdAt'] : $data['createdAt']) : null;
+        $updatedAt = isset($data['updatedAt']) ? (is_int($data['updatedAt']) ? (string)$data['updatedAt'] : $data['updatedAt']) : null;
+        
+        // Ensure amount is treated as an integer
+        $amountInCents = (int) $data['amount'];
+        
+        // Handle metadata - convert stdClass to array if needed
+        $metadata = null;
+        if (isset($data['metadata'])) {
+            if (is_array($data['metadata'])) {
+                $metadata = $data['metadata'];
+            } elseif (is_object($data['metadata'])) {
+                $metadata = (array)$data['metadata'];
             }
         }
 
         return new self(
             $data['id'],
             $data['status'],
-            (float) $data['amount'],
+            $amountInCents,
             $data['currency'],
             $data['orderId'],
-            $data['createdAt'] ?? null,
-            $data['updatedAt'] ?? null,
-            $data['metadata'] ?? null,
+            $createdAt,
+            $updatedAt,
+            $metadata,
             $data
         );
     }
@@ -148,13 +181,23 @@ class PaymentDTO
     }
 
     /**
-     * Get payment amount
+     * Get payment amount in currency units (e.g., euros, dollars)
      *
      * @return float
      */
     public function getAmount(): float
     {
         return $this->amount;
+    }
+    
+    /**
+     * Get payment amount in cents/smallest currency unit (as received from API)
+     *
+     * @return int
+     */
+    public function getAmountInCents(): int
+    {
+        return $this->amountInCents;
     }
 
     /**

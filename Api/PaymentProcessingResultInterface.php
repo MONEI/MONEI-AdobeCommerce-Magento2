@@ -69,4 +69,18 @@ interface PaymentProcessingResultInterface
      * @return string|null
      */
     public function getDisplayErrorMessage(): ?string;
+    
+    /**
+     * Alternative method for checking success (alias for isSuccessful)
+     *
+     * @return bool
+     */
+    public function isSuccess(): bool;
+    
+    /**
+     * Get a generic message about the processing result
+     *
+     * @return string
+     */
+    public function getMessage(): string;
 }

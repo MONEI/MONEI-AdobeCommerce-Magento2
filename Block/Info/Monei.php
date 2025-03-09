@@ -99,30 +99,100 @@ class Monei extends Info
     {
         $result = [];
 
-        // Add the type of payment method
-        $result['type'] = $paymentMethod->getType();
+        // Store the payment method type
+        $result['method'] = $paymentMethod->getMethod();
 
         // Process card data if available
         $card = $paymentMethod->getCard();
         if ($card) {
+            // Basic card details
             $result['brand'] = $card->getBrand();
             $result['last4'] = $card->getLast4();
             $result['type'] = $card->getType();
+            
+            // Advanced card details
             if ($card->getExpiration()) {
                 $result['expiration'] = date('m/y', $card->getExpiration());
             }
             if ($card->getCardholderName()) {
-                $result['name'] = $card->getCardholderName();
+                $result['cardholderName'] = $card->getCardholderName();
+            }
+            if ($card->getCountry()) {
+                $result['country'] = $card->getCountry();
+            }
+            if ($card->getTokenizationMethod()) {
+                $result['tokenizationMethod'] = $card->getTokenizationMethod();
+            }
+            if ($card->getCardholderEmail()) {
+                $result['cardholderEmail'] = $card->getCardholderEmail();
+            }
+            
+            // 3DS information
+            if ($card->getThreeDSecure()) {
+                $result['threeDSecure'] = $card->getThreeDSecure();
+                if ($card->getThreeDSecureVersion()) {
+                    $result['threeDSecureVersion'] = $card->getThreeDSecureVersion();
+                }
+                if ($card->getThreeDSecureFlow()) {
+                    $result['threeDSecureFlow'] = $card->getThreeDSecureFlow();
+                }
             }
         }
 
         // Process bizum data if available
         $bizum = $paymentMethod->getBizum();
-        if ($bizum && $bizum->getPhoneNumber()) {
-            $result['phoneNumber'] = $bizum->getPhoneNumber();
+        if ($bizum) {
+            if ($bizum->getPhoneNumber()) {
+                $result['phoneNumber'] = $bizum->getPhoneNumber();
+            }
+            // Add other bizum specific fields if available
         }
-
+        
+        // Process PayPal data if available
+        $paypal = $paymentMethod->getPaypal();
+        if ($paypal) {
+            $result['method'] = 'paypal';
+            // Add PayPal specific fields if needed
+        }
+        
+        // Process MBWay data if available
+        $mbway = $paymentMethod->getMbway();
+        if ($mbway) {
+            $result['method'] = 'mbway';
+            if ($mbway->getPhoneNumber()) {
+                $result['phoneNumber'] = $mbway->getPhoneNumber();
+            }
+        }
+        
+        // Process SEPA data if available
+        $sepa = $paymentMethod->getSepa();
+        if ($sepa) {
+            $result['method'] = 'sepa';
+            if ($sepa->getIban()) {
+                $result['iban'] = $this->maskIban($sepa->getIban());
+            }
+            if ($sepa->getName()) {
+                $result['accountName'] = $sepa->getName();
+            }
+        }
+        
         return $result;
+    }
+    
+    /**
+     * Mask an IBAN for display purposes
+     *
+     * @param string $iban
+     * @return string
+     */
+    private function maskIban(string $iban): string
+    {
+        if (strlen($iban) <= 8) {
+            return str_repeat('*', strlen($iban));
+        }
+        
+        // Keep first 4 and last 4 characters visible
+        return substr($iban, 0, 4) . str_repeat('*', strlen($iban) - 8) . substr($iban, -4);
     }
 
     /**
