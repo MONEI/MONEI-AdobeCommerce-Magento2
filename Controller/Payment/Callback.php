@@ -128,21 +128,13 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
 
             // Process the verified payment from validateForCsrf
             if ($this->verifiedPayment) {
-                // Log the payment object type for debugging
-                $this->logger->debug('[Callback] Payment object type', [
-                    'object_type' => gettype($this->verifiedPayment),
-                    'is_object' => is_object($this->verifiedPayment),
-                    'class' => is_object($this->verifiedPayment) ? get_class($this->verifiedPayment) : 'not_an_object'
-                ]);
-
                 // Convert Payment object to array
                 $paymentData = (array)$this->verifiedPayment;
 
                 $this->logger->debug('[Callback] Signature verified, processing payment', [
                     'payment_id' => $paymentData['id'] ?? 'unknown',
                     'order_id' => $paymentData['orderId'] ?? 'unknown',
-                    'status' => $paymentData['status'] ?? 'unknown',
-                    'available_keys' => array_keys($paymentData)
+                    'status' => $paymentData['status'] ?? 'unknown'
                 ]);
 
                 // Validate the payment data has required fields
@@ -226,8 +218,8 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     public function validateForCsrf(RequestInterface $request): ?bool
     {
         try {
-            $body = $request->getBody();
-            $header = $request->getHeader('MONEI_SIGNATURE');
+            $body = file_get_contents('php://input');
+            $header = $_SERVER['HTTP_MONEI_SIGNATURE'] ?? '';
 
             if (empty($header)) {
                 $this->errorMessage = 'Missing signature header';

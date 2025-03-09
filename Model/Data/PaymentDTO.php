@@ -10,7 +10,7 @@ namespace Monei\MoneiPayment\Model\Data;
 
 use Magento\Framework\Exception\LocalizedException;
 use Monei\Model\PaymentStatus;
-use Monei\Model\Payment;
+use Monei\MoneiPayment\Model\Payment\Status;
 
 /**
  * Data Transfer Object for MONEI payment data
@@ -168,11 +168,11 @@ class PaymentDTO
     /**
      * Create a PaymentDTO from MONEI SDK Payment object
      *
-     * @param Payment $payment
+     * @param \Monei\Model\Payment $payment
      * @return self
      * @throws LocalizedException
      */
-    public static function fromPaymentObject(Payment $payment): self
+    public static function fromPaymentObject(\Monei\Model\Payment $payment): self
     {
         // Extract data using getters rather than relying on object serialization
         try {

@@ -610,72 +610,48 @@ class PaymentProcessor implements PaymentProcessorInterface
     private function getOrderByIncrementId(string $orderId): ?OrderInterface
     {
         try {
-            // First try to load the order directly as it might be an entity ID
-            try {
-                $order = $this->orderRepository->get($orderId);
-                if ($order && $order->getEntityId()) {
-                    $this->logger->debug(sprintf(
-                        '[Order found directly] Entity ID %s',
-                        $orderId
-                    ));
+            $this->logger->debug(sprintf(
+                '[Order lookup] Searching for order with ID: %s',
+                $orderId
+            ));
 
-                    return $order;
-                }
-            } catch (\Exception $e) {
-                // If loading by entity ID failed, continue with increment ID search
-                $this->logger->debug(sprintf(
-                    '[Not an entity ID] %s: %s',
-                    $orderId,
-                    $e->getMessage()
-                ));
-            }
+            // First try to load by increment ID using OrderFactory (similar to main branch)
+            $order = $this->orderFactory->create()->loadByIncrementId($orderId);
 
-            // Create search criteria using the increment_id field
-            $searchCriteriaBuilder = $this->searchCriteriaBuilder;
-            $searchCriteria = $searchCriteriaBuilder->addFilter('increment_id', $orderId)->create();
-
-            // Get the order list
-            $orderList = $this->orderRepository->getList($searchCriteria);
-            $orders = $orderList->getItems();
-
-            // Return the first order if found
-            if (count($orders) > 0) {
-                $order = reset($orders);
+            if ($order && $order->getId()) {
                 $this->logger->debug(sprintf(
                     '[Order found by increment ID] %s (Entity ID: %s)',
                     $orderId,
                     $order->getEntityId()
                 ));
-
                 return $order;
             }
 
-            // Log more detailed information about the missing order
-            $this->logger->warning(sprintf(
-                '[Order not found] No order found for ID: %s. Check if the order exists in the database and can be accessed.',
+            // If still not found, try without leading zeros
+            $numericOrderId = ltrim($orderId, '0');
+            if ($numericOrderId !== $orderId) {
+                $this->logger->debug(sprintf(
+                    '[Trying without leading zeros] %s -> %s',
+                    $orderId,
+                    $numericOrderId
+                ));
+
+                $order = $this->orderFactory->create()->loadByIncrementId($numericOrderId);
+
+                if ($order && $order->getId()) {
+                    $this->logger->debug(sprintf(
+                        '[Order found by numeric increment ID] %s (Entity ID: %s)',
+                        $numericOrderId,
+                        $order->getEntityId()
+                    ));
+                    return $order;
+                }
+            }
+
+            $this->logger->error(sprintf(
+                '[Order not found] No order found for ID: %s',
                 $orderId
             ));
-
-            // Try to get all orders with similar ID pattern to help diagnose
-            $partialSearchCriteria = $this->searchCriteriaBuilder
-                ->addFilter('increment_id', substr($orderId, 0, 5) . '%', 'like')
-                ->setPageSize(5)
-                ->create();
-
-            $similarOrders = $this->orderRepository->getList($partialSearchCriteria)->getItems();
-            if (count($similarOrders) > 0) {
-                $similarOrderIds = array_map(function ($order) {
-                    return $order->getIncrementId();
-                }, $similarOrders);
-
-                $this->logger->debug(sprintf(
-                    '[Similar orders found] Found %d orders with similar prefix: %s',
-                    count($similarOrderIds),
-                    implode(', ', $similarOrderIds)
-                ));
-            } else {
-                $this->logger->debug('[No similar orders found] No orders with similar ID pattern exist');
-            }
 
             return null;
         } catch (\Exception $e) {

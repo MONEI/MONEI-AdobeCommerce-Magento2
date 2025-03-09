@@ -67,6 +67,11 @@ class GetPayment extends AbstractApiService implements GetPaymentInterface
             ['payment_id' => $payment_id]
         );
 
+        // Log the API response for debugging - log both raw format and JSON format for diagnostics
+        $this->logger->debug('API Response: getPayment', [
+            'response' => $response->__toString()
+        ]);
+
         // SDK Payment objects are properly structured but have magic getters/setters
         // Let's make sure we can access them - try to access via accessor methods
         $responseValid = false;

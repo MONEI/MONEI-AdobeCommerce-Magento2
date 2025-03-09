@@ -39,11 +39,13 @@ class GetPaymentMethods extends AbstractApiService implements GetPaymentMethodsI
     private RegistryAccountId $registryAccountId;
 
     /**
+     * Constructor.
+     *
      * @param Logger $logger Logger for tracking operations
      * @param ApiExceptionHandler $exceptionHandler Exception handler for MONEI API errors
      * @param MoneiApiClient $apiClient API client factory for MONEI SDK
-     * @param MoneiPaymentModuleConfigInterface $moduleConfig Module configuration provider
-     * @param RegistryAccountId $registryAccountId Account ID registry
+     * @param MoneiPaymentModuleConfigInterface $moduleConfig
+     * @param RegistryAccountId $registryAccountId
      */
     public function __construct(
         Logger $logger,
