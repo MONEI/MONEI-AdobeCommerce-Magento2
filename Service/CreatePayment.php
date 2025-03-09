@@ -102,12 +102,6 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
         // Build the payment request from the data
         $paymentRequest = $this->buildPaymentRequest($data);
 
-        // Log the raw request data
-        $this->logger->logApiRequest(
-            'Raw Request Data: createPayment',
-            $paymentRequest->jsonSerialize()
-        );
-
         // Execute the SDK call with the standardized pattern
         $response = $this->executeMoneiSdkCall(
             'createPayment',
