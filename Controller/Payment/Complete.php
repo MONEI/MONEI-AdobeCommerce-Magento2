@@ -146,11 +146,23 @@ class Complete implements HttpGetActionInterface
                     // Get the payment data from the API to ensure it's up-to-date
                     $paymentObject = $this->getPaymentService->execute($paymentId);
 
-                    // Convert the payment object to array
-                    $paymentData = (array)$paymentObject;
+                    // Log the payment object type for debugging
+                    $this->logger->debug('[Complete] Payment object retrieved', [
+                        'object_type' => get_class($paymentObject),
+                        'payment_id' => $paymentId,
+                        'has_id' => !empty($paymentObject->getId()),
+                        'has_orderId' => !empty($paymentObject->getOrderId())
+                    ]);
 
-                    // Create a PaymentDTO instance with the API data
-                    $paymentDTO = PaymentDTO::fromArray($paymentData);
+                    // Create a PaymentDTO instance directly from the Payment object
+                    $paymentDTO = PaymentDTO::fromPaymentObject($paymentObject);
+
+                    // Verify the PaymentDTO was created correctly
+                    $this->logger->debug('[Complete] PaymentDTO created', [
+                        'payment_id' => $paymentDTO->getId(),
+                        'order_id' => $paymentDTO->getOrderId(),
+                        'status' => $paymentDTO->getStatus()
+                    ]);
 
                     // Process the payment through the unified processor
                     $result = $this->paymentProcessor->process(
@@ -167,20 +179,44 @@ class Complete implements HttpGetActionInterface
                     $this->logger->error('[Complete] Error processing payment', [
                         'order_id' => $orderId,
                         'payment_id' => $paymentId,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
                     ]);
 
                     // If API fetch fails, fallback to using redirect data
                     try {
                         // Create PaymentDTO from redirect parameters
-                        $paymentDTO = PaymentDTO::fromArray($params);
-                        $this->paymentProcessor->process(
+                        // Make sure we have the right field names for PaymentDTO creation
+                        $redirectData = [
+                            'id' => $params['id'],
+                            'orderId' => $params['orderId'],
+                            'status' => $params['status'],
+                            'amount' => $params['amount'] ?? 0,
+                            'currency' => $params['currency'] ?? 'EUR'
+                        ];
+
+                        $paymentDTO = PaymentDTO::fromArray($redirectData);
+
+                        $this->logger->debug('[Complete] Using fallback payment data', [
+                            'payment_id' => $paymentDTO->getId(),
+                            'order_id' => $paymentDTO->getOrderId(),
+                            'status' => $paymentDTO->getStatus()
+                        ]);
+
+                        $result = $this->paymentProcessor->process(
                             $paymentDTO->getOrderId(),
                             $paymentDTO->getId(),
                             $paymentDTO->getRawData()
                         );
+
+                        $this->logger->debug('[Complete] Fallback payment processing result', [
+                            'success' => $result->isSuccess(),
+                            'message' => $result->getMessage()
+                        ]);
                     } catch (\Exception $fallbackEx) {
-                        $this->logger->error('[Complete] Fallback processing failed: ' . $fallbackEx->getMessage());
+                        $this->logger->error('[Complete] Fallback processing failed: ' . $fallbackEx->getMessage(), [
+                            'trace' => $fallbackEx->getTraceAsString()
+                        ]);
                     }
                 }
             }

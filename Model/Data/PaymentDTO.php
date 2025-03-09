@@ -10,7 +10,7 @@ namespace Monei\MoneiPayment\Model\Data;
 
 use Magento\Framework\Exception\LocalizedException;
 use Monei\Model\PaymentStatus;
-use Monei\MoneiPayment\Model\Payment\Status;
+use Monei\Model\Payment;
 
 /**
  * Data Transfer Object for MONEI payment data
@@ -122,6 +122,11 @@ class PaymentDTO
      */
     public static function fromArray(array $data): self
     {
+        // Handle case when we get the data inside a 'response' key from the API
+        if (isset($data['response']) && is_array($data['response'])) {
+            $data = $data['response'];
+        }
+
         // Validate required fields
         $requiredFields = ['id', 'status', 'amount', 'currency', 'orderId'];
         foreach ($requiredFields as $field) {
@@ -158,6 +163,41 @@ class PaymentDTO
             $metadata,
             $data
         );
+    }
+
+    /**
+     * Create a PaymentDTO from MONEI SDK Payment object
+     *
+     * @param Payment $payment
+     * @return self
+     * @throws LocalizedException
+     */
+    public static function fromPaymentObject(Payment $payment): self
+    {
+        // Extract data using getters rather than relying on object serialization
+        try {
+            $data = [
+                'id' => $payment->getId(),
+                'status' => $payment->getStatus(),
+                'amount' => $payment->getAmount(),
+                'currency' => $payment->getCurrency(),
+                'orderId' => $payment->getOrderId(),
+                'createdAt' => $payment->getCreatedAt(),
+                'updatedAt' => $payment->getUpdatedAt()
+            ];
+
+            // Add metadata if available
+            if ($payment->getMetadata()) {
+                $data['metadata'] = $payment->getMetadata();
+            }
+
+            // Store the original payment object for reference
+            $data['original_payment'] = $payment;
+
+            return self::fromArray($data);
+        } catch (\Exception $e) {
+            throw new LocalizedException(__('Failed to convert Payment object to DTO: %1', $e->getMessage()));
+        }
     }
 
     /**

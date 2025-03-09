@@ -51,6 +51,13 @@ class GetPayment extends AbstractApiService implements GetPaymentInterface
             throw new LocalizedException(__('Payment ID is required to retrieve payment details'));
         }
 
+        // Log the request parameters for easier debugging
+        $this->logger->debug('API Request: getPayment', [
+            'request' => [
+                'payment_id' => $payment_id
+            ]
+        ]);
+
         // Use standardized SDK call pattern with the executeMoneiSdkCall method
         $response = $this->executeMoneiSdkCall(
             'getPayment',
@@ -59,6 +66,24 @@ class GetPayment extends AbstractApiService implements GetPaymentInterface
             },
             ['payment_id' => $payment_id]
         );
+
+        // SDK Payment objects are properly structured but have magic getters/setters
+        // Let's make sure we can access them - try to access via accessor methods
+        $responseValid = false;
+        try {
+            $responseValid = !empty($response->getId()) && !empty($response->getOrderId());
+        } catch (\Exception $e) {
+            $this->logger->error('Error accessing Payment properties: ' . $e->getMessage());
+            // Will continue and throw the exception below
+        }
+
+        if (!$responseValid) {
+            $this->logger->error('Invalid payment response', [
+                'payment_id' => $payment_id,
+                'response_type' => is_object($response) ? get_class($response) : gettype($response)
+            ]);
+            throw new LocalizedException(__('Invalid payment response from API'));
+        }
 
         return $response;
     }

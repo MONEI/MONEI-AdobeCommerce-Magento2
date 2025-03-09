@@ -610,35 +610,48 @@ class PaymentProcessor implements PaymentProcessorInterface
     private function getOrderByIncrementId(string $orderId): ?OrderInterface
     {
         try {
-            // First try to load the order directly as it might be an entity ID
-            try {
-                $order = $this->orderRepository->get($orderId);
-                if ($order && $order->getEntityId()) {
-                    $this->logger->debug(sprintf(
-                        '[Order found directly] Entity ID %s',
-                        $orderId
-                    ));
+            // First - clear the search criteria builder to avoid any lingering filters
+            $this->searchCriteriaBuilder->create();
 
-                    return $order;
-                }
-            } catch (\Exception $e) {
-                // If loading by entity ID failed, continue with increment ID search
-                $this->logger->debug(sprintf(
-                    '[Not an entity ID] %s: %s',
-                    $orderId,
-                    $e->getMessage()
-                ));
+            // Log the order ID we're looking for
+            $this->logger->debug(sprintf(
+                '[Order lookup] Searching for order with ID: %s',
+                $orderId
+            ));
+
+            // DIAGNOSTIC: Get a sample of recent orders to see what's in the database
+            $recentOrdersCriteria = $this->searchCriteriaBuilder
+                ->setPageSize(10)
+                ->setCurrentPage(1)
+                ->addSortOrder('entity_id', 'DESC')
+                ->create();
+
+            $recentOrders = $this->orderRepository->getList($recentOrdersCriteria)->getItems();
+            $recentOrderInfo = [];
+            foreach ($recentOrders as $order) {
+                $recentOrderInfo[] = [
+                    'entity_id' => $order->getEntityId(),
+                    'increment_id' => $order->getIncrementId(),
+                    'store_id' => $order->getStoreId()
+                ];
             }
 
-            // Create search criteria using the increment_id field
-            $searchCriteriaBuilder = $this->searchCriteriaBuilder;
-            $searchCriteria = $searchCriteriaBuilder->addFilter('increment_id', $orderId)->create();
+            $this->logger->debug(
+                '[DIAGNOSTIC] Recent orders in system',
+                ['recent_orders' => $recentOrderInfo]
+            );
 
-            // Get the order list
+            // Reset the search criteria builder after diagnostic
+            $this->searchCriteriaBuilder->create();
+
+            // First try with direct search criteria based on increment_id
+            $searchCriteria = $this->searchCriteriaBuilder
+                ->addFilter('increment_id', $orderId, 'eq')
+                ->create();
+
             $orderList = $this->orderRepository->getList($searchCriteria);
             $orders = $orderList->getItems();
 
-            // Return the first order if found
             if (count($orders) > 0) {
                 $order = reset($orders);
                 $this->logger->debug(sprintf(
@@ -650,10 +663,147 @@ class PaymentProcessor implements PaymentProcessorInterface
                 return $order;
             }
 
+            // Try searching across all store views
+            $this->logger->debug('[Order not found in first attempt] Trying to search across all stores');
+
+            // Reset the search criteria and try looking for any similar ID across all stores
+            $this->searchCriteriaBuilder->create();
+            $searchCriteria = $this->searchCriteriaBuilder
+                ->addFilter('increment_id', $orderId, 'eq')
+                ->create();
+
+            $orderList = $this->orderRepository->getList($searchCriteria);
+            $orders = $orderList->getItems();
+
+            if (count($orders) > 0) {
+                $order = reset($orders);
+                $this->logger->debug(sprintf(
+                    '[Order found across stores] %s (Entity ID: %s, Store ID: %s)',
+                    $orderId,
+                    $order->getEntityId(),
+                    $order->getStoreId()
+                ));
+
+                return $order;
+            }
+
+            // If not found, try with a direct load by ID in case it's an entity ID
+            try {
+                $order = $this->orderRepository->get($orderId);
+                if ($order && $order->getEntityId()) {
+                    $this->logger->debug(sprintf(
+                        '[Order found directly] Entity ID %s',
+                        $orderId
+                    ));
+
+                    return $order;
+                }
+            } catch (\Exception $e) {
+                // If loading by entity ID failed, continue with other search attempts
+                $this->logger->debug(sprintf(
+                    '[Not an entity ID] %s: %s',
+                    $orderId,
+                    $e->getMessage()
+                ));
+            }
+
+            // Try for potential leading zeros trimming by loading orders with similar pattern
+            // Sometimes Magento might treat numeric strings differently than expected
+            $numericOrderId = ltrim($orderId, '0');
+            if ($numericOrderId !== $orderId) {
+                $this->logger->debug(sprintf(
+                    '[Trying without leading zeros] %s -> %s',
+                    $orderId,
+                    $numericOrderId
+                ));
+
+                $searchCriteria = $this->searchCriteriaBuilder
+                    ->addFilter('increment_id', $numericOrderId, 'eq')
+                    ->create();
+
+                $orderList = $this->orderRepository->getList($searchCriteria);
+                $orders = $orderList->getItems();
+
+                if (count($orders) > 0) {
+                    $order = reset($orders);
+                    $this->logger->debug(sprintf(
+                        '[Order found by numeric increment ID] %s (Entity ID: %s)',
+                        $numericOrderId,
+                        $order->getEntityId()
+                    ));
+
+                    return $order;
+                }
+            }
+
+            // Try padded order ID if the numeric version might have lost leading zeros
+            // If MONEI is adding leading zeros that Magento doesn't store
+            $paddedIds = [];
+            // Try with various padding lengths (up to 9 leading zeros)
+            for ($i = 1; $i <= 9; $i++) {
+                $paddedId = str_pad($numericOrderId, $i, '0', STR_PAD_LEFT);
+                if ($paddedId !== $orderId && $paddedId !== $numericOrderId) {
+                    $paddedIds[] = $paddedId;
+                }
+            }
+
+            if (!empty($paddedIds)) {
+                $this->logger->debug(sprintf(
+                    '[Trying with different zero padding] Original: %s, Trying: %s',
+                    $orderId,
+                    implode(', ', $paddedIds)
+                ));
+
+                // Try each variant
+                foreach ($paddedIds as $paddedId) {
+                    $this->searchCriteriaBuilder->create();
+                    $searchCriteria = $this->searchCriteriaBuilder
+                        ->addFilter('increment_id', $paddedId, 'eq')
+                        ->create();
+
+                    $orderList = $this->orderRepository->getList($searchCriteria);
+                    $orders = $orderList->getItems();
+
+                    if (count($orders) > 0) {
+                        $order = reset($orders);
+                        $this->logger->debug(sprintf(
+                            '[Order found with different padding] Sent: %s, Found: %s (Entity ID: %s)',
+                            $orderId,
+                            $paddedId,
+                            $order->getEntityId()
+                        ));
+
+                        return $order;
+                    }
+                }
+            }
+
+            // Log more detailed information about the missing order
             $this->logger->warning(sprintf(
-                '[Order not found] No order found for ID: %s',
+                '[Order not found] No order found for ID: %s. Check if the order exists in the database and can be accessed.',
                 $orderId
             ));
+
+            // Try to get all orders with similar ID pattern to help diagnose
+            $partialSearchCriteria = $this->searchCriteriaBuilder
+                ->addFilter('increment_id', substr($orderId, 0, 5) . '%', 'like')
+                ->setPageSize(5)
+                ->create();
+
+            $similarOrders = $this->orderRepository->getList($partialSearchCriteria)->getItems();
+            if (count($similarOrders) > 0) {
+                $similarOrderIds = array_map(function ($order) {
+                    return $order->getIncrementId();
+                }, $similarOrders);
+
+                $this->logger->debug(sprintf(
+                    '[Similar orders found] Found %d orders with similar prefix: %s',
+                    count($similarOrderIds),
+                    implode(', ', $similarOrderIds)
+                ));
+            } else {
+                $this->logger->debug('[No similar orders found] No orders with similar ID pattern exist');
+            }
 
             return null;
         } catch (\Exception $e) {
@@ -661,7 +811,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                 '[Error loading order] ID %s: %s',
                 $orderId,
                 $e->getMessage()
-            ));
+            ), ['exception' => $e]);
 
             return null;
         }

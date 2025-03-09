@@ -186,28 +186,18 @@ class MoneiApiClient
         }
 
         try {
-            // Try SDK-specific conversion methods first
-            if (method_exists($response, 'toArray')) {
-                return $response->toArray();
-            }
-
-            // Try built-in serialization method
+            // For SDK models, use the jsonSerialize method directly
             if (method_exists($response, 'jsonSerialize')) {
-                $result = $response->jsonSerialize();
-
-                // If result is already an array, return it
-                if (is_array($result)) {
-                    return $result;
-                }
-
-                // Otherwise, use json_encode/decode to convert to array
-                return json_decode(json_encode($result), true) ?: [];
+                return (array)$response->jsonSerialize();
             }
 
-            // Use json serialization as final approach
-            $result = json_decode(json_encode($response), true);
+            // Fallback for any other object types
+            if (is_object($response)) {
+                return json_decode(json_encode($response), true) ?: [];
+            }
 
-            return is_array($result) ? $result : [];
+            // For any other types, return empty array
+            return [];
         } catch (\Exception $e) {
             $this->logger->warning('Failed to convert response to array', [
                 'exception' => get_class($e),
