@@ -14,16 +14,13 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\MaskedQuoteIdToQuoteIdInterface;
 use Magento\Quote\Model\Quote;
-use Monei\MoneiPayment\Api\Data\QuoteInterface;
-use Monei\MoneiClient;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateGuestMoneiPaymentInSiteInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
-use Monei\MoneiPayment\Service\CreatePayment;
-use Monei\MoneiPayment\Service\Checkout\AbstractCheckoutService;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
+use Monei\MoneiPayment\Service\CreatePayment;
 use Monei\MoneiPayment\Service\Logger;
 
 /**

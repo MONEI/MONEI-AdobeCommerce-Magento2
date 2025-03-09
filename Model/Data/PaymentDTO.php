@@ -31,7 +31,7 @@ class PaymentDTO
      * @var float Amount in currency units (e.g., euros, dollars)
      */
     private float $amount;
-    
+
     /**
      * @var int Original amount in cents from API
      */
@@ -98,18 +98,18 @@ class PaymentDTO
         $this->amount = $amountInCents / 100.0;
         $this->currency = $currency;
         $this->orderId = $orderId;
-        
+
         // Convert timestamps to strings if they are integers
         $this->createdAt = is_int($createdAt) ? (string)$createdAt : $createdAt;
         $this->updatedAt = is_int($updatedAt) ? (string)$updatedAt : $updatedAt;
-        
+
         // Convert metadata object to array if needed
         if (is_object($metadata)) {
             $this->metadata = (array)$metadata;
         } else {
             $this->metadata = $metadata;
         }
-        
+
         $this->rawData = $rawData;
     }
 
@@ -129,14 +129,14 @@ class PaymentDTO
                 throw new LocalizedException(__('Missing required field: %1', $field));
             }
         }
-        
+
         // Convert timestamps to strings if they are integers
         $createdAt = isset($data['createdAt']) ? (is_int($data['createdAt']) ? (string)$data['createdAt'] : $data['createdAt']) : null;
         $updatedAt = isset($data['updatedAt']) ? (is_int($data['updatedAt']) ? (string)$data['updatedAt'] : $data['updatedAt']) : null;
-        
+
         // Ensure amount is treated as an integer
         $amountInCents = (int) $data['amount'];
-        
+
         // Handle metadata - convert stdClass to array if needed
         $metadata = null;
         if (isset($data['metadata'])) {
@@ -189,7 +189,7 @@ class PaymentDTO
     {
         return $this->amount;
     }
-    
+
     /**
      * Get payment amount in cents/smallest currency unit (as received from API)
      *

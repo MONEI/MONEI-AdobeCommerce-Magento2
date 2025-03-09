@@ -20,8 +20,12 @@ define([
 
             // Handle messages with parameters
             if (error.parameters && error.parameters.length) {
-                var translatedMessage = $.mage.__(error.message, error.parameters);
-                errorMessage = translatedMessage;
+                // Manually replace parameters in the message
+                errorMessage = error.message;
+                for (var i = 0; i < error.parameters.length; i++) {
+                    var placeholder = '%' + (i + 1);
+                    errorMessage = errorMessage.replace(placeholder, error.parameters[i]);
+                }
             } else {
                 errorMessage = error.message || $t('An error occurred during the payment process');
             }

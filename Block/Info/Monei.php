@@ -109,7 +109,7 @@ class Monei extends Info
             $result['brand'] = $card->getBrand();
             $result['last4'] = $card->getLast4();
             $result['type'] = $card->getType();
-            
+
             // Advanced card details
             if ($card->getExpiration()) {
                 $result['expiration'] = date('m/y', $card->getExpiration());
@@ -126,7 +126,7 @@ class Monei extends Info
             if ($card->getCardholderEmail()) {
                 $result['cardholderEmail'] = $card->getCardholderEmail();
             }
-            
+
             // 3DS information
             if ($card->getThreeDSecure()) {
                 $result['threeDSecure'] = $card->getThreeDSecure();
@@ -147,14 +147,14 @@ class Monei extends Info
             }
             // Add other bizum specific fields if available
         }
-        
+
         // Process PayPal data if available
         $paypal = $paymentMethod->getPaypal();
         if ($paypal) {
             $result['method'] = 'paypal';
             // Add PayPal specific fields if needed
         }
-        
+
         // Process MBWay data if available
         $mbway = $paymentMethod->getMbway();
         if ($mbway) {
@@ -163,7 +163,7 @@ class Monei extends Info
                 $result['phoneNumber'] = $mbway->getPhoneNumber();
             }
         }
-        
+
         // Process SEPA data if available
         $sepa = $paymentMethod->getSepa();
         if ($sepa) {
@@ -175,10 +175,10 @@ class Monei extends Info
                 $result['accountName'] = $sepa->getName();
             }
         }
-        
+
         return $result;
     }
-    
+
     /**
      * Mask an IBAN for display purposes
      *
@@ -190,7 +190,7 @@ class Monei extends Info
         if (strlen($iban) <= 8) {
             return str_repeat('*', strlen($iban));
         }
-        
+
         // Keep first 4 and last 4 characters visible
         return substr($iban, 0, 4) . str_repeat('*', strlen($iban) - 8) . substr($iban, -4);
     }

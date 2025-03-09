@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Model;
 
+use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
@@ -18,6 +19,7 @@ use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Api\PaymentDataProviderInterface;
 use Monei\MoneiPayment\Api\PaymentProcessingResultInterface;
 use Monei\MoneiPayment\Api\PaymentProcessorInterface;
+use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Model\Api\MoneiApiClient;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
 use Monei\MoneiPayment\Model\Data\PaymentProcessingResult;
@@ -71,6 +73,16 @@ class PaymentProcessor implements PaymentProcessorInterface
     private OrderSender $orderSender;
 
     /**
+     * @var SearchCriteriaBuilder
+     */
+    private SearchCriteriaBuilder $searchCriteriaBuilder;
+
+    /**
+     * @var GetPaymentInterface
+     */
+    private GetPaymentInterface $getPaymentInterface;
+
+    /**
      * @param OrderRepositoryInterface $orderRepository
      * @param InvoiceService $invoiceService
      * @param LockManagerInterface $lockManager
@@ -79,6 +91,8 @@ class PaymentProcessor implements PaymentProcessorInterface
      * @param PaymentDataProviderInterface $apiPaymentDataProvider
      * @param MoneiPaymentModuleConfigInterface $moduleConfig
      * @param OrderSender $orderSender
+     * @param SearchCriteriaBuilder $searchCriteriaBuilder
+     * @param GetPaymentInterface $getPaymentInterface
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
@@ -88,7 +102,9 @@ class PaymentProcessor implements PaymentProcessorInterface
         MoneiApiClient $moneiApiClient,
         PaymentDataProviderInterface $apiPaymentDataProvider,
         MoneiPaymentModuleConfigInterface $moduleConfig,
-        OrderSender $orderSender
+        OrderSender $orderSender,
+        SearchCriteriaBuilder $searchCriteriaBuilder,
+        GetPaymentInterface $getPaymentInterface
     ) {
         $this->orderRepository = $orderRepository;
         $this->invoiceService = $invoiceService;
@@ -98,6 +114,8 @@ class PaymentProcessor implements PaymentProcessorInterface
         $this->apiPaymentDataProvider = $apiPaymentDataProvider;
         $this->moduleConfig = $moduleConfig;
         $this->orderSender = $orderSender;
+        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
+        $this->getPaymentInterface = $getPaymentInterface;
     }
 
     /**
@@ -114,7 +132,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                     $paymentId,
                     'Order not found',
                     'not_found',
-                    ['order_id' => $orderId]
+                    null
                 );
             }
 
@@ -136,7 +154,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                     $paymentId,
                     'Payment processing failed',
                     'processing_failed',
-                    ['payment_status' => $payment->getStatus()]
+                    null
                 );
             }
         } catch (\Exception $e) {
@@ -152,7 +170,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                 $paymentId,
                 $e->getMessage(),
                 'exception',
-                ['exception' => $e->getMessage()]
+                null
             );
         }
     }
@@ -162,7 +180,7 @@ class PaymentProcessor implements PaymentProcessorInterface
      */
     public function isProcessing(string $orderId, string $paymentId): bool
     {
-        return $this->lockManager->isOrderLocked($orderId) || $this->lockManager->isPaymentLocked($paymentId);
+        return $this->lockManager->isOrderLocked($orderId) || $this->lockManager->isPaymentLocked($orderId, $paymentId);
     }
 
     /**
@@ -196,7 +214,9 @@ class PaymentProcessor implements PaymentProcessorInterface
     public function getPaymentStatus(string $paymentId): array
     {
         try {
-            return $this->moneiApiClient->getPayment($paymentId);
+            $payment = $this->getPaymentInterface->execute($paymentId);
+
+            return (array)$payment;
         } catch (\Exception $e) {
             $this->logger->error(sprintf(
                 '[Error getting payment status] Payment %s: %s',
@@ -403,7 +423,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             $order->setStatus($orderStatus);
 
             // Send order email if it hasn't been sent yet
-            if ($order->getCanSendNewEmailFlag() && !$order->getEmailSent()) {
+            if (!$order->getEmailSent()) {
                 try {
                     $this->logger->debug('[Sending order email]');
                     $this->orderSender->send($order);
@@ -502,7 +522,7 @@ class PaymentProcessor implements PaymentProcessorInterface
 
         try {
             // Check if order is already canceled
-            if ($order->getState() === \Magento\Sales\Model\Order::STATE_CANCELED) {
+            if ($order->getState() === Order::STATE_CANCELED) {
                 $this->logger->info(sprintf(
                     '[Order already canceled] Order %s, payment %s',
                     $incrementId,
@@ -516,28 +536,35 @@ class PaymentProcessor implements PaymentProcessorInterface
             $this->updatePaymentInformation($order, $payment);
 
             // Cancel the order
-            if ($order->canCancel()) {
-                $order->cancel();
+            $state = $order->getState();
+            $allowedStatesToCancel = [
+                Order::STATE_NEW,
+                Order::STATE_PROCESSING,
+            ];
+
+            if (in_array($state, $allowedStatesToCancel)) {
+                $order->setState(Order::STATE_CANCELED);
+                $order->setStatus(Order::STATE_CANCELED);
                 $this->orderRepository->save($order);
 
                 $this->logger->info(sprintf(
-                    '[Payment failed, order canceled] Order %s, payment %s, status: %s',
+                    '[Order canceled] Order %s, payment %s',
                     $incrementId,
-                    $paymentId,
-                    $payment->getStatus()
+                    $paymentId
                 ));
             } else {
                 $this->logger->warning(sprintf(
-                    '[Payment failed, but order cannot be canceled] Order %s, payment %s',
+                    '[Order could not be canceled] Order %s, payment %s, state: %s',
                     $incrementId,
-                    $paymentId
+                    $paymentId,
+                    $order->getState()
                 ));
             }
 
             return true;
         } catch (\Exception $e) {
             $this->logger->error(sprintf(
-                '[Error processing failed payment] Order %s, payment %s: %s',
+                '[Error handling failed payment] Order %s, payment %s: %s',
                 $incrementId,
                 $paymentId,
                 $e->getMessage()
@@ -591,6 +618,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                         '[Order found directly] Entity ID %s',
                         $orderId
                     ));
+
                     return $order;
                 }
             } catch (\Exception $e) {
@@ -601,15 +629,15 @@ class PaymentProcessor implements PaymentProcessorInterface
                     $e->getMessage()
                 ));
             }
-            
+
             // Create search criteria using the increment_id field
-            $searchCriteriaBuilder = $this->orderRepository->create();
+            $searchCriteriaBuilder = $this->searchCriteriaBuilder;
             $searchCriteria = $searchCriteriaBuilder->addFilter('increment_id', $orderId)->create();
-            
+
             // Get the order list
             $orderList = $this->orderRepository->getList($searchCriteria);
             $orders = $orderList->getItems();
-            
+
             // Return the first order if found
             if (count($orders) > 0) {
                 $order = reset($orders);
@@ -618,14 +646,15 @@ class PaymentProcessor implements PaymentProcessorInterface
                     $orderId,
                     $order->getEntityId()
                 ));
+
                 return $order;
             }
-            
+
             $this->logger->warning(sprintf(
                 '[Order not found] No order found for ID: %s',
                 $orderId
             ));
-            
+
             return null;
         } catch (\Exception $e) {
             $this->logger->error(sprintf(

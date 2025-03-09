@@ -15,7 +15,6 @@ use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
-use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentVaultInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
@@ -122,7 +121,7 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
             // Create payment
             $result = $this->createPayment->execute($paymentData);
             $paymentId = $result->getId() ?? '';
-            
+
             // Save payment ID to quote for future reference
             $this->savePaymentIdToQuote($quote, $paymentId);
 
@@ -198,7 +197,7 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
 
         // Start with the base payment data
         $paymentData = $this->prepareBasePaymentData($quote);
-        
+
         // Add customer-specific data
         $paymentData['customer'] = $this->getCustomerDetailsByQuote->execute($quote);
         $paymentData['billing_details'] = $this->getAddressDetailsByQuoteAddress->executeBilling($quote->getBillingAddress());

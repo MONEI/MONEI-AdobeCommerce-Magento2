@@ -59,7 +59,7 @@ class SaveTokenization extends AbstractCheckoutService implements SaveTokenizati
         try {
             // Use the parent class method to resolve the quote
             $quote = $this->resolveQuote($cartId);
-            
+
             // Save the tokenization flag
             $quote->setData(QuoteInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, $isVaultChecked);
             $this->quoteRepository->save($quote);
@@ -70,7 +70,7 @@ class SaveTokenization extends AbstractCheckoutService implements SaveTokenizati
                 'cartId' => $cartId,
                 'isVaultChecked' => $isVaultChecked
             ]);
-            
+
             throw new LocalizedException(__('An error occurred trying to save the card.'));
         }
     }

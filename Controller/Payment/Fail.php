@@ -9,12 +9,12 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Controller\Payment;
 
 use Magento\Checkout\Model\Session;
-use Magento\Framework\App\Action\Context;
-use Magento\Framework\App\ActionInterface;
+use Magento\Framework\App\Action\HttpGetActionInterface;
+use Magento\Framework\App\Request\Http as HttpRequest;
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Controller\Result\RedirectFactory;
 use Magento\Framework\Message\ManagerInterface;
-use Magento\Sales\Api\Data\OrderInterfaceFactory;
+use Magento\Sales\Model\OrderFactory;
 use Monei\MoneiPayment\Api\PaymentProcessorInterface;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
 use Monei\MoneiPayment\Model\Payment\Status;
@@ -22,93 +22,95 @@ use Monei\MoneiPayment\Service\Logger;
 
 /**
  * Controller for handling payment failure redirects from MONEI
+ * Implements HttpGetActionInterface to specify it handles GET requests
  */
-class Fail implements ActionInterface
+class Fail implements HttpGetActionInterface
 {
-    /**
-     * @var Context
-     */
-    private Context $context;
-    
     /**
      * @var Session
      */
     private Session $checkoutSession;
-    
+
     /**
-     * @var OrderInterfaceFactory
+     * @var OrderFactory
      */
-    private OrderInterfaceFactory $orderFactory;
-    
+    private OrderFactory $orderFactory;
+
     /**
      * @var ManagerInterface
      */
     private ManagerInterface $messageManager;
-    
+
     /**
      * @var RedirectFactory
      */
     private RedirectFactory $resultRedirectFactory;
-    
+
     /**
      * @var PaymentProcessorInterface
      */
     private PaymentProcessorInterface $paymentProcessor;
-    
+
     /**
      * @var Logger
      */
     private Logger $logger;
 
     /**
+     * @var HttpRequest
+     */
+    private HttpRequest $request;
+
+    /**
      * Constructor for Fail controller
      *
-     * @param Context $context
      * @param Session $checkoutSession
-     * @param OrderInterfaceFactory $orderFactory
+     * @param OrderFactory $orderFactory
      * @param ManagerInterface $messageManager
      * @param RedirectFactory $resultRedirectFactory
      * @param PaymentProcessorInterface $paymentProcessor
      * @param Logger $logger
+     * @param HttpRequest $request
      */
     public function __construct(
-        Context $context,
         Session $checkoutSession,
-        OrderInterfaceFactory $orderFactory,
+        OrderFactory $orderFactory,
         ManagerInterface $messageManager,
         RedirectFactory $resultRedirectFactory,
         PaymentProcessorInterface $paymentProcessor,
-        Logger $logger
+        Logger $logger,
+        HttpRequest $request
     ) {
-        $this->context = $context;
         $this->checkoutSession = $checkoutSession;
         $this->orderFactory = $orderFactory;
         $this->messageManager = $messageManager;
         $this->resultRedirectFactory = $resultRedirectFactory;
         $this->paymentProcessor = $paymentProcessor;
         $this->logger = $logger;
+        $this->request = $request;
     }
 
     /**
      * Process payment failure redirect from MONEI
+     * This controller handles GET requests from payment gateway redirects
      *
      * @return Redirect
      */
     public function execute()
     {
         try {
-            $params = $this->context->getRequest()->getParams();
+            $params = $this->request->getParams();
             $this->logger->debug('---------------------------------------------');
             $this->logger->debug('[Fail] Payment failure received', [
                 'order_id' => $params['orderId'] ?? 'unknown',
                 'payment_id' => $params['paymentId'] ?? $params['id'] ?? 'unknown',
                 'status' => $params['status'] ?? 'unknown'
             ]);
-            
+
             if (isset($params['orderId'])) {
                 $orderId = $params['orderId'];
                 $paymentId = $params['paymentId'] ?? $params['id'] ?? 'unknown';
-                
+
                 try {
                     // Prepare payment data for failed payment
                     $paymentData = [
@@ -118,17 +120,17 @@ class Fail implements ActionInterface
                         'amount' => $params['amount'] ?? 0,
                         'currency' => $params['currency'] ?? 'EUR'
                     ];
-                    
+
                     // Create a PaymentDTO instance
                     $paymentDTO = PaymentDTO::fromArray($paymentData);
-                    
+
                     // Process the failed payment through the standard processor
                     $result = $this->paymentProcessor->process(
                         $paymentDTO->getOrderId(),
                         $paymentDTO->getId(),
                         $paymentDTO->getRawData()
                     );
-                    
+
                     $this->logger->debug('[Fail] Payment processing result', [
                         'success' => $result->isSuccess(),
                         'message' => $result->getMessage()
@@ -140,7 +142,7 @@ class Fail implements ActionInterface
                         'error' => $e->getMessage()
                     ]);
                 }
-                
+
                 // Restore the quote for the customer to try again
                 $this->checkoutSession->restoreQuote();
                 $this->messageManager->addErrorMessage(
@@ -160,7 +162,7 @@ class Fail implements ActionInterface
                 __('An error occurred during payment processing. Please try again.')
             );
         }
-        
+
         return $this->resultRedirectFactory->create()->setPath('checkout/cart', ['_secure' => true]);
     }
 }

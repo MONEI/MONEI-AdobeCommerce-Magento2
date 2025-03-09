@@ -10,10 +10,8 @@ namespace Monei\MoneiPayment\Service\Checkout;
 
 use Magento\Checkout\Model\Session;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
-use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentInSiteInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
@@ -138,7 +136,7 @@ class CreateLoggedMoneiPaymentInSite extends AbstractCheckoutService implements 
 
         // Start with the base payment data
         $paymentData = $this->prepareBasePaymentData($quote);
-        
+
         // Add customer-specific data
         $paymentData['customer'] = $this->getCustomerDetailsByQuote->execute($quote);
         $paymentData['billing_details'] = $this->getAddressDetailsByQuoteAddress->executeBilling($quote->getBillingAddress());

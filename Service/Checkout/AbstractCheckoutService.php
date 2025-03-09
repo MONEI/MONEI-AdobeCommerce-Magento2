@@ -17,7 +17,6 @@ use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Service\AbstractApiService;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use Monei\MoneiPayment\Service\CreatePayment;
 use Monei\MoneiPayment\Service\Logger;
 
 /**
@@ -94,9 +93,11 @@ abstract class AbstractCheckoutService extends AbstractApiService
             return $quote;
         } catch (NoSuchEntityException $e) {
             $this->logger->error('Quote not found: ' . $e->getMessage(), ['cartId' => $cartId]);
+
             throw new LocalizedException(__('Quote not found for this cart ID'));
         } catch (\Exception $e) {
             $this->logger->error('Error resolving quote: ' . $e->getMessage(), ['cartId' => $cartId]);
+
             throw new LocalizedException(__('An error occurred while retrieving quote information'));
         }
     }

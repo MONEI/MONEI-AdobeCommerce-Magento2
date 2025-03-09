@@ -1,24 +1,28 @@
 parameters:
-    level: 0
+    level: 4
+    treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: false
     paths:
         - .
     excludePaths:
-        - vendor/
-        - build/
-        - .git/
-        - node_modules/
+        - vendor/*
+        - Test/*
     ignoreErrors:
-        # Magento framework and related errors
-        - '#Call to an undefined method [a-zA-Z0-9\\_]+::set[A-Z][a-zA-Z0-9\\_]+\(\)#'
-        - '#Call to an undefined method [a-zA-Z0-9\\_]+::get[A-Z][a-zA-Z0-9\\_]+\(\)#'
-        - '#Access to an undefined property [a-zA-Z0-9\\_]+::\$[a-zA-Z0-9\\_]+#'
-        - '#Parameter \#[0-9]+ \$[a-zA-Z0-9\\_]+ of method [a-zA-Z0-9\\_\\\:]+::[a-zA-Z0-9\\_]+\(\) expects [a-zA-Z0-9\\_\\\|]+, [a-zA-Z0-9\\_\\\|]+ given#'
-        - '#Access to undefined constant Magento\\Sales\\Api\\Data\\InvoiceInterface::CAPTURE_ONLINE#'
-        - 
-            message: '#Property [a-zA-Z0-9\\_\\\\]+::\$[a-zA-Z0-9\\_]+ has unknown class [a-zA-Z0-9\\_\\\\]+ as its type#'
-            path: '*'
-        - 
-            message: '#Parameter \$[a-zA-Z0-9\\_]+ of method [a-zA-Z0-9\\_\\\\]+::[a-zA-Z0-9\\_]+\(\) has invalid type [a-zA-Z0-9\\_\\\\]+#'
-            path: '*'
-        - '#Cannot unset offset numeric-string on array#'
-    reportUnmatchedIgnoredErrors: false
+        # Too many false positives with PHP 8 constructor property promotion
+        - '#Access to an undefined property [a-zA-Z0-9\\_]+::\$[a-zA-Z0-9_]+#'
+        # False positives for Magento command-line
+        - '#Parameter \#1 \$paths of method [a-zA-Z0-9\\_]+::execute\(\) expects array<string>, string given#'
+        # Common Magento patterns that PHPStan doesn't understand
+        - '#Call to an undefined method [a-zA-Z0-9\\_]+::set(Data|ExtensionAttributes)\(\)#'
+        - '#Call to an undefined method [a-zA-Z0-9\\_]+::get(Data|ExtensionAttributes)\(\)#'
+        - '#Access to an undefined property object::\$[a-zA-Z0-9_]+#'
+        - '#Parameter \#1 \$[a-zA-Z0-9_]+ of method [a-zA-Z0-9\\_:]+::[a-zA-Z0-9_]+\(\) expects [^,]+ given#'
+        # Ignore unused properties in controllers (often injected but used indirectly)
+        - '#Property [a-zA-Z0-9\\_\\\\]+::\$[a-zA-Z0-9_]+ is never read, only written#'
+        # Ignore invalid OrderFactory type issues
+        - '#has unknown class Magento\\Sales\\Model\\OrderFactory as its type#'
+        - '#Parameter \$orderFactory of method .+ has invalid type Magento\\Sales\\Model\\OrderFactory#'
+        # Ignore unneeded void return types
+        - '#Method [a-zA-Z0-9\\_\\\\]+::[a-zA-Z0-9_]+\(\) never returns void so it can be removed from the return type#'
+        # Ignore expressions on left side of ?? operator
+        - '#Expression on left side of \?\? is not nullable#'

@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Controller\Payment;
 
 use Magento\Checkout\Model\Session;
-use Magento\Framework\App\ActionInterface;
+use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\Controller\Result\Redirect as MagentoRedirect;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Model\Order\Address;
@@ -20,28 +20,29 @@ use Monei\MoneiPayment\Service\Shared\GetMoneiPaymentCodesByMagentoPaymentCodeRe
 
 /**
  * Monei payment redirect controller.
+ * Implements HttpGetActionInterface to specify it handles GET requests
  */
-class Redirect implements ActionInterface
+class Redirect implements HttpGetActionInterface
 {
     /**
      * @var Session
      */
-    private $checkoutSession;
+    private Session $checkoutSession;
 
     /**
      * @var CreatePaymentInterface
      */
-    private $createPayment;
+    private CreatePaymentInterface $createPayment;
 
     /**
      * @var MagentoRedirect
      */
-    private $resultRedirectFactory;
+    private MagentoRedirect $resultRedirectFactory;
 
     /**
      * @var GetMoneiPaymentCodesByMagentoPaymentCodeRedirect
      */
-    private $getMoneiPaymentCodesByMagentoPaymentCodeRedirect;
+    private GetMoneiPaymentCodesByMagentoPaymentCodeRedirect $getMoneiPaymentCodesByMagentoPaymentCodeRedirect;
 
     /**
      * Constructor.

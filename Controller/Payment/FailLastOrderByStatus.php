@@ -9,63 +9,79 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Controller\Payment;
 
 use Magento\Checkout\Model\Session;
-use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\Request\Http as HttpRequest;
 use Magento\Framework\Controller\Result\Redirect as MagentoRedirect;
 use Magento\Framework\Controller\Result\RedirectFactory;
 use Magento\Framework\Message\ManagerInterface;
-use Magento\Sales\Api\Data\OrderInterfaceFactory;
-use Monei\MoneiPayment\Model\PaymentProcessor;
+use Magento\Sales\Model\OrderFactory;
+use Monei\MoneiPayment\Api\PaymentProcessorInterface;
 use Monei\MoneiPayment\Service\Logger;
 
 /**
  * Monei payment fail insite controller.
+ * Extends Fail to handle cases where the order ID needs to be retrieved from the session
  */
 class FailLastOrderByStatus extends Fail
 {
     /**
-     * Controller context.
-     *
-     * @var Context
-     */
-    private Context $context;
-
-    /**
-     * Session manager for handling customer checkout data.
-     *
      * @var Session
      */
     private Session $checkoutSession;
 
     /**
+     * @var HttpRequest
+     */
+    private HttpRequest $request;
+
+    /**
+     * @var Logger
+     */
+    protected Logger $logger;
+
+    /**
+     * @var ManagerInterface
+     */
+    protected ManagerInterface $messageManager;
+
+    /**
+     * @var RedirectFactory
+     */
+    protected RedirectFactory $resultRedirectFactory;
+
+    /**
      * Constructor for FailLastOrderByStatus controller.
      *
-     * @param Context $context Application context
      * @param Session $checkoutSession Checkout session
-     * @param OrderInterfaceFactory $orderFactory Order factory
+     * @param OrderFactory $orderFactory Order factory
      * @param ManagerInterface $messageManager Message manager
-     * @param MagentoRedirect $resultRedirectFactory Redirect factory
-     * @param PaymentProcessor $paymentProcessor Payment processor
+     * @param RedirectFactory $resultRedirectFactory Redirect factory
+     * @param PaymentProcessorInterface $paymentProcessor Payment processor
      * @param Logger $logger Logger
+     * @param HttpRequest $request HTTP request
      */
     public function __construct(
-        Context $context,
         Session $checkoutSession,
-        OrderInterfaceFactory $orderFactory,
+        OrderFactory $orderFactory,
         ManagerInterface $messageManager,
-        MagentoRedirect $resultRedirectFactory,
-        PaymentProcessor $paymentProcessor,
-        Logger $logger
+        RedirectFactory $resultRedirectFactory,
+        PaymentProcessorInterface $paymentProcessor,
+        Logger $logger,
+        HttpRequest $request
     ) {
         $this->checkoutSession = $checkoutSession;
-        $this->context = $context;
+        $this->request = $request;
+        $this->logger = $logger;
+        $this->messageManager = $messageManager;
+        $this->resultRedirectFactory = $resultRedirectFactory;
+
         parent::__construct(
-            $context,
             $checkoutSession,
             $orderFactory,
             $messageManager,
             $resultRedirectFactory,
             $paymentProcessor,
-            $logger
+            $logger,
+            $request
         );
     }
 
@@ -82,10 +98,25 @@ class FailLastOrderByStatus extends Fail
     {
         $order = $this->checkoutSession->getLastRealOrder();
 
-        $request = $this->context->getRequest();
-        $params = $request->getParams();
+        // Check if we have a valid order
+        if (!$order || !$order->getIncrementId()) {
+            $this->logger->error('[FailLastOrderByStatus] No valid order found in session');
+            $this->messageManager->addErrorMessage(
+                __('Something went wrong while processing the payment. Unable to restore your cart.')
+            );
+
+            return $this->resultRedirectFactory->create()->setPath('checkout/cart', ['_secure' => true]);
+        }
+
+        $params = $this->request->getParams();
         $params['orderId'] = $order->getIncrementId();
-        $request->setParams($params);
+
+        // Ensure we have a payment ID, even if it's unknown
+        if (!isset($params['paymentId']) && !isset($params['id'])) {
+            $params['id'] = 'unknown';
+        }
+
+        $this->request->setParams($params);
 
         return parent::execute();
     }

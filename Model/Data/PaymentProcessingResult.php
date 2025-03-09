@@ -145,7 +145,7 @@ class PaymentProcessingResult implements PaymentProcessingResultInterface
         // Format the error message for display
         return __('MONEI Payment Error: %1', $this->errorMessage)->render();
     }
-    
+
     /**
      * Alias for isSuccessful() to maintain backward compatibility
      *
@@ -155,10 +155,10 @@ class PaymentProcessingResult implements PaymentProcessingResultInterface
     {
         return $this->isSuccessful();
     }
-    
+
     /**
      * Get the message (alias for getErrorMessage or a success message)
-     * 
+     *
      * @return string
      */
     public function getMessage(): string
@@ -166,7 +166,7 @@ class PaymentProcessingResult implements PaymentProcessingResultInterface
         if ($this->isSuccessful()) {
             return 'Payment processed successfully.';
         }
-        
+
         return $this->getErrorMessage() ?? 'Unknown error occurred.';
     }
 

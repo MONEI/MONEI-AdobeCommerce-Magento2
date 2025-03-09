@@ -62,9 +62,10 @@ class Logger extends MonologLogger
     {
         if (empty($data)) {
             $this->debug("API Request: {$operation}", []);
+
             return;
         }
-        
+
         // Convert object to array if necessary
         if (is_object($data)) {
             if (method_exists($data, 'toArray')) {
@@ -103,7 +104,7 @@ class Logger extends MonologLogger
                 $data = (array)$data;
             }
         }
-        
+
         // Sanitize sensitive data
         $sanitizedData = $this->sanitizeData($data);
 
@@ -124,7 +125,7 @@ class Logger extends MonologLogger
     {
         // Sanitize sensitive data
         $sanitizedData = $this->sanitizeData($context);
-        
+
         // Pretty-print the JSON for the log
         $prettyJson = json_encode($sanitizedData, self::JSON_OPTIONS);
         $this->critical("API Error: {$operation} - {$message} " . $prettyJson);
@@ -195,7 +196,7 @@ class Logger extends MonologLogger
     {
         parent::critical($message, $context);
     }
-    
+
     /**
      * Check if a string is a valid JSON
      *
@@ -205,6 +206,7 @@ class Logger extends MonologLogger
     private function isJson(string $string): bool
     {
         json_decode($string);
+
         return json_last_error() === JSON_ERROR_NONE;
     }
 
@@ -226,16 +228,17 @@ class Logger extends MonologLogger
                 $data = (array)$data;
             }
         }
-        
+
         // If not an array by now, return empty array
         if (!is_array($data)) {
             return [];
         }
-        
+
         foreach ($data as $key => $value) {
             // Mask sensitive fields - ensure key is a string before using strtolower
             if (is_string($key) && in_array(strtolower($key), array_map('strtolower', $this->sensitiveFields))) {
                 $data[$key] = self::MASKED_VALUE;
+
                 continue;
             }
 
