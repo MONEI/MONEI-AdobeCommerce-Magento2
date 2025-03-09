@@ -11,6 +11,7 @@ namespace Monei\MoneiPayment\Service;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Model\OrderFactory;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Api\PaymentDataProviderInterface;
@@ -20,6 +21,7 @@ use Monei\MoneiPayment\Model\Data\PaymentDTO;
 use Monei\MoneiPayment\Model\Data\PaymentProcessingResult;
 use Monei\MoneiPayment\Model\Payment\Status;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
+use Magento\Sales\Model\Order;
 
 /**
  * Service for processing MONEI payments
@@ -30,6 +32,11 @@ class ProcessPaymentService implements PaymentProcessorInterface
      * @var OrderRepositoryInterface
      */
     private OrderRepositoryInterface $orderRepository;
+
+    /**
+     * @var OrderFactory
+     */
+    private OrderFactory $orderFactory;
 
     /**
      * @var LockManagerInterface
@@ -63,6 +70,7 @@ class ProcessPaymentService implements PaymentProcessorInterface
 
     /**
      * @param OrderRepositoryInterface $orderRepository
+     * @param OrderFactory $orderFactory
      * @param LockManagerInterface $lockManager
      * @param InvoiceService $invoiceService
      * @param MoneiApiClient $apiClient
@@ -72,6 +80,7 @@ class ProcessPaymentService implements PaymentProcessorInterface
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
+        OrderFactory $orderFactory,
         LockManagerInterface $lockManager,
         InvoiceService $invoiceService,
         MoneiApiClient $apiClient,
@@ -80,6 +89,7 @@ class ProcessPaymentService implements PaymentProcessorInterface
         MoneiPaymentModuleConfigInterface $moduleConfig
     ) {
         $this->orderRepository = $orderRepository;
+        $this->orderFactory = $orderFactory;
         $this->lockManager = $lockManager;
         $this->invoiceService = $invoiceService;
         $this->apiClient = $apiClient;
@@ -111,8 +121,9 @@ class ProcessPaymentService implements PaymentProcessorInterface
             }
 
             try {
-                // Load the order
-                $order = $this->orderRepository->get($orderId);
+                // Load the order by increment ID
+                /** @var Order $order */
+                $order = $this->orderFactory->create()->loadByIncrementId($orderId);
 
                 // Create PaymentDTO from data
                 $payment = PaymentDTO::fromArray($paymentData);
@@ -163,7 +174,7 @@ class ProcessPaymentService implements PaymentProcessorInterface
     /**
      * Process a successful payment
      *
-     * @param OrderInterface $order
+     * @param Order $order
      * @param PaymentDTO $payment
      * @return PaymentProcessingResultInterface
      */
@@ -229,7 +240,7 @@ class ProcessPaymentService implements PaymentProcessorInterface
     /**
      * Process an authorized payment
      *
-     * @param OrderInterface $order
+     * @param Order $order
      * @param PaymentDTO $payment
      * @return PaymentProcessingResultInterface
      */
@@ -294,7 +305,7 @@ class ProcessPaymentService implements PaymentProcessorInterface
     /**
      * Process a failed payment
      *
-     * @param OrderInterface $order
+     * @param Order $order
      * @param PaymentDTO $payment
      * @return PaymentProcessingResultInterface
      */
@@ -320,6 +331,7 @@ class ProcessPaymentService implements PaymentProcessorInterface
             }
 
             // Cancel the order
+            /** @var Order $order */
             if ($order->canCancel()) {
                 $order->cancel();
                 $order->addCommentToStatusHistory(

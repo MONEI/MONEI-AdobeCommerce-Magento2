@@ -293,16 +293,6 @@
         </arguments>
     </type>
 
-    <!-- OrderProcessor service configuration -->
-    <type name="Monei\MoneiPayment\Model\Service\OrderProcessor">
-        <arguments>
-            <argument name="lockManager" xsi:type="object">Monei\MoneiPayment\Api\LockManagerInterface</argument>
-            <argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
-            <argument name="transactionFactory" xsi:type="object">Magento\Framework\DB\TransactionFactory</argument>
-            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
-        </arguments>
-    </type>
-
     <!-- Capture command configuration -->
     <type name="Monei\MoneiPayment\Gateway\Command\Capture">
         <arguments>
@@ -343,11 +333,11 @@
             <argument name="moduleVersion" xsi:type="object">Monei\MoneiPayment\Model\Config\Source\ModuleVersion</argument>
         </arguments>
     </type>
-    
+
     <!-- Quote Services -->
-    <preference for="Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface" 
+    <preference for="Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface"
                 type="Monei\MoneiPayment\Service\Quote\GetAddressDetailsByQuoteAddress"/>
-    <preference for="Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface" 
+    <preference for="Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface"
                 type="Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote"/>
 
 <!-- Type configurations for standardized SDK services -->
@@ -360,7 +350,7 @@
             <argument name="urlBuilder" xsi:type="object">Magento\Framework\Url</argument>
         </arguments>
     </type>
-    
+
     <type name="Monei\MoneiPayment\Service\GetPayment">
         <arguments>
             <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
@@ -368,7 +358,7 @@
             <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Service\Api\MoneiApiClient</argument>
         </arguments>
     </type>
-    
+
     <type name="Monei\MoneiPayment\Service\GetPaymentMethods">
         <arguments>
             <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
@@ -378,7 +368,7 @@
             <argument name="registryAccountId" xsi:type="object">Monei\MoneiPayment\Registry\AccountId</argument>
         </arguments>
     </type>
-    
+
     <!-- Checkout Services -->
     <type name="Monei\MoneiPayment\Service\Checkout\CreateGuestMoneiPaymentInSite">
         <arguments>
@@ -394,7 +384,7 @@
             <argument name="createPayment" xsi:type="object">Monei\MoneiPayment\Service\CreatePayment</argument>
         </arguments>
     </type>
-    
+
     <type name="Monei\MoneiPayment\Service\Checkout\CreateLoggedMoneiPaymentInSite">
         <arguments>
             <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
@@ -407,7 +397,7 @@
             <argument name="createPayment" xsi:type="object">Monei\MoneiPayment\Service\CreatePayment</argument>
         </arguments>
     </type>
-    
+
     <type name="Monei\MoneiPayment\Service\Checkout\CreateLoggedMoneiPaymentVault">
         <arguments>
             <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
@@ -421,7 +411,7 @@
             <argument name="createPayment" xsi:type="object">Monei\MoneiPayment\Service\CreatePayment</argument>
         </arguments>
     </type>
-    
+
     <type name="Monei\MoneiPayment\Service\Checkout\SaveTokenization">
         <arguments>
             <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
@@ -495,7 +485,7 @@
             <argument name="getPaymentService" xsi:type="object">Monei\MoneiPayment\Api\Service\GetPaymentInterface</argument>
         </arguments>
     </type>
-    
+
     <!-- Type configuration for Fail controller -->
     <type name="Monei\MoneiPayment\Controller\Payment\Fail">
         <arguments>

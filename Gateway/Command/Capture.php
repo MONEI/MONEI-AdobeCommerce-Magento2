@@ -61,7 +61,15 @@ class Capture implements CommandInterface
         $moneiStatus = $additionalInfo['monei_payment_status'] ?? $order->getData('monei_status');
         $isAlreadyCaptured = $additionalInfo['monei_is_captured'] ?? false;
 
-        if ($moneiStatus === Status::SUCCEEDED || $isAlreadyCaptured) {
+        // Log the status values we're checking
+        $this->logger->debug(sprintf(
+            '[Capture status check] Order %s, monei_status: %s, is_captured: %s',
+            $order->getIncrementId(),
+            $moneiStatus ?? 'null',
+            $isAlreadyCaptured ? 'true' : 'false'
+        ));
+
+        if ($moneiStatus === Status::SUCCEEDED || $moneiStatus === 'SUCCEEDED' || $isAlreadyCaptured) {
             // Payment already succeeded or captured, no need to capture again
             $this->logger->info(sprintf(
                 '[Payment already captured] Order %s, status: %s, is_captured: %s',
@@ -105,10 +113,10 @@ class Capture implements CommandInterface
 
         if (isset($response['error']) && $response['error'] === true) {
             if (isset($response['errorData']['message'])) {
-                throw new LocalizedException(__($response['errorData']['message']));
+                throw new LocalizedException(__('{0}', $response['errorData']['message']));
             }
 
-            throw new LocalizedException(__($response['errorMessage']));
+            throw new LocalizedException(__('{0}', $response['errorMessage']));
         }
     }
 }
