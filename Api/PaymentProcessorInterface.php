@@ -43,11 +43,11 @@ interface PaymentProcessorInterface
     public function waitForProcessing(string $orderId, string $paymentId, int $timeout = 15): bool;
 
     /**
-     * Get the current payment status from MONEI API
+     * Get the current payment data from MONEI API
      *
      * @param string $paymentId MONEI payment ID
      * @return array Payment data
      * @throws \Exception When API call fails, with original error message
      */
-    public function getPaymentStatus(string $paymentId): array;
+    public function getPayment(string $paymentId): array;
 }

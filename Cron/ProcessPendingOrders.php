@@ -18,7 +18,6 @@ use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
 use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Api\Service\CancelPaymentInterface;
 use Monei\MoneiPayment\Model\Payment\Status;
-use Monei\MoneiPayment\Model\PaymentDataProvider\ApiPaymentDataProvider;
 use Monei\MoneiPayment\Model\PaymentProcessor;
 use Monei\MoneiPayment\Service\Logger;
 
@@ -36,11 +35,6 @@ class ProcessPendingOrders
      * @var OrderInterfaceFactory
      */
     private $orderFactory;
-
-    /**
-     * @var ApiPaymentDataProvider
-     */
-    private $apiPaymentDataProvider;
 
     /**
      * @var PaymentProcessor
@@ -82,7 +76,6 @@ class ProcessPendingOrders
      *
      * @param OrderCollectionFactory $orderCollectionFactory
      * @param OrderInterfaceFactory $orderFactory
-     * @param ApiPaymentDataProvider $apiPaymentDataProvider
      * @param PaymentProcessor $paymentProcessor
      * @param OrderRepositoryInterface $orderRepository
      * @param LockManagerInterface $lockManager
@@ -94,7 +87,6 @@ class ProcessPendingOrders
     public function __construct(
         OrderCollectionFactory $orderCollectionFactory,
         OrderInterfaceFactory $orderFactory,
-        ApiPaymentDataProvider $apiPaymentDataProvider,
         PaymentProcessor $paymentProcessor,
         OrderRepositoryInterface $orderRepository,
         LockManagerInterface $lockManager,
@@ -105,7 +97,6 @@ class ProcessPendingOrders
     ) {
         $this->orderCollectionFactory = $orderCollectionFactory;
         $this->orderFactory = $orderFactory;
-        $this->apiPaymentDataProvider = $apiPaymentDataProvider;
         $this->paymentProcessor = $paymentProcessor;
         $this->orderRepository = $orderRepository;
         $this->lockManager = $lockManager;
@@ -170,8 +161,7 @@ class ProcessPendingOrders
                     $this->cancelPaymentService->execute($data);
 
                     // Process the canceled payment
-                    $this->apiPaymentDataProvider->clearCache($paymentId);
-                    $this->paymentProcessor->processPaymentById($order, $paymentId, $this->apiPaymentDataProvider);
+                    $this->paymentProcessor->processPaymentById($order, $paymentId, $this->paymentProcessor);
                 } catch (\Exception $e) {
                     $this->logger->error(sprintf(
                         '[Cron] Error canceling payment for order %s: %s',
@@ -185,8 +175,7 @@ class ProcessPendingOrders
 
             // Process the payment to check its current status
             try {
-                $this->apiPaymentDataProvider->clearCache($paymentId);
-                $this->paymentProcessor->processPaymentById($order, $paymentId, $this->apiPaymentDataProvider);
+                $this->paymentProcessor->processPaymentById($order, $paymentId, $this->paymentProcessor);
             } catch (\Exception $e) {
                 $this->logger->error(sprintf(
                     '[Cron] Error processing payment for order %s: %s',

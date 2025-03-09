@@ -30,7 +30,7 @@ use Monei\MoneiPayment\Service\Logger;
 /**
  * Processes payments and updates order status
  */
-class PaymentProcessor implements PaymentProcessorInterface
+class PaymentProcessor implements PaymentProcessorInterface, PaymentDataProviderInterface
 {
     /**
      * @var OrderRepositoryInterface
@@ -83,6 +83,11 @@ class PaymentProcessor implements PaymentProcessorInterface
     private GetPaymentInterface $getPaymentInterface;
 
     /**
+     * @var \Magento\Sales\Model\OrderFactory
+     */
+    private \Magento\Sales\Model\OrderFactory $orderFactory;
+
+    /**
      * @param OrderRepositoryInterface $orderRepository
      * @param InvoiceService $invoiceService
      * @param LockManagerInterface $lockManager
@@ -93,6 +98,7 @@ class PaymentProcessor implements PaymentProcessorInterface
      * @param OrderSender $orderSender
      * @param SearchCriteriaBuilder $searchCriteriaBuilder
      * @param GetPaymentInterface $getPaymentInterface
+     * @param \Magento\Sales\Model\OrderFactory $orderFactory
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
@@ -104,7 +110,8 @@ class PaymentProcessor implements PaymentProcessorInterface
         MoneiPaymentModuleConfigInterface $moduleConfig,
         OrderSender $orderSender,
         SearchCriteriaBuilder $searchCriteriaBuilder,
-        GetPaymentInterface $getPaymentInterface
+        GetPaymentInterface $getPaymentInterface,
+        \Magento\Sales\Model\OrderFactory $orderFactory
     ) {
         $this->orderRepository = $orderRepository;
         $this->invoiceService = $invoiceService;
@@ -116,6 +123,7 @@ class PaymentProcessor implements PaymentProcessorInterface
         $this->orderSender = $orderSender;
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
         $this->getPaymentInterface = $getPaymentInterface;
+        $this->orderFactory = $orderFactory;
     }
 
     /**
@@ -211,7 +219,7 @@ class PaymentProcessor implements PaymentProcessorInterface
     /**
      * @inheritdoc
      */
-    public function getPaymentStatus(string $paymentId): array
+    public function getPayment(string $paymentId): array
     {
         try {
             $payment = $this->getPaymentInterface->execute($paymentId);
@@ -413,6 +421,11 @@ class PaymentProcessor implements PaymentProcessorInterface
 
             // Update payment information
             $this->updatePaymentInformation($order, $payment);
+
+            $this->logger->info(sprintf(
+                '[Payment information updated] Order %s, payment %s',
+                $order
+            ));
 
             // Generate invoice
             $this->invoiceService->processInvoice($order, $paymentId);
@@ -663,5 +676,42 @@ class PaymentProcessor implements PaymentProcessorInterface
 
             return null;
         }
+    }
+
+    /**
+     * Get payment data for a specific payment ID
+     *
+     * @param string $paymentId
+     * @return PaymentDTO
+     * @throws LocalizedException
+     */
+    public function getPaymentData(string $paymentId): PaymentDTO
+    {
+        $paymentData = $this->getPayment($paymentId);
+
+        if (isset($paymentData['status']) && $paymentData['status'] === 'ERROR') {
+            throw new LocalizedException(__('Failed to fetch payment data: %1', $paymentData['error'] ?? 'Unknown error'));
+        }
+
+        return PaymentDTO::fromArray($paymentData);
+    }
+
+    /**
+     * Validate payment data
+     *
+     * @param array $data
+     * @return bool
+     */
+    public function validatePaymentData(array $data): bool
+    {
+        // Validate that required fields are present
+        if (empty($data['id']) || !isset($data['status'])) {
+            $this->logger->debug('[Payment data validation failed] Missing required fields', [
+                'received_fields' => array_keys($data)
+            ]);
+            return false;
+        }
+
+        return true;
     }
 }

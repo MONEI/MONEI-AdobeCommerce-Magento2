@@ -21,7 +21,6 @@ use Magento\Sales\Api\OrderRepositoryInterface;
 use Monei\MoneiPayment\Api\PaymentProcessorInterface;
 use Monei\MoneiPayment\Model\Api\MoneiApiClient;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
-use Monei\MoneiPayment\Model\PaymentDataProvider\WebhookPaymentDataProvider;
 use Monei\MoneiPayment\Service\Logger;
 
 /**
@@ -43,11 +42,6 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
      * @var JsonFactory
      */
     private JsonFactory $resultJsonFactory;
-
-    /**
-     * @var WebhookPaymentDataProvider
-     */
-    private WebhookPaymentDataProvider $webhookPaymentDataProvider;
 
     /**
      * @var PaymentProcessorInterface
@@ -82,7 +76,6 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     /**
      * @param Logger $logger
      * @param JsonFactory $resultJsonFactory
-     * @param WebhookPaymentDataProvider $webhookPaymentDataProvider
      * @param PaymentProcessorInterface $paymentProcessor
      * @param MoneiApiClient $apiClient
      * @param OrderRepositoryInterface $orderRepository
@@ -92,7 +85,6 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     public function __construct(
         Logger $logger,
         JsonFactory $resultJsonFactory,
-        WebhookPaymentDataProvider $webhookPaymentDataProvider,
         PaymentProcessorInterface $paymentProcessor,
         MoneiApiClient $apiClient,
         OrderRepositoryInterface $orderRepository,
@@ -101,7 +93,6 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     ) {
         $this->logger = $logger;
         $this->resultJsonFactory = $resultJsonFactory;
-        $this->webhookPaymentDataProvider = $webhookPaymentDataProvider;
         $this->paymentProcessor = $paymentProcessor;
         $this->apiClient = $apiClient;
         $this->orderRepository = $orderRepository;
