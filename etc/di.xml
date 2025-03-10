@@ -444,6 +444,7 @@
             <argument name="searchCriteriaBuilder" xsi:type="object">Magento\Framework\Api\SearchCriteriaBuilder</argument>
             <argument name="getPaymentInterface" xsi:type="object">Monei\MoneiPayment\Api\Service\GetPaymentInterface</argument>
             <argument name="orderFactory" xsi:type="object">Magento\Sales\Model\OrderFactory</argument>
+            <argument name="createVaultPayment" xsi:type="object">Monei\MoneiPayment\Service\Order\CreateVaultPayment</argument>
         </arguments>
     </type>
 
@@ -528,3 +529,4 @@
         </arguments>
     </type>
 </config>
+<!-- Updated configuration for dependency injection fix -->

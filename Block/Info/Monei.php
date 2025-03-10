@@ -18,7 +18,7 @@ use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Gateway\Config\Config;
 use Monei\MoneiPayment\Model\Payment\Monei as MoneiPayment;
 use Monei\MoneiPayment\Service\Logger;
-use Monei\Model\Payment;
+use Monei\Model\Payment as MoneiModelPayment;
 
 /**
  * Monei payment info block.
