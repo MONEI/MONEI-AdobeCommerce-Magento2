@@ -20,8 +20,7 @@ use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\CreatePayment;
 use Monei\MoneiPayment\Service\Logger;
-use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface as CustomerSessionInterface;
-use Monei\MoneiPayment\Api\Service\MoneiPaymentModuleConfigInterface;
+use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 
 /**
  * Monei create payment REST integration service class for logged-in customers.
@@ -31,13 +30,6 @@ use Monei\MoneiPayment\Api\Service\MoneiPaymentModuleConfigInterface;
  */
 class CreateLoggedMoneiPaymentInSite extends AbstractCheckoutService implements CreateLoggedMoneiPaymentInSiteInterface
 {
-    /**
-     * Service for retrieving customer details from quote.
-     *
-     * @var GetCustomerDetailsByQuoteInterface
-     */
-    private GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote;
-
     /**
      * Service for retrieving address details from quote address.
      *
@@ -53,6 +45,20 @@ class CreateLoggedMoneiPaymentInSite extends AbstractCheckoutService implements 
     private CreatePayment $createPayment;
 
     /**
+     * Customer details service
+     *
+     * @var GetCustomerDetailsByQuoteInterface
+     */
+    private GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote;
+
+    /**
+     * Module configuration
+     *
+     * @var MoneiPaymentModuleConfigInterface
+     */
+    private MoneiPaymentModuleConfigInterface $moduleConfig;
+
+    /**
      * Constructor for CreateLoggedMoneiPaymentInSite service.
      *
      * @param Logger $logger Logger instance
@@ -60,7 +66,7 @@ class CreateLoggedMoneiPaymentInSite extends AbstractCheckoutService implements 
      * @param MoneiApiClient $apiClient MONEI API client service
      * @param CartRepositoryInterface $quoteRepository Quote repository
      * @param Session $checkoutSession Checkout session
-     * @param CustomerSessionInterface $customerSession Customer session
+     * @param GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote Customer details service
      * @param GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress Address details service
      * @param MoneiPaymentModuleConfigInterface $moduleConfig Module configuration
      * @param CreatePayment $createPayment Payment creation service
@@ -72,7 +78,7 @@ class CreateLoggedMoneiPaymentInSite extends AbstractCheckoutService implements 
         MoneiApiClient $apiClient,
         CartRepositoryInterface $quoteRepository,
         Session $checkoutSession,
-        CustomerSessionInterface $customerSession,
+        GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote,
         GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress,
         MoneiPaymentModuleConfigInterface $moduleConfig,
         CreatePayment $createPayment,
@@ -86,7 +92,7 @@ class CreateLoggedMoneiPaymentInSite extends AbstractCheckoutService implements 
             $checkoutSession,
             $getPaymentService
         );
-        $this->customerSession = $customerSession;
+        $this->getCustomerDetailsByQuote = $getCustomerDetailsByQuote;
         $this->getAddressDetailsByQuoteAddress = $getAddressDetailsByQuoteAddress;
         $this->moduleConfig = $moduleConfig;
         $this->createPayment = $createPayment;
@@ -116,9 +122,9 @@ class CreateLoggedMoneiPaymentInSite extends AbstractCheckoutService implements 
             return $existingPayment;
         }
 
-        return $this->executeApiCall(__METHOD__, function () use ($quote) {
+        return $this->executeApiCall(__METHOD__, function () use ($quote, $email) {
             // Prepare payment data
-            $paymentData = $this->preparePaymentData($quote);
+            $paymentData = $this->preparePaymentData($quote, $email);
 
             // Create payment
             $result = $this->createPayment->execute($paymentData);
@@ -139,9 +145,10 @@ class CreateLoggedMoneiPaymentInSite extends AbstractCheckoutService implements 
      * Prepare payment data from quote
      *
      * @param Quote $quote The quote to prepare payment data from
+     * @param string|null $email Optional customer email override
      * @return array Payment data ready for the CreatePayment service
      */
-    private function preparePaymentData(Quote $quote): array
+    private function preparePaymentData(Quote $quote, ?string $email = null): array
     {
         // Get shipping address or fallback to billing if shipping is not available
         $shippingAddress = $quote->getShippingAddress();
@@ -153,7 +160,7 @@ class CreateLoggedMoneiPaymentInSite extends AbstractCheckoutService implements 
         $paymentData = $this->prepareBasePaymentData($quote);
 
         // Add customer-specific data
-        $paymentData['customer'] = $this->getCustomerDetailsByQuote->execute($quote);
+        $paymentData['customer'] = $this->getCustomerDetailsByQuote->execute($quote, $email);
         $paymentData['billing_details'] = $this->getAddressDetailsByQuoteAddress->executeBilling($quote->getBillingAddress());
         $paymentData['shipping_details'] = $this->getAddressDetailsByQuoteAddress->executeShipping($shippingAddress);
 

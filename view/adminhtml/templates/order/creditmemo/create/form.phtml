@@ -35,10 +35,7 @@ $refundReasons = $refundReasonsViewModel->getData();
                     <div class="admin__page-section-item-content">
                         <div class="order-payment-method-title"><?= $block->getChildHtml('order_payment') ?></div>
                         <div class="order-payment-currency">
-                            <?= $escaper->escapeHtml(__(
-                                'The order was placed using %1.',
-                                $_order->getOrderCurrencyCode()
-                            )) ?>
+                            <?= $escaper->escapeHtml($_order->getOrderCurrencyCode()) ?>
                         </div>
                         <div class="order-payment-additional">
                             <?= $block->getChildHtml('order_payment_additional') ?>

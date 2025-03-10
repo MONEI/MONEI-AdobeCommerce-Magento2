@@ -370,6 +370,7 @@
             <argument name="getAddressDetailsByQuoteAddress" xsi:type="object">Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface</argument>
             <argument name="moduleConfig" xsi:type="object">Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface</argument>
             <argument name="createPayment" xsi:type="object">Monei\MoneiPayment\Service\CreatePayment</argument>
+            <argument name="getPaymentService" xsi:type="object">Monei\MoneiPayment\Api\Service\GetPaymentInterface</argument>
         </arguments>
     </type>
 
@@ -380,9 +381,11 @@
             <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Service\Api\MoneiApiClient</argument>
             <argument name="quoteRepository" xsi:type="object">Magento\Quote\Api\CartRepositoryInterface</argument>
             <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session</argument>
-            <argument name="getCustomerDetailsByQuote" xsi:type="object">Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface</argument>
+            <argument name="customerSession" xsi:type="object">Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface</argument>
             <argument name="getAddressDetailsByQuoteAddress" xsi:type="object">Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface</argument>
+            <argument name="moduleConfig" xsi:type="object">Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface</argument>
             <argument name="createPayment" xsi:type="object">Monei\MoneiPayment\Service\CreatePayment</argument>
+            <argument name="getPaymentService" xsi:type="object">Monei\MoneiPayment\Api\Service\GetPaymentInterface</argument>
         </arguments>
     </type>
 
@@ -397,6 +400,7 @@
             <argument name="getAddressDetailsByQuoteAddress" xsi:type="object">Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface</argument>
             <argument name="tokenManagement" xsi:type="object">Magento\Vault\Api\PaymentTokenManagementInterface</argument>
             <argument name="createPayment" xsi:type="object">Monei\MoneiPayment\Service\CreatePayment</argument>
+            <argument name="getPaymentService" xsi:type="object">Monei\MoneiPayment\Api\Service\GetPaymentInterface</argument>
         </arguments>
     </type>
 
@@ -407,6 +411,7 @@
             <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Service\Api\MoneiApiClient</argument>
             <argument name="quoteRepository" xsi:type="object">Magento\Quote\Api\CartRepositoryInterface</argument>
             <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session</argument>
+            <argument name="getPaymentService" xsi:type="object">Monei\MoneiPayment\Api\Service\GetPaymentInterface</argument>
         </arguments>
     </type>
 

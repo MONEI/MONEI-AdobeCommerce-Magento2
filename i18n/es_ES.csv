@@ -52,7 +52,6 @@
 "Issuing Bank","Banco emisor"
 "Phone Number","Número de teléfono"
 "Country","País"
-"The order was placed using","El pedido se realizó utilizando"
 "Required parameters are missing. Cannot proceed with cancellation.","Faltan parámetros obligatorios. No se puede proceder con la cancelación."
 "MONEI payment cancellation failed: %1","La cancelación de pago de MONEI ha fallado: %1"
 "MONEI payment cancellation failed. Please check the logs for more details.","La cancelación de pago de MONEI ha fallado. Por favor, consulte los registros para más detalles."
