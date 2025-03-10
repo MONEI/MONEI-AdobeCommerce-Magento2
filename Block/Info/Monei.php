@@ -81,7 +81,10 @@ class Monei extends Info
             return null;
         }
 
-        $monei_payment_id = $this->getInfo()->getOrder()->getData('monei_payment_id');
+        // Get payment ID from payment's additional information
+        $payment = $this->getInfo();
+        $monei_payment_id = $payment->getAdditionalInformation('monei_payment_id');
+
         if (!$monei_payment_id) {
             $this->logger->debug('Payment Info: Missing Monei payment ID in order', [
                 'order_id' => $this->getInfo()->getOrder()->getIncrementId()
