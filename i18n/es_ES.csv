@@ -60,3 +60,8 @@
 "Order cancellation failed: %1","La cancelación del pedido ha fallado: %1"
 "An unexpected error occurred during payment cancellation. Please check the logs for more details.","Se produjo un error inesperado durante la cancelación del pago. Por favor, consulte los registros para más detalles."
 "An error occurred during the payment process","Se produjo un error durante el proceso de pago"
+"Payment ID","ID de Pago"
+"Authorization Code","Código de Autorización"
+"Cardholder Email","Email del Titular"
+"IBAN","IBAN"
+"Account Holder","Titular de la Cuenta"

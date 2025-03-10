@@ -51,3 +51,8 @@
 "Please enter the name on the card.","Please enter the name on the card."
 "Please enter the name exactly as it appears on the card.","Please enter the name exactly as it appears on the card."
 "(Test Mode)","(Test Mode)"
+"Payment ID","Payment ID"
+"Authorization Code","Authorization Code"
+"Cardholder Email","Cardholder Email"
+"IBAN","IBAN"
+"Account Holder","Account Holder"
