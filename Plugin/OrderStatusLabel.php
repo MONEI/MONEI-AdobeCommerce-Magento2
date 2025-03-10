@@ -8,6 +8,8 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Plugin;
 
+use Magento\Framework\App\State;
+use Magento\Framework\App\Area;
 use Magento\Sales\Model\Order\StatusLabel;
 use Monei\MoneiPayment\Model\Payment\Monei;
 use Magento\Sales\Model\Order;
@@ -34,7 +36,22 @@ class OrderStatusLabel
     ];
 
     /**
+     * @var State
+     */
+    private $appState;
+
+    /**
+     * @param State $appState
+     */
+    public function __construct(
+        State $appState
+    ) {
+        $this->appState = $appState;
+    }
+
+    /**
      * After plugin to map MONEI custom status codes to standard Magento status labels
+     * Only applies mapping in frontend area, preserves original MONEI labels in admin
      *
      * @param StatusLabel $subject
      * @param string|null $result
@@ -43,8 +60,15 @@ class OrderStatusLabel
      */
     public function afterGetStatusLabel(StatusLabel $subject, ?string $result, ?string $status): ?string
     {
-        if ($status && isset($this->statusMappings[$status])) {
-            return (string)__($this->statusMappings[$status]);
+        try {
+            // Only apply the mapping in the frontend area
+            // In admin area, use the default status labels from the database
+            if ($this->appState->getAreaCode() !== Area::AREA_ADMINHTML && $status && isset($this->statusMappings[$status])) {
+                return (string)__($this->statusMappings[$status]);
+            }
+        } catch (\Exception $e) {
+            // If we can't determine the area code, continue with default behavior
+            return $result;
         }
 
         return $result;

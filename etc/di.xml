@@ -59,6 +59,7 @@
                 <item name="moneiGetPayment" xsi:type="object">Monei\MoneiPayment\Command\GetPaymentCommand</item>
                 <item name="moneiCancelPayment" xsi:type="object">Monei\MoneiPayment\Command\CancelPaymentCommand</item>
                 <item name="moneiRefundPayment" xsi:type="object">Monei\MoneiPayment\Command\RefundPaymentCommand</item>
+                <item name="moneiUpdateStatusLabels" xsi:type="object">Monei\MoneiPayment\Console\Command\UpdateStatusLabels</item>
             </argument>
         </arguments>
     </type>
