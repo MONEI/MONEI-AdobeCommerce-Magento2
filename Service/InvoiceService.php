@@ -183,21 +183,11 @@ class InvoiceService
         $transaction->save();
 
         // Send invoice email if needed
-        // Since shouldSendInvoiceEmail() doesn't exist in the config, we'll use a default behavior
-        // You can add this method to MoneiPaymentModuleConfig if needed
         try {
-            // Try to use the method if it exists
-            if (method_exists($this->moduleConfig, 'shouldSendInvoiceEmail') &&
-                $this->moduleConfig->shouldSendInvoiceEmail()
-            ) {
+            // Check if invoice emails should be sent based on configuration
+            if ($this->moduleConfig->shouldSendInvoiceEmail($order->getStoreId())) {
+                $this->logger->debug('[Sending invoice email]');
                 $this->invoiceSender->send($invoice);
-            } else {
-                // Default behavior: check if invoice emails are enabled globally
-                $sendInvoiceEmail = $this->moduleConfig->isEnabled();
-                if ($sendInvoiceEmail) {
-                    $this->logger->debug('[Sending invoice email]');
-                    $this->invoiceSender->send($invoice);
-                }
             }
         } catch (\Exception $e) {
             $this->logger->warning(

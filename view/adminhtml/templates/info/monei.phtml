@@ -12,45 +12,7 @@ $paymentTitle = $block->getPaymentTitle();
 $paymentInfo = $block->getPaymentInfo();
 ?>
 <?php if (is_array($paymentInfo)): ?>
-    <?php
-    // Prepare combined payment method display
-    $paymentMethodDisplay = '';
-    $methodType = $paymentInfo['method'] ?? '';
-
-    if (isset($paymentInfo['brand']) && !empty($paymentInfo['brand'])) {
-        // Card payment display
-        $brand = strtolower($paymentInfo['brand']);
-        $paymentMethodDisplay = ucfirst($paymentInfo['brand']);
-
-        // Add card type inline if available
-        if (isset($paymentInfo['type']) && !empty($paymentInfo['type'])) {
-            $paymentMethodDisplay .= ' ' . ucfirst($paymentInfo['type']);
-        }
-
-        if (isset($paymentInfo['last4']) && !empty($paymentInfo['last4'])) {
-            $paymentMethodDisplay .= ' •••• ' . $paymentInfo['last4'];
-        }
-    } elseif (!empty($methodType)) {
-        // For non-card methods, format the method name nicely
-        switch ($methodType) {
-            case 'bizum':
-                $paymentMethodDisplay = 'Bizum';
-                break;
-            case 'paypal':
-                $paymentMethodDisplay = 'PayPal';
-                break;
-            case 'mbway':
-                $paymentMethodDisplay = 'MB WAY';
-                break;
-            case 'multibanco':
-                $paymentMethodDisplay = 'Multibanco';
-                break;
-            default:
-                // Fallback: Convert camelCase to Title Case with spaces
-                $paymentMethodDisplay = ucfirst(preg_replace('/([a-z])([A-Z])/', '$1 $2', $methodType));
-        }
-    }
-    ?>
+    <?php $paymentMethodDisplay = $block->getFormattedPaymentMethodDisplay(); ?>
 
     <table class="data-table admin__table-secondary">
         <tbody>
@@ -72,20 +34,7 @@ $paymentInfo = $block->getPaymentInfo();
             </tr>
 
             <?php if (isset($paymentInfo['tokenizationMethod']) && !empty($paymentInfo['tokenizationMethod'])):
-                // Pretty print tokenizationMethod value
-                $walletValue = $paymentInfo['tokenizationMethod'];
-
-                // Convert camelCase to readable format (e.g., googlePay -> Google Pay)
-                if ($walletValue === 'googlePay') {
-                    $walletValue = 'Google Pay';
-                } elseif ($walletValue === 'applePay') {
-                    $walletValue = 'Apple Pay';
-                } elseif ($walletValue === 'clickToPay') {
-                    $walletValue = 'Click to Pay';
-                } else {
-                    // Handle any other values by adding spaces before capital letters and capitalizing first letter
-                    $walletValue = ucfirst(preg_replace('/([a-z])([A-Z])/', '$1 $2', $walletValue));
-                }
+                $walletValue = $block->formatWalletDisplay($paymentInfo['tokenizationMethod']);
                 ?>
                 <tr>
                     <th><?= $escaper->escapeHtml(__('Digital Wallet')) ?></th>
@@ -110,7 +59,7 @@ $paymentInfo = $block->getPaymentInfo();
             <?php if (isset($paymentInfo['phoneNumber']) && !empty($paymentInfo['phoneNumber'])): ?>
                 <tr>
                     <th><?= $escaper->escapeHtml(__('Phone Number')) ?></th>
-                    <td><?= $escaper->escapeHtml($paymentInfo['phoneNumber']) ?></td>
+                    <td><?= $escaper->escapeHtml($block->formatPhoneNumber($paymentInfo['phoneNumber'])) ?></td>
                 </tr>
             <?php endif; ?>
 
@@ -130,7 +79,7 @@ $paymentInfo = $block->getPaymentInfo();
 
             <?php if (isset($paymentInfo['country']) && !empty($paymentInfo['country'])): ?>
                 <tr>
-                    <th><?= $escaper->escapeHtml(__('Country')) ?></th>
+                    <th><?= $escaper->escapeHtml(__('Country Code')) ?></th>
                     <td><?= $escaper->escapeHtml($paymentInfo['country']) ?></td>
                 </tr>
             <?php endif; ?>
@@ -145,4 +94,8 @@ $paymentInfo = $block->getPaymentInfo();
             <?php endif; ?>
         </tbody>
     </table>
+<?php else: ?>
+    <div class="message message-notice">
+        <div><?= $escaper->escapeHtml(__('Payment details will be available after payment confirmation')) ?></div>
+    </div>
 <?php endif; ?>

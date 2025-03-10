@@ -390,7 +390,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                 return true;
             }
 
-            // Update payment information
+            // Update payment information first
             $this->updatePaymentInformation($order, $payment);
 
             $this->logger->info(sprintf(
@@ -407,11 +407,16 @@ class PaymentProcessor implements PaymentProcessorInterface
             $orderStatus = $this->moduleConfig->getConfirmedStatus($order->getStoreId());
             $order->setStatus($orderStatus);
 
+            // Set the flag to allow sending the email now
+            $order->setCanSendNewEmailFlag(true);
+
             // Send order email if it hasn't been sent yet
             if (!$order->getEmailSent()) {
                 try {
-                    $this->logger->debug('[Sending order email]');
-                    $this->orderSender->send($order);
+                    if ($this->moduleConfig->shouldSendOrderEmail($order->getStoreId())) {
+                        $this->logger->debug('[Sending order email]');
+                        $this->orderSender->send($order);
+                    }
                 } catch (Exception $e) {
                     $this->logger->critical('[Email sending error] ' . $e->getMessage());
                 }

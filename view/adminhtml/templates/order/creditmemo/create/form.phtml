@@ -34,9 +34,6 @@ $refundReasons = $refundReasonsViewModel->getData();
                     </div>
                     <div class="admin__page-section-item-content">
                         <div class="order-payment-method-title"><?= $block->getChildHtml('order_payment') ?></div>
-                        <div class="order-payment-currency">
-                            <?= $escaper->escapeHtml($_order->getOrderCurrencyCode()) ?>
-                        </div>
                         <div class="order-payment-additional">
                             <?= $block->getChildHtml('order_payment_additional') ?>
                         </div>
@@ -79,9 +76,9 @@ $refundReasons = $refundReasonsViewModel->getData();
                     <?php endif; ?>
                 </div>
                 <?php if ($_order->getData('monei_payment_id') !== null): ?>
-                    <div>
+                    <div class="admin__field field">
                         <label for="refund_reason" class="admin__field-label">
-                            <?= $escaper->escapeHtml(__('Refund reason')) ?>
+                            <span><?= $escaper->escapeHtml(__('Refund reason')) ?></span>
                         </label>
                         <div class="admin__field-control">
                             <select name="creditmemo[refund_reason]" id="refund_reason" class="admin__control-select">

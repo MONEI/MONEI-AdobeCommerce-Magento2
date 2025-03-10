@@ -39,7 +39,7 @@ class ProcessingStatus extends Status
         if (!$moneiSucceededFound) {
             $options[] = [
                 'value' => 'monei_succeeded',
-                'label' => __('Monei - succeeded')
+                'label' => __('MONEI - Succeeded')
             ];
         }
 

@@ -13,9 +13,10 @@ define(
         'Magento_Checkout/js/action/redirect-on-success',
         'Magento_Ui/js/model/messageList',
         'Magento_Checkout/js/model/full-screen-loader',
-        'Monei_MoneiPayment/js/utils/error-handler'
+        'Monei_MoneiPayment/js/utils/error-handler',
+        'Monei_MoneiPayment/js/utils/constants'
     ],
-    function (ko, $, Component, additionalValidators, monei, quote, redirectOnSuccessAction, globalMessageList, fullScreenLoader, errorHandler) {
+    function (ko, $, Component, additionalValidators, monei, quote, redirectOnSuccessAction, globalMessageList, fullScreenLoader, errorHandler, constants) {
         'use strict';
 
         return Component.extend({
@@ -74,7 +75,7 @@ define(
             },
 
             setTitle: function(result){
-                if(result.paymentMethods.includes('applePay') && this.applePaySupported){
+                if(result.paymentMethods.includes(constants.PAYMENT_METHODS.APPLE_PAY) && this.applePaySupported){
                     this.paymentMethodTitle(window.checkoutConfig.payment[this.getCode()].appleTitle);
                 }
                 if(window.checkoutConfig.isMoneiTestMode){

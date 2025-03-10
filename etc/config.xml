@@ -19,6 +19,8 @@
         <order_status>pending_payment</order_status>
         <confirmed_status>monei_succeeded</confirmed_status>
         <pre_authorized_status>monei_authorized</pre_authorized_status>
+        <send_order_email>1</send_order_email>
+        <send_invoice_email>1</send_invoice_email>
         <can_use_internal>1</can_use_internal>
         <can_use_checkout>1</can_use_checkout>
         <is_gateway>1</is_gateway>

@@ -47,6 +47,10 @@ interface MoneiPaymentModuleConfigInterface
 
     public const SORT_ORDER = 'payment/monei/sort_order';
 
+    public const SEND_ORDER_EMAIL = 'payment/monei/send_order_email';
+
+    public const SEND_INVOICE_EMAIL = 'payment/monei/send_invoice_email';
+
     /**
      * Check if payment method is enabled.
      *
@@ -193,4 +197,11 @@ interface MoneiPaymentModuleConfigInterface
      * @param int|null $storeId
      */
     public function shouldSendInvoiceEmail($storeId = null): bool;
+
+    /**
+     * Check if order emails should be sent after payment confirmation.
+     *
+     * @param int|null $storeId
+     */
+    public function shouldSendOrderEmail($storeId = null): bool;
 }

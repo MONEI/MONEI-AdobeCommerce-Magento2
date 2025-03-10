@@ -400,6 +400,41 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
             $storeId
         );
 
-        return (bool) $sendInvoiceEmail;
+        // Check if module-specific setting is enabled
+        $moduleSpecificSetting = $this->scopeConfig->getValue(
+            self::SEND_INVOICE_EMAIL,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+
+        // Both global and module-specific settings must be enabled
+        return (bool) $sendInvoiceEmail && (bool) $moduleSpecificSetting;
+    }
+
+    /**
+     * Check if order emails should be sent after payment confirmation.
+     *
+     * @param int|null $storeId The store ID to check the configuration for
+     *
+     * @return bool True if order emails should be sent, false otherwise
+     */
+    public function shouldSendOrderEmail($storeId = null): bool
+    {
+        // Check if order emails are enabled in Magento's global settings
+        $sendOrderEmail = $this->scopeConfig->getValue(
+            'sales_email/order/enabled',
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+
+        // Check if module-specific setting is enabled
+        $moduleSpecificSetting = $this->scopeConfig->getValue(
+            self::SEND_ORDER_EMAIL,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+
+        // Both global and module-specific settings must be enabled
+        return (bool) $sendOrderEmail && (bool) $moduleSpecificSetting;
     }
 }

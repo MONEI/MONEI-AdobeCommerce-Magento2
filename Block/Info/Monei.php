@@ -14,6 +14,7 @@ use Magento\Framework\View\Element\Template\Context;
 use Magento\Payment\Block\Info;
 use Magento\Sales\Model\Order\Payment;
 use Monei\MoneiPayment\Api\Data\PaymentInfoInterface;
+use Monei\MoneiPayment\Api\Helper\PaymentMethodFormatterInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Gateway\Config\Config;
 use Monei\MoneiPayment\Model\Payment\Monei as MoneiPayment;
@@ -54,22 +55,30 @@ class Monei extends Info
     private Logger $logger;
 
     /**
+     * @var PaymentMethodFormatterInterface
+     */
+    private PaymentMethodFormatterInterface $paymentMethodFormatter;
+
+    /**
      * Constructor.
      *
      * @param GetPaymentInterface $paymentService
      * @param Template\Context $context
      * @param Logger $logger
+     * @param PaymentMethodFormatterInterface $paymentMethodFormatter
      * @param array $data
      */
     public function __construct(
         GetPaymentInterface $paymentService,
         Template\Context $context,
         Logger $logger,
+        PaymentMethodFormatterInterface $paymentMethodFormatter,
         array $data = []
     ) {
         parent::__construct($context, $data);
         $this->paymentService = $paymentService;
         $this->logger = $logger;
+        $this->paymentMethodFormatter = $paymentMethodFormatter;
     }
 
     /**
@@ -201,6 +210,43 @@ class Monei extends Info
         }
 
         return null;
+    }
+
+    /**
+     * Get formatted payment method display
+     *
+     * @return string
+     */
+    public function getFormattedPaymentMethodDisplay()
+    {
+        $paymentInfo = $this->getPaymentInfo();
+        if (!is_array($paymentInfo)) {
+            return '';
+        }
+
+        return $this->paymentMethodFormatter->formatPaymentMethodDisplay($paymentInfo);
+    }
+
+    /**
+     * Format wallet display from tokenization method
+     *
+     * @param string $walletValue
+     * @return string
+     */
+    public function formatWalletDisplay(string $walletValue): string
+    {
+        return $this->paymentMethodFormatter->formatWalletDisplay($walletValue);
+    }
+
+    /**
+     * Format phone number with proper spacing
+     *
+     * @param string $phoneNumber
+     * @return string
+     */
+    public function formatPhoneNumber(string $phoneNumber): string
+    {
+        return $this->paymentMethodFormatter->formatPhoneNumber($phoneNumber);
     }
 
     /**

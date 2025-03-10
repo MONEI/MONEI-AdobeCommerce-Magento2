@@ -101,13 +101,13 @@ class SetupSales implements DataPatchInterface, NonTransactionableInterface
         );
 
         $statuses = [
-            Monei::STATUS_MONEI_PENDING => __('Monei - pending'),
-            Monei::STATUS_MONEI_AUTHORIZED => __('Monei - pre-authorized'),
-            Monei::STATUS_MONEI_EXPIRED => __('Monei - expired'),
-            Monei::STATUS_MONEI_FAILED => __('Monei - failed'),
-            Monei::STATUS_MONEI_SUCCEDED => __('Monei - succeeded'),
-            Monei::STATUS_MONEI_PARTIALLY_REFUNDED => __('Monei - partially refunded'),
-            Monei::STATUS_MONEI_REFUNDED => __('Monei - refunded'),
+            Monei::STATUS_MONEI_PENDING => __('MONEI - Pending'),
+            Monei::STATUS_MONEI_AUTHORIZED => __('MONEI - Authorized'),
+            Monei::STATUS_MONEI_EXPIRED => __('MONEI - Expired'),
+            Monei::STATUS_MONEI_FAILED => __('MONEI - Failed'),
+            Monei::STATUS_MONEI_SUCCEEDED => __('MONEI - Succeeded'),
+            Monei::STATUS_MONEI_PARTIALLY_REFUNDED => __('MONEI - Partially Refunded'),
+            Monei::STATUS_MONEI_REFUNDED => __('MONEI - Refunded'),
         ];
         foreach ($statuses as $code => $info) {
             $data[] = ['status' => $code, 'label' => $info];
@@ -129,7 +129,7 @@ class SetupSales implements DataPatchInterface, NonTransactionableInterface
                 Monei::STATUS_MONEI_FAILED => false,
             ],
             'processing' => [
-                Monei::STATUS_MONEI_SUCCEDED => false,
+                Monei::STATUS_MONEI_SUCCEEDED => false,
                 Monei::STATUS_MONEI_PARTIALLY_REFUNDED => false,
             ],
             'complete' => [

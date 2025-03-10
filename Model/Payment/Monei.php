@@ -8,6 +8,8 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Model\Payment;
 
+use Monei\Model\PaymentMethods;
+
 /**
  * Monei payment method class.
  */
@@ -37,7 +39,7 @@ class Monei
 
     public const STATUS_MONEI_FAILED = 'monei_failed';
 
-    public const STATUS_MONEI_SUCCEDED = 'monei_succeeded';
+    public const STATUS_MONEI_SUCCEEDED = 'monei_succeeded';
 
     public const STATUS_MONEI_PARTIALLY_REFUNDED = 'monei_partially_refunded';
 
@@ -69,20 +71,20 @@ class Monei
         self::MBWAY_REDIRECT_CODE,
     ];
 
-    public const MONEI_GOOGLE_CODE = 'googlePay';
+    public const MONEI_GOOGLE_CODE = PaymentMethods::PAYMENT_METHODS_GOOGLE_PAY;
 
-    public const MONEI_APPLE_CODE = 'applePay';
+    public const MONEI_APPLE_CODE = PaymentMethods::PAYMENT_METHODS_APPLE_PAY;
 
     public const MAPPER_MAGENTO_MONEI_PAYMENT_CODE = [
-        self::BIZUM_CODE => ['bizum'],
+        self::BIZUM_CODE => [PaymentMethods::PAYMENT_METHODS_BIZUM],
         self::GOOGLE_APPLE_CODE => [self::MONEI_GOOGLE_CODE, self::MONEI_APPLE_CODE],
-        self::CARD_CODE => ['card'],
-        self::MULTIBANCO_REDIRECT_CODE => ['multibanco'],
-        self::MBWAY_REDIRECT_CODE => ['mbway'],
+        self::CARD_CODE => [PaymentMethods::PAYMENT_METHODS_CARD],
+        self::MULTIBANCO_REDIRECT_CODE => [PaymentMethods::PAYMENT_METHODS_MULTIBANCO],
+        self::MBWAY_REDIRECT_CODE => [PaymentMethods::PAYMENT_METHODS_MBWAY],
     ];
 
     public const MAPPER_MAGENTO_MONEI_PAYMENT_CODE_REDIRECT = [
-        self::MULTIBANCO_REDIRECT_CODE => ['multibanco'],
-        self::MBWAY_REDIRECT_CODE => ['mbway'],
+        self::MULTIBANCO_REDIRECT_CODE => [PaymentMethods::PAYMENT_METHODS_MULTIBANCO],
+        self::MBWAY_REDIRECT_CODE => [PaymentMethods::PAYMENT_METHODS_MBWAY],
     ];
 }

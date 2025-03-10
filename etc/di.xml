@@ -37,6 +37,7 @@
                 type="Monei\MoneiPayment\Service\GenerateInvoice"/>
     <preference for="Magento\Sales\Controller\Adminhtml\Order\Creditmemo\Save"
                 type="Monei\MoneiPayment\Controller\Adminhtml\Order\Creditmemo\Save"/>
+    <preference for="Monei\MoneiPayment\Api\Helper\PaymentMethodFormatterInterface" type="Monei\MoneiPayment\Helper\PaymentMethodFormatter"/>
 
     <type name="Monei\MoneiPayment\Service\Logger\Handler">
         <arguments>
@@ -526,6 +527,13 @@
             <argument name="lockManager" xsi:type="object">Monei\MoneiPayment\Api\LockManagerInterface</argument>
             <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
             <argument name="moduleConfig" xsi:type="object">Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface</argument>
+        </arguments>
+    </type>
+
+    <!-- Helper class for payment method formatting -->
+    <type name="Monei\MoneiPayment\Block\Info\Monei">
+        <arguments>
+            <argument name="paymentMethodFormatter" xsi:type="object">Monei\MoneiPayment\Helper\PaymentMethodFormatter</argument>
         </arguments>
     </type>
 </config>

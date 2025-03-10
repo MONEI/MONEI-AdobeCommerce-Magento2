@@ -75,6 +75,22 @@
             <source_model>Monei\MoneiPayment\Model\Config\Source\PendingStatus</source_model>
             <comment>Selectable with all the pending order statuses</comment>
         </field>
+        <field id="heading_emails" translate="label" sortOrder="95" showInDefault="1" showInWebsite="1" showInStore="1">
+          <label>Email Settings:</label>
+          <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
+        </field>
+        <field id="send_order_email" translate="label comment" sortOrder="96" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+          <label>Send Order Email</label>
+          <comment>Controls whether to send order confirmation emails after payment is confirmed</comment>
+          <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+          <config_path>payment/monei/send_order_email</config_path>
+        </field>
+        <field id="send_invoice_email" translate="label comment" sortOrder="97" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
+          <label>Send Invoice Email</label>
+          <comment>Controls whether to send invoice emails after invoice is created</comment>
+          <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+          <config_path>payment/monei/send_invoice_email</config_path>
+        </field>
         <field id="heading3" translate="label" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Monei Redirect:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
