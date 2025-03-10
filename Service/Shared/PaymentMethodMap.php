@@ -10,7 +10,7 @@ namespace Monei\MoneiPayment\Service\Shared;
 
 use Monei\MoneiPayment\Model\Payment\Monei;
 
-class GetMoneiPaymentCodesByMagentoPaymentCode
+class PaymentMethodMap
 {
     /**
      * Get Monei payment codes for a given Magento payment code.
@@ -21,6 +21,6 @@ class GetMoneiPaymentCodesByMagentoPaymentCode
      */
     public function execute(string $magentoPaymentCode): array
     {
-        return Monei::MAPPER_MAGENTO_MONEI_PAYMENT_CODE[$magentoPaymentCode] ?? [];
+        return Monei::PAYMENT_METHOD_MAP[$magentoPaymentCode] ?? [];
     }
 }

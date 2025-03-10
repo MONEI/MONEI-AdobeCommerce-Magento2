@@ -68,7 +68,7 @@ class Monei
 
     public const MONEI_APPLE_CODE = PaymentMethods::PAYMENT_METHODS_APPLE_PAY;
 
-    public const MAPPER_MAGENTO_MONEI_PAYMENT_CODE = [
+    public const PAYMENT_METHOD_MAP = [
         self::BIZUM_CODE => [PaymentMethods::PAYMENT_METHODS_BIZUM],
         self::GOOGLE_APPLE_CODE => [self::MONEI_GOOGLE_CODE, self::MONEI_APPLE_CODE],
         self::CARD_CODE => [PaymentMethods::PAYMENT_METHODS_CARD],
@@ -76,7 +76,7 @@ class Monei
         self::MBWAY_REDIRECT_CODE => [PaymentMethods::PAYMENT_METHODS_MBWAY],
     ];
 
-    public const MAPPER_MAGENTO_MONEI_PAYMENT_CODE_REDIRECT = [
+    public const REDIRECT_PAYMENT_MAP = [
         self::MULTIBANCO_REDIRECT_CODE => [PaymentMethods::PAYMENT_METHODS_MULTIBANCO],
         self::MBWAY_REDIRECT_CODE => [PaymentMethods::PAYMENT_METHODS_MBWAY],
     ];

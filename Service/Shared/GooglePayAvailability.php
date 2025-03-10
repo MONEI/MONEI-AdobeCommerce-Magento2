@@ -12,9 +12,9 @@ use Monei\MoneiPayment\Api\Config\MoneiGoogleApplePaymentModuleConfigInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
 
 /**
- * Service class to check if Apple Pay is enabled in the Monei account.
+ * Service class to check if Google Pay is enabled in the Monei account.
  */
-class IsEnabledApplePayInMoneiAccount
+class GooglePayAvailability
 {
     /**
      * Google and Apple Payment module configuration.
@@ -26,38 +26,38 @@ class IsEnabledApplePayInMoneiAccount
     /**
      * Service to get available Monei payment methods.
      *
-     * @var GetAvailableMoneiPaymentMethods
+     * @var AvailablePaymentMethods
      */
-    private GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods;
+    private AvailablePaymentMethods $availablePaymentMethods;
 
     /**
-     * Constructor for IsEnabledApplePayInMoneiAccount.
+     * Constructor for GooglePayAvailability.
      *
      * @param MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentModuleConfig
      *        Configuration for Google and Apple Pay
-     * @param GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods
+     * @param AvailablePaymentMethods $availablePaymentMethods
      *        Service to retrieve available payment methods
      */
     public function __construct(
         MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentModuleConfig,
-        GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods
+        AvailablePaymentMethods $availablePaymentMethods
     ) {
+        $this->availablePaymentMethods = $availablePaymentMethods;
         $this->moneiGoogleApplePaymentModuleConfig = $moneiGoogleApplePaymentModuleConfig;
-        $this->getAvailableMoneiPaymentMethods = $getAvailableMoneiPaymentMethods;
     }
 
     /**
-     * Check if Apple Pay is enabled in the Monei account.
+     * Check if Google Pay is enabled in the Monei account.
      *
-     * @return bool True if Apple Pay is enabled, false otherwise
+     * @return bool True if Google Pay is enabled, false otherwise
      */
     public function execute(): bool
     {
         if (!$this->moneiGoogleApplePaymentModuleConfig->isEnabled()) {
             return false;
         }
-        $availableMoneiPaymentMethods = $this->getAvailableMoneiPaymentMethods->execute();
+        $availableMoneiPaymentMethods = $this->availablePaymentMethods->execute();
 
-        return \in_array(Monei::MONEI_APPLE_CODE, $availableMoneiPaymentMethods, true);
+        return \in_array(Monei::MONEI_GOOGLE_CODE, $availableMoneiPaymentMethods, true);
     }
 }

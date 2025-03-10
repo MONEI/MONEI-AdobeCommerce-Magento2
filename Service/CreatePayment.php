@@ -20,10 +20,10 @@ use Monei\Model\PaymentTransactionType;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
 use Monei\MoneiPayment\Model\Config\Source\TypeOfPayment;
+use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiClient;
-use Monei\MoneiPayment\Model\Payment\Monei;
 
 /**
  * Monei create payment service class using the official MONEI PHP SDK.
@@ -136,9 +136,28 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
             'fail_url' => $this->urlBuilder->getUrl('monei/payment/fail')
         ]);
 
+        // Set allowed payment methods if available
+        if (isset($data['allowed_payment_methods']) && is_array($data['allowed_payment_methods'])) {
+            $paymentRequest->setAllowedPaymentMethods($data['allowed_payment_methods']);
+        }
+
         // Set transaction type if necessary using the SDK enum
         if (TypeOfPayment::TYPE_PRE_AUTHORIZED === $this->moduleConfig->getTypeOfPayment()) {
-            $paymentRequest->setTransactionType(PaymentTransactionType::AUTH);
+            $allowedPaymentMethods = $paymentRequest->getAllowedPaymentMethods();
+
+            // Define the payment methods that don't support AUTH
+            $mbwayCode = Monei::REDIRECT_PAYMENT_MAP[Monei::MBWAY_REDIRECT_CODE][0];
+            $multibancoCode = Monei::REDIRECT_PAYMENT_MAP[Monei::MULTIBANCO_REDIRECT_CODE][0];
+
+            // Only set AUTH if the allowed payment methods don't include MBway or Multibanco
+            $hasMbwayOrMultibanco = $allowedPaymentMethods &&
+                is_array($allowedPaymentMethods) &&
+                (in_array($mbwayCode, $allowedPaymentMethods) ||
+                    in_array($multibancoCode, $allowedPaymentMethods));
+
+            if (!$hasMbwayOrMultibanco) {
+                $paymentRequest->setTransactionType(PaymentTransactionType::AUTH);
+            }
         }
 
         // Set customer information if available

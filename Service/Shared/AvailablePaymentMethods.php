@@ -14,7 +14,7 @@ use Monei\MoneiPayment\Api\Service\GetPaymentMethodsInterface;
 /**
  * Get Monei payment method configuration class.
  */
-class GetAvailableMoneiPaymentMethods
+class AvailablePaymentMethods
 {
     /**
      * Collection of payment methods supported by Monei.
@@ -38,7 +38,7 @@ class GetAvailableMoneiPaymentMethods
     private GetPaymentMethodsInterface $getPaymentMethodsService;
 
     /**
-     * GetAvailableMoneiPaymentMethods constructor.
+     * AvailablePaymentMethods constructor.
      *
      * @param GetPaymentMethodsInterface $getPaymentMethodsService
      */

@@ -65,14 +65,14 @@
   },
   "scripts": {
     "lint": "vendor/bin/phpcs --standard=phpcs.xml .",
-    "fix": "vendor/bin/phpcbf --standard=phpcs.xml .",
+    "fix": "vendor/bin/phpcbf --standard=phpcs.xml . || true",
     "cs:check": "vendor/bin/php-cs-fixer check --config=.php-cs-fixer.php .",
-    "cs:fix": "vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php .",
+    "cs:fix": "vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php . || true",
     "phpstan": "vendor/bin/phpstan analyse --memory-limit=2G",
     "phpstan:controllers": "vendor/bin/phpstan analyse --memory-limit=2G Controller",
     "pretty:check": "./pretty-php.phar --check .",
     "pretty:diff": "./pretty-php.phar --diff .",
-    "pretty:fix": "./pretty-php.phar .",
+    "pretty:fix": "./pretty-php.phar . || true",
     "fix:all": [
       "@fix",
       "@cs:fix",

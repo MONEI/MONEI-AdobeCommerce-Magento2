@@ -21,8 +21,8 @@ use Monei\MoneiPayment\Block\Monei\Customer\CardRenderer;
 use Monei\MoneiPayment\Model\Config\Source\Mode;
 use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Model\Payment\Status;
-use Monei\MoneiPayment\Service\Shared\IsEnabledApplePayInMoneiAccount;
-use Monei\MoneiPayment\Service\Shared\IsEnabledGooglePayInMoneiAccount;
+use Monei\MoneiPayment\Service\Shared\ApplePayAvailability;
+use Monei\MoneiPayment\Service\Shared\GooglePayAvailability;
 
 /**
  * Provides config data for payment.
@@ -81,16 +81,16 @@ class CheckoutConfigProvider implements ConfigProviderInterface
     /**
      * Google Pay availability checker.
      *
-     * @var IsEnabledGooglePayInMoneiAccount
+     * @var GooglePayAvailability
      */
-    private IsEnabledGooglePayInMoneiAccount $isEnabledGooglePayInMoneiAccount;
+    private GooglePayAvailability $googlePayAvailability;
 
     /**
      * Apple Pay availability checker.
      *
-     * @var IsEnabledApplePayInMoneiAccount
+     * @var ApplePayAvailability
      */
-    private IsEnabledApplePayInMoneiAccount $isEnabledApplePayInMoneiAccount;
+    private ApplePayAvailability $applePayAvailability;
 
     /**
      * Constructor.
@@ -101,8 +101,8 @@ class CheckoutConfigProvider implements ConfigProviderInterface
      * @param MoneiCardPaymentModuleConfigInterface $moneiCardPaymentConfig
      * @param MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentConfig
      * @param MoneiBizumPaymentModuleConfigInterface $moneiBizumPaymentModuleConfig
-     * @param IsEnabledGooglePayInMoneiAccount $isEnabledGooglePayInMoneiAccount
-     * @param IsEnabledApplePayInMoneiAccount $isEnabledApplePayInMoneiAccount
+     * @param GooglePayAvailability $googlePayAvailability
+     * @param ApplePayAvailability $applePayAvailability
      * @param StoreManagerInterface $storeManager
      */
     public function __construct(
@@ -112,16 +112,16 @@ class CheckoutConfigProvider implements ConfigProviderInterface
         MoneiCardPaymentModuleConfigInterface $moneiCardPaymentConfig,
         MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentConfig,
         MoneiBizumPaymentModuleConfigInterface $moneiBizumPaymentModuleConfig,
-        IsEnabledGooglePayInMoneiAccount $isEnabledGooglePayInMoneiAccount,
-        IsEnabledApplePayInMoneiAccount $isEnabledApplePayInMoneiAccount,
+        GooglePayAvailability $googlePayAvailability,
+        ApplePayAvailability $applePayAvailability,
         StoreManagerInterface $storeManager
     ) {
         $this->allMoneiPaymentModuleConfig = $allMoneiPaymentModuleConfig;
         $this->moneiGoogleApplePaymentConfig = $moneiGoogleApplePaymentConfig;
         $this->moneiBizumPaymentModuleConfig = $moneiBizumPaymentModuleConfig;
         $this->moneiCardPaymentConfig = $moneiCardPaymentConfig;
-        $this->isEnabledGooglePayInMoneiAccount = $isEnabledGooglePayInMoneiAccount;
-        $this->isEnabledApplePayInMoneiAccount = $isEnabledApplePayInMoneiAccount;
+        $this->googlePayAvailability = $googlePayAvailability;
+        $this->applePayAvailability = $applePayAvailability;
         $this->moneiPaymentConfig = $moneiPaymentConfig;
         $this->urlBuilder = $urlBuilder;
         $this->storeManager = $storeManager;
@@ -183,8 +183,8 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                     'jsonStyle' => $this->moneiBizumPaymentModuleConfig->getJsonStyle($storeId),
                 ],
                 Monei::GOOGLE_APPLE_CODE => [
-                    'isEnabledGooglePay' => $this->isEnabledGooglePayInMoneiAccount->execute(),
-                    'isEnabledApplePay' => $this->isEnabledApplePayInMoneiAccount->execute(),
+                    'isEnabledGooglePay' => $this->googlePayAvailability->execute(),
+                    'isEnabledApplePay' => $this->applePayAvailability->execute(),
                     'googleTitle' => $this->moneiGoogleApplePaymentConfig->getGoogleTitle($storeId),
                     'appleTitle' => $this->moneiGoogleApplePaymentConfig->getAppleTitle($storeId),
                     'redirectUrl' => $this->urlBuilder->getUrl('monei/payment/redirect'),

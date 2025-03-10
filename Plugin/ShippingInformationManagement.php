@@ -13,8 +13,8 @@ use Magento\Checkout\Api\Data\ShippingInformationInterface;
 use Magento\Checkout\Model\ShippingInformationManagement as MagentoShippingInformationManagement;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
-use Monei\MoneiPayment\Service\Shared\GetAvailableMoneiPaymentMethodsByCountry;
-use Monei\MoneiPayment\Service\Shared\GetMoneiPaymentCodesByMagentoPaymentCode;
+use Monei\MoneiPayment\Service\Shared\CountryPaymentMethods;
+use Monei\MoneiPayment\Service\Shared\PaymentMethodMap;
 
 /**
  * Plugin for ShippingInformationManagement to filter payment methods based on shipping address.
@@ -31,35 +31,35 @@ class ShippingInformationManagement
     /**
      * Service to get available Monei payment methods by country.
      *
-     * @var GetAvailableMoneiPaymentMethodsByCountry
+     * @var CountryPaymentMethods
      */
-    private GetAvailableMoneiPaymentMethodsByCountry $getAvailableMoneiPaymentMethodsByCountry;
+    private CountryPaymentMethods $countryPaymentMethods;
 
     /**
      * Service to get Monei payment codes by Magento payment code.
      *
-     * @var GetMoneiPaymentCodesByMagentoPaymentCode
+     * @var PaymentMethodMap
      */
-    private GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode;
+    private PaymentMethodMap $paymentMethodMap;
 
     /**
      * Constructor for ShippingInformationManagement plugin.
      *
      * @param MoneiPaymentModuleConfigInterface $moneiPaymentModuleConfig
      *     Configuration for Monei payment module
-     * @param GetAvailableMoneiPaymentMethodsByCountry $getAvailableMoneiPaymentMethodsByCountry
+     * @param CountryPaymentMethods $countryPaymentMethods
      *     Service to get available payment methods by country
-     * @param GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode
+     * @param PaymentMethodMap $paymentMethodMap
      *     Service to get Monei payment codes
      */
     public function __construct(
         MoneiPaymentModuleConfigInterface $moneiPaymentModuleConfig,
-        GetAvailableMoneiPaymentMethodsByCountry $getAvailableMoneiPaymentMethodsByCountry,
-        GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode
+        CountryPaymentMethods $countryPaymentMethods,
+        PaymentMethodMap $paymentMethodMap
     ) {
         $this->moneiPaymentModuleConfig = $moneiPaymentModuleConfig;
-        $this->getAvailableMoneiPaymentMethodsByCountry = $getAvailableMoneiPaymentMethodsByCountry;
-        $this->getMoneiPaymentCodesByMagentoPaymentCode = $getMoneiPaymentCodesByMagentoPaymentCode;
+        $this->countryPaymentMethods = $countryPaymentMethods;
+        $this->paymentMethodMap = $paymentMethodMap;
     }
 
     /**
@@ -117,13 +117,13 @@ class ShippingInformationManagement
     ): PaymentDetailsInterface {
         $paymentMethods = $paymentDetails->getPaymentMethods();
         $shippingAddress = $addressInformation->getShippingAddress();
-        $availableMoneiPaymentMethodsByCountry = $this->getAvailableMoneiPaymentMethodsByCountry->execute(
+        $availableMoneiPaymentMethodsByCountry = $this->countryPaymentMethods->execute(
             $shippingAddress->getCountryId()
         );
 
         $filteredPaymentMethods = [];
         foreach ($paymentMethods as $paymentMethod) {
-            $moneiPaymentCodes = $this->getMoneiPaymentCodesByMagentoPaymentCode->execute(
+            $moneiPaymentCodes = $this->paymentMethodMap->execute(
                 $paymentMethod->getCode()
             );
             if (

@@ -21,6 +21,6 @@ class PaymentMethodCodeMapper
      */
     public function execute(string $magentoPaymentCode): array
     {
-        return Monei::MAPPER_MAGENTO_MONEI_PAYMENT_CODE_REDIRECT[$magentoPaymentCode] ?? [];
+        return Monei::REDIRECT_PAYMENT_MAP[$magentoPaymentCode] ?? [];
     }
 }

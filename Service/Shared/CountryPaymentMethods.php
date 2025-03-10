@@ -11,23 +11,23 @@ namespace Monei\MoneiPayment\Service\Shared;
 /**
  * Service to get available Monei payment methods by country.
  */
-class GetAvailableMoneiPaymentMethodsByCountry
+class CountryPaymentMethods
 {
     /**
      * Service to get all available Monei payment methods.
      *
-     * @var GetAvailableMoneiPaymentMethods
+     * @var AvailablePaymentMethods
      */
-    private GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods;
+    private AvailablePaymentMethods $availablePaymentMethods;
 
     /**
      * Constructor.
      *
-     * @param GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods
+     * @param AvailablePaymentMethods $availablePaymentMethods
      */
-    public function __construct(GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods)
+    public function __construct(AvailablePaymentMethods $availablePaymentMethods)
     {
-        $this->getAvailableMoneiPaymentMethods = $getAvailableMoneiPaymentMethods;
+        $this->availablePaymentMethods = $availablePaymentMethods;
     }
 
     /**
@@ -39,8 +39,8 @@ class GetAvailableMoneiPaymentMethodsByCountry
      */
     public function execute(string $countryId): array
     {
-        $allPaymentMethods = $this->getAvailableMoneiPaymentMethods->execute();
-        $metadataPaymentMethods = $this->getAvailableMoneiPaymentMethods->getMetadataPaymentMethods();
+        $allPaymentMethods = $this->availablePaymentMethods->execute();
+        $metadataPaymentMethods = $this->availablePaymentMethods->getMetadataPaymentMethods();
         foreach ($allPaymentMethods as $index => $paymentMethod) {
             if (isset($metadataPaymentMethods[$paymentMethod], $metadataPaymentMethods[$paymentMethod]['countries'])) {
                 $countriesAvailable = $metadataPaymentMethods[$paymentMethod]['countries'];
