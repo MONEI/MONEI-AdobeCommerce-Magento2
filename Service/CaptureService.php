@@ -9,14 +9,18 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Phrase;
 use Magento\Sales\Api\Data\InvoiceInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\InvoiceRepositoryInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
-use Monei\Model\PaymentStatus;
+use Magento\Sales\Model\Order;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use Monei\MoneiPayment\Api\Data\PaymentInfoInterface;
 use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Model\Api\MoneiApiClient;
+use Monei\MoneiPayment\Model\Payment\Monei;
+use Monei\MoneiPayment\Model\Payment\Status;
 
 /**
  * Service for capturing MONEI payments
@@ -93,7 +97,7 @@ class CaptureService
             throw new LocalizedException(__('Payment not found for order %1', $order->getIncrementId()));
         }
 
-        $paymentId = $payment->getAdditionalInformation('monei_payment_id');
+        $paymentId = $payment->getAdditionalInformation(PaymentInfoInterface::PAYMENT_ID);
         if (!$paymentId) {
             throw new LocalizedException(__('MONEI payment ID not found for order %1', $order->getIncrementId()));
         }
@@ -135,15 +139,16 @@ class CaptureService
             $this->invoiceRepository->save($invoice);
 
             // Update payment information
-            $payment->setAdditionalInformation('monei_capture_id', $captureResult['id']);
-            $payment->setAdditionalInformation('monei_is_captured', true);
-            $this->orderRepository->save($order);
+            $this->logger->info('[Capture successful] Payment captured', [
+                'order_id' => $order->getIncrementId(),
+                'payment_id' => $paymentId,
+                'amount' => $amount,
+                'capture_id' => $captureResult['id']
+            ]);
 
-            $this->logger->info(sprintf(
-                'Successfully captured payment %s for order %s',
-                $paymentId,
-                $order->getIncrementId()
-            ));
+            $payment->setAdditionalInformation(PaymentInfoInterface::CAPTURE_ID, $captureResult['id']);
+            $payment->setAdditionalInformation(PaymentInfoInterface::PAYMENT_IS_CAPTURED, true);
+            $this->orderRepository->save($order);
 
             return true;
         } catch (\Exception $e) {
@@ -174,12 +179,12 @@ class CaptureService
                 return false;
             }
 
-            $paymentId = $payment->getAdditionalInformation('monei_payment_id');
+            $paymentId = $payment->getAdditionalInformation(PaymentInfoInterface::PAYMENT_ID);
             if (!$paymentId) {
                 return false;
             }
 
-            $isCaptured = (bool) $payment->getAdditionalInformation('monei_is_captured');
+            $isCaptured = (bool) $payment->getAdditionalInformation(PaymentInfoInterface::PAYMENT_IS_CAPTURED);
             if ($isCaptured) {
                 return false;
             }
@@ -214,7 +219,7 @@ class CaptureService
             throw new LocalizedException(__('Payment not found for order %1', $order->getIncrementId()));
         }
 
-        $paymentId = $payment->getAdditionalInformation('monei_payment_id');
+        $paymentId = $payment->getAdditionalInformation(PaymentInfoInterface::PAYMENT_ID);
         if (!$paymentId) {
             throw new LocalizedException(__('MONEI payment ID not found for order %1', $order->getIncrementId()));
         }
@@ -246,14 +251,13 @@ class CaptureService
             }
 
             // Update payment information
-            $payment->setAdditionalInformation('monei_is_voided', true);
-            $this->orderRepository->save($order);
+            $this->logger->info('[Void successful] Payment voided', [
+                'order_id' => $order->getIncrementId(),
+                'payment_id' => $paymentId
+            ]);
 
-            $this->logger->info(sprintf(
-                'Successfully voided payment %s for order %s',
-                $paymentId,
-                $order->getIncrementId()
-            ));
+            $payment->setAdditionalInformation(PaymentInfoInterface::PAYMENT_IS_VOIDED, true);
+            $this->orderRepository->save($order);
 
             return true;
         } catch (\Exception $e) {
@@ -284,7 +288,7 @@ class CaptureService
                 return false;
             }
 
-            $paymentId = $payment->getAdditionalInformation('monei_payment_id');
+            $paymentId = $payment->getAdditionalInformation(PaymentInfoInterface::PAYMENT_ID);
             if (!$paymentId) {
                 return false;
             }

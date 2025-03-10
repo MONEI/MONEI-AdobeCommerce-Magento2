@@ -10,10 +10,15 @@ namespace Monei\MoneiPayment\Block\Info;
 
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\View\Element\Template;
+use Magento\Framework\View\Element\Template\Context;
 use Magento\Payment\Block\Info;
-use Monei\Model\Payment;
+use Magento\Sales\Model\Order\Payment;
+use Monei\MoneiPayment\Api\Data\PaymentInfoInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
+use Monei\MoneiPayment\Gateway\Config\Config;
+use Monei\MoneiPayment\Model\Payment\Monei as MoneiPayment;
 use Monei\MoneiPayment\Service\Logger;
+use Monei\Model\Payment;
 
 /**
  * Monei payment info block.
@@ -83,7 +88,7 @@ class Monei extends Info
 
         // Get payment ID from payment's additional information
         $payment = $this->getInfo();
-        $monei_payment_id = $payment->getAdditionalInformation('monei_payment_id');
+        $monei_payment_id = $payment->getAdditionalInformation(PaymentInfoInterface::PAYMENT_ID);
 
         if (!$monei_payment_id) {
             $this->logger->debug('Payment Info: Missing Monei payment ID in order', [

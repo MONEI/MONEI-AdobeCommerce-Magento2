@@ -17,6 +17,10 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 use Magento\Sales\Model\OrderFactory;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
+use Monei\MoneiPayment\Api\Data\PaymentErrorCodeInterface;
+use Monei\MoneiPayment\Api\Data\PaymentInfoInterface;
+use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Api\PaymentProcessingResultInterface;
 use Monei\MoneiPayment\Api\PaymentProcessorInterface;
@@ -27,6 +31,7 @@ use Monei\MoneiPayment\Model\Data\PaymentProcessingResult;
 use Monei\MoneiPayment\Model\Payment\Status;
 use Monei\MoneiPayment\Service\InvoiceService;
 use Monei\MoneiPayment\Service\Logger;
+use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 use Exception;
 
 /**
@@ -85,6 +90,11 @@ class PaymentProcessor implements PaymentProcessorInterface
     private OrderFactory $orderFactory;
 
     /**
+     * @var CreateVaultPayment
+     */
+    private CreateVaultPayment $createVaultPayment;
+
+    /**
      * @param OrderRepositoryInterface $orderRepository
      * @param InvoiceService $invoiceService
      * @param LockManagerInterface $lockManager
@@ -95,6 +105,7 @@ class PaymentProcessor implements PaymentProcessorInterface
      * @param SearchCriteriaBuilder $searchCriteriaBuilder
      * @param GetPaymentInterface $getPaymentInterface
      * @param OrderFactory $orderFactory
+     * @param CreateVaultPayment $createVaultPayment
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
@@ -106,7 +117,8 @@ class PaymentProcessor implements PaymentProcessorInterface
         OrderSender $orderSender,
         SearchCriteriaBuilder $searchCriteriaBuilder,
         GetPaymentInterface $getPaymentInterface,
-        OrderFactory $orderFactory
+        OrderFactory $orderFactory,
+        CreateVaultPayment $createVaultPayment
     ) {
         $this->orderRepository = $orderRepository;
         $this->invoiceService = $invoiceService;
@@ -118,6 +130,7 @@ class PaymentProcessor implements PaymentProcessorInterface
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
         $this->getPaymentInterface = $getPaymentInterface;
         $this->orderFactory = $orderFactory;
+        $this->createVaultPayment = $createVaultPayment;
     }
 
     /**
@@ -133,7 +146,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                     $orderId,
                     $paymentId,
                     'Order not found',
-                    'not_found',
+                    PaymentErrorCodeInterface::ERROR_NOT_FOUND,
                     null
                 );
             }
@@ -155,7 +168,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                     $orderId,
                     $paymentId,
                     'Payment processing failed',
-                    'processing_failed',
+                    PaymentErrorCodeInterface::ERROR_PROCESSING_FAILED,
                     null
                 );
             }
@@ -171,7 +184,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                 $orderId,
                 $paymentId,
                 $e->getMessage(),
-                'exception',
+                PaymentErrorCodeInterface::ERROR_EXCEPTION,
                 null
             );
         }
@@ -557,22 +570,32 @@ class PaymentProcessor implements PaymentProcessorInterface
     {
         $orderPayment = $order->getPayment();
         if ($orderPayment) {
-            $orderPayment->setAdditionalInformation('monei_payment_id', $payment->getId());
-            $orderPayment->setAdditionalInformation('monei_payment_status', $payment->getStatus());
-            $orderPayment->setAdditionalInformation('monei_payment_amount', $payment->getAmount());
-            $orderPayment->setAdditionalInformation('monei_payment_currency', $payment->getCurrency());
-            $orderPayment->setAdditionalInformation('monei_payment_updated_at', $payment->getUpdatedAt());
+            $orderPayment->setAdditionalInformation(PaymentInfoInterface::PAYMENT_ID, $payment->getId());
+            $orderPayment->setAdditionalInformation(PaymentInfoInterface::PAYMENT_STATUS, $payment->getStatus());
+            $orderPayment->setAdditionalInformation(PaymentInfoInterface::PAYMENT_AMOUNT, $payment->getAmount());
+            $orderPayment->setAdditionalInformation(PaymentInfoInterface::PAYMENT_CURRENCY, $payment->getCurrency());
+            $orderPayment->setAdditionalInformation(PaymentInfoInterface::PAYMENT_UPDATED_AT, $payment->getUpdatedAt());
 
             if ($payment->isAuthorized()) {
-                $orderPayment->setAdditionalInformation('monei_is_authorized', true);
+                $orderPayment->setAdditionalInformation(PaymentInfoInterface::PAYMENT_IS_AUTHORIZED, true);
             }
 
             if ($payment->isSucceeded()) {
-                $orderPayment->setAdditionalInformation('monei_is_captured', true);
+                $orderPayment->setAdditionalInformation(PaymentInfoInterface::PAYMENT_IS_CAPTURED, true);
+            }
+
+            // Check if we need to tokenize the payment
+            if ($order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION)) {
+                $vaultCreated = $this->createVaultPayment->execute(
+                    $payment->getId(),
+                    $orderPayment
+                );
+                $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, $vaultCreated);
+                $this->logger->debug('[Payment token] Token creation ' . ($vaultCreated ? 'successful' : 'failed'));
             }
 
             // Also set payment ID directly on the order to maintain compatibility with Block/Info/Monei.php
-            $order->setData('monei_payment_id', $payment->getId());
+            $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $payment->getId());
         }
     }
 

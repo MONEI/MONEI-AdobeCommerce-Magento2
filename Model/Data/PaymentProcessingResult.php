@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Model\Data;
 
+use Monei\MoneiPayment\Api\Data\PaymentErrorCodeInterface;
 use Monei\MoneiPayment\Api\PaymentProcessingResultInterface;
 
 /**
@@ -202,6 +203,11 @@ class PaymentProcessingResult implements PaymentProcessingResultInterface
         ?string $statusCode = null,
         ?array $fullErrorResponse = null
     ): self {
+        // Use ERROR_UNKNOWN if no status code is provided
+        if ($statusCode === null) {
+            $statusCode = \Monei\MoneiPayment\Api\Data\PaymentErrorCodeInterface::ERROR_UNKNOWN;
+        }
+
         return new self(
             $status,
             $orderId,

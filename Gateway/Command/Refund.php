@@ -9,7 +9,10 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Gateway\Command;
 
 use Magento\Payment\Gateway\CommandInterface;
+use Magento\Payment\Gateway\Helper\SubjectReader;
+use Magento\Sales\Model\Order\Payment;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
+use Monei\MoneiPayment\Api\Data\PaymentInfoInterface;
 use Monei\MoneiPayment\Api\Service\RefundPaymentInterface;
 
 /**
@@ -48,7 +51,7 @@ class Refund implements CommandInterface
 
         // If not found on order, try to get from payment additional information
         if (empty($paymentId)) {
-            $paymentId = $payment->getAdditionalInformation('monei_payment_id');
+            $paymentId = $payment->getAdditionalInformation(PaymentInfoInterface::PAYMENT_ID);
         }
 
         // If still not found, try to get from payment's last transaction ID
