@@ -16,6 +16,7 @@ use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentMethodsInterface;
 use Monei\MoneiPayment\Model\Config\Source\ModuleVersion;
 use Monei\MoneiPayment\Registry\AccountId as RegistryAccountId;
+use Monei\MoneiPayment\Service\Logger;
 
 /**
  * Monei get payment REST integration service class.

@@ -18,6 +18,7 @@ use Magento\Framework\UrlInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Model\Config\Source\ModuleVersion;
+use Monei\MoneiPayment\Service\Logger;
 
 /**
  * Monei WS service abstract class.

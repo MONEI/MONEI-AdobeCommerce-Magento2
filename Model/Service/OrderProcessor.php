@@ -17,7 +17,7 @@ use Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\CollectionFactor
 use Magento\Framework\DB\Transaction;
 use Magento\Framework\DB\TransactionFactory;
 use Monei\MoneiPayment\Api\OrderLockManagerInterface;
-use Monei\MoneiPayment\Logger\Logger;
+use Monei\MoneiPayment\Service\Logger;
 
 /**
  * Service for processing orders with proper transaction and locking.
