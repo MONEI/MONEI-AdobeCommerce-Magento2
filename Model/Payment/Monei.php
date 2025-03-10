@@ -24,7 +24,16 @@ class Monei
 
     public const STATUS_MONEI_FAILED = 'monei_failed';
 
+    /**
+     * Constant defining the succeeded status.
+     * The original misspelled version was STATUS_MONEI_SUCCEDED but had the correctly spelled value 'monei_succeeded'
+     */
     public const STATUS_MONEI_SUCCEEDED = 'monei_succeeded';
+
+    /**
+     * @deprecated Use STATUS_MONEI_SUCCEEDED instead. Kept for backward compatibility.
+     */
+    public const STATUS_MONEI_SUCCEDED = self::STATUS_MONEI_SUCCEEDED;
 
     public const STATUS_MONEI_PARTIALLY_REFUNDED = 'monei_partially_refunded';
 
