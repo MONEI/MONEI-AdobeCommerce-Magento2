@@ -69,7 +69,8 @@ class RefundPayment extends AbstractApiService implements RefundPaymentInterface
         // Convert any camelCase keys to snake_case to ensure consistency
         $data = $this->convertKeysToSnakeCase($data);
 
-        return $this->executeApiCall(__METHOD__, function () use ($data) {
+        // Store the result in a variable to return just the Payment object
+        $result = $this->executeApiCall(__METHOD__, function () use ($data) {
             // Validate the request parameters
             $this->validateParams($data, $this->requiredArguments, [
                 'refund_reason' => function ($value) {
@@ -111,6 +112,9 @@ class RefundPayment extends AbstractApiService implements RefundPaymentInterface
                 throw new LocalizedException(__('Failed to refund payment with MONEI API: %1', $e->getMessage()));
             }
         }, ['refundData' => $data]);
+
+        // Extract and return just the Payment object from the array
+        return $result['response'] ?? $result[0] ?? null;
     }
 
     /**

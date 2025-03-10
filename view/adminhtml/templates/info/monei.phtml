@@ -145,11 +145,4 @@ $paymentInfo = $block->getPaymentInfo();
             <?php endif; ?>
         </tbody>
     </table>
-
-    <?php if (isset($paymentInfo['currency']) && !empty($paymentInfo['currency'])): ?>
-        <div style="margin-top: 10px; font-style: italic; color: #666; font-size: 13px;">
-            <?= $escaper->escapeHtml(__('The order was placed using')) ?>
-            <?= $escaper->escapeHtml($paymentInfo['currency']) ?>.
-        </div>
-    <?php endif; ?>
 <?php endif; ?>
