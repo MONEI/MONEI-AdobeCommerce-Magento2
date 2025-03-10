@@ -16,7 +16,7 @@
 
     <!-- Directories to exclude -->
     <exclude-pattern>*/vendor/*</exclude-pattern>
-    <exclude-pattern>*/stubs/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
 
     <!-- Set max line length -->
     <rule ref="Generic.Files.LineLength">
@@ -25,4 +25,4 @@
             <property name="absoluteLineLimit" value="120"/>
         </properties>
     </rule>
-</ruleset> 
+</ruleset>

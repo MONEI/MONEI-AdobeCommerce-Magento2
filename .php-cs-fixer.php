@@ -7,7 +7,7 @@
 $finder = PhpCsFixer\Finder::create()
     ->in(__DIR__)
     ->exclude('vendor')
-    ->exclude('stubs');
+    ->exclude('node_modules');
 
 $config = new PhpCsFixer\Config();
 return $config->setRules([

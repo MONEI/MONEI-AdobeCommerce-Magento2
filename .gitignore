@@ -24,6 +24,5 @@ node_modules
 .phpcs-cache
 .php_cs.cache
 .phpunit.result.cache
-stubs/cache/*
 /var/cache/*
 /generated/*

@@ -14,8 +14,8 @@ jobs:
       with:
         type: 'zip'
         filename: 'monei-module-monei-payment-${{github.event.release.tag_name}}.zip'
-        exclusions: '*.git* /build/* /scripts/* /stubs/*'
-        
+        exclusions: '*.git* /build/*
+
     - name: Upload Release
       uses: ncipollo/release-action@v1.12.0
       with:
