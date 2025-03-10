@@ -36,7 +36,7 @@
       <monei_card>
         <active>0</active>
         <model>MoneiCardPaymentFacade</model>
-        <title>Pay with card</title>
+            <title>Pay with card</title>
         <is_enabled_tokenization>0</is_enabled_tokenization>
         <allowspecific>0</allowspecific>
         <can_use_internal>1</can_use_internal>

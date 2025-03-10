@@ -62,7 +62,7 @@
         </field>
         <field id="type_of_payment" translate="label comment" sortOrder="70" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Payment Action</label>
-            <comment>Choose whether to only authorize payments or to authorize and capture them immediately.</comment>
+            <comment>Choose whether to only authorize payments or to authorize and capture them immediately. Note: Pre-authorization (Authorize option) is only supported for card payments, not for MBWay or Multibanco.</comment>
             <source_model>Monei\MoneiPayment\Model\Config\Source\TypeOfPayment</source_model>
           </field>
         <field id="confirmed_status" translate="label comment" type="select" sortOrder="80" showInDefault="1" showInWebsite="1" showInStore="1">

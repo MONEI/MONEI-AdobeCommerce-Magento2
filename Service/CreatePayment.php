@@ -23,6 +23,7 @@ use Monei\MoneiPayment\Model\Config\Source\TypeOfPayment;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiClient;
+use Monei\MoneiPayment\Model\Payment\Monei;
 
 /**
  * Monei create payment service class using the official MONEI PHP SDK.
@@ -42,8 +43,6 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
         'amount',
         'currency',
         'order_id',
-        'customer',
-        'billing_details',
         'shipping_details',
     ];
 

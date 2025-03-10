@@ -16,7 +16,7 @@ use Magento\Sales\Model\Order\Address;
 use Monei\Model\Payment;
 use Monei\Model\PaymentNextAction;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
-use Monei\MoneiPayment\Service\Shared\GetMoneiPaymentCodesByMagentoPaymentCodeRedirect;
+use Monei\MoneiPayment\Service\Shared\PaymentMethodCodeMapper;
 
 /**
  * Monei payment redirect controller.
@@ -40,9 +40,9 @@ class Redirect implements HttpGetActionInterface
     private MagentoRedirect $resultRedirectFactory;
 
     /**
-     * @var GetMoneiPaymentCodesByMagentoPaymentCodeRedirect
+     * @var PaymentMethodCodeMapper
      */
-    private GetMoneiPaymentCodesByMagentoPaymentCodeRedirect $getMoneiPaymentCodesByMagentoPaymentCodeRedirect;
+    private PaymentMethodCodeMapper $paymentMethodCodeMapper;
 
     /**
      * Constructor.
@@ -50,18 +50,18 @@ class Redirect implements HttpGetActionInterface
      * @param Session $checkoutSession
      * @param CreatePaymentInterface $createPayment
      * @param MagentoRedirect $resultRedirectFactory
-     * @param GetMoneiPaymentCodesByMagentoPaymentCodeRedirect $getMoneiPaymentCodesByMagentoPaymentCodeRedirect
+     * @param PaymentMethodCodeMapper $paymentMethodCodeMapper
      */
     public function __construct(
         Session $checkoutSession,
         CreatePaymentInterface $createPayment,
         MagentoRedirect $resultRedirectFactory,
-        GetMoneiPaymentCodesByMagentoPaymentCodeRedirect $getMoneiPaymentCodesByMagentoPaymentCodeRedirect
+        PaymentMethodCodeMapper $paymentMethodCodeMapper
     ) {
         $this->checkoutSession = $checkoutSession;
         $this->createPayment = $createPayment;
         $this->resultRedirectFactory = $resultRedirectFactory;
-        $this->getMoneiPaymentCodesByMagentoPaymentCodeRedirect = $getMoneiPaymentCodesByMagentoPaymentCodeRedirect;
+        $this->paymentMethodCodeMapper = $paymentMethodCodeMapper;
     }
 
     /**
@@ -193,7 +193,7 @@ class Redirect implements HttpGetActionInterface
         $paymentCode = $payment ? $payment->getMethod() : null;
 
         return $paymentCode
-            ? $this->getMoneiPaymentCodesByMagentoPaymentCodeRedirect->execute($paymentCode)
+            ? $this->paymentMethodCodeMapper->execute($paymentCode)
             : [];
     }
 }
