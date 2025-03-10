@@ -1,6 +1,9 @@
 #!/bin/bash
 # Simple script to run Magento commands from the module directory
 
+# Save the original working directory
+ORIGINAL_DIR="$(pwd)"
+
 # Get the absolute path to the Magento root directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MAGENTO_ROOT="$(cd "$SCRIPT_DIR/../../../../.." && pwd)"
@@ -15,8 +18,8 @@ cd "$MAGENTO_ROOT" || {
 # Run the Magento command with all arguments passed to this script
 bin/magento "$@"
 
-# Return to the module directory
-cd "$SCRIPT_DIR" || {
-    echo "Failed to return to module directory"
+# Return to the original directory
+cd "$ORIGINAL_DIR" || {
+    echo "Failed to return to original directory"
     exit 1
 }

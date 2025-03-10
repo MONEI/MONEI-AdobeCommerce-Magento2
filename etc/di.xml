@@ -68,6 +68,12 @@
     <type name="Magento\Checkout\Model\ShippingInformationManagement">
         <plugin name="Monei\MoneiPayment\Plugin\ShippingInformationManagement" type="Monei\MoneiPayment\Plugin\ShippingInformationManagement"/>
     </type>
+    <type name="Magento\Sales\Model\Order\StatusLabel">
+        <plugin name="monei_order_status_label" type="Monei\MoneiPayment\Plugin\OrderStatusLabel"/>
+    </type>
+    <type name="Magento\Sales\Model\Order\Config">
+        <plugin name="monei_order_config" type="Monei\MoneiPayment\Plugin\OrderConfig"/>
+    </type>
     <virtualType name="MoneiPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
         <arguments>
             <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::CODE</argument>
