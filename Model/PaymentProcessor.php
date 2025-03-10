@@ -570,6 +570,9 @@ class PaymentProcessor implements PaymentProcessorInterface
             if ($payment->isSucceeded()) {
                 $orderPayment->setAdditionalInformation('monei_is_captured', true);
             }
+
+            // Also set payment ID directly on the order to maintain compatibility with Block/Info/Monei.php
+            $order->setData('monei_payment_id', $payment->getId());
         }
     }
 
