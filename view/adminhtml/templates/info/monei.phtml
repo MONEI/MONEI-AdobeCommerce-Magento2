@@ -116,13 +116,6 @@ $paymentInfo = $block->getPaymentInfo();
                 </tr>
             <?php endif; ?>
 
-            <?php if (isset($paymentInfo['bank']) && !empty($paymentInfo['bank'])): ?>
-                <tr>
-                    <th><?= $escaper->escapeHtml(__('Issuing Bank')) ?></th>
-                    <td><?= $escaper->escapeHtml($paymentInfo['bank']) ?></td>
-                </tr>
-            <?php endif; ?>
-
             <?php if (isset($paymentInfo['phoneNumber']) && !empty($paymentInfo['phoneNumber'])): ?>
                 <tr>
                     <th><?= $escaper->escapeHtml(__('Phone Number')) ?></th>
