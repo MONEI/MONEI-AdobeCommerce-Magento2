@@ -13,7 +13,10 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
+use Monei\Model\Payment;
 use Monei\MoneiPayment\Api\Data\QuoteInterface;
+use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
+use Monei\MoneiPayment\Model\Payment\Status;
 use Monei\MoneiPayment\Service\AbstractApiService;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
@@ -42,6 +45,13 @@ abstract class AbstractCheckoutService extends AbstractApiService
     protected Session $checkoutSession;
 
     /**
+     * Payment retrieval service
+     *
+     * @var GetPaymentInterface
+     */
+    protected GetPaymentInterface $getPaymentService;
+
+    /**
      * Base constructor for checkout services
      *
      * @param Logger $logger Logger for tracking operations
@@ -49,17 +59,20 @@ abstract class AbstractCheckoutService extends AbstractApiService
      * @param MoneiApiClient|null $apiClient MONEI API client
      * @param CartRepositoryInterface $quoteRepository Repository for accessing quotes
      * @param Session $checkoutSession Checkout session for accessing the current quote
+     * @param GetPaymentInterface $getPaymentService Service to retrieve payment details
      */
     public function __construct(
         Logger $logger,
         ?ApiExceptionHandler $exceptionHandler,
         ?MoneiApiClient $apiClient,
         CartRepositoryInterface $quoteRepository,
-        Session $checkoutSession
+        Session $checkoutSession,
+        GetPaymentInterface $getPaymentService
     ) {
         parent::__construct($logger, $exceptionHandler, $apiClient);
         $this->quoteRepository = $quoteRepository;
         $this->checkoutSession = $checkoutSession;
+        $this->getPaymentService = $getPaymentService;
     }
 
     /**
@@ -104,22 +117,57 @@ abstract class AbstractCheckoutService extends AbstractApiService
 
     /**
      * Checks if a quote already has a payment ID to prevent duplicate payments
+     * Only returns existing payment if it has a pending status and the same amount
      *
      * @param Quote $quote The quote to check
-     * @return array|null Returns payment data array if payment exists, null otherwise
+     * @return array|null Returns payment data array if valid payment exists, null otherwise
      */
     protected function checkExistingPayment(Quote $quote): ?array
     {
         $existingPaymentId = $quote->getData(QuoteInterface::ATTR_FIELD_MONEI_PAYMENT_ID);
-        if (!empty($existingPaymentId)) {
-            // Log the reuse of existing payment ID
-            $this->logger->info("Using existing payment ID", [
+        if (empty($existingPaymentId)) {
+            return null;
+        }
+
+        try {
+            // Get current quote amount in cents
+            $currentAmount = (int) ($quote->getBaseGrandTotal() * 100);
+
+            // Retrieve payment details from API
+            $payment = $this->getPaymentService->execute($existingPaymentId);
+
+            // Check if payment has pending status and same amount
+            $isPending = $payment->getStatus() === Status::PENDING;
+            $isSameAmount = $payment->getAmount() === $currentAmount;
+
+            if ($isPending && $isSameAmount) {
+                // Log the reuse of existing payment ID
+                $this->logger->info("Using existing payment ID with pending status and matching amount", [
+                    'payment_id' => $existingPaymentId,
+                    'order_id' => $quote->getReservedOrderId(),
+                    'amount' => $payment->getAmount(),
+                    'status' => $payment->getStatus()
+                ]);
+
+                // Return an array with the payment ID as expected by the frontend
+                return [['id' => $existingPaymentId]];
+            } else {
+                $this->logger->info("Existing payment cannot be reused - creating new payment", [
+                    'payment_id' => $existingPaymentId,
+                    'order_id' => $quote->getReservedOrderId(),
+                    'pending' => $isPending ? 'yes' : 'no',
+                    'amount_match' => $isSameAmount ? 'yes' : 'no',
+                    'current_amount' => $currentAmount,
+                    'payment_amount' => $payment->getAmount(),
+                    'status' => $payment->getStatus()
+                ]);
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('Error checking existing payment: ' . $e->getMessage(), [
                 'payment_id' => $existingPaymentId,
                 'order_id' => $quote->getReservedOrderId()
             ]);
-
-            // Return an array with the payment ID as expected by the frontend
-            return [['id' => $existingPaymentId]];
+            // If we can't check the payment details, don't reuse the existing ID
         }
 
         return null;

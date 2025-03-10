@@ -13,12 +13,15 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentInSiteInterface;
+use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\CreatePayment;
 use Monei\MoneiPayment\Service\Logger;
+use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface as CustomerSessionInterface;
+use Monei\MoneiPayment\Api\Service\MoneiPaymentModuleConfigInterface;
 
 /**
  * Monei create payment REST integration service class for logged-in customers.
@@ -50,30 +53,42 @@ class CreateLoggedMoneiPaymentInSite extends AbstractCheckoutService implements 
     private CreatePayment $createPayment;
 
     /**
-     * Constructor.
+     * Constructor for CreateLoggedMoneiPaymentInSite service.
      *
-     * @param Logger $logger Logger for tracking operations
-     * @param ApiExceptionHandler|null $exceptionHandler Exception handler for API calls
-     * @param MoneiApiClient|null $apiClient MONEI API client
-     * @param CartRepositoryInterface $quoteRepository Repository for accessing and saving quotes
-     * @param Session $checkoutSession Checkout session for accessing the current quote
-     * @param GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote Service to get customer details from a quote
-     * @param GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress Service to get address details
-     * @param CreatePayment $createPayment Service for creating MONEI payments
+     * @param Logger $logger Logger instance
+     * @param ApiExceptionHandler $exceptionHandler API error handling service
+     * @param MoneiApiClient $apiClient MONEI API client service
+     * @param CartRepositoryInterface $quoteRepository Quote repository
+     * @param Session $checkoutSession Checkout session
+     * @param CustomerSessionInterface $customerSession Customer session
+     * @param GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress Address details service
+     * @param MoneiPaymentModuleConfigInterface $moduleConfig Module configuration
+     * @param CreatePayment $createPayment Payment creation service
+     * @param GetPaymentInterface $getPaymentService Service to retrieve payment details
      */
     public function __construct(
         Logger $logger,
-        ?ApiExceptionHandler $exceptionHandler,
-        ?MoneiApiClient $apiClient,
+        ApiExceptionHandler $exceptionHandler,
+        MoneiApiClient $apiClient,
         CartRepositoryInterface $quoteRepository,
         Session $checkoutSession,
-        GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote,
+        CustomerSessionInterface $customerSession,
         GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress,
-        CreatePayment $createPayment
+        MoneiPaymentModuleConfigInterface $moduleConfig,
+        CreatePayment $createPayment,
+        GetPaymentInterface $getPaymentService
     ) {
-        parent::__construct($logger, $exceptionHandler, $apiClient, $quoteRepository, $checkoutSession);
-        $this->getCustomerDetailsByQuote = $getCustomerDetailsByQuote;
+        parent::__construct(
+            $logger,
+            $exceptionHandler,
+            $apiClient,
+            $quoteRepository,
+            $checkoutSession,
+            $getPaymentService
+        );
+        $this->customerSession = $customerSession;
         $this->getAddressDetailsByQuoteAddress = $getAddressDetailsByQuoteAddress;
+        $this->moduleConfig = $moduleConfig;
         $this->createPayment = $createPayment;
     }
 

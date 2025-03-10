@@ -75,7 +75,7 @@ class Redirect implements HttpGetActionInterface
         $order = $this->checkoutSession->getLastRealOrder();
 
         $data = [
-            'amount' => $order->getBaseGrandTotal() * 100,
+            'amount' => (int) ($order->getBaseGrandTotal() * 100),
             'currency' => $order->getBaseCurrencyCode(),
             'orderId' => $order->getIncrementId(),
             'customer' => $this->getCustomerDetails($order),

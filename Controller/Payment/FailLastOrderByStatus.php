@@ -105,7 +105,7 @@ class FailLastOrderByStatus extends Fail
                 __('Something went wrong while processing the payment. Unable to restore your cart.')
             );
 
-            return $this->resultRedirectFactory->create()->setPath('checkout/cart', ['_secure' => true]);
+            return $this->resultRedirectFactory->create()->setPath('checkout/cart');
         }
 
         $params = $this->request->getParams();

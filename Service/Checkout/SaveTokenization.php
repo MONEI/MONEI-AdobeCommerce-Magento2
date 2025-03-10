@@ -13,6 +13,7 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\SaveTokenizationInterface;
+use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\Logger;
@@ -33,15 +34,24 @@ class SaveTokenization extends AbstractCheckoutService implements SaveTokenizati
      * @param MoneiApiClient|null $apiClient MONEI API client
      * @param CartRepositoryInterface $quoteRepository Repository for managing quote data
      * @param Session $checkoutSession Checkout session for accessing the current quote
+     * @param GetPaymentInterface $getPaymentService Service to retrieve payment details
      */
     public function __construct(
         Logger $logger,
         ?ApiExceptionHandler $exceptionHandler,
         ?MoneiApiClient $apiClient,
         CartRepositoryInterface $quoteRepository,
-        Session $checkoutSession
+        Session $checkoutSession,
+        GetPaymentInterface $getPaymentService
     ) {
-        parent::__construct($logger, $exceptionHandler, $apiClient, $quoteRepository, $checkoutSession);
+        parent::__construct(
+            $logger,
+            $exceptionHandler,
+            $apiClient,
+            $quoteRepository,
+            $checkoutSession,
+            $getPaymentService
+        );
     }
 
     /**

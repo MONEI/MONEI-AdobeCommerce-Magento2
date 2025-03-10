@@ -163,6 +163,6 @@ class Fail implements HttpGetActionInterface
             );
         }
 
-        return $this->resultRedirectFactory->create()->setPath('checkout/cart', ['_secure' => true]);
+        return $this->resultRedirectFactory->create()->setPath('checkout/cart');
     }
 }

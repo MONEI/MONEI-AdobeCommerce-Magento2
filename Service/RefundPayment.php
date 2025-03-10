@@ -89,7 +89,7 @@ class RefundPayment extends AbstractApiService implements RefundPaymentInterface
 
                 // Set amount in cents
                 if (isset($data['amount'])) {
-                    $refundRequest->setAmount((int) round((float) $data['amount'] * 100));
+                    $refundRequest->setAmount((int) ($data['amount'] * 100));
                 }
 
                 // Set refund reason using the SDK enum

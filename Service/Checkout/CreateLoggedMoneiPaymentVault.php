@@ -16,6 +16,7 @@ use Magento\Quote\Model\Quote;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentVaultInterface;
+use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
@@ -71,6 +72,7 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
      * @param GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress Service to retrieve address details
      * @param PaymentTokenManagementInterface $tokenManagement For handling saved payment methods
      * @param CreatePayment $createPayment Service to create payment in Monei
+     * @param GetPaymentInterface $getPaymentService Service to retrieve payment details
      */
     public function __construct(
         Logger $logger,
@@ -81,9 +83,17 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
         GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote,
         GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress,
         PaymentTokenManagementInterface $tokenManagement,
-        CreatePayment $createPayment
+        CreatePayment $createPayment,
+        GetPaymentInterface $getPaymentService
     ) {
-        parent::__construct($logger, $exceptionHandler, $apiClient, $quoteRepository, $checkoutSession);
+        parent::__construct(
+            $logger,
+            $exceptionHandler,
+            $apiClient,
+            $quoteRepository,
+            $checkoutSession,
+            $getPaymentService
+        );
         $this->getCustomerDetailsByQuote = $getCustomerDetailsByQuote;
         $this->getAddressDetailsByQuoteAddress = $getAddressDetailsByQuoteAddress;
         $this->tokenManagement = $tokenManagement;

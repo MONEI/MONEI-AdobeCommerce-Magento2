@@ -16,6 +16,7 @@ use Magento\Quote\Model\MaskedQuoteIdToQuoteIdInterface;
 use Magento\Quote\Model\Quote;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateGuestMoneiPaymentInSiteInterface;
+use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
@@ -79,6 +80,7 @@ class CreateGuestMoneiPaymentInSite extends AbstractCheckoutService implements C
      * @param GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress Service to get address details
      * @param MoneiPaymentModuleConfigInterface $moduleConfig Module configuration
      * @param CreatePayment $createPayment Service for creating MONEI payments
+     * @param GetPaymentInterface $getPaymentService Service to retrieve payment details
      */
     public function __construct(
         Logger $logger,
@@ -90,9 +92,17 @@ class CreateGuestMoneiPaymentInSite extends AbstractCheckoutService implements C
         GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote,
         GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress,
         MoneiPaymentModuleConfigInterface $moduleConfig,
-        CreatePayment $createPayment
+        CreatePayment $createPayment,
+        GetPaymentInterface $getPaymentService
     ) {
-        parent::__construct($logger, $exceptionHandler, $apiClient, $quoteRepository, $checkoutSession);
+        parent::__construct(
+            $logger,
+            $exceptionHandler,
+            $apiClient,
+            $quoteRepository,
+            $checkoutSession,
+            $getPaymentService
+        );
         $this->maskedQuoteIdToQuoteId = $maskedQuoteIdToQuoteId;
         $this->getCustomerDetailsByQuote = $getCustomerDetailsByQuote;
         $this->getAddressDetailsByQuoteAddress = $getAddressDetailsByQuoteAddress;

@@ -105,7 +105,7 @@ class CaptureService
         }
 
         try {
-            $amount = (int) round($invoice->getGrandTotal() * 100);
+            $amount = (int) ($invoice->getGrandTotal() * 100);
             $currency = $order->getOrderCurrencyCode();
 
             $this->logger->info(sprintf(

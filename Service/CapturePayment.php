@@ -75,7 +75,7 @@ class CapturePayment extends AbstractApiService implements CapturePaymentInterfa
 
                 // Set amount in cents
                 if (isset($data['amount'])) {
-                    $captureRequest->setAmount((int) round((float) $data['amount'] * 100));
+                    $captureRequest->setAmount((int) ($data['amount'] * 100));
                 }
 
                 // Capture the payment using the SDK and request object
