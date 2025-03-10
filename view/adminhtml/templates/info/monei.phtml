@@ -71,15 +71,6 @@ $paymentInfo = $block->getPaymentInfo();
                 </td>
             </tr>
 
-            <?php if (isset($paymentInfo['authorizationCode']) && !empty($paymentInfo['authorizationCode'])): ?>
-            <tr>
-                <th><?= $escaper->escapeHtml(__('Authorization Code')) ?></th>
-                <td>
-                    <?= $escaper->escapeHtml($paymentInfo['authorizationCode']) ?>
-                </td>
-            </tr>
-            <?php endif; ?>
-
             <?php if (isset($paymentInfo['tokenizationMethod']) && !empty($paymentInfo['tokenizationMethod'])):
                 // Pretty print tokenizationMethod value
                 $walletValue = $paymentInfo['tokenizationMethod'];
@@ -141,6 +132,15 @@ $paymentInfo = $block->getPaymentInfo();
                 <tr>
                     <th><?= $escaper->escapeHtml(__('Country')) ?></th>
                     <td><?= $escaper->escapeHtml($paymentInfo['country']) ?></td>
+                </tr>
+            <?php endif; ?>
+
+            <?php if (isset($paymentInfo['authorizationCode']) && !empty($paymentInfo['authorizationCode'])): ?>
+                <tr>
+                    <th><?= $escaper->escapeHtml(__('Authorization Code')) ?></th>
+                    <td>
+                        <?= $escaper->escapeHtml($paymentInfo['authorizationCode']) ?>
+                    </td>
                 </tr>
             <?php endif; ?>
         </tbody>
