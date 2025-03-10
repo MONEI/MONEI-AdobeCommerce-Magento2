@@ -2,27 +2,39 @@ parameters:
     level: 4
     treatPhpDocTypesAsCertain: false
     reportUnmatchedIgnoredErrors: false
+    fileExtensions:
+        - php
+        - phtml
     paths:
         - .
     excludePaths:
         - vendor/*
         - Test/*
+        - node_modules/*
     ignoreErrors:
-        # Too many false positives with PHP 8 constructor property promotion
-        - '#Access to an undefined property [a-zA-Z0-9\\_]+::\$[a-zA-Z0-9_]+#'
-        # False positives for Magento command-line
-        - '#Parameter \#1 \$paths of method [a-zA-Z0-9\\_]+::execute\(\) expects array<string>, string given#'
-        # Common Magento patterns that PHPStan doesn't understand
+        # Magento extension attributes system - safe to ignore
         - '#Call to an undefined method [a-zA-Z0-9\\_]+::set(Data|ExtensionAttributes)\(\)#'
-        - '#Call to an undefined method [a-zA-Z0-9\\_]+::get(Data|ExtensionAttributes)\(\)#'
-        - '#Access to an undefined property object::\$[a-zA-Z0-9_]+#'
-        - '#Parameter \#1 \$[a-zA-Z0-9_]+ of method [a-zA-Z0-9\\_:]+::[a-zA-Z0-9_]+\(\) expects [^,]+ given#'
-        # Ignore unused properties in controllers (often injected but used indirectly)
-        - '#Property [a-zA-Z0-9\\_\\\\]+::\$[a-zA-Z0-9_]+ is never read, only written#'
-        # Ignore invalid OrderFactory type issues
+
+        # Magento Factory pattern - these are generated at runtime
         - '#has unknown class Magento\\Sales\\Model\\OrderFactory as its type#'
         - '#Parameter \$orderFactory of method .+ has invalid type Magento\\Sales\\Model\\OrderFactory#'
-        # Ignore unneeded void return types
-        - '#Method [a-zA-Z0-9\\_\\\\]+::[a-zA-Z0-9_]+\(\) never returns void so it can be removed from the return type#'
-        # Ignore expressions on left side of ?? operator
-        - '#Expression on left side of \?\? is not nullable#'
+        - '#Call to method create\(\) on an unknown class Magento\\Sales\\Model\\OrderFactory#'
+
+        # Safe to ignore - these factory classes are valid in Magento but PHPStan can't resolve them
+        - '#has unknown class Magento\\Backend\\Model\\View\\Result\\ForwardFactory as its type#'
+        - '#has unknown class Magento\\Framework\\DB\\TransactionFactory as its type#'
+        - '#has unknown class Magento\\Vault\\Model\\Ui\\TokenUiComponentInterfaceFactory as its type#'
+        - '#has unknown class GuzzleHttp\\ClientFactory as its type#'
+
+        # Magento interface methods that exist but PHPStan can't see
+        - '#Call to an undefined method Magento\\Framework\\App\\RequestInterface::getPost\(\)#'
+        - '#Call to an undefined method Magento\\Sales\\Api\\Data\\OrderInterface::(getId|getData|prepareInvoice|addRelatedObject|setCanSendNewEmailFlag)\(\)#'
+        - '#Call to an undefined method Magento\\Quote\\Api\\Data\\CartInterface::(getEntityId|getShippingAddress|getCustomerFirstname|getCustomerLastname|getCustomerEmail)\(\)#'
+
+        # Magento API design patterns - these are known behavior
+        - '#Method Magento\\Sales\\Api\\Data\\OrderPaymentInterface::setAdditionalInformation\(\) invoked with 2 parameters, 1 required#'
+        - '#Method Magento\\Sales\\Api\\Data\\OrderPaymentInterface::getAdditionalInformation\(\) invoked with 1 parameter, 0 required#'
+
+        # Deprecated class usage warnings - we should fix these but they don't affect functionality
+        - '#Parameter \$registry of method .+ has typehint with deprecated class Magento\\Framework\\Registry#'
+        - '#Parameter \$jsonHelper of method .+ has typehint with deprecated class Magento\\Framework\\Json\\Helper\\Data#'

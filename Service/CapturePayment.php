@@ -90,29 +90,4 @@ class CapturePayment extends AbstractApiService implements CapturePaymentInterfa
             }
         }, ['captureData' => $data]);
     }
-
-    /**
-     * Validate request required parameters.
-     *
-     * Checks if all required parameters are present and have appropriate values.
-     * Throws exceptions if validation fails.
-     *
-     * @param array $data Request data to validate
-     *
-     * @throws LocalizedException If validation fails
-     */
-    private function validate(array $data): void
-    {
-        foreach ($this->requiredArguments as $argument) {
-            if (!isset($data[$argument]) || null === $data[$argument]) {
-                throw new LocalizedException(
-                    __('Required parameter "%1" is missing or empty.', $argument)
-                );
-            } elseif ('amount' === $argument && !is_numeric($data[$argument])) {
-                throw new LocalizedException(
-                    __('%1 should be numeric value', $argument)
-                );
-            }
-        }
-    }
 }

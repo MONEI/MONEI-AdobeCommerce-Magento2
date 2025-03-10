@@ -525,18 +525,6 @@
         </arguments>
     </type>
 
-    <!-- Type configuration for CaptureService -->
-    <type name="Monei\MoneiPayment\Service\CaptureService">
-        <arguments>
-            <argument name="moneiApiClient" xsi:type="object">Monei\MoneiPayment\Model\Api\MoneiApiClient</argument>
-            <argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
-            <argument name="invoiceRepository" xsi:type="object">Magento\Sales\Api\InvoiceRepositoryInterface</argument>
-            <argument name="lockManager" xsi:type="object">Monei\MoneiPayment\Api\LockManagerInterface</argument>
-            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
-            <argument name="moduleConfig" xsi:type="object">Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface</argument>
-        </arguments>
-    </type>
-
     <!-- Helper class for payment method formatting -->
     <type name="Monei\MoneiPayment\Block\Info\Monei">
         <arguments>
