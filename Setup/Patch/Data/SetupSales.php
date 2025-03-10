@@ -79,8 +79,10 @@ class SetupSales implements DataPatchInterface, NonTransactionableInterface
      * Apply the patch.
      *
      * Adds Monei-specific order attributes and order statuses to the database.
+     *
+     * @return self
      */
-    public function apply(): void
+    public function apply(): self
     {
         $this->moduleDataSetup->getConnection()->startSetup();
 
@@ -155,5 +157,7 @@ class SetupSales implements DataPatchInterface, NonTransactionableInterface
         );
 
         $this->moduleDataSetup->getConnection()->endSetup();
+
+        return $this;
     }
 }

@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Gateway\Command;
 
 use Magento\Payment\Gateway\CommandInterface;
+use Magento\Payment\Gateway\Command\ResultInterface;
 use Magento\Sales\Model\Order\Payment;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
 use Monei\MoneiPayment\Api\Data\PaymentInfoInterface;
@@ -38,9 +39,9 @@ class Refund implements CommandInterface
      *
      * @param array $commandSubject Command subject containing payment and amount
      *
-     * @return void
+     * @return ResultInterface|null
      */
-    public function execute(array $commandSubject)
+    public function execute(array $commandSubject): ?ResultInterface
     {
         $payment = $commandSubject['payment']->getPayment();
         $order = $payment->getOrder();
@@ -73,5 +74,7 @@ class Refund implements CommandInterface
         ];
 
         $this->refundPaymentService->execute($data);
+
+        return null;
     }
 }

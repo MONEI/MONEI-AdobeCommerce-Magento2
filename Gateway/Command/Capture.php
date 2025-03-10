@@ -10,6 +10,7 @@ namespace Monei\MoneiPayment\Gateway\Command;
 
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Gateway\CommandInterface;
+use Magento\Payment\Gateway\Command\ResultInterface;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
 use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
@@ -46,8 +47,9 @@ class Capture implements CommandInterface
     /**
      * @param array $commandSubject
      * @throws LocalizedException
+     * @return ResultInterface|null
      */
-    public function execute(array $commandSubject)
+    public function execute(array $commandSubject): ?ResultInterface
     {
         $payment = $commandSubject['payment']->getPayment();
         $order = $payment->getOrder();
@@ -78,7 +80,7 @@ class Capture implements CommandInterface
                 $isAlreadyCaptured ? 'true' : 'false'
             ));
 
-            return;
+            return null;
         }
 
         // Get the payment ID from the additional information
@@ -118,5 +120,7 @@ class Capture implements CommandInterface
 
             throw new LocalizedException(__('{0}', $response['errorMessage']));
         }
+
+        return null;
     }
 }

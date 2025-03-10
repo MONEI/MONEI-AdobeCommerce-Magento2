@@ -198,19 +198,6 @@ class Logger extends MonologLogger
     }
 
     /**
-     * Check if a string is a valid JSON
-     *
-     * @param string $string
-     * @return bool
-     */
-    private function isJson(string $string): bool
-    {
-        json_decode($string);
-
-        return json_last_error() === JSON_ERROR_NONE;
-    }
-
-    /**
      * Sanitize sensitive data for logging
      *
      * @param array|object $data
