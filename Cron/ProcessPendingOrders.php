@@ -9,7 +9,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Cron;
 
 use Magento\Framework\Stdlib\DateTime\DateTime;
-use Magento\Sales\Model\OrderFactory as OrderInterfaceFactory;
+use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\ResourceModel\Order\Collection as OrderCollection;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory as OrderCollectionFactory;
@@ -32,7 +32,7 @@ class ProcessPendingOrders
     private $orderCollectionFactory;
 
     /**
-     * @var OrderInterfaceFactory
+     * @var OrderFactory
      */
     private $orderFactory;
 
@@ -75,7 +75,7 @@ class ProcessPendingOrders
      * Constructor.
      *
      * @param OrderCollectionFactory $orderCollectionFactory
-     * @param OrderInterfaceFactory $orderFactory
+     * @param OrderFactory $orderFactory
      * @param PaymentProcessor $paymentProcessor
      * @param OrderRepositoryInterface $orderRepository
      * @param LockManagerInterface $lockManager
@@ -86,7 +86,7 @@ class ProcessPendingOrders
      */
     public function __construct(
         OrderCollectionFactory $orderCollectionFactory,
-        OrderInterfaceFactory $orderFactory,
+        OrderFactory $orderFactory,
         PaymentProcessor $paymentProcessor,
         OrderRepositoryInterface $orderRepository,
         LockManagerInterface $lockManager,
@@ -161,7 +161,7 @@ class ProcessPendingOrders
                     $this->cancelPaymentService->execute($data);
 
                     // Process the canceled payment
-                    $this->paymentProcessor->processPaymentById($order, $paymentId, $this->paymentProcessor);
+                    $this->paymentProcessor->processPaymentById($order, $paymentId);
                 } catch (\Exception $e) {
                     $this->logger->error(sprintf(
                         '[Cron] Error canceling payment for order %s: %s',
@@ -175,7 +175,7 @@ class ProcessPendingOrders
 
             // Process the payment to check its current status
             try {
-                $this->paymentProcessor->processPaymentById($order, $paymentId, $this->paymentProcessor);
+                $this->paymentProcessor->processPaymentById($order, $paymentId);
             } catch (\Exception $e) {
                 $this->logger->error(sprintf(
                     '[Cron] Error processing payment for order %s: %s',

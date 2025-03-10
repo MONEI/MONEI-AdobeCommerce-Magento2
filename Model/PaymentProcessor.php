@@ -18,7 +18,6 @@ use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 use Magento\Sales\Model\OrderFactory;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\LockManagerInterface;
-use Monei\MoneiPayment\Api\PaymentDataProviderInterface;
 use Monei\MoneiPayment\Api\PaymentProcessingResultInterface;
 use Monei\MoneiPayment\Api\PaymentProcessorInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
@@ -28,11 +27,12 @@ use Monei\MoneiPayment\Model\Data\PaymentProcessingResult;
 use Monei\MoneiPayment\Model\Payment\Status;
 use Monei\MoneiPayment\Service\InvoiceService;
 use Monei\MoneiPayment\Service\Logger;
+use Exception;
 
 /**
  * Processes payments and updates order status
  */
-class PaymentProcessor implements PaymentProcessorInterface, PaymentDataProviderInterface
+class PaymentProcessor implements PaymentProcessorInterface
 {
     /**
      * @var OrderRepositoryInterface
@@ -58,11 +58,6 @@ class PaymentProcessor implements PaymentProcessorInterface, PaymentDataProvider
      * @var MoneiApiClient
      */
     private MoneiApiClient $moneiApiClient;
-
-    /**
-     * @var PaymentDataProviderInterface
-     */
-    private PaymentDataProviderInterface $apiPaymentDataProvider;
 
     /**
      * @var MoneiPaymentModuleConfigInterface
@@ -95,7 +90,6 @@ class PaymentProcessor implements PaymentProcessorInterface, PaymentDataProvider
      * @param LockManagerInterface $lockManager
      * @param Logger $logger
      * @param MoneiApiClient $moneiApiClient
-     * @param PaymentDataProviderInterface $apiPaymentDataProvider
      * @param MoneiPaymentModuleConfigInterface $moduleConfig
      * @param OrderSender $orderSender
      * @param SearchCriteriaBuilder $searchCriteriaBuilder
@@ -108,7 +102,6 @@ class PaymentProcessor implements PaymentProcessorInterface, PaymentDataProvider
         LockManagerInterface $lockManager,
         Logger $logger,
         MoneiApiClient $moneiApiClient,
-        PaymentDataProviderInterface $apiPaymentDataProvider,
         MoneiPaymentModuleConfigInterface $moduleConfig,
         OrderSender $orderSender,
         SearchCriteriaBuilder $searchCriteriaBuilder,
@@ -120,7 +113,6 @@ class PaymentProcessor implements PaymentProcessorInterface, PaymentDataProvider
         $this->lockManager = $lockManager;
         $this->logger = $logger;
         $this->moneiApiClient = $moneiApiClient;
-        $this->apiPaymentDataProvider = $apiPaymentDataProvider;
         $this->moduleConfig = $moduleConfig;
         $this->orderSender = $orderSender;
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
@@ -167,7 +159,7 @@ class PaymentProcessor implements PaymentProcessorInterface, PaymentDataProvider
                     null
                 );
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->logger->error(sprintf(
                 '[Payment processing failed] Order %s, payment %s: %s',
                 $orderId,
@@ -227,7 +219,7 @@ class PaymentProcessor implements PaymentProcessorInterface, PaymentDataProvider
             $payment = $this->getPaymentInterface->execute($paymentId);
 
             return (array)$payment;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->logger->error(sprintf(
                 '[Error getting payment status] Payment %s: %s',
                 $paymentId,
@@ -283,61 +275,25 @@ class PaymentProcessor implements PaymentProcessorInterface, PaymentDataProvider
     }
 
     /**
-     * Process a payment from webhook data
-     *
-     * @param OrderInterface $order
-     * @param array $webhookData
-     * @param PaymentDataProviderInterface $paymentDataProvider
-     * @return bool
-     */
-    public function processPaymentFromWebhook(
-        OrderInterface $order,
-        array $webhookData,
-        PaymentDataProviderInterface $paymentDataProvider
-    ): bool {
-        try {
-            // Validate webhook data
-            if (!$paymentDataProvider->validatePaymentData($webhookData)) {
-                $this->logger->error(sprintf(
-                    '[Invalid webhook data] Order %s',
-                    $order->getIncrementId()
-                ));
-
-                return false;
-            }
-
-            // Create PaymentDTO from webhook data
-            $payment = PaymentDTO::fromArray($webhookData);
-
-            // Process the payment
-            return $this->processPayment($order, $payment);
-        } catch (LocalizedException $e) {
-            $this->logger->error(sprintf(
-                '[Webhook processing failed] Order %s: %s',
-                $order->getIncrementId(),
-                $e->getMessage()
-            ));
-
-            return false;
-        }
-    }
-
-    /**
      * Process a payment by ID
      *
      * @param OrderInterface $order
      * @param string $paymentId
-     * @param PaymentDataProviderInterface $paymentDataProvider
      * @return bool
      */
     public function processPaymentById(
         OrderInterface $order,
-        string $paymentId,
-        PaymentDataProviderInterface $paymentDataProvider
+        string $paymentId
     ): bool {
         try {
-            // Get payment data from provider
-            $payment = $paymentDataProvider->getPaymentData($paymentId);
+            // Get payment data using our own getPayment method
+            $paymentData = $this->getPayment($paymentId);
+
+            if (isset($paymentData['status']) && $paymentData['status'] === 'ERROR') {
+                throw new LocalizedException(__('Failed to fetch payment data: %1', $paymentData['error'] ?? 'Unknown error'));
+            }
+
+            $payment = PaymentDTO::fromArray($paymentData);
 
             // Process the payment
             return $this->processPayment($order, $payment);
@@ -411,7 +367,7 @@ class PaymentProcessor implements PaymentProcessorInterface, PaymentDataProvider
 
         try {
             // Check if order is already processed
-            if ($order->getState() === \Magento\Sales\Model\Order::STATE_PROCESSING) {
+            if ($order->getState() === Order::STATE_PROCESSING) {
                 $this->logger->info(sprintf(
                     '[Order already processed] Order %s, payment %s',
                     $incrementId,
@@ -426,14 +382,15 @@ class PaymentProcessor implements PaymentProcessorInterface, PaymentDataProvider
 
             $this->logger->info(sprintf(
                 '[Payment information updated] Order %s, payment %s',
-                $order
+                $incrementId,
+                $paymentId
             ));
 
             // Generate invoice
             $this->invoiceService->processInvoice($order, $paymentId);
 
             // Update order status
-            $order->setState(\Magento\Sales\Model\Order::STATE_PROCESSING);
+            $order->setState(Order::STATE_PROCESSING);
             $orderStatus = $this->moduleConfig->getConfirmedStatus($order->getStoreId());
             $order->setStatus($orderStatus);
 
@@ -442,7 +399,7 @@ class PaymentProcessor implements PaymentProcessorInterface, PaymentDataProvider
                 try {
                     $this->logger->debug('[Sending order email]');
                     $this->orderSender->send($order);
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $this->logger->critical('[Email sending error] ' . $e->getMessage());
                 }
             }
@@ -456,7 +413,7 @@ class PaymentProcessor implements PaymentProcessorInterface, PaymentDataProvider
             ));
 
             return true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->logger->error(sprintf(
                 '[Error processing successful payment] Order %s, payment %s: %s',
                 $incrementId,
@@ -482,7 +439,7 @@ class PaymentProcessor implements PaymentProcessorInterface, PaymentDataProvider
 
         try {
             // Check if order is already processed
-            if ($order->getState() === \Magento\Sales\Model\Order::STATE_PROCESSING) {
+            if ($order->getState() === Order::STATE_PROCESSING) {
                 $this->logger->info(sprintf(
                     '[Order already processed] Order %s, payment %s',
                     $incrementId,
@@ -499,7 +456,7 @@ class PaymentProcessor implements PaymentProcessorInterface, PaymentDataProvider
             $this->invoiceService->createPendingInvoice($order, $paymentId);
 
             // Update order status
-            $order->setState(\Magento\Sales\Model\Order::STATE_PROCESSING);
+            $order->setState(Order::STATE_PROCESSING);
             $orderStatus = $this->moduleConfig->getPreAuthorizedStatus($order->getStoreId());
             $order->setStatus($orderStatus);
             $this->orderRepository->save($order);
@@ -511,7 +468,7 @@ class PaymentProcessor implements PaymentProcessorInterface, PaymentDataProvider
             ));
 
             return true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->logger->error(sprintf(
                 '[Error processing authorized payment] Order %s, payment %s: %s',
                 $incrementId,
@@ -577,7 +534,7 @@ class PaymentProcessor implements PaymentProcessorInterface, PaymentDataProvider
             }
 
             return true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->logger->error(sprintf(
                 '[Error handling failed payment] Order %s, payment %s: %s',
                 $incrementId,
@@ -669,7 +626,7 @@ class PaymentProcessor implements PaymentProcessorInterface, PaymentDataProvider
             ));
 
             return null;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->logger->error(sprintf(
                 '[Error loading order] ID %s: %s',
                 $orderId,

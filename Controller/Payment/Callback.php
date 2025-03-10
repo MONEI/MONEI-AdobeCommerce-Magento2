@@ -114,9 +114,6 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
             $this->logger->debug('---------------------------------------------');
             $this->logger->debug('[Callback] Payment callback received');
 
-            // Return 200 OK immediately to acknowledge receipt
-            http_response_code(200);
-
             // Process the verified payment from validateForCsrf
             if ($this->verifiedPayment) {
                 // Convert Payment object to array

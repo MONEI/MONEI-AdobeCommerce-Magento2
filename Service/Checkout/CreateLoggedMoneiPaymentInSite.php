@@ -141,12 +141,6 @@ class CreateLoggedMoneiPaymentInSite extends AbstractCheckoutService implements 
         $paymentData['customer'] = $this->getCustomerDetailsByQuote->execute($quote);
         $paymentData['billing_details'] = $this->getAddressDetailsByQuoteAddress->executeBilling($quote->getBillingAddress());
         $paymentData['shipping_details'] = $this->getAddressDetailsByQuoteAddress->executeShipping($shippingAddress);
-        $paymentData['metadata'] = [
-            'magento_module' => 'monei_magento2',
-            'payment_type' => 'logged_in_payment',
-            'quote_id' => $quote->getId(),
-            'customer_id' => (string) $quote->getCustomerId()
-        ];
 
         return $paymentData;
     }

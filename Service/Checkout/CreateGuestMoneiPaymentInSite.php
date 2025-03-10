@@ -203,11 +203,6 @@ class CreateGuestMoneiPaymentInSite extends AbstractCheckoutService implements C
         $paymentData['customer'] = $this->getCustomerDetailsByQuote->execute($quote, $email);
         $paymentData['billing_details'] = $this->getAddressDetailsByQuoteAddress->executeBilling($quote->getBillingAddress(), $email);
         $paymentData['shipping_details'] = $this->getAddressDetailsByQuoteAddress->executeShipping($shippingAddress, $email);
-        $paymentData['metadata'] = [
-            'magento_module' => 'monei_magento2',
-            'payment_type' => 'guest_payment',
-            'quote_id' => $quote->getId()
-        ];
 
         return $paymentData;
     }
