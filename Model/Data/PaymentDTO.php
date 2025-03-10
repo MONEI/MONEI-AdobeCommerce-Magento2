@@ -100,12 +100,12 @@ class PaymentDTO
         $this->orderId = $orderId;
 
         // Convert timestamps to strings if they are integers
-        $this->createdAt = is_int($createdAt) ? (string)$createdAt : $createdAt;
-        $this->updatedAt = is_int($updatedAt) ? (string)$updatedAt : $updatedAt;
+        $this->createdAt = is_int($createdAt) ? (string) $createdAt : $createdAt;
+        $this->updatedAt = is_int($updatedAt) ? (string) $updatedAt : $updatedAt;
 
         // Convert metadata object to array if needed
         if (is_object($metadata)) {
-            $this->metadata = (array)$metadata;
+            $this->metadata = (array) $metadata;
         } else {
             $this->metadata = $metadata;
         }
@@ -136,8 +136,8 @@ class PaymentDTO
         }
 
         // Convert timestamps to strings if they are integers
-        $createdAt = isset($data['createdAt']) ? (is_int($data['createdAt']) ? (string)$data['createdAt'] : $data['createdAt']) : null;
-        $updatedAt = isset($data['updatedAt']) ? (is_int($data['updatedAt']) ? (string)$data['updatedAt'] : $data['updatedAt']) : null;
+        $createdAt = isset($data['createdAt']) ? (is_int($data['createdAt']) ? (string) $data['createdAt'] : $data['createdAt']) : null;
+        $updatedAt = isset($data['updatedAt']) ? (is_int($data['updatedAt']) ? (string) $data['updatedAt'] : $data['updatedAt']) : null;
 
         // Ensure amount is treated as an integer
         $amountInCents = (int) $data['amount'];
@@ -148,7 +148,7 @@ class PaymentDTO
             if (is_array($data['metadata'])) {
                 $metadata = $data['metadata'];
             } elseif (is_object($data['metadata'])) {
-                $metadata = (array)$data['metadata'];
+                $metadata = (array) $data['metadata'];
             }
         }
 

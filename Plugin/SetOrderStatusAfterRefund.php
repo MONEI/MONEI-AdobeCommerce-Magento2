@@ -10,8 +10,8 @@ namespace Monei\MoneiPayment\Plugin;
 
 use Magento\Sales\Api\Data\CreditmemoInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
-use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Service\CreditmemoService;
+use Magento\Sales\Model\Order;
 use Monei\MoneiPayment\Model\Payment\Status;
 use Psr\Log\LoggerInterface;
 
@@ -70,7 +70,8 @@ class SetOrderStatusAfterRefund
             $order = $this->orderRepository->get($orderId);
 
             // Check if this is a Monei payment and not already closed
-            if (null !== $order->getData('monei_payment_id') &&
+            if (
+                null !== $order->getData('monei_payment_id') &&
                 'closed' !== $order->getState()
             ) {
                 $orderStatus = Status::MAGENTO_STATUS_MAP[Status::PARTIALLY_REFUNDED];

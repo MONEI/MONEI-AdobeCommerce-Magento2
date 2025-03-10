@@ -17,9 +17,9 @@ use Monei\Model\Payment;
 use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Model\Payment\Status;
-use Monei\MoneiPayment\Service\AbstractApiService;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
+use Monei\MoneiPayment\Service\AbstractApiService;
 use Monei\MoneiPayment\Service\Logger;
 
 /**
@@ -142,7 +142,7 @@ abstract class AbstractCheckoutService extends AbstractApiService
 
             if ($isPending && $isSameAmount) {
                 // Log the reuse of existing payment ID
-                $this->logger->info("Using existing payment ID with pending status and matching amount", [
+                $this->logger->info('Using existing payment ID with pending status and matching amount', [
                     'payment_id' => $existingPaymentId,
                     'order_id' => $quote->getReservedOrderId(),
                     'amount' => $payment->getAmount(),
@@ -152,7 +152,7 @@ abstract class AbstractCheckoutService extends AbstractApiService
                 // Return an array with the payment ID as expected by the frontend
                 return [['id' => $existingPaymentId]];
             } else {
-                $this->logger->info("Existing payment cannot be reused - creating new payment", [
+                $this->logger->info('Existing payment cannot be reused - creating new payment', [
                     'payment_id' => $existingPaymentId,
                     'order_id' => $quote->getReservedOrderId(),
                     'pending' => $isPending ? 'yes' : 'no',

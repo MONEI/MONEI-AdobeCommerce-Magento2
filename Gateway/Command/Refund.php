@@ -9,7 +9,6 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Gateway\Command;
 
 use Magento\Payment\Gateway\CommandInterface;
-use Magento\Payment\Gateway\Helper\SubjectReader;
 use Magento\Sales\Model\Order\Payment;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
 use Monei\MoneiPayment\Api\Data\PaymentInfoInterface;
@@ -68,7 +67,7 @@ class Refund implements CommandInterface
 
         $data = [
             'paymentId' => $paymentId,
-            'amount' => $commandSubject['amount'], // Amount will be converted to cents in the service
+            'amount' => $commandSubject['amount'],  // Amount will be converted to cents in the service
             'refundReason' => $payment->getCreditmemo()->getData('refund_reason') ?? 'requested_by_customer',
             'storeId' => (int) $order->getStoreId(),
         ];

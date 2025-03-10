@@ -11,11 +11,11 @@ namespace Monei\MoneiPayment\Service\Api;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\StoreManagerInterface;
-use Monei\ApiException;
-use Monei\MoneiClient;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Model\Config\Source\ModuleVersion;
 use Monei\MoneiPayment\Service\Logger;
+use Monei\ApiException;
+use Monei\MoneiClient;
 
 /**
  * Client factory for MONEI Payment Gateway SDK
@@ -188,7 +188,7 @@ class MoneiApiClient
         try {
             // For SDK models, use the jsonSerialize method directly
             if (method_exists($response, 'jsonSerialize')) {
-                return (array)$response->jsonSerialize();
+                return (array) $response->jsonSerialize();
             }
 
             // Fallback for any other object types

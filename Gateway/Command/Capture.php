@@ -103,7 +103,7 @@ class Capture implements CommandInterface
 
         $data = [
             'paymentId' => $paymentId,
-            'amount' => $commandSubject['amount'] // Amount will be converted to cents in the service
+            'amount' => $commandSubject['amount']  // Amount will be converted to cents in the service
         ];
 
         $this->logger->debug('[Capture payment request]');

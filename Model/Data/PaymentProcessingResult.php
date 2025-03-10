@@ -8,7 +8,6 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Model\Data;
 
-use Monei\MoneiPayment\Api\Data\PaymentErrorCodeInterface;
 use Monei\MoneiPayment\Api\PaymentProcessingResultInterface;
 
 /**

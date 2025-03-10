@@ -9,7 +9,6 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Model\Payment;
 
 use Monei\Model\PaymentMethods;
-use Monei\MoneiPayment\Model\Payment\Status;
 
 /**
  * Monei payment method class.

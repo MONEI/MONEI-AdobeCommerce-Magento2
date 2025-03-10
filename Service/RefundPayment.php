@@ -9,12 +9,12 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\Exception\LocalizedException;
-use Monei\ApiException;
 use Monei\Model\Payment;
 use Monei\Model\PaymentRefundReason;
 use Monei\Model\RefundPaymentRequest;
 use Monei\MoneiPayment\Api\Service\RefundPaymentInterface;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
+use Monei\ApiException;
 
 /**
  * Monei refund payment service class using the official MONEI PHP SDK.

@@ -9,10 +9,10 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\Exception\LocalizedException;
-use Monei\ApiException;
 use Monei\Model\CapturePaymentRequest;
 use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
+use Monei\ApiException;
 
 /**
  * Monei capture payment service class using the official MONEI PHP SDK.

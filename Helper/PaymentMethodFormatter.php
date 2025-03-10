@@ -52,15 +52,19 @@ class PaymentMethodFormatter implements PaymentMethodFormatterInterface
                         $last3 = substr($paymentInfo['phoneNumber'], -3);
                         $paymentMethodDisplay .= ' •••••' . $last3;
                     }
+
                     break;
                 case PaymentMethods::PAYMENT_METHODS_PAYPAL:
                     $paymentMethodDisplay = 'PayPal';
+
                     break;
                 case PaymentMethods::PAYMENT_METHODS_MBWAY:
                     $paymentMethodDisplay = 'MB WAY';
+
                     break;
                 case PaymentMethods::PAYMENT_METHODS_MULTIBANCO:
                     $paymentMethodDisplay = 'Multibanco';
+
                     break;
                 default:
                     // Fallback: Convert camelCase to Title Case with spaces
@@ -108,22 +112,22 @@ class PaymentMethodFormatter implements PaymentMethodFormatterInterface
             // This is a simplified approach, different countries have different formats
             $length = strlen($phoneNumber);
 
-            if ($length >= 12) { // Full international number
-                return substr($phoneNumber, 0, 3) . ' ' .
-                       substr($phoneNumber, 3, 3) . ' ' .
-                       substr($phoneNumber, 6, 3) . ' ' .
-                       substr($phoneNumber, 9);
-            } else if ($length >= 9) { // Shorter international number
-                return substr($phoneNumber, 0, 3) . ' ' .
-                       substr($phoneNumber, 3, 3) . ' ' .
-                       substr($phoneNumber, 6);
+            if ($length >= 12) {  // Full international number
+                return substr($phoneNumber, 0, 3) . ' '
+                    . substr($phoneNumber, 3, 3) . ' '
+                    . substr($phoneNumber, 6, 3) . ' '
+                    . substr($phoneNumber, 9);
+            } elseif ($length >= 9) {  // Shorter international number
+                return substr($phoneNumber, 0, 3) . ' '
+                    . substr($phoneNumber, 3, 3) . ' '
+                    . substr($phoneNumber, 6);
             }
         } else {
             // National format (no plus sign): XXX XXX XXX
             if (strlen($phoneNumber) >= 9) {
-                return substr($phoneNumber, 0, 3) . ' ' .
-                       substr($phoneNumber, 3, 3) . ' ' .
-                       substr($phoneNumber, 6);
+                return substr($phoneNumber, 0, 3) . ' '
+                    . substr($phoneNumber, 3, 3) . ' '
+                    . substr($phoneNumber, 6);
             }
         }
 

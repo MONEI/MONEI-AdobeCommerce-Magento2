@@ -10,28 +10,26 @@ namespace Monei\MoneiPayment\Model;
 
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Phrase;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
-use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
+use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
 use Monei\MoneiPayment\Api\Data\PaymentErrorCodeInterface;
 use Monei\MoneiPayment\Api\Data\PaymentInfoInterface;
-use Monei\MoneiPayment\Api\Data\QuoteInterface;
+use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Api\PaymentProcessingResultInterface;
 use Monei\MoneiPayment\Api\PaymentProcessorInterface;
-use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Model\Api\MoneiApiClient;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
 use Monei\MoneiPayment\Model\Data\PaymentProcessingResult;
 use Monei\MoneiPayment\Model\Payment\Status;
+use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 use Monei\MoneiPayment\Service\InvoiceService;
 use Monei\MoneiPayment\Service\Logger;
-use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 use Exception;
 
 /**
@@ -231,7 +229,7 @@ class PaymentProcessor implements PaymentProcessorInterface
         try {
             $payment = $this->getPaymentInterface->execute($paymentId);
 
-            return (array)$payment;
+            return (array) $payment;
         } catch (Exception $e) {
             $this->logger->error(sprintf(
                 '[Error getting payment status] Payment %s: %s',
@@ -627,6 +625,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                     $orderId,
                     $order->getEntityId()
                 ));
+
                 return $order;
             }
 
@@ -647,6 +646,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                         $numericOrderId,
                         $order->getEntityId()
                     ));
+
                     return $order;
                 }
             }
@@ -699,6 +699,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             $this->logger->debug('[Payment data validation failed] Missing required fields', [
                 'received_fields' => array_keys($data)
             ]);
+
             return false;
         }
 

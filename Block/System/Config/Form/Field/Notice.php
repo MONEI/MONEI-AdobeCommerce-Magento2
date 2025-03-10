@@ -9,8 +9,8 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Block\System\Config\Form\Field;
 
 use Magento\Backend\Block\AbstractBlock;
-use Magento\Framework\Data\Form\Element\AbstractElement;
 use Magento\Framework\Data\Form\Element\Renderer\RendererInterface;
+use Magento\Framework\Data\Form\Element\AbstractElement;
 
 class Notice extends AbstractBlock implements RendererInterface
 {

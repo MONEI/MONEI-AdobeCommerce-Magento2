@@ -10,16 +10,12 @@ namespace Monei\MoneiPayment\Block\Info;
 
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\View\Element\Template;
-use Magento\Framework\View\Element\Template\Context;
 use Magento\Payment\Block\Info;
 use Magento\Sales\Model\Order\Payment;
 use Monei\MoneiPayment\Api\Data\PaymentInfoInterface;
 use Monei\MoneiPayment\Api\Helper\PaymentMethodFormatterInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
-use Monei\MoneiPayment\Gateway\Config\Config;
-use Monei\MoneiPayment\Model\Payment\Monei as MoneiPayment;
 use Monei\MoneiPayment\Service\Logger;
-use Monei\Model\Payment as MoneiModelPayment;
 
 /**
  * Monei payment info block.
@@ -92,6 +88,7 @@ class Monei extends Info
     {
         if (!$this->getInfo() || !$this->getInfo()->getOrder()) {
             $this->logger->debug('Payment Info: Missing order information');
+
             return null;
         }
 
@@ -103,6 +100,7 @@ class Monei extends Info
             $this->logger->debug('Payment Info: Missing Monei payment ID in order', [
                 'order_id' => $this->getInfo()->getOrder()->getIncrementId()
             ]);
+
             return null;
         }
 
@@ -126,6 +124,7 @@ class Monei extends Info
 
             if (!isset($paymentData['paymentMethod'])) {
                 $this->logger->debug('Payment Info: Missing paymentMethod key in payment data');
+
                 return null;
             }
 
@@ -156,6 +155,7 @@ class Monei extends Info
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
+
             return null;
         }
     }
@@ -170,6 +170,7 @@ class Monei extends Info
     {
         if (!$paymentMethodData) {
             $this->logger->debug('Payment method data is null');
+
             return null;
         }
 
@@ -181,6 +182,7 @@ class Monei extends Info
         foreach ($paymentMethodData as $payKey => $payValue) {
             if (!\is_array($payValue)) {
                 $result[$payKey] = $payValue;
+
                 continue;
             }
 

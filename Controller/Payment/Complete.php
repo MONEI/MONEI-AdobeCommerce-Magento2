@@ -14,8 +14,8 @@ use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Controller\Result\RedirectFactory;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Monei\Model\PaymentStatus;
-use Monei\MoneiPayment\Api\PaymentProcessorInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
+use Monei\MoneiPayment\Api\PaymentProcessorInterface;
 use Monei\MoneiPayment\Model\Api\MoneiApiClient;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
 use Monei\MoneiPayment\Service\Logger;
@@ -222,8 +222,10 @@ class Complete implements HttpGetActionInterface
             }
 
             // Determine redirect based on payment status
-            if (isset($params['status']) &&
-                ($params['status'] === PaymentStatus::SUCCEEDED || $params['status'] === PaymentStatus::AUTHORIZED)) {
+            if (
+                isset($params['status']) &&
+                ($params['status'] === PaymentStatus::SUCCEEDED || $params['status'] === PaymentStatus::AUTHORIZED)
+            ) {
                 return $this->resultRedirectFactory->create()->setPath('checkout/onepage/success');
             }
 

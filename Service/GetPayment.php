@@ -10,10 +10,10 @@ namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\Exception\LocalizedException;
 use Monei\Model\Payment;
-use Monei\MoneiClient;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
+use Monei\MoneiClient;
 
 /**
  * Monei get payment service class using the official MONEI PHP SDK.
@@ -70,6 +70,7 @@ class GetPayment extends AbstractApiService implements GetPaymentInterface
         // SDK Payment objects are properly structured but have magic getters/setters
         // Let's make sure we can access them - try to access via accessor methods
         $responseValid = false;
+
         try {
             $responseValid = !empty($response->getId()) && !empty($response->getOrderId());
         } catch (\Exception $e) {
@@ -82,6 +83,7 @@ class GetPayment extends AbstractApiService implements GetPaymentInterface
                 'payment_id' => $payment_id,
                 'response_type' => is_object($response) ? get_class($response) : gettype($response)
             ]);
+
             throw new LocalizedException(__('Invalid payment response from API'));
         }
 

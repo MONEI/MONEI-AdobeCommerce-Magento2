@@ -73,7 +73,7 @@ class Logger extends MonologLogger
             } elseif (method_exists($data, '__toArray')) {
                 $data = $data->__toArray();
             } else {
-                $data = (array)$data;
+                $data = (array) $data;
             }
         }
 
@@ -101,7 +101,7 @@ class Logger extends MonologLogger
             } elseif (method_exists($data, '__toArray')) {
                 $data = $data->__toArray();
             } else {
-                $data = (array)$data;
+                $data = (array) $data;
             }
         }
 
@@ -225,7 +225,7 @@ class Logger extends MonologLogger
             } elseif (method_exists($data, '__toArray')) {
                 $data = $data->__toArray();
             } else {
-                $data = (array)$data;
+                $data = (array) $data;
             }
         }
 

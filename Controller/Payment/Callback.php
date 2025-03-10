@@ -8,13 +8,12 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Controller\Payment;
 
-use Exception;
 use Magento\Framework\App\Action\HttpPostActionInterface;
-use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\Request\Http as HttpRequest;
 use Magento\Framework\App\Request\InvalidRequestException;
-use Magento\Framework\App\RequestInterface;
 use Magento\Framework\App\Response\Http as HttpResponse;
+use Magento\Framework\App\CsrfAwareActionInterface;
+use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Sales\Api\OrderRepositoryInterface;
@@ -22,6 +21,7 @@ use Monei\MoneiPayment\Api\PaymentProcessorInterface;
 use Monei\MoneiPayment\Model\Api\MoneiApiClient;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
 use Monei\MoneiPayment\Service\Logger;
+use Exception;
 
 /**
  * Controller for managing callbacks from Monei system
@@ -117,7 +117,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
             // Process the verified payment from validateForCsrf
             if ($this->verifiedPayment) {
                 // Convert Payment object to array
-                $paymentData = (array)$this->verifiedPayment;
+                $paymentData = (array) $this->verifiedPayment;
 
                 $this->logger->debug('[Callback] Signature verified, processing payment', [
                     'payment_id' => $paymentData['id'] ?? 'unknown',
@@ -133,6 +133,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
 
                     $response = $this->resultJsonFactory->create();
                     $response->setHttpResponseCode(400);
+
                     return $response->setData(['error' => 'Missing required payment data fields']);
                 }
 

@@ -11,7 +11,6 @@ namespace Monei\MoneiPayment\Service\Order;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
 use Magento\Vault\Api\Data\PaymentTokenFactoryInterface;
 use Monei\Model\Payment;
-use Monei\Model\PaymentPaymentMethod;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Service\Logger;
@@ -72,6 +71,7 @@ class CreateVaultPayment
                 'method' => $payment->getMethod(),
                 'expected' => Monei::CARD_CODE
             ]);
+
             return false;
         }
 
@@ -88,6 +88,7 @@ class CreateVaultPayment
             $gatewayToken = $moneiPayment->getPaymentToken();
             if (empty($gatewayToken)) {
                 $this->logger->debug('Vault: Payment token is empty');
+
                 return false;
             }
 
@@ -95,6 +96,7 @@ class CreateVaultPayment
             $paymentMethod = $moneiPayment->getPaymentMethod();
             if (!$paymentMethod) {
                 $this->logger->debug('Vault: Payment method is null');
+
                 return false;
             }
 
@@ -110,6 +112,7 @@ class CreateVaultPayment
 
             if (!$card) {
                 $this->logger->debug('Vault: Card details are missing');
+
                 return false;
             }
 
@@ -118,6 +121,7 @@ class CreateVaultPayment
 
             if (!$expiration) {
                 $this->logger->debug('Vault: Card expiration is empty');
+
                 return false;
             }
 
@@ -153,12 +157,14 @@ class CreateVaultPayment
             // Set the token on the payment
             if (!$payment->getExtensionAttributes()) {
                 $this->logger->debug('Vault: Payment extension attributes are null');
+
                 return false;
             }
 
             $payment->getExtensionAttributes()->setVaultPaymentToken($paymentToken);
 
             $this->logger->debug('Vault: Payment token successfully created and assigned');
+
             return true;
         } catch (\Exception $e) {
             $this->logger->debug('Vault: Exception during tokenization process', [
@@ -166,6 +172,7 @@ class CreateVaultPayment
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
+
             return false;
         }
     }

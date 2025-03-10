@@ -2,12 +2,12 @@
 
 namespace Monei\MoneiPayment\Console\Command;
 
+use Magento\Framework\App\State;
+use Magento\Framework\Setup\ModuleDataSetupInterface;
+use Monei\MoneiPayment\Setup\Patch\Data\UpdateOrderStatusLabels;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Monei\MoneiPayment\Setup\Patch\Data\UpdateOrderStatusLabels;
-use Magento\Framework\Setup\ModuleDataSetupInterface;
-use Magento\Framework\App\State;
 
 /**
  * CLI command to manually execute the UpdateOrderStatusLabels data patch
@@ -56,7 +56,8 @@ class UpdateStatusLabels extends Command
      */
     protected function configure()
     {
-        $this->setName('monei:update-status-labels')
+        $this
+            ->setName('monei:update-status-labels')
             ->setDescription('Update MONEI order status labels to ensure proper formatting');
 
         parent::configure();
@@ -84,6 +85,7 @@ class UpdateStatusLabels extends Command
             return Command::SUCCESS;
         } catch (\Exception $e) {
             $output->writeln('<error>' . $e->getMessage() . '</error>');
+
             return Command::FAILURE;
         }
     }
