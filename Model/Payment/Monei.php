@@ -9,28 +9,13 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Model\Payment;
 
 use Monei\Model\PaymentMethods;
+use Monei\MoneiPayment\Model\Payment\Status;
 
 /**
  * Monei payment method class.
  */
 class Monei
 {
-    public const ORDER_STATUS_PENDING = 'PENDING';
-
-    public const ORDER_STATUS_AUTHORIZED = 'AUTHORIZED';
-
-    public const ORDER_STATUS_EXPIRED = 'EXPIRED';
-
-    public const ORDER_STATUS_CANCELED = 'CANCELED';
-
-    public const ORDER_STATUS_FAILED = 'FAILED';
-
-    public const ORDER_STATUS_SUCCEEDED = 'SUCCEEDED';
-
-    public const ORDER_STATUS_PARTIALLY_REFUNDED = 'PARTIALLY_REFUNDED';
-
-    public const ORDER_STATUS_REFUNDED = 'REFUNDED';
-
     public const STATUS_MONEI_PENDING = 'monei_pending';
 
     public const STATUS_MONEI_AUTHORIZED = 'monei_authorized';

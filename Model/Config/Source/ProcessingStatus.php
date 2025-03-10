@@ -10,6 +10,7 @@ namespace Monei\MoneiPayment\Model\Config\Source;
 
 use Magento\Sales\Model\Config\Source\Order\Status;
 use Magento\Sales\Model\Order;
+use Monei\MoneiPayment\Model\Payment\Monei;
 
 /**
  * Order Statuses source model for Processing state.
@@ -29,7 +30,7 @@ class ProcessingStatus extends Status
         // Add Monei-specific status if not already present
         $moneiSucceededFound = false;
         foreach ($options as $option) {
-            if (isset($option['value']) && $option['value'] === 'monei_succeeded') {
+            if (isset($option['value']) && $option['value'] === Monei::STATUS_MONEI_SUCCEEDED) {
                 $moneiSucceededFound = true;
 
                 break;
@@ -38,7 +39,7 @@ class ProcessingStatus extends Status
 
         if (!$moneiSucceededFound) {
             $options[] = [
-                'value' => 'monei_succeeded',
+                'value' => Monei::STATUS_MONEI_SUCCEEDED,
                 'label' => __('MONEI - Succeeded')
             ];
         }
