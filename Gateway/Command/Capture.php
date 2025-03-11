@@ -9,9 +9,10 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Gateway\Command;
 
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Payment\Gateway\CommandInterface;
 use Magento\Payment\Gateway\Command\ResultInterface;
+use Magento\Payment\Gateway\CommandInterface;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
+use Monei\MoneiPayment\Api\Data\PaymentInfoInterface;
 use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Model\Payment\Status;
@@ -109,16 +110,70 @@ class Capture implements CommandInterface
         ];
 
         $this->logger->debug('[Capture payment request]');
-        $this->logger->debug(json_encode($data, JSON_PRETTY_PRINT));
+        $this->logger->debug(sprintf(
+            'Request data: paymentId=%s, amount=%s',
+            $paymentId,
+            $commandSubject['amount']
+        ));
 
-        $response = $this->capturePaymentService->execute($data);
+        try {
+            // Execute the capture request
+            $response = $this->capturePaymentService->execute($data);
 
-        if (isset($response['error']) && $response['error'] === true) {
-            if (isset($response['errorData']['message'])) {
-                throw new LocalizedException(__('{0}', $response['errorData']['message']));
+            // Log the response for debugging
+            $this->logger->debug('[Capture payment response]');
+            $this->logger->debug(sprintf(
+                'Response type: %s',
+                is_object($response) ? get_class($response) : gettype($response)
+            ));
+
+            // Get the capture ID from the response
+            $captureId = $response->getId();
+
+            if ($captureId) {
+                // Update payment transaction IDs
+                $payment->setTransactionId($captureId);
+                $payment->setLastTransId($captureId);
+
+                // Update payment additional information
+                $payment->setAdditionalInformation(PaymentInfoInterface::PAYMENT_IS_CAPTURED, true);
+                $payment->setAdditionalInformation(PaymentInfoInterface::PAYMENT_STATUS, Status::SUCCEEDED);
+
+                // Set transaction ID on the invoice if available
+                if (
+                    isset($commandSubject['payment']) &&
+                    method_exists($commandSubject['payment'], 'getCreatedInvoice')
+                ) {
+                    $invoice = $commandSubject['payment']->getCreatedInvoice();
+                    if ($invoice) {
+                        $invoice->setTransactionId($captureId);
+                        $this->logger->info(sprintf(
+                            '[Invoice transaction ID updated] Invoice %s, transaction ID: %s',
+                            $invoice->getIncrementId(),
+                            $captureId
+                        ));
+                    }
+                }
+
+                $this->logger->info(sprintf(
+                    '[Capture transaction ID stored] Order %s, transaction ID: %s',
+                    $order->getIncrementId(),
+                    $captureId
+                ));
+            } else {
+                $this->logger->warning(sprintf(
+                    '[No capture ID found in response] Order %s',
+                    $order->getIncrementId()
+                ));
             }
+        } catch (\Exception $e) {
+            $this->logger->error(sprintf(
+                '[Capture payment error] Order %s: %s',
+                $order->getIncrementId(),
+                $e->getMessage()
+            ));
 
-            throw new LocalizedException(__('{0}', $response['errorMessage']));
+            throw new LocalizedException(__('Error capturing payment: %1', $e->getMessage()));
         }
 
         return null;

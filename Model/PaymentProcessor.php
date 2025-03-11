@@ -468,8 +468,8 @@ class PaymentProcessor implements PaymentProcessorInterface
             // Update payment information
             $this->updatePaymentInformation($order, $payment);
 
-            // Create pending invoice for authorized payment
-            $this->invoiceService->createPendingInvoice($order, $paymentId);
+            // No longer creating pending invoice for authorized payment
+            // The merchant will create the invoice manually, which will be automatically captured
 
             // Update order status
             $order->setState(Order::STATE_PROCESSING);
