@@ -12,7 +12,8 @@ use Magento\Sales\Api\CreditmemoRepositoryInterface;
 use Magento\Sales\Api\OrderStatusHistoryRepositoryInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Creditmemo;
-use Monei\MoneiPayment\Model\Config\MoneiPaymentModuleConfig;
+use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Service\Logger;
 
 /**
@@ -21,9 +22,14 @@ use Monei\MoneiPayment\Service\Logger;
 class OrderStatusAfterRefund
 {
     /**
-     * @var MoneiPaymentModuleConfig
+     * Default refunded status to use
      */
-    private MoneiPaymentModuleConfig $config;
+    private const REFUNDED_STATUS = Monei::STATUS_MONEI_REFUNDED;
+
+    /**
+     * @var MoneiPaymentModuleConfigInterface
+     */
+    private MoneiPaymentModuleConfigInterface $config;
 
     /**
      * @var OrderStatusHistoryRepositoryInterface
@@ -36,12 +42,12 @@ class OrderStatusAfterRefund
     private Logger $logger;
 
     /**
-     * @param MoneiPaymentModuleConfig $config
+     * @param MoneiPaymentModuleConfigInterface $config
      * @param OrderStatusHistoryRepositoryInterface $historyRepository
      * @param Logger $logger
      */
     public function __construct(
-        MoneiPaymentModuleConfig $config,
+        MoneiPaymentModuleConfigInterface $config,
         OrderStatusHistoryRepositoryInterface $historyRepository,
         Logger $logger
     ) {
@@ -62,15 +68,23 @@ class OrderStatusAfterRefund
         Creditmemo $creditmemo
     ): Creditmemo {
         try {
-            $refundedStatus = $this->config->getRefundedOrderStatus();
-            // Skip if refunded status is not set in configuration
+            $refundedStatus = self::REFUNDED_STATUS;
+
+            // Skip if refunded status is not set
             if (!$refundedStatus) {
                 return $creditmemo;
             }
 
             /** @var Order $order */
             $order = $creditmemo->getOrder();
-            // Skip for closed orders or orders with no refunded status
+
+            // Skip processing non-Monei payments
+            if (!$order->getPayment() ||
+                !in_array($order->getPayment()->getMethod(), Monei::PAYMENT_METHODS_MONEI)) {
+                return $creditmemo;
+            }
+
+            // Skip for closed orders
             if ($order->getState() === Order::STATE_CLOSED) {
                 return $creditmemo;
             }

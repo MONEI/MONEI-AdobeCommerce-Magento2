@@ -51,52 +51,58 @@ class OrderPaymentUpdateHistoryAfterCapture
                 return $result;
             }
 
-            // If the invoice email was sent, mark history entries as notified
-            if ($invoice->getEmailSent()) {
-                $order = $subject->getOrder();
+            $order = $subject->getOrder();
 
-                // Log for debugging
-                $this->logger->debug(sprintf(
-                    '[Checking history entries] Order %s, Invoice %s, Email Sent: true',
-                    $order->getIncrementId(),
-                    $invoice->getIncrementId()
-                ));
+            // Always mark entries as notified if the invoice exists, even if email hasn't been sent yet
+            // This is more aggressive but ensures entries are marked
+            $this->logger->debug(sprintf(
+                '[Checking history entries] Order %s, Invoice %s, Current status: %s',
+                $order->getIncrementId(),
+                $invoice->getIncrementId(),
+                $order->getStatus()
+            ));
 
-                // Get all status history entries
-                $historyEntries = $order->getStatusHistories();
-                if (!$historyEntries) {
-                    return $result;
+            // Get all status history entries
+            $historyEntries = $order->getStatusHistories();
+            if (!$historyEntries) {
+                return $result;
+            }
+
+            // Sort by created_at in descending order to get the most recent entries first
+            usort($historyEntries, function ($a, $b) {
+                $timeA = $a->getCreatedAt() ? strtotime($a->getCreatedAt()) : 0;
+                $timeB = $b->getCreatedAt() ? strtotime($b->getCreatedAt()) : 0;
+                return $timeB - $timeA;
+            });
+
+            $updated = false;
+
+            // Find and update status entries specifically related to this capture or current status
+            foreach ($historyEntries as $history) {
+                if (
+                    !$history->getIsCustomerNotified() && (
+                        // Check for capture-related comments
+                        ($history->getComment() && strpos((string)$history->getComment(), 'Captured amount') !== false) ||
+                        // Check for status-related entries
+                        $history->getStatus() == $order->getStatus() ||
+                        // Check for capture-related status changes
+                        ($history->getEntityName() == 'invoice' && $history->getStatus() == $order->getStatus())
+                    )
+                ) {
+                    // Mark as notified
+                    $history->setIsCustomerNotified(true);
+                    $updated = true;
+                    $this->logger->debug(sprintf(
+                        '[Marked history as notified] Order %s, Status: %s, Comment: %s',
+                        $order->getIncrementId(),
+                        $history->getStatus(),
+                        (string)($history->getComment() ?? 'No comment')
+                    ));
                 }
+            }
 
-                // Sort by created_at in descending order to get the most recent entries first
-                usort($historyEntries, function ($a, $b) {
-                    $timeA = $a->getCreatedAt() ? strtotime($a->getCreatedAt()) : 0;
-                    $timeB = $b->getCreatedAt() ? strtotime($b->getCreatedAt()) : 0;
-                    return $timeB - $timeA;
-                });
-
-                // Find and update status entries specifically related to this capture
-                foreach ($historyEntries as $history) {
-                    if (
-                        !$history->getIsCustomerNotified() &&
-                        $history->getComment() &&
-                        (
-                            strpos($history->getComment(), 'Captured amount') !== false ||
-                            $history->getStatus() == $order->getStatus()
-                        )
-                    ) {
-                        // Mark as notified
-                        $history->setIsCustomerNotified(true);
-                        $this->logger->debug(sprintf(
-                            '[Marked history as notified] Order %s, Comment: %s',
-                            $order->getIncrementId(),
-                            $history->getComment()
-                        ));
-                        break;
-                    }
-                }
-
-                // Save the order to persist the changes
+            // Save the order to persist the changes only if we updated something
+            if ($updated) {
                 $order->save();
             }
         } catch (\Exception $e) {
