@@ -12,7 +12,7 @@ use Magento\Sales\Api\CreditmemoRepositoryInterface;
 use Magento\Sales\Api\OrderStatusHistoryRepositoryInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Creditmemo;
-use Monei\MoneiPayment\Model\Config;
+use Monei\MoneiPayment\Model\Config\MoneiPaymentModuleConfig;
 use Monei\MoneiPayment\Service\Logger;
 
 /**
@@ -21,9 +21,9 @@ use Monei\MoneiPayment\Service\Logger;
 class OrderStatusAfterRefund
 {
     /**
-     * @var Config
+     * @var MoneiPaymentModuleConfig
      */
-    private Config $config;
+    private MoneiPaymentModuleConfig $config;
 
     /**
      * @var OrderStatusHistoryRepositoryInterface
@@ -36,12 +36,12 @@ class OrderStatusAfterRefund
     private Logger $logger;
 
     /**
-     * @param Config $config
+     * @param MoneiPaymentModuleConfig $config
      * @param OrderStatusHistoryRepositoryInterface $historyRepository
      * @param Logger $logger
      */
     public function __construct(
-        Config $config,
+        MoneiPaymentModuleConfig $config,
         OrderStatusHistoryRepositoryInterface $historyRepository,
         Logger $logger
     ) {
