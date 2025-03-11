@@ -39,13 +39,6 @@
                 type="Monei\MoneiPayment\Controller\Adminhtml\Order\Creditmemo\Save"/>
     <preference for="Monei\MoneiPayment\Api\Helper\PaymentMethodFormatterInterface" type="Monei\MoneiPayment\Helper\PaymentMethodFormatter"/>
 
-    <!-- Plugin to send invoice emails after capture for Monei payments -->
-    <type name="Magento\Sales\Model\Order\Payment">
-        <plugin name="monei_payment_send_invoice_email_after_capture"
-                type="Monei\MoneiPayment\Plugin\Sales\Model\Order\Payment\Capture"
-                sortOrder="10" />
-    </type>
-
     <!-- Plugin to mark customer as notified after order cancellation for Monei payments -->
     <type name="Magento\Sales\Model\Order">
         <plugin name="monei_order_cancel_notification"
