@@ -87,7 +87,7 @@
         </field>
         <field id="send_invoice_email" translate="label comment" sortOrder="97" type="select" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Send Invoice Email</label>
-          <comment>Controls whether to send invoice emails after invoice is created</comment>
+          <comment>Controls whether to send invoice emails for automatically created invoices. Does not affect manually created invoices, for which merchants can choose to notify customers during creation.</comment>
           <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
           <config_path>payment/monei/send_invoice_email</config_path>
         </field>

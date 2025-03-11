@@ -475,6 +475,22 @@ class PaymentProcessor implements PaymentProcessorInterface
             $order->setState(Order::STATE_PROCESSING);
             $orderStatus = $this->moduleConfig->getPreAuthorizedStatus($order->getStoreId());
             $order->setStatus($orderStatus);
+
+            // Set the flag to allow sending the email now
+            $order->setCanSendNewEmailFlag(true);
+
+            // Send order email if it hasn't been sent yet
+            if (!$order->getEmailSent()) {
+                try {
+                    if ($this->moduleConfig->shouldSendOrderEmail($order->getStoreId())) {
+                        $this->logger->debug('[Sending order email for authorized payment]');
+                        $this->orderSender->send($order);
+                    }
+                } catch (Exception $e) {
+                    $this->logger->critical('[Email sending error for authorized payment] ' . $e->getMessage());
+                }
+            }
+
             $this->orderRepository->save($order);
 
             $this->logger->info(sprintf(

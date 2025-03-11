@@ -38,7 +38,7 @@ class Monei
 
     public const STATUS_MONEI_REFUNDED = 'monei_refunded';
 
-    public const CODE = 'monei';
+    public const REDIRECT_CODE = 'monei';
 
     public const CARD_CODE = 'monei_card';
 
@@ -55,7 +55,7 @@ class Monei
     public const MBWAY_REDIRECT_CODE = 'monei_mbway_redirect';
 
     public const PAYMENT_METHODS_MONEI = [
-        self::CODE,
+        self::REDIRECT_CODE,
         self::CARD_CODE,
         self::CC_VAULT_CODE,
         self::BIZUM_CODE,

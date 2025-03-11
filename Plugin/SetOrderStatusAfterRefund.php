@@ -12,6 +12,7 @@ use Magento\Sales\Api\Data\CreditmemoInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Service\CreditmemoService;
 use Magento\Sales\Model\Order;
+use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Model\Payment\Status;
 use Psr\Log\LoggerInterface;
 
@@ -71,12 +72,36 @@ class SetOrderStatusAfterRefund
 
             // Check if this is a Monei payment and not already closed
             if (
-                null !== $order->getData('monei_payment_id') &&
+                $order->getPayment() &&
+                $order->getPayment()->getMethod() &&
+                in_array($order->getPayment()->getMethod(), Monei::PAYMENT_METHODS_MONEI) &&
                 'closed' !== $order->getState()
             ) {
                 $orderStatus = Status::MAGENTO_STATUS_MAP[Status::PARTIALLY_REFUNDED];
                 $orderState = Order::STATE_PROCESSING;
                 $order->setStatus($orderStatus)->setState($orderState);
+
+                // Find and update the most recent status history entry for the current status
+                $historyEntries = $order->getStatusHistories();
+                if (!$historyEntries) {
+                    $historyEntries = [];
+                }
+
+                // Sort by created_at in descending order to get the most recent entries first
+                usort($historyEntries, function($a, $b) {
+                    $timeA = $a->getCreatedAt() ? strtotime($a->getCreatedAt()) : 0;
+                    $timeB = $b->getCreatedAt() ? strtotime($b->getCreatedAt()) : 0;
+                    return $timeB - $timeA;
+                });
+
+                // Find and update status entries related to the refund
+                foreach ($historyEntries as $history) {
+                    if ($history->getStatus() == $orderStatus && !$history->getIsCustomerNotified()) {
+                        $history->setIsCustomerNotified(true);
+                        break;
+                    }
+                }
+
                 $this->orderRepository->save($order);
             }
         } catch (\Exception $e) {

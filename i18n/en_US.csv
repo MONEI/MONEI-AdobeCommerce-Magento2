@@ -69,7 +69,7 @@
 "Send Order Email","Send Order Email"
 "Send Invoice Email","Send Invoice Email"
 "Controls whether to send order confirmation emails after payment is confirmed","Controls whether to send order confirmation emails after payment is confirmed"
-"Controls whether to send invoice emails after invoice is created","Controls whether to send invoice emails after invoice is created"
+"Controls whether to send invoice emails after invoice is created","Controls whether to send invoice emails for automatically captured payments. (Payment Action: Authorize and Capture)"
 "Monei Redirect:","MONEI Redirect:"
 "Enable","Enable"
 "Title","Title"

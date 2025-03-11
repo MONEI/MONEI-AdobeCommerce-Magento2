@@ -78,7 +78,7 @@
 "Send Order Email","Enviar Email de Pedido"
 "Send Invoice Email","Enviar Email de Factura"
 "Controls whether to send order confirmation emails after payment is confirmed","Controla si se envían emails de confirmación de pedido después de confirmar el pago"
-"Controls whether to send invoice emails after invoice is created","Controla si se envían emails de factura después de crear la factura"
+"Controls whether to send invoice emails after invoice is created","Controla si se envían emails de factura para pagos capturados automáticamente. (Acción de Pago: Autorizar y Capturar)"
 "Monei Redirect:","Redirección de MONEI:"
 "Enable","Habilitar"
 "Title","Título"

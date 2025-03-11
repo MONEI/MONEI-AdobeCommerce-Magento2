@@ -146,7 +146,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
             'isMoneiTestMode' => Mode::MODE_TEST === $this->moneiPaymentConfig->getMode($storeId),
             'moneiLanguage' => $this->moneiPaymentConfig->getLanguage($storeId),
             'payment' => [
-                Monei::CODE => [
+                Monei::REDIRECT_CODE => [
                     'redirectUrl' => $this->urlBuilder->getUrl('monei/payment/redirect'),
                     'cancelOrderUrl' => $this->urlBuilder->getUrl('monei/payment/cancel'),
                     'failOrderUrl' => $this->urlBuilder->getUrl('monei/payment/faillastorderbystatus'),
