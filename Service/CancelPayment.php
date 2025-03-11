@@ -10,10 +10,12 @@ namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\Exception\LocalizedException;
 use Monei\Model\CancelPaymentRequest;
+use Monei\Model\Payment;
 use Monei\Model\PaymentCancellationReason;
 use Monei\MoneiPayment\Api\Service\CancelPaymentInterface;
+use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use Monei\ApiException;
+use Monei\MoneiClient;
 
 /**
  * Monei cancel payment service class using the official MONEI PHP SDK.
@@ -38,20 +40,16 @@ class CancelPayment extends AbstractApiService implements CancelPaymentInterface
     ];
 
     /**
-     * @var MoneiApiClient
-     */
-    private $moneiApiClient;
-
-    /**
      * @param Logger $logger
-     * @param MoneiApiClient $moneiApiClient
+     * @param ApiExceptionHandler $exceptionHandler
+     * @param MoneiApiClient $apiClient
      */
     public function __construct(
         Logger $logger,
-        MoneiApiClient $moneiApiClient
+        ApiExceptionHandler $exceptionHandler,
+        MoneiApiClient $apiClient
     ) {
-        parent::__construct($logger);
-        $this->moneiApiClient = $moneiApiClient;
+        parent::__construct($logger, $exceptionHandler, $apiClient);
     }
 
     /**
@@ -59,41 +57,34 @@ class CancelPayment extends AbstractApiService implements CancelPaymentInterface
      *
      * @param array $data Payment data including payment_id and cancellation_reason
      *
-     * @return array Response from the Monei API
+     * @return Payment MONEI SDK Payment object
+     * @throws LocalizedException If the payment cannot be cancelled
      */
-    public function execute(array $data): array
+    public function execute(array $data): Payment
     {
-        return $this->executeApiCall(__METHOD__, function () use ($data) {
-            // Validate the request parameters
-            $this->validateParams($data, $this->requiredArguments, [
-                'cancellation_reason' => function ($value) {
-                    return in_array($value, $this->cancellationReasons, true);
-                }
-            ]);
-
-            try {
-                // Get the SDK client
-                $moneiSdk = $this->moneiApiClient->getMoneiSdk();
-
-                // Create cancel request with SDK model
-                $cancelRequest = new CancelPaymentRequest();
-
-                // Set cancellation reason using the SDK enum
-                $cancelRequest->setCancellationReason($data['cancellation_reason']);
-
-                // Cancel the payment using the SDK and request object
-                $payment = $moneiSdk->payments->cancel($data['payment_id'], $cancelRequest);
-
-                // Convert response to array and add cancellation reason for reference
-                $response = $this->moneiApiClient->convertResponseToArray($payment);
-                $response['cancellation_reason'] = $data['cancellation_reason'];
-
-                return $response;
-            } catch (ApiException $e) {
-                $this->logger->critical('[API Error] ' . $e->getMessage());
-
-                throw new LocalizedException(__('Failed to cancel payment with MONEI API: %1', $e->getMessage()));
+        // Validate the request parameters
+        $this->validateParams($data, $this->requiredArguments, [
+            'cancellation_reason' => function ($value) {
+                return in_array($value, $this->cancellationReasons, true);
             }
-        }, ['cancelData' => $data]);
+        ]);
+
+        // Create cancel request with SDK model
+        $cancelRequest = new CancelPaymentRequest();
+
+        // Set cancellation reason using the SDK enum
+        $cancelRequest->setCancellationReason($data['cancellation_reason']);
+
+        // Use standardized SDK call pattern with the executeMoneiSdkCall method
+        return $this->executeMoneiSdkCall(
+            'cancelPayment',
+            function (MoneiClient $moneiSdk) use ($data, $cancelRequest) {
+                return $moneiSdk->payments->cancel($data['payment_id'], $cancelRequest);
+            },
+            [
+                'payment_id' => $data['payment_id'],
+                'cancellation_reason' => $data['cancellation_reason']
+            ]
+        );
     }
 }

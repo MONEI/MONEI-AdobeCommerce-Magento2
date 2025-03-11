@@ -10,9 +10,11 @@ namespace Monei\MoneiPayment\Service;
 
 use Magento\Framework\Exception\LocalizedException;
 use Monei\Model\CapturePaymentRequest;
+use Monei\Model\Payment;
 use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
+use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use Monei\ApiException;
+use Monei\MoneiClient;
 
 /**
  * Monei capture payment service class using the official MONEI PHP SDK.
@@ -30,20 +32,16 @@ class CapturePayment extends AbstractApiService implements CapturePaymentInterfa
     ];
 
     /**
-     * @var MoneiApiClient
-     */
-    private $moneiApiClient;
-
-    /**
      * @param Logger $logger
-     * @param MoneiApiClient $moneiApiClient
+     * @param ApiExceptionHandler $exceptionHandler
+     * @param MoneiApiClient $apiClient
      */
     public function __construct(
         Logger $logger,
-        MoneiApiClient $moneiApiClient
+        ApiExceptionHandler $exceptionHandler,
+        MoneiApiClient $apiClient
     ) {
-        parent::__construct($logger);
-        $this->moneiApiClient = $moneiApiClient;
+        parent::__construct($logger, $exceptionHandler, $apiClient);
     }
 
     /**
@@ -54,40 +52,37 @@ class CapturePayment extends AbstractApiService implements CapturePaymentInterfa
      *
      * @param array $data Data for the capture request containing paymentId and amount
      *
-     * @return array Response from the API with capture results or error details
+     * @return Payment MONEI SDK Payment object
+     * @throws LocalizedException If the payment cannot be captured
      */
-    public function execute(array $data): array
+    public function execute(array $data): Payment
     {
-        return $this->executeApiCall(__METHOD__, function () use ($data) {
-            // Validate the request parameters
-            $this->validateParams($data, $this->requiredArguments, [
-                'amount' => function ($value) {
-                    return is_numeric($value);
-                }
-            ]);
-
-            try {
-                // Get the SDK client
-                $moneiSdk = $this->moneiApiClient->getMoneiSdk($data['storeId'] ?? null);
-
-                // Create capture request with SDK model
-                $captureRequest = new CapturePaymentRequest();
-
-                // Set amount in cents
-                if (isset($data['amount'])) {
-                    $captureRequest->setAmount((int) ($data['amount'] * 100));
-                }
-
-                // Capture the payment using the SDK and request object
-                $payment = $moneiSdk->payments->capture($data['paymentId'], $captureRequest);
-
-                // Convert response to array
-                return $this->moneiApiClient->convertResponseToArray($payment);
-            } catch (ApiException $e) {
-                $this->logger->critical('[API Error] ' . $e->getMessage());
-
-                throw new LocalizedException(__('Failed to capture payment with MONEI API: %1', $e->getMessage()));
+        // Validate the request parameters
+        $this->validateParams($data, $this->requiredArguments, [
+            'amount' => function ($value) {
+                return is_numeric($value);
             }
-        }, ['captureData' => $data]);
+        ]);
+
+        // Create capture request with SDK model
+        $captureRequest = new CapturePaymentRequest();
+
+        // Set amount in cents
+        if (isset($data['amount'])) {
+            $captureRequest->setAmount((int) ($data['amount'] * 100));
+        }
+
+        // Use standardized SDK call pattern with the executeMoneiSdkCall method
+        return $this->executeMoneiSdkCall(
+            'capturePayment',
+            function (MoneiClient $moneiSdk) use ($data, $captureRequest) {
+                return $moneiSdk->payments->capture($data['paymentId'], $captureRequest);
+            },
+            [
+                'paymentId' => $data['paymentId'],
+                'amount' => $data['amount']
+            ],
+            $data['storeId'] ?? null
+        );
     }
 }

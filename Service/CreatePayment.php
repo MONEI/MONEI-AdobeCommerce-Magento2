@@ -102,7 +102,7 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
         $paymentRequest = $this->buildPaymentRequest($data);
 
         // Execute the SDK call with the standardized pattern
-        $response = $this->executeMoneiSdkCall(
+        return $this->executeMoneiSdkCall(
             'createPayment',
             function (MoneiClient $moneiSdk) use ($paymentRequest) {
                 return $moneiSdk->payments->create($paymentRequest);
@@ -113,8 +113,6 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
                 'currency' => $data['currency']
             ]
         );
-
-        return $response;
     }
 
     /**

@@ -13,8 +13,9 @@ use Monei\Model\Payment;
 use Monei\Model\PaymentRefundReason;
 use Monei\Model\RefundPaymentRequest;
 use Monei\MoneiPayment\Api\Service\RefundPaymentInterface;
+use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use Monei\ApiException;
+use Monei\MoneiClient;
 
 /**
  * Monei refund payment service class using the official MONEI PHP SDK.
@@ -40,20 +41,16 @@ class RefundPayment extends AbstractApiService implements RefundPaymentInterface
     ];
 
     /**
-     * @var MoneiApiClient
-     */
-    private $moneiApiClient;
-
-    /**
      * @param Logger $logger
-     * @param MoneiApiClient $moneiApiClient
+     * @param ApiExceptionHandler $exceptionHandler
+     * @param MoneiApiClient $apiClient
      */
     public function __construct(
         Logger $logger,
-        MoneiApiClient $moneiApiClient
+        ApiExceptionHandler $exceptionHandler,
+        MoneiApiClient $apiClient
     ) {
-        parent::__construct($logger);
-        $this->moneiApiClient = $moneiApiClient;
+        parent::__construct($logger, $exceptionHandler, $apiClient);
     }
 
     /**
@@ -69,75 +66,39 @@ class RefundPayment extends AbstractApiService implements RefundPaymentInterface
         // Convert any camelCase keys to snake_case to ensure consistency
         $data = $this->convertKeysToSnakeCase($data);
 
-        // Store the result in a variable to return just the Payment object
-        $result = $this->executeApiCall(__METHOD__, function () use ($data) {
-            // Validate the request parameters
-            $this->validateParams($data, $this->requiredArguments, [
-                'refund_reason' => function ($value) {
-                    return in_array($value, $this->refundReasons, true);
-                },
-                'amount' => function ($value) {
-                    return is_numeric($value);
-                }
-            ]);
-
-            try {
-                // Get the SDK client
-                $moneiSdk = $this->moneiApiClient->getMoneiSdk($data['store_id'] ?? null);
-
-                // Create refund request with SDK model
-                $refundRequest = new RefundPaymentRequest();
-
-                // Set amount in cents
-                if (isset($data['amount'])) {
-                    $refundRequest->setAmount((int) ($data['amount'] * 100));
-                }
-
-                // Set refund reason using the SDK enum
-                $refundRequest->setRefundReason($data['refund_reason']);
-
-                // Refund the payment using the SDK and request object
-                $payment = $moneiSdk->payments->refund($data['payment_id'], $refundRequest);
-
-                // Log refund reason - just for reference
-                $this->logger->debug('Refund completed', [
-                    'payment_id' => $data['payment_id'],
-                    'refund_reason' => $data['refund_reason']
-                ]);
-
-                return $payment;
-            } catch (ApiException $e) {
-                $this->logger->critical('[API Error] ' . $e->getMessage());
-
-                throw new LocalizedException(__('Failed to refund payment with MONEI API: %1', $e->getMessage()));
+        // Validate the request parameters
+        $this->validateParams($data, $this->requiredArguments, [
+            'refund_reason' => function ($value) {
+                return in_array($value, $this->refundReasons, true);
+            },
+            'amount' => function ($value) {
+                return is_numeric($value);
             }
-        }, ['refundData' => $data]);
+        ]);
 
-        // Extract and return just the Payment object from the array
-        return $result['response'] ?? $result[0] ?? null;
-    }
+        // Create refund request with SDK model
+        $refundRequest = new RefundPaymentRequest();
 
-    /**
-     * Convert camelCase keys to snake_case in an array
-     *
-     * @param array $data Input data with possible camelCase keys
-     * @return array Data with all keys in snake_case
-     */
-    protected function convertKeysToSnakeCase(array $data): array
-    {
-        $result = [];
-        foreach ($data as $key => $value) {
-            // Convert camelCase to snake_case
-            $snakeKey = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $key));
-
-            // If value is an array, recursively convert its keys too
-            if (is_array($value)) {
-                $value = $this->convertKeysToSnakeCase($value);
-            }
-
-            $result[$snakeKey] = $value;
+        // Set amount in cents
+        if (isset($data['amount'])) {
+            $refundRequest->setAmount((int) ($data['amount'] * 100));
         }
 
-        return $result;
+        // Set refund reason using the SDK enum
+        $refundRequest->setRefundReason($data['refund_reason']);
+
+        // Use standardized SDK call pattern with the executeMoneiSdkCall method
+        return $this->executeMoneiSdkCall(
+            'refundPayment',
+            function (MoneiClient $moneiSdk) use ($data, $refundRequest) {
+                return $moneiSdk->payments->refund($data['payment_id'], $refundRequest);
+            },
+            [
+                'payment_id' => $data['payment_id'],
+                'refund_reason' => $data['refund_reason'],
+                'amount' => $data['amount']
+            ],
+            $data['store_id'] ?? null
+        );
     }
 }
