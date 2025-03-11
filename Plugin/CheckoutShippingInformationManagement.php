@@ -19,7 +19,7 @@ use Monei\MoneiPayment\Service\Shared\PaymentMethodMap;
 /**
  * Plugin for ShippingInformationManagement to filter payment methods based on shipping address.
  */
-class ShippingInformationManagement
+class CheckoutShippingInformationManagement
 {
     /**
      * Monei payment module configuration.

@@ -397,8 +397,11 @@ class PaymentProcessor implements PaymentProcessorInterface
                 $paymentId
             ));
 
+            // Before creating a new invoice, check for and mark existing history entries
+            $this->markExistingCaptureHistoryAsNotified($order);
+
             // Generate invoice
-            $this->invoiceService->processInvoice($order, $paymentId);
+            $invoice = $this->invoiceService->processInvoice($order, $paymentId);
 
             // Update order status
             $order->setState(Order::STATE_PROCESSING);
@@ -420,7 +423,9 @@ class PaymentProcessor implements PaymentProcessorInterface
                 }
             }
 
+            // After saving the order, check for newly added history entries related to capture
             $this->orderRepository->save($order);
+            $this->markExistingCaptureHistoryAsNotified($order);
 
             $this->logger->info(sprintf(
                 '[Payment successful] Order %s, payment %s',
@@ -438,6 +443,59 @@ class PaymentProcessor implements PaymentProcessorInterface
             ));
 
             return false;
+        }
+    }
+
+    /**
+     * Mark existing "Captured amount" history entries as notified
+     *
+     * @param OrderInterface $order
+     * @return void
+     */
+    private function markExistingCaptureHistoryAsNotified(OrderInterface $order): void
+    {
+        try {
+            // Get all status history entries
+            $historyEntries = $order->getStatusHistories();
+            if (!$historyEntries) {
+                return;
+            }
+
+            $updated = false;
+
+            // Find and update invoice and capture related entries
+            foreach ($historyEntries as $history) {
+                if (!$history->getIsCustomerNotified() && $history->getComment()) {
+                    $comment = $history->getComment();
+                    // Check for various capture-related texts
+                    if (
+                        stripos($comment, 'Captured amount') !== false ||
+                        stripos($comment, 'Invoice') !== false ||
+                        stripos($comment, 'Capture') !== false
+                    ) {
+                        $history->setIsCustomerNotified(true);
+                        $this->logger->debug(sprintf(
+                            '[Order history entry marked as notified] Order %s, Comment: %s',
+                            $order->getIncrementId(),
+                            $comment
+                        ));
+                        $updated = true;
+                    }
+                }
+            }
+
+            // Only save if we actually updated an entry
+            if ($updated) {
+                $this->orderRepository->save($order);
+            }
+        } catch (Exception $e) {
+            $this->logger->error(
+                sprintf(
+                    '[Error marking history as notified] %s',
+                    $e->getMessage()
+                ),
+                ['exception' => $e]
+            );
         }
     }
 
@@ -468,6 +526,9 @@ class PaymentProcessor implements PaymentProcessorInterface
             // Update payment information
             $this->updatePaymentInformation($order, $payment);
 
+            // Before updating order status, check for and mark existing history entries
+            $this->markExistingCaptureHistoryAsNotified($order);
+
             // No longer creating pending invoice for authorized payment
             // The merchant will create the invoice manually, which will be automatically captured
 
@@ -491,7 +552,9 @@ class PaymentProcessor implements PaymentProcessorInterface
                 }
             }
 
+            // After saving the order, check for newly added history entries
             $this->orderRepository->save($order);
+            $this->markExistingCaptureHistoryAsNotified($order);
 
             $this->logger->info(sprintf(
                 '[Payment authorized] Order %s, payment %s',

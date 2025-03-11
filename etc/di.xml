@@ -42,7 +42,14 @@
     <!-- Plugin to mark customer as notified after order cancellation for Monei payments -->
     <type name="Magento\Sales\Model\Order">
         <plugin name="monei_order_cancel_notification"
-                type="Monei\MoneiPayment\Plugin\Sales\Model\Order\Cancel"
+                type="Monei\MoneiPayment\Plugin\OrderCancel"
+                sortOrder="10" />
+    </type>
+
+    <!-- Plugin to update order history entries for "Captured amount" after payment capture -->
+    <type name="Magento\Sales\Model\Order\Payment">
+        <plugin name="monei_payment_update_history_after_capture"
+                type="Monei\MoneiPayment\Plugin\OrderPaymentUpdateHistoryAfterCapture"
                 sortOrder="10" />
     </type>
 
@@ -71,16 +78,16 @@
         </arguments>
     </type>
     <type name="Magento\Sales\Model\Service\CreditmemoService">
-        <plugin name="set_order_status_after_refund" type="Monei\MoneiPayment\Plugin\SetOrderStatusAfterRefund"/>
+        <plugin name="set_order_status_after_refund" type="Monei\MoneiPayment\Plugin\OrderStatusAfterRefund"/>
     </type>
     <type name="Magento\Checkout\Model\ShippingInformationManagement">
-        <plugin name="Monei\MoneiPayment\Plugin\ShippingInformationManagement" type="Monei\MoneiPayment\Plugin\ShippingInformationManagement"/>
+        <plugin name="monei_checkout_shipping_information_management" type="Monei\MoneiPayment\Plugin\CheckoutShippingInformationManagement"/>
     </type>
     <type name="Magento\Sales\Model\Order\StatusLabel">
-        <plugin name="monei_order_status_label" type="Monei\MoneiPayment\Plugin\OrderStatusLabel"/>
+        <plugin name="monei_order_status_label" type="Monei\MoneiPayment\Plugin\SalesOrderStatusLabel"/>
     </type>
     <type name="Magento\Sales\Model\Order\Config">
-        <plugin name="monei_order_config" type="Monei\MoneiPayment\Plugin\OrderConfig"/>
+        <plugin name="monei_order_config" type="Monei\MoneiPayment\Plugin\SalesOrderConfig"/>
     </type>
     <virtualType name="MoneiPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
         <arguments>

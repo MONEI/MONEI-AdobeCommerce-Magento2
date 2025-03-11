@@ -11,13 +11,12 @@ namespace Monei\MoneiPayment\Plugin;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\State;
 use Magento\Sales\Model\Order\StatusLabel;
-use Magento\Sales\Model\Order;
 use Monei\MoneiPayment\Model\Payment\Monei;
 
 /**
  * Plugin to map MONEI custom order statuses to standard Magento labels in the customer account
  */
-class OrderStatusLabel
+class SalesOrderStatusLabel
 {
     /**
      * Map of MONEI status codes to standard Magento status labels

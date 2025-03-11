@@ -14,7 +14,7 @@ use Monei\MoneiPayment\Model\Payment\Monei;
 /**
  * Plugin to ensure MONEI custom order statuses are visible in the customer account
  */
-class OrderConfig
+class SalesOrderConfig
 {
     /**
      * Add MONEI custom statuses to the list of statuses visible on frontend
