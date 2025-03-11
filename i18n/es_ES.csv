@@ -104,3 +104,8 @@
 "Selectable with all the processing order statuses","Seleccionable con todos los estados de pedido en procesamiento"
 "Selectable with all the pending order statuses","Seleccionable con todos los estados de pedido pendientes"
 "In which order the payment method will be displayed in checkout","En qué orden se mostrará el método de pago en el proceso de pago"
+"Are you sure you want to cancel this order?","¿Está seguro de que desea cancelar este pedido? Esta acción cancelará automáticamente el pago autorizado (no capturado) y liberará los fondos del cliente."
+"Cancel MONEI Order","Cancelar el pedido"
+"Never mind","No importa"
+"Cancel","Cancelar"
+"Cancellation reason","Motivo de la cancelación"

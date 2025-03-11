@@ -62,6 +62,9 @@ class CancelPayment extends AbstractApiService implements CancelPaymentInterface
      */
     public function execute(array $data): Payment
     {
+        // Convert any camelCase keys to snake_case to ensure consistency
+        $data = $this->convertKeysToSnakeCase($data);
+
         // Validate the request parameters
         $this->validateParams($data, $this->requiredArguments, [
             'cancellation_reason' => function ($value) {

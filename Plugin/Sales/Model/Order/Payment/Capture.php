@@ -82,7 +82,7 @@ class Capture
             // Check if this was a previously authorized payment
             // For manually created invoices, the merchant can choose to send the email during invoice creation
             $wasAuthorized = $subject->getAuthorizationTransaction() &&
-                             $subject->getAuthorizationTransaction()->getCreatedAt() != $subject->getCreatedAt();
+                $subject->getAuthorizationTransaction()->getCreatedAt() != $subject->getCreatedAt();
 
             // Only automatically send invoice emails for automatically created invoices (not manual ones)
             if (!$wasAuthorized) {
@@ -107,26 +107,30 @@ class Capture
             }
 
             // Sort by created_at in descending order to get the most recent entries first
-            usort($historyEntries, function($a, $b) {
+            usort($historyEntries, function ($a, $b) {
                 $timeA = $a->getCreatedAt() ? strtotime($a->getCreatedAt()) : 0;
                 $timeB = $b->getCreatedAt() ? strtotime($b->getCreatedAt()) : 0;
+
                 return $timeB - $timeA;
             });
 
             // Find and update status entries specifically related to this capture/invoice
             foreach ($historyEntries as $history) {
-                if (!$history->getIsCustomerNotified() &&
+                if (
+                    !$history->getIsCustomerNotified() &&
                     (strpos($history->getComment() ?? '', 'Captured amount') !== false ||
-                     $history->getStatus() == $order->getStatus())) {
+                        $history->getStatus() == $order->getStatus())
+                ) {
                     // For authorized payments where invoice is created manually, we still mark the status history
                     // as notified if the merchant chose to send a notification during invoice creation
                     if ($wasAuthorized && $invoice->getEmailSent()) {
                         $history->setIsCustomerNotified(true);
                     }
                     // For automatic captures, we always mark it as notified based on our email sending
-                    else if (!$wasAuthorized) {
+                    elseif (!$wasAuthorized) {
                         $history->setIsCustomerNotified(true);
                     }
+
                     break;
                 }
             }

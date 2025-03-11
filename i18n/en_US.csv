@@ -95,3 +95,8 @@
 "Selectable with all the processing order statuses","Selectable with all the processing order statuses"
 "Selectable with all the pending order statuses","Selectable with all the pending order statuses"
 "In which order the payment method will be displayed in checkout","In which order the payment method will be displayed in checkout"
+"Are you sure you want to cancel this order?","Are you certain you want to cancel this order? This action will automatically cancel the authorized (uncaptured) payment and release the customer's funds."
+"Cancel MONEI Order","Cancel the order"
+"Never mind","Never mind"
+"Cancel","Cancel"
+"Cancellation reason","Cancellation reason"

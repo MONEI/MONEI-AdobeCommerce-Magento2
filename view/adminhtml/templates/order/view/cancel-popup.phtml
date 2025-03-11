@@ -5,7 +5,7 @@
 <?php if ($block->isOrderPlacedWithMonei()): ?>
     <div id="cancel-monei-order" style="display: none">
         <div class="message message-warning">
-            <?= $escaper->escapeHtml(__('Are you sure you want to cancel this order?')) ?>
+            <?= $escaper->escapeHtml(__('Are you certain you want to cancel this order? This action will automatically cancel the authorized (uncaptured) payment and release the customer\'s funds.')) ?>
         </div>
 
         <input type="hidden"
@@ -21,12 +21,12 @@
             name="order_id" />
 
         <div class="admin__field field">
-            <label class="admin__field-label" for="cancel_reason">
-                <span><?= $escaper->escapeHtml(__('Cancel reason')) ?></span>
+            <label class="admin__field-label" for="cancellation_reason">
+                <span><?= $escaper->escapeHtml(__('Cancellation reason')) ?></span>
             </label>
             <div class="admin__field-control">
-                <select name="cancel_reason"
-                    id="cancel_reason"
+                <select name="cancellation_reason"
+                    id="cancellation_reason"
                     class="admin__control-select"
                     data-validate="{required:true}">
                     <?php foreach ($block->getCancelReasons() as $option): ?>
@@ -57,28 +57,28 @@
                 modalClass: 'cancel-monei-order-popup',
                 responsive: false,
                 innerScroll: true,
-                title: "<?= $escaper->escapeHtml(__('Cancel MONEI Order')) ?>",
+                title: "<?= $escaper->escapeHtml(__('Cancel the order')) ?>",
                 buttons: [{
-                    text: "<?= $escaper->escapeHtml(__('Cancel')) ?>",
+                    text: "<?= $escaper->escapeHtml(__('Never mind')) ?>",
                     class: 'action-secondary',
                     click: function() {
                         this.closeModal();
                     }
                 }, {
-                    text: "<?= $escaper->escapeHtml(__('OK')) ?>",
+                    text: "<?= $escaper->escapeHtml(__('Cancel')) ?>",
                     class: 'action-primary',
                     click: function() {
                         var url = $('#cancel_url_monei').val();
                         var paymentId = $('#payment_id').val();
                         var orderId = $('#order_id').val();
-                        var reason = $('#cancel_reason').val();
+                        var reason = $('#cancellation_reason').val();
 
                         $.ajax({
                             url: url,
                             data: {
                                 payment_id: paymentId,
                                 order_id: orderId,
-                                cancel_reason: reason
+                                cancellation_reason: reason
                             },
                             type: 'post',
                             dataType: 'json',

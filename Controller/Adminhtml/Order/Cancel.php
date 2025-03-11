@@ -90,10 +90,33 @@ class Cancel extends Action
     {
         $params = $this->getRequest()->getParams();
 
+        // Debug logging for incoming parameters
+        $this->logger->debug('[Cancel Payment] Incoming parameters:', $params);
+
         /** @var Json $resultJson */
         $resultJson = $this->resultJsonFactory->create();
-        if (!isset($params['payment_id']) || !isset($params['cancel_reason']) || !isset($params['order_id'])) {
-            $this->messageManager->addErrorMessage(__('Required parameters are missing. Cannot proceed with cancellation.'));
+        if (!isset($params['payment_id']) || !isset($params['cancellation_reason']) || !isset($params['order_id'])) {
+            $missingParams = [];
+            if (!isset($params['payment_id'])) {
+                $missingParams[] = 'payment_id';
+            }
+            if (!isset($params['cancellation_reason'])) {
+                $missingParams[] = 'cancellation_reason';
+            }
+            if (!isset($params['order_id'])) {
+                $missingParams[] = 'order_id';
+            }
+
+            $message = sprintf(
+                'Required parameter%s %s %s missing or empty.',
+                count($missingParams) > 1 ? 's' : '',
+                implode(', ', $missingParams),
+                count($missingParams) > 1 ? 'are' : 'is'
+            );
+
+            $this->messageManager->addErrorMessage(__($message));
+            $this->logger->error(sprintf('Cancel order error: %s. Params received: %s', $message, json_encode($params)));
+
             $url = $this->getUrl('sales/*/');
             $response = [
                 'redirectUrl' => $url,
@@ -103,8 +126,8 @@ class Cancel extends Action
         }
 
         $data = [
-            'paymentId' => $params['payment_id'],
-            'cancellationReason' => $params['cancel_reason'],
+            'payment_id' => $params['payment_id'],
+            'cancellation_reason' => $params['cancellation_reason'],
         ];
 
         try {

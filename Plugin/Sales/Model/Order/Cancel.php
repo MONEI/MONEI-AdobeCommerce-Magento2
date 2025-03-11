@@ -64,9 +64,10 @@ class Cancel
             }
 
             // Sort by created_at in descending order to get the most recent entries first
-            usort($historyEntries, function($a, $b) {
+            usort($historyEntries, function ($a, $b) {
                 $timeA = $a->getCreatedAt() ? strtotime($a->getCreatedAt()) : 0;
                 $timeB = $b->getCreatedAt() ? strtotime($b->getCreatedAt()) : 0;
+
                 return $timeB - $timeA;
             });
 
@@ -76,6 +77,7 @@ class Cancel
             foreach ($historyEntries as $history) {
                 if ($history->getStatus() == $currentStatus && !$history->getIsCustomerNotified()) {
                     $history->setIsCustomerNotified(true);
+
                     break;
                 }
             }
