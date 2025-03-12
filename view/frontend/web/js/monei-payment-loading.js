@@ -1,4 +1,4 @@
-define(['jquery', 'loader', 'moneijs', 'mage/translate', ], function ($, _, monei, $t) {
+define(['jquery', 'loader', 'moneijs', 'mage/translate'], function ($, _, monei, $t) {
   'use strict';
 
   return function (config) {

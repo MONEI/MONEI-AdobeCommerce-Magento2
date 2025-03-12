@@ -139,7 +139,7 @@ define([
         onBeforeSubmit: function () {
           fullScreenLoader.startLoader();
         },
-        onSubmit: function(result) {
+        onSubmit: function (result) {
           if (result.error) {
             console.log(result.error);
             self.isPlaceOrderActionAllowed(true);
@@ -148,7 +148,7 @@ define([
             self.createOrderInMagento(result.token);
           }
         },
-        onError: function(error) {
+        onError: function (error) {
           console.error('Apple Pay Error', error);
           fullScreenLoader.stopLoader();
           self.isPlaceOrderActionAllowed(true);

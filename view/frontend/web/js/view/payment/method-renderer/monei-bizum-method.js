@@ -78,7 +78,7 @@ define([
         onBeforeOpen: function () {
           return additionalValidators.validate();
         },
-        onSubmit: function(result) {
+        onSubmit: function (result) {
           if (result.error) {
             console.log(result.error);
             self.isPlaceOrderActionAllowed(true);
@@ -87,7 +87,7 @@ define([
             self.createOrderInMagento(result.token);
           }
         },
-        onError: function(error) {
+        onError: function (error) {
           console.log(error);
           self.isPlaceOrderActionAllowed(false);
         }
