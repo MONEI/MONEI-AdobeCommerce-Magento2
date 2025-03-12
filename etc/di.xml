@@ -46,13 +46,6 @@
                 sortOrder="10" />
     </type>
 
-    <!-- Plugin to update order history entries for "Captured amount" after payment capture -->
-    <type name="Magento\Sales\Model\Order\Payment">
-        <plugin name="monei_payment_update_history_after_capture"
-                type="Monei\MoneiPayment\Plugin\OrderPaymentUpdateHistoryAfterCapture"
-                sortOrder="10" />
-    </type>
-
     <type name="Monei\MoneiPayment\Service\Logger\Handler">
         <arguments>
             <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
@@ -543,6 +536,21 @@
     <type name="Monei\MoneiPayment\Block\Info\Monei">
         <arguments>
             <argument name="paymentMethodFormatter" xsi:type="object">Monei\MoneiPayment\Helper\PaymentMethodFormatter</argument>
+        </arguments>
+    </type>
+
+    <!-- Plugin to mark order history entries as notified after invoice email is sent -->
+    <type name="Magento\Sales\Model\Order\Email\Sender\InvoiceSender">
+        <plugin name="monei_order_invoice_email_sent"
+                type="Monei\MoneiPayment\Plugin\OrderInvoiceEmailSent"
+                sortOrder="10" />
+    </type>
+
+    <!-- Type configuration for OrderInvoiceEmailSent -->
+    <type name="Monei\MoneiPayment\Plugin\OrderInvoiceEmailSent">
+        <arguments>
+            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
+            <argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
         </arguments>
     </type>
 </config>

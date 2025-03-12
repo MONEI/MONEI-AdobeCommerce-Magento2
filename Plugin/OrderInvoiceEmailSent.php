@@ -9,14 +9,16 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Plugin;
 
 use Magento\Sales\Api\Data\InvoiceInterface;
-use Magento\Sales\Model\Order\Payment;
+use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Model\Order;
+use Magento\Sales\Model\Order\Email\Sender\InvoiceSender;
 use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Service\Logger;
 
 /**
- * Plugin to mark order history entries as notified after payment capture
+ * Plugin to mark order history entries as notified after invoice email is sent
  */
-class OrderPaymentUpdateHistoryAfterCapture
+class OrderInvoiceEmailSent
 {
     /**
      * @var Logger
@@ -24,42 +26,60 @@ class OrderPaymentUpdateHistoryAfterCapture
     private Logger $logger;
 
     /**
+     * @var OrderRepositoryInterface
+     */
+    private OrderRepositoryInterface $orderRepository;
+
+    /**
      * @param Logger $logger
+     * @param OrderRepositoryInterface $orderRepository
      */
     public function __construct(
-        Logger $logger
+        Logger $logger,
+        OrderRepositoryInterface $orderRepository
     ) {
         $this->logger = $logger;
+        $this->orderRepository = $orderRepository;
     }
 
     /**
-     * After payment capture, mark history entries as notified if invoice email is sent
+     * After invoice email is sent, mark relevant order history entries as notified
      *
-     * @param Payment $subject
-     * @param Payment $result
-     * @param InvoiceInterface|null $invoice
-     * @return Payment
+     * @param InvoiceSender $subject
+     * @param bool $result
+     * @param InvoiceInterface $invoice
+     * @return bool
      */
-    public function afterCapture(
-        Payment $subject,
-        Payment $result,
-        ?InvoiceInterface $invoice = null
-    ): Payment {
+    public function afterSend(
+        InvoiceSender $subject,
+        bool $result,
+        InvoiceInterface $invoice
+    ): bool {
         try {
-            // Skip if no invoice or not a Monei payment
-            if (!$invoice || !in_array($subject->getMethod(), Monei::PAYMENT_METHODS_MONEI)) {
+            // Get the order from the invoice's order ID
+            $orderId = $invoice->getOrderId();
+            /** @var Order $order */
+            $order = $this->orderRepository->get($orderId);
+
+            // Skip if not a Monei payment
+            if (!$order->getPayment() || !in_array($order->getPayment()->getMethod(), Monei::PAYMENT_METHODS_MONEI)) {
                 return $result;
             }
 
-            $order = $subject->getOrder();
+            // Only proceed if the email was actually sent
+            if (!$result) {
+                $this->logger->debug(sprintf(
+                    '[Invoice email not sent] Order %s, Invoice %s - Skipping history update',
+                    $order->getIncrementId(),
+                    $invoice->getIncrementId()
+                ));
+                return $result;
+            }
 
-            // Always mark entries as notified if the invoice exists, even if email hasn't been sent yet
-            // This is more aggressive but ensures entries are marked
             $this->logger->debug(sprintf(
-                '[Checking history entries] Order %s, Invoice %s, Current status: %s',
+                '[Invoice email sent] Order %s, Invoice %s - Updating history entries',
                 $order->getIncrementId(),
-                $invoice->getIncrementId(),
-                $order->getStatus()
+                $invoice->getIncrementId()
             ));
 
             // Get all status history entries
@@ -77,7 +97,7 @@ class OrderPaymentUpdateHistoryAfterCapture
 
             $updated = false;
 
-            // Find and update status entries specifically related to this capture or current status
+            // Find and update status entries specifically related to the invoice capture
             foreach ($historyEntries as $history) {
                 if (
                     !$history->getIsCustomerNotified() && (
@@ -107,7 +127,7 @@ class OrderPaymentUpdateHistoryAfterCapture
             }
         } catch (\Exception $e) {
             $this->logger->error(sprintf(
-                '[Error marking history as notified after capture] %s',
+                '[Error marking history as notified after email] %s',
                 $e->getMessage()
             ), ['exception' => $e]);
         }
