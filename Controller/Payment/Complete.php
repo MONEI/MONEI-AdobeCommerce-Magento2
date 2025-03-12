@@ -307,7 +307,7 @@ class Complete implements HttpGetActionInterface
             ]);
 
             // Special handling for MBWAY payments in PENDING status
-            if ($paymentDTO->isPending()) {
+            if ($paymentDTO->isPending() && $paymentDTO->isMbway()) {
                 return $this->handlePendingMbwayPayment($paymentDTO);
             }
 
