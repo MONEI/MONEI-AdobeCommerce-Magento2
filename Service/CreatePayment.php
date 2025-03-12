@@ -130,8 +130,7 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
             'order_id' => $data['order_id'],
             'complete_url' => $this->urlBuilder->getUrl('monei/payment/complete'),
             'callback_url' => $this->urlBuilder->getUrl('monei/payment/callback'),
-            'cancel_url' => $this->urlBuilder->getUrl('monei/payment/cancel'),
-            'fail_url' => $this->urlBuilder->getUrl('monei/payment/fail')
+            'cancel_url' => $this->urlBuilder->getUrl('monei/payment/cancel')
         ]);
 
         // Set allowed payment methods if available

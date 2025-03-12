@@ -99,7 +99,7 @@ class Redirect implements HttpGetActionInterface
         }
 
         return $this->resultRedirectFactory->setPath(
-            'monei/payment/fail',
+            'monei/payment/complete',
             ['orderId' => $order->getEntityId()]
         );
     }

@@ -6,6 +6,7 @@
     "../../../../app/code",
     "../../../../app/design"
   ],
+  "prettier.requireConfig": false,
   "intelephense.files.associations": [
     "*.php",
     "*.phtml"

@@ -154,6 +154,7 @@ class MoneiApiClient
         if ($storeId !== null) {
             $key = (string) $storeId;
             $this->removeInstanceByKey($key);
+
             return;
         }
 

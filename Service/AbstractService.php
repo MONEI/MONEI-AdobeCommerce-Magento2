@@ -174,8 +174,6 @@ abstract class AbstractService
         return [
             'completeUrl' => $this->urlBuilder->getUrl('monei/payment/complete'),
             'callbackUrl' => $this->urlBuilder->getUrl('monei/payment/callback/'),
-            'cancelUrl' => $this->urlBuilder->getUrl('monei/payment/cancel'),
-            'failUrl' => $this->urlBuilder->getUrl('monei/payment/fail'),
         ];
     }
 

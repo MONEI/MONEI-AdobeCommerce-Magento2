@@ -149,7 +149,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                 Monei::REDIRECT_CODE => [
                     'redirectUrl' => $this->urlBuilder->getUrl('monei/payment/redirect'),
                     'cancelOrderUrl' => $this->urlBuilder->getUrl('monei/payment/cancel'),
-                    'failOrderUrl' => $this->urlBuilder->getUrl('monei/payment/faillastorderbystatus'),
+                    'completeUrl' => $this->urlBuilder->getUrl('monei/payment/complete'),
                     'failOrderStatus' => [
                         Status::EXPIRED,
                         Status::CANCELED,
@@ -159,7 +159,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                 Monei::CARD_CODE => [
                     'redirectUrl' => $this->urlBuilder->getUrl('monei/payment/redirect'),
                     'cancelOrderUrl' => $this->urlBuilder->getUrl('monei/payment/cancel'),
-                    'failOrderUrl' => $this->urlBuilder->getUrl('monei/payment/faillastorderbystatus'),
+                    'completeUrl' => $this->urlBuilder->getUrl('monei/payment/complete'),
                     'failOrderStatus' => [
                         Status::EXPIRED,
                         Status::CANCELED,
@@ -173,7 +173,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                 Monei::BIZUM_CODE => [
                     'redirectUrl' => $this->urlBuilder->getUrl('monei/payment/redirect'),
                     'cancelOrderUrl' => $this->urlBuilder->getUrl('monei/payment/cancel'),
-                    'failOrderUrl' => $this->urlBuilder->getUrl('monei/payment/faillastorderbystatus'),
+                    'completeUrl' => $this->urlBuilder->getUrl('monei/payment/complete'),
                     'failOrderStatus' => [
                         Status::EXPIRED,
                         Status::CANCELED,
@@ -189,7 +189,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                     'appleTitle' => $this->moneiGoogleApplePaymentConfig->getAppleTitle($storeId),
                     'redirectUrl' => $this->urlBuilder->getUrl('monei/payment/redirect'),
                     'cancelOrderUrl' => $this->urlBuilder->getUrl('monei/payment/cancel'),
-                    'failOrderUrl' => $this->urlBuilder->getUrl('monei/payment/faillastorderbystatus'),
+                    'completeUrl' => $this->urlBuilder->getUrl('monei/payment/complete'),
                     'failOrderStatus' => [
                         Status::EXPIRED,
                         Status::CANCELED,
@@ -204,7 +204,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                     'card_icons' => CardRenderer::ICON_TYPE_BY_BRAND,
                     'redirectUrl' => $this->urlBuilder->getUrl('monei/payment/redirect'),
                     'cancelOrderUrl' => $this->urlBuilder->getUrl('monei/payment/cancel'),
-                    'failOrderUrl' => $this->urlBuilder->getUrl('monei/payment/faillastorderbystatus'),
+                    'completeUrl' => $this->urlBuilder->getUrl('monei/payment/complete'),
                     'failOrderStatus' => [
                         Status::EXPIRED,
                         Status::CANCELED,

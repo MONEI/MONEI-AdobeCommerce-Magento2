@@ -4,82 +4,97 @@
  * @copyright Copyright © Monei (https://monei.com)
  */
 -->
-<div class="payment-method monei-payment-methods" data-bind="attr: {'id': getPaymentCode()}, css: {'_active': (getCode() == isChecked())}">
-    <div class="payment-method-title field choice label custom-control custom-radio">
-        <input type="radio"
-               name="payment[method]"
-               class="radio custom-control-input"
-               data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible()">
-        <label data-bind="attr: {'for': getCode()}" class="label custom-control-label">
-            <span data-bind="text: getTitle()"></span>
-            <span class="monei-payment-icon"></span>
-        </label>
-    </div>
-    <div class="payment-method-content">
-        <div id="monei-card-insite-payment-form" afterRender="createMoneiPayment">
-            <div class="checkout-monei-card-extra-fields-block">
-                <fieldset class="fieldset">
-                    <div class="field _required" data-bind="css: {'_error': !cardHolderNameValid()}">
-                        <label for="monei-insite-cardholder-name" class="label">
-                            <span data-bind="i18n: 'Name on card'"></span>
-                        </label>
-                        <div class="control">
-                            <input type="text" id="monei-insite-cardholder-name" name="monei-insite-cardholder-name" class="input-text" data-bind="attr: {'data-validate': JSON.stringify({'required':true})}, css: {'_error': !cardHolderNameValid()}">
-                            <div class="field-error" data-bind="visible: !cardHolderNameValid(), i18n: errorMessageCardHolderName()"></div>
-                        </div>
-                    </div>
-                </fieldset>
+<div
+  class="payment-method monei-payment-methods"
+  data-bind="attr: {'id': getPaymentCode()}, css: {'_active': (getCode() == isChecked())}"
+>
+  <div class="payment-method-title field choice label custom-control custom-radio">
+    <input
+      type="radio"
+      name="payment[method]"
+      class="radio custom-control-input"
+      data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible()"
+    />
+    <label data-bind="attr: {'for': getCode()}" class="label custom-control-label">
+      <span data-bind="text: getTitle()"></span>
+      <span class="monei-payment-icon"></span>
+    </label>
+  </div>
+  <div class="payment-method-content">
+    <div id="monei-card-insite-payment-form" afterRender="createMoneiPayment">
+      <div class="checkout-monei-card-extra-fields-block">
+        <fieldset class="fieldset">
+          <div class="field _required" data-bind="css: {'_error': !cardHolderNameValid()}">
+            <label for="monei-insite-cardholder-name" class="label">
+              <span data-bind="i18n: 'Name on card'"></span>
+            </label>
+            <div class="control">
+              <input
+                type="text"
+                id="monei-insite-cardholder-name"
+                name="monei-insite-cardholder-name"
+                class="input-text"
+                data-bind="attr: {'data-validate': JSON.stringify({'required':true})}, css: {'_error': !cardHolderNameValid()}"
+              />
+              <div
+                class="field-error"
+                data-bind="visible: !cardHolderNameValid(), i18n: errorMessageCardHolderName()"
+              ></div>
             </div>
-            <div class="checkout-monei-card-input-card">
-                <fieldset class="fieldset">
-                    <div class="field _required card-field">
-                        <label for="monei-insite-card-input" class="label">
-                            <span data-bind="i18n: 'Card number'"></span>
-                        </label>
-                        <div id="monei-insite-card-input"></div>
-                        <div id="monei-insite-card-error"></div>
-                    </div>
-                </fieldset>
-            </div>
+          </div>
+        </fieldset>
+      </div>
+      <div class="checkout-monei-card-input-card">
+        <fieldset class="fieldset">
+          <div class="field _required card-field">
+            <label for="monei-insite-card-input" class="label">
+              <span data-bind="i18n: 'Card number'"></span>
+            </label>
+            <div id="monei-insite-card-input"></div>
+            <div id="monei-insite-card-error"></div>
+          </div>
+        </fieldset>
+      </div>
 
-            <!-- ko if: (isVaultEnabled())-->
-            <div class="field choice">
-                <input type="checkbox"
-                       class="checkbox"
-                       data-bind="checked: checkedVault, attr: {'id': getCode() + '_enable_vault', 'name': getCode() + '_enable_vault'}">
-                <label class="label" data-bind="attr: {'for': getCode() + '_enable_vault'}">
-                    <span><!-- ko i18n: 'Save payment information to my account for future purchases'--><!-- /ko --></span>
-                </label>
-            </div>
-            <!-- /ko -->
-        </div>
-        <!-- ko foreach: getRegion('messages') -->
-        <!-- ko template: getTemplate() --><!-- /ko -->
-        <!--/ko-->
-        <div class="payment-method-billing-address">
-            <!-- ko foreach: $parent.getRegion(getBillingAddressFormName()) -->
-            <!-- ko template: getTemplate() --><!-- /ko -->
-            <!--/ko-->
-        </div>
-        <div class="checkout-agreements-block">
-            <!-- ko foreach: $parent.getRegion('before-place-order') -->
-            <!-- ko template: getTemplate() --><!-- /ko -->
-            <!--/ko-->
-        </div>
-        <div class="actions-toolbar">
-            <div class="primary">
-                <button class="action primary checkout btn btn-primary"
-                        type="submit"
-                        data-bind="
-                        click: confirmCardMonei,
-                        attr: {title: $t('Place Order')},
-                        css: {disabled: !isPlaceOrderActionAllowed()},
-                        enable: (getCode() == isChecked())
-                        "
-                        disabled>
-                    <span data-bind="i18n: 'Place Order'"></span>
-                </button>
-            </div>
-        </div>
+      <!-- ko if: (isVaultEnabled())-->
+      <div class="field choice">
+        <input
+          type="checkbox"
+          class="checkbox"
+          data-bind="checked: checkedVault, attr: {'id': getCode() + '_enable_vault', 'name': getCode() + '_enable_vault'}"
+        />
+        <label class="label" data-bind="attr: {'for': getCode() + '_enable_vault'}">
+          <span
+            ><!-- ko i18n: 'Save payment information to my account for future purchases'--><!-- /ko --></span
+          >
+        </label>
+      </div>
+      <!-- /ko -->
     </div>
+    <!-- ko foreach: getRegion('messages') -->
+    <!-- ko template: getTemplate() --><!-- /ko -->
+    <!--/ko-->
+    <div class="payment-method-billing-address">
+      <!-- ko foreach: $parent.getRegion(getBillingAddressFormName()) -->
+      <!-- ko template: getTemplate() --><!-- /ko -->
+      <!--/ko-->
+    </div>
+    <div class="checkout-agreements-block">
+      <!-- ko foreach: $parent.getRegion('before-place-order') -->
+      <!-- ko template: getTemplate() --><!-- /ko -->
+      <!--/ko-->
+    </div>
+    <div class="actions-toolbar">
+      <div class="primary">
+        <button
+          class="action primary checkout btn btn-primary"
+          type="submit"
+          data-bind="click: confirmCardMonei, attr: {title: $t('Place Order')}, css: {disabled: !isPlaceOrderActionAllowed()}, enable: (getCode() == isChecked())"
+          disabled
+        >
+          <span data-bind="i18n: 'Place Order'"></span>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

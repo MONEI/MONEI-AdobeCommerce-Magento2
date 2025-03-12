@@ -42,8 +42,10 @@ class OrderCancel
     {
         try {
             // Skip non-Monei payments
-            if (!$result->getPayment() ||
-                !in_array($result->getPayment()->getMethod(), Monei::PAYMENT_METHODS_MONEI)) {
+            if (
+                !$result->getPayment() ||
+                !in_array($result->getPayment()->getMethod(), Monei::PAYMENT_METHODS_MONEI)
+            ) {
                 return $result;
             }
 
@@ -63,6 +65,7 @@ class OrderCancel
             usort($historyEntries, function ($a, $b) {
                 $timeA = $a->getCreatedAt() ? strtotime($a->getCreatedAt()) : 0;
                 $timeB = $b->getCreatedAt() ? strtotime($b->getCreatedAt()) : 0;
+
                 return $timeB - $timeA;
             });
 
@@ -71,14 +74,16 @@ class OrderCancel
             // Find and update the most recent cancellation status entries
             foreach ($historyEntries as $history) {
                 // Check for any entries that match the current status or have cancellation keywords
-                if (!$history->getIsCustomerNotified() && (
-                    $history->getStatus() === $result->getStatus() ||
-                    ($history->getComment() && (
-                        stripos((string)$history->getComment(), 'cancel') !== false ||
-                        stripos((string)$history->getComment(), 'cancelled') !== false ||
-                        stripos((string)$history->getComment(), 'canceled') !== false
-                    ))
-                )) {
+                if (
+                    !$history->getIsCustomerNotified() && (
+                        $history->getStatus() === $result->getStatus() ||
+                        ($history->getComment() && (
+                            stripos((string) $history->getComment(), 'cancel') !== false ||
+                            stripos((string) $history->getComment(), 'cancelled') !== false ||
+                            stripos((string) $history->getComment(), 'canceled') !== false
+                        ))
+                    )
+                ) {
                     // Mark as notified
                     $history->setIsCustomerNotified(true);
                     $updated = true;
@@ -87,7 +92,7 @@ class OrderCancel
                         '[Marked cancellation history as notified] Order %s, Status: %s, Comment: %s',
                         $result->getIncrementId(),
                         $history->getStatus(),
-                        (string)($history->getComment() ?? 'No comment')
+                        (string) ($history->getComment() ?? 'No comment')
                     ));
                 }
             }

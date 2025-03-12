@@ -369,4 +369,106 @@ class PaymentDTO
     {
         return strtoupper($this->status) === PaymentStatus::PARTIALLY_REFUNDED;
     }
+
+    /**
+     * Check if payment is pending
+     *
+     * @return bool
+     */
+    public function isPending(): bool
+    {
+        return strtoupper($this->status) === PaymentStatus::PENDING;
+    }
+
+    /**
+     * Get the payment method type
+     *
+     * @return string|null
+     */
+    public function getPaymentMethodType(): ?string
+    {
+        if (
+            isset($this->rawData['original_payment']) &&
+            method_exists($this->rawData['original_payment'], 'getPaymentMethod')
+        ) {
+            $paymentMethod = $this->rawData['original_payment']->getPaymentMethod();
+            if (isset($paymentMethod->type)) {
+                return $paymentMethod->type;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if payment method is MBWAY
+     *
+     * @return bool
+     */
+    public function isMbway(): bool
+    {
+        $paymentMethodType = $this->getPaymentMethodType();
+
+        return $paymentMethodType === \Monei\Model\PaymentMethods::PAYMENT_METHODS_MBWAY;
+    }
+
+    /**
+     * Check if payment method is Card
+     *
+     * @return bool
+     */
+    public function isCard(): bool
+    {
+        $paymentMethodType = $this->getPaymentMethodType();
+
+        return $paymentMethodType === \Monei\Model\PaymentMethods::PAYMENT_METHODS_CARD;
+    }
+
+    /**
+     * Check if payment method is Bizum
+     *
+     * @return bool
+     */
+    public function isBizum(): bool
+    {
+        $paymentMethodType = $this->getPaymentMethodType();
+
+        return $paymentMethodType === \Monei\Model\PaymentMethods::PAYMENT_METHODS_BIZUM;
+    }
+
+    /**
+     * Check if payment method is Multibanco
+     *
+     * @return bool
+     */
+    public function isMultibanco(): bool
+    {
+        $paymentMethodType = $this->getPaymentMethodType();
+
+        return $paymentMethodType === \Monei\Model\PaymentMethods::PAYMENT_METHODS_MULTIBANCO;
+    }
+
+    /**
+     * Check if payment method is Google Pay
+     *
+     * @return bool
+     */
+    public function isGooglePay(): bool
+    {
+        $paymentMethodType = $this->getPaymentMethodType();
+
+        return $paymentMethodType === \Monei\Model\PaymentMethods::PAYMENT_METHODS_GOOGLE_PAY;
+    }
+
+    /**
+     * Check if payment method is Apple Pay
+     *
+     * @return bool
+     */
+    public function isApplePay(): bool
+    {
+        $paymentMethodType = $this->getPaymentMethodType();
+
+        return $paymentMethodType === \Monei\Model\PaymentMethods::PAYMENT_METHODS_APPLE_PAY;
+    }
 }

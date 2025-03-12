@@ -348,6 +348,11 @@ class PaymentProcessor implements PaymentProcessorInterface
             return $this->handleAuthorizedPayment($order, $payment);
         }
 
+        // Check if payment is pending
+        if ($payment->isPending()) {
+            return $this->handlePendingPayment($order, $payment);
+        }
+
         // Check if payment failed
         if ($payment->isFailed() || $payment->isCanceled() || $payment->isExpired()) {
             return $this->handleFailedPayment($order, $payment);
@@ -632,6 +637,79 @@ class PaymentProcessor implements PaymentProcessorInterface
         } catch (Exception $e) {
             $this->logger->error(sprintf(
                 '[Error handling failed payment] Order %s, payment %s: %s',
+                $incrementId,
+                $paymentId,
+                $e->getMessage()
+            ));
+
+            return false;
+        }
+    }
+
+    /**
+     * Handle a pending payment
+     *
+     * @param OrderInterface $order
+     * @param PaymentDTO $payment
+     * @return bool
+     */
+    private function handlePendingPayment(OrderInterface $order, PaymentDTO $payment): bool
+    {
+        $incrementId = $order->getIncrementId();
+        $paymentId = $payment->getId();
+
+        try {
+            // Check if order is already processed
+            if ($order->getState() === Order::STATE_PROCESSING) {
+                $this->logger->info(sprintf(
+                    '[Order already processed] Order %s, payment %s',
+                    $incrementId,
+                    $paymentId
+                ));
+
+                return true;
+            }
+
+            // Update payment information
+            $this->updatePaymentInformation($order, $payment);
+
+            // Before updating order status, check for and mark existing history entries
+            $this->markExistingCaptureHistoryAsNotified($order);
+
+            // Update order status similar to authorized payment
+            $order->setState(Order::STATE_PROCESSING);
+            $orderStatus = $this->moduleConfig->getPreAuthorizedStatus($order->getStoreId());
+            $order->setStatus($orderStatus);
+
+            // Set the flag to allow sending the email now
+            $order->setCanSendNewEmailFlag(true);
+
+            // Send order email if it hasn't been sent yet
+            if (!$order->getEmailSent()) {
+                try {
+                    if ($this->moduleConfig->shouldSendOrderEmail($order->getStoreId())) {
+                        $this->logger->debug('[Sending order email for pending payment]');
+                        $this->orderSender->send($order);
+                    }
+                } catch (Exception $e) {
+                    $this->logger->critical('[Email sending error for pending payment] ' . $e->getMessage());
+                }
+            }
+
+            // After saving the order, check for newly added history entries
+            $this->orderRepository->save($order);
+            $this->markExistingCaptureHistoryAsNotified($order);
+
+            $this->logger->info(sprintf(
+                '[Payment pending] Order %s, payment %s',
+                $incrementId,
+                $paymentId
+            ));
+
+            return true;
+        } catch (Exception $e) {
+            $this->logger->error(sprintf(
+                '[Error processing pending payment] Order %s, payment %s: %s',
                 $incrementId,
                 $paymentId,
                 $e->getMessage()

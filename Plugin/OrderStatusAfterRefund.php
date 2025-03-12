@@ -10,8 +10,8 @@ namespace Monei\MoneiPayment\Plugin;
 
 use Magento\Sales\Api\CreditmemoRepositoryInterface;
 use Magento\Sales\Api\OrderStatusHistoryRepositoryInterface;
-use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Creditmemo;
+use Magento\Sales\Model\Order;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Service\Logger;
@@ -74,8 +74,10 @@ class OrderStatusAfterRefund
             $order = $creditmemo->getOrder();
 
             // Skip processing non-Monei payments
-            if (!$order->getPayment() ||
-                !in_array($order->getPayment()->getMethod(), Monei::PAYMENT_METHODS_MONEI)) {
+            if (
+                !$order->getPayment() ||
+                !in_array($order->getPayment()->getMethod(), Monei::PAYMENT_METHODS_MONEI)
+            ) {
                 return $creditmemo;
             }
 

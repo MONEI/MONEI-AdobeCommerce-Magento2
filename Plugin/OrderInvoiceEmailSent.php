@@ -10,8 +10,8 @@ namespace Monei\MoneiPayment\Plugin;
 
 use Magento\Sales\Api\Data\InvoiceInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
-use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Email\Sender\InvoiceSender;
+use Magento\Sales\Model\Order;
 use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Service\Logger;
 
@@ -73,6 +73,7 @@ class OrderInvoiceEmailSent
                     $order->getIncrementId(),
                     $invoice->getIncrementId()
                 ));
+
                 return $result;
             }
 
@@ -92,6 +93,7 @@ class OrderInvoiceEmailSent
             usort($historyEntries, function ($a, $b) {
                 $timeA = $a->getCreatedAt() ? strtotime($a->getCreatedAt()) : 0;
                 $timeB = $b->getCreatedAt() ? strtotime($b->getCreatedAt()) : 0;
+
                 return $timeB - $timeA;
             });
 
@@ -102,7 +104,7 @@ class OrderInvoiceEmailSent
                 if (
                     !$history->getIsCustomerNotified() && (
                         // Check for capture-related comments
-                        ($history->getComment() && strpos((string)$history->getComment(), 'Captured amount') !== false) ||
+                        ($history->getComment() && strpos((string) $history->getComment(), 'Captured amount') !== false) ||
                         // Check for status-related entries
                         $history->getStatus() == $order->getStatus() ||
                         // Check for capture-related status changes
@@ -116,7 +118,7 @@ class OrderInvoiceEmailSent
                         '[Marked history as notified] Order %s, Status: %s, Comment: %s',
                         $order->getIncrementId(),
                         $history->getStatus(),
-                        (string)($history->getComment() ?? 'No comment')
+                        (string) ($history->getComment() ?? 'No comment')
                     ));
                 }
             }

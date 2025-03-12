@@ -107,3 +107,6 @@
 "Custom json style for the google and apple component. View more info <a href=\"https://docs.monei.com/docs/monei-js/reference/#paymentrequest-options\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>","Custom json style for the google and apple component. View more info <a href=\"https://docs.monei.com/docs/monei-js/reference/#paymentrequest-options\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>"
 "You must register your domain in the \"MONEI Dashboard\" to use Apple Pay. For more information, click <a href=\"https://dashboard.monei.com/settings/payment-methods\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>.","You must register your domain in the \"MONEI Dashboard\" to use Apple Pay. For more information, click <a href=\"https://dashboard.monei.com/settings/payment-methods\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>."
 "Allowed Countries","Allowed Countries"
+"Checking payment status...","Checking payment status..."
+"Checking payment status, it may take a few seconds...","Checking payment status, it may take a few seconds..."
+"Loading","Loading"

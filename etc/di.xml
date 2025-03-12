@@ -487,27 +487,6 @@
         </arguments>
     </type>
 
-    <!-- Type configuration for Fail controller -->
-    <type name="Monei\MoneiPayment\Controller\Payment\Fail">
-        <arguments>
-            <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session</argument>
-            <argument name="orderFactory" xsi:type="object">Magento\Sales\Model\OrderFactory</argument>
-            <argument name="messageManager" xsi:type="object">Magento\Framework\Message\ManagerInterface</argument>
-            <argument name="resultRedirectFactory" xsi:type="object">Magento\Framework\Controller\Result\RedirectFactory</argument>
-            <argument name="paymentProcessor" xsi:type="object">Monei\MoneiPayment\Api\PaymentProcessorInterface</argument>
-            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
-        </arguments>
-    </type>
-
-    <!-- Type configuration for FailLastOrderByStatus controller -->
-    <type name="Monei\MoneiPayment\Controller\Payment\FailLastOrderByStatus">
-        <arguments>
-            <argument name="orderFactory" xsi:type="object">Magento\Sales\Model\OrderFactory</argument>
-            <argument name="paymentProcessor" xsi:type="object">Monei\MoneiPayment\Model\PaymentProcessor</argument>
-            <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
-        </arguments>
-    </type>
-
     <!-- Payment Processing Services -->
     <preference for="Monei\MoneiPayment\Api\PaymentProcessorInterface" type="Monei\MoneiPayment\Model\PaymentProcessor" />
     <preference for="Monei\MoneiPayment\Api\Service\ValidateWebhookSignatureInterface" type="Monei\MoneiPayment\Service\ValidateWebhookSignature" />

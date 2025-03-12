@@ -121,3 +121,6 @@
 "Resource not found: %1","Recurso no encontrado: %1"
 "Operation conflict: %1","Conflicto de operación: %1"
 "Validation error: %1","Error de validación: %1"
+"Checking payment status...","Comprobando estado del pago..."
+"Checking payment status, it may take a few seconds...","Comprobando estado del pago, puede tardar unos segundos..."
+"Loading","Cargando"
