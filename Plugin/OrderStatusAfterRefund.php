@@ -70,11 +70,6 @@ class OrderStatusAfterRefund
         try {
             $refundedStatus = self::REFUNDED_STATUS;
 
-            // Skip if refunded status is not set
-            if (!$refundedStatus) {
-                return $creditmemo;
-            }
-
             /** @var Order $order */
             $order = $creditmemo->getOrder();
 

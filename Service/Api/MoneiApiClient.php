@@ -153,15 +153,25 @@ class MoneiApiClient
     {
         if ($storeId !== null) {
             $key = (string) $storeId;
-            if (array_key_exists($key, $this->instances)) {
-                unset($this->instances[$key]);
-            }
-
+            $this->removeInstanceByKey($key);
             return;
         }
 
         // Reset all instances
         $this->instances = [];
+    }
+
+    /**
+     * Remove a SDK instance by its key
+     *
+     * @param string $key The key for the instance to remove
+     * @return void
+     */
+    private function removeInstanceByKey(string $key): void
+    {
+        if (array_key_exists($key, $this->instances)) {
+            unset($this->instances[$key]);
+        }
     }
 
     /**

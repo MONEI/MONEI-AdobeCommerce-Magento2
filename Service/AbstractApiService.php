@@ -172,7 +172,7 @@ abstract class AbstractApiService
     protected function validateParams(array $data, array $requiredParams, array $customValidators = []): void
     {
         foreach ($requiredParams as $param) {
-            if (!isset($data[$param]) || $data[$param] === null) {
+            if (!isset($data[$param]) || $data[$param] === '' || ($data[$param] !== 0 && $data[$param] !== false && empty($data[$param]))) {
                 throw new LocalizedException(__('Required parameter "%1" is missing or empty.', $param));
             }
         }

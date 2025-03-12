@@ -115,7 +115,7 @@
           </depends>
         </field>
         <field id="allowspecific" translate="label comment" sortOrder="160" type="allowspecific" showInDefault="1" showInWebsite="1" showInStore="1">
-          <label>Payment from Applicable Countries</label>
+          <label>Allowed Countries</label>
           <source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
           <depends>
             <field id="active">1</field>
@@ -167,7 +167,7 @@
             </depends>
         </field>
         <field id="allowspecific_card_insite" translate="label comment" sortOrder="230" type="allowspecific" showInDefault="1" showInWebsite="1" showInStore="1">
-            <label>Payment from Applicable Countries</label>
+            <label>Allowed Countries</label>
             <source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
             <config_path>payment/monei_card/allowspecific</config_path>
             <depends>
@@ -223,7 +223,7 @@
             </depends>
         </field>
         <field id="allowspecific_bizum_insite" translate="label comment" sortOrder="290" type="allowspecific" showInDefault="1" showInWebsite="1" showInStore="1">
-            <label>Payment from Applicable Countries</label>
+            <label>Allowed Countries</label>
             <source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
             <config_path>payment/monei_bizum/allowspecific</config_path>
             <depends>
@@ -272,7 +272,7 @@
         </field>
         <field id="notification1" translate="label" sortOrder="335" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Enable Apple Pay</label>
-            <comment><![CDATA[It's required register your domain in "MONEI Dashboard" to use Apple Pay - More info <a href="https://dashboard.monei.com/settings/payment-methods" target="_blank" rel="noopener noreferrer">here</a>]]></comment>
+            <comment><![CDATA[You must register your domain in the "MONEI Dashboard" to use Apple Pay. For more information, click <a href="https://dashboard.monei.com/settings/payment-methods" target="_blank" rel="noopener noreferrer">here</a>.]]></comment>
             <frontend_model>Monei\MoneiPayment\Block\System\Config\Form\Field\Notice</frontend_model>
         </field>
         <field id="title_google_insite" translate="label comment" type="text" sortOrder="340" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -292,7 +292,7 @@
             </depends>
         </field>
         <field id="allowspecific_google_apple_insite" translate="label comment" sortOrder="350" type="allowspecific" showInDefault="1" showInWebsite="1" showInStore="1">
-            <label>Payment from Applicable Countries</label>
+            <label>Allowed Countries</label>
             <source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
             <config_path>payment/monei_google_apple/allowspecific</config_path>
             <depends>
@@ -340,7 +340,7 @@
               <backend_model>Monei\MoneiPayment\Model\Config\Backend\EnableMultibanco</backend_model>
           </field>
           <field id="allowspecific_multibanco_redirect" translate="label comment" sortOrder="400" type="allowspecific" showInDefault="1" showInWebsite="1" showInStore="1">
-              <label>Payment from Applicable Countries</label>
+              <label>Allowed Countries</label>
               <source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
               <config_path>payment/monei_multibanco_redirect/allowspecific</config_path>
               <depends>
@@ -380,7 +380,7 @@
               <backend_model>Monei\MoneiPayment\Model\Config\Backend\EnableMBWay</backend_model>
           </field>
           <field id="allowspecific_mbway_redirect" translate="label comment" sortOrder="450" type="allowspecific" showInDefault="1" showInWebsite="1" showInStore="1">
-              <label>Payment from Applicable Countries</label>
+              <label>Allowed Countries</label>
               <source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
               <config_path>payment/monei_mbway_redirect/allowspecific</config_path>
               <depends>

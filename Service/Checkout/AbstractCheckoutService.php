@@ -76,14 +76,14 @@ abstract class AbstractCheckoutService extends AbstractApiService
     }
 
     /**
-     * Resolves a quote from a cart ID with standardized error handling
+     * Resolves a quote by cart ID, with optional fallback to checkout session
      *
-     * @param string $cartId The cart/quote ID to resolve
-     * @param bool $useSessionFirst Whether to try getting the quote from session first
-     * @return Quote The resolved quote
-     * @throws LocalizedException If the quote cannot be resolved
+     * @param string $cartId Cart ID to resolve
+     * @param bool $useSessionFirst Whether to try to use the checkout session first
+     * @return \Magento\Quote\Api\Data\CartInterface
+     * @throws LocalizedException
      */
-    protected function resolveQuote(string $cartId, bool $useSessionFirst = true): Quote
+    protected function resolveQuote(string $cartId, bool $useSessionFirst = true): \Magento\Quote\Api\Data\CartInterface
     {
         try {
             $quote = null;

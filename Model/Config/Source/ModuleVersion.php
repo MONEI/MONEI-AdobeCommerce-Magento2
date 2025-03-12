@@ -63,13 +63,15 @@ class ModuleVersion extends Value
     /**
      * Inject current installed module version as the config value.
      *
-     * @return void
+     * @return $this
      */
     public function afterLoad()
     {
         $version = $this->moduleResource->getDbVersion('Monei_MoneiPayment');
 
         $this->setValue($version);
+
+        return $this;
     }
 
     /**

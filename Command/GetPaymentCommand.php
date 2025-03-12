@@ -67,7 +67,15 @@ class GetPaymentCommand extends Command
         $output->writeln('Payment ID: ' . $result->getId());
         $output->writeln('Amount: ' . $result->getAmount());
         $output->writeln('Currency: ' . $result->getCurrency());
-        $output->writeln('Status: ' . $result->getStatus());
+
+        // Handle status display safely
+        $status = $result->getStatus();
+        $statusDisplay = 'null';
+        if ($status !== null) {
+            $statusDisplay = method_exists($status, 'getValue') ? $status->getValue() : 'UNKNOWN';
+        }
+        $output->writeln('Status: ' . $statusDisplay);
+
         $output->writeln('Order ID: ' . $result->getOrderId());
 
         // You can still output the full JSON if needed

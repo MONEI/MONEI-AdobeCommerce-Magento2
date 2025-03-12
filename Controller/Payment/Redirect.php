@@ -145,7 +145,7 @@ class Redirect implements HttpGetActionInterface
      *
      * @param Address $address
      *
-     * @return array|void
+     * @return array
      */
     private function getAddressDetails($address)
     {

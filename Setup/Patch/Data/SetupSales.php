@@ -132,7 +132,6 @@ class SetupSales implements DataPatchInterface, NonTransactionableInterface
             ],
             'processing' => [
                 Monei::STATUS_MONEI_SUCCEEDED => false,
-                Monei::STATUS_MONEI_SUCCEDED => false,
                 Monei::STATUS_MONEI_PARTIALLY_REFUNDED => false,
             ],
             'complete' => [

@@ -1,0 +1,55 @@
+---
+description: Project setup
+globs: 
+---
+# MONEI Payment Module for Magento 2
+
+## Commands
+```bash
+# Code quality
+composer lint                      # Run PHPCS code sniffer
+composer fix                       # Fix coding standards with PHPCBF
+composer fix:all                   # Run all fixers (PHPCBF, PHP-CS-Fixer, pretty-php)
+composer check:all                 # Run all code quality checks
+composer cs:check                  # Check with PHP-CS-Fixer
+composer cs:fix                    # Fix with PHP-CS-Fixer
+composer phpstan                   # Run static analysis (level 4)
+composer phpstan:strict            # Run stricter static analysis (level 7)
+composer phpstan:single-file       # Analyze single file (path as argument)
+composer pretty:check              # Check formatting with pretty-php
+composer pretty:fix                # Fix formatting with pretty-php
+
+# Frontend
+yarn format                        # Format frontend code with prettier
+
+# Magento commands (using helper script)
+./magento.sh setup:di:compile      # Compile dependency injection
+./magento.sh setup:upgrade         # Run module upgrades
+./magento.sh cache:clean           # Clean caches
+./magento.sh cache:flush           # Flush all caches
+./magento.sh module:enable Monei_MoneiPayment  # Enable module
+```
+
+## Code Style
+- Follow PSR-12 and Magento 2 coding standards (Magento2 ruleset)
+- Use strict typing with PHP 8.1+ parameter and return type declarations
+- Classes: StudlyCaps (e.g., `MoneiApiClient`)
+- Methods: camelCase (e.g., `processPayment`)
+- Interfaces: StudlyCaps with Interface suffix
+- Constants: UPPER_SNAKE_CASE
+- Comprehensive PHPDoc for all classes, methods, and properties
+- Use dependency injection, avoid direct object instantiation
+- Error handling: Use specialized exception classes and detailed logging
+
+## Project Structure
+- `Api`: Service contracts (interfaces)
+- `Model`: Business logic and data models
+- `Service`: Payment processing and API integration
+- `Controller`: HTTP request handlers
+- `Block`: View/template data providers
+- `view`: Frontend templates and JS components
+
+## Commit Style
+- Use conventional commits format: type(scope): message
+- Types: feat, fix, refactor, docs, style, test, chore
+- Keep commit messages concise but descriptive

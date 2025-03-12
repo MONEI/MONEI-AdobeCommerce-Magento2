@@ -72,7 +72,7 @@ class Capture implements CommandInterface
             $isAlreadyCaptured ? 'true' : 'false'
         ));
 
-        if ($moneiStatus === Status::SUCCEEDED || $moneiStatus === 'SUCCEEDED' || $isAlreadyCaptured) {
+        if ($moneiStatus === Status::SUCCEEDED || (is_string($moneiStatus) && $moneiStatus === 'SUCCEEDED') || $isAlreadyCaptured) {
             // Payment already succeeded or captured, no need to capture again
             $this->logger->info(sprintf(
                 '[Payment already captured] Order %s, status: %s, is_captured: %s',
