@@ -38,7 +38,7 @@ define([
 
   return VaultComponent.extend({
     defaults: {
-      template: 'Monei_MoneiPayment/payment/vault',
+      template: 'Monei_MoneiPayment/payment/monei-card-vault',
       active: false,
       isMoneiVault: true,
       paymentMethodTokenizationId: '',

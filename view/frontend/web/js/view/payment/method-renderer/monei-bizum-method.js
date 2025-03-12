@@ -3,6 +3,7 @@
  * @copyright Copyright © Monei (https://monei.com)
  */
 define([
+  'ko',
   'jquery',
   'Monei_MoneiPayment/js/view/payment/method-renderer/monei-insite',
   'Magento_Checkout/js/model/payment/additional-validators',
@@ -12,6 +13,7 @@ define([
   'Magento_Checkout/js/model/full-screen-loader',
   'Monei_MoneiPayment/js/utils/error-handler'
 ], function (
+  ko,
   $,
   MoneiInsiteComponent,
   additionalValidators,
