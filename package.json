@@ -8,7 +8,10 @@
   "private": true,
   "scripts": {
     "release": "release-it",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky install",
+    "pre-commit": "lint-staged"
   },
   "release-it": {
     "git": {
@@ -34,8 +37,19 @@
     }
   },
   "devDependencies": {
+    "@prettier/plugin-php": "^0.21.0",
+    "@prettier/plugin-xml": "^3.1.1",
     "@release-it/bumper": "^3.0.1",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.2",
+    "prettier": "^3.5.3",
+    "prettier-plugin-organize-imports": "^3.2.4",
     "release-it": "^14.12.4"
   },
-  "packageManager": "yarn@4.6.0"
+  "packageManager": "yarn@4.7.0",
+  "lint-staged": {
+    "*.{js,json,css,md,yml,yaml,html,xml}": [
+      "prettier --write"
+    ]
+  }
 }

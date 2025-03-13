@@ -30,6 +30,7 @@ Accept payments through [MONEI](https://monei.com) in your Adobe Commerce (Magen
       - [Setting up development environment](#setting-up-development-environment)
       - [Available Commands](#available-commands)
     - [Environment Variables](#environment-variables)
+    - [Prettier Setup](#prettier-setup)
   - [Troubleshooting](#troubleshooting)
   - [Contributing](#contributing)
   - [License](#license)
@@ -247,6 +248,39 @@ SKIP_CS_FIXER=1 composer lint
 # Run fix script with only CS Fixer (skips PHP_CodeSniffer)
 FIX_CS_ONLY=1 composer fix
 ```
+
+### Prettier Setup
+
+This project uses Prettier for code formatting. To get started:
+
+1. Install dependencies:
+
+   ```bash
+   yarn install
+   ```
+
+2. Format all files:
+
+   ```bash
+   yarn format
+   ```
+
+3. Format only staged files:
+
+   ```bash
+   yarn format:staged
+   ```
+
+4. Check for formatting issues without making changes:
+
+   ```bash
+   yarn format:check
+   ```
+
+5. VS Code Integration:
+   Install the [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extension for VS Code.
+
+The configuration supports formatting for JavaScript, TypeScript, JSON, HTML, XML, CSS, LESS, YAML, and Markdown files. PHP files are handled by Pretty PHP.
 
 ## Troubleshooting
 
