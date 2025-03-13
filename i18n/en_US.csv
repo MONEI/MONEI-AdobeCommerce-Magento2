@@ -35,6 +35,7 @@
 "Issuing Bank","Issuing Bank"
 "Phone Number","Phone Number"
 "Country","Country"
+"Country Code","Country Code"
 "Required parameters are missing. Cannot proceed with cancellation.","Required parameters are missing. Cannot proceed with cancellation."
 "MONEI payment cancellation failed: %1","MONEI payment cancellation failed: %1"
 "MONEI payment cancellation failed. Please check the logs for more details.","MONEI payment cancellation failed. Please check the logs for more details."
