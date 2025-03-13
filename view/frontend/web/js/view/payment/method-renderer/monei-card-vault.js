@@ -158,8 +158,14 @@ define([
       self
         .getPlaceOrderDeferredObject()
         .done(function () {
-          // After order is placed, submit a form to redirect to payment
-          self.submitPaymentForm();
+          // Log successful order placement
+          console.log('Order successfully placed in Magento');
+
+          // Brief delay to ensure order is completely processed by Magento
+          setTimeout(function () {
+            // After order is placed, submit a form to redirect to payment
+            self.submitPaymentForm();
+          }, 500);
         })
         .fail(function (response) {
           fullScreenLoader.stopLoader();

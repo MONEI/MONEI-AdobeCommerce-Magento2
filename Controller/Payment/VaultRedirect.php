@@ -10,20 +10,22 @@ namespace Monei\MoneiPayment\Controller\Payment;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Customer\Model\Session as CustomerSession;
-use Magento\Framework\App\Action\Action;
-use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\Redirect;
+use Magento\Framework\Data\Form\FormKey\Validator as FormKeyValidator;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Message\ManagerInterface;
+use Magento\Sales\Api\Data\OrderInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentVaultInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Controller for handling direct form submission and redirection for vault payments
  */
-class VaultRedirect extends Action implements HttpPostActionInterface, CsrfAwareActionInterface
+class VaultRedirect implements HttpPostActionInterface, CsrfAwareActionInterface
 {
     /**
      * @var CustomerSession
@@ -41,21 +43,58 @@ class VaultRedirect extends Action implements HttpPostActionInterface, CsrfAware
     protected $createLoggedMoneiPaymentVault;
 
     /**
-     * @param Context $context
+     * @var FormKeyValidator
+     */
+    protected $formKeyValidator;
+
+    /**
+     * @var LoggerInterface
+     */
+    protected $logger;
+
+    /**
+     * @var Redirect
+     */
+    protected $redirect;
+
+    /**
+     * @var ManagerInterface
+     */
+    protected $messageManager;
+
+    /**
+     * @var RequestInterface
+     */
+    protected $request;
+
+    /**
      * @param CustomerSession $customerSession
      * @param CheckoutSession $checkoutSession
      * @param CreateLoggedMoneiPaymentVaultInterface $createLoggedMoneiPaymentVault
+     * @param FormKeyValidator $formKeyValidator
+     * @param LoggerInterface $logger
+     * @param Redirect $redirect
+     * @param ManagerInterface $messageManager
+     * @param RequestInterface $request
      */
     public function __construct(
-        Context $context,
         CustomerSession $customerSession,
         CheckoutSession $checkoutSession,
-        CreateLoggedMoneiPaymentVaultInterface $createLoggedMoneiPaymentVault
+        CreateLoggedMoneiPaymentVaultInterface $createLoggedMoneiPaymentVault,
+        FormKeyValidator $formKeyValidator,
+        LoggerInterface $logger,
+        Redirect $redirect,
+        ManagerInterface $messageManager,
+        RequestInterface $request
     ) {
         $this->customerSession = $customerSession;
         $this->checkoutSession = $checkoutSession;
         $this->createLoggedMoneiPaymentVault = $createLoggedMoneiPaymentVault;
-        parent::__construct($context);
+        $this->formKeyValidator = $formKeyValidator;
+        $this->logger = $logger;
+        $this->redirect = $redirect;
+        $this->messageManager = $messageManager;
+        $this->request = $request;
     }
 
     /**
@@ -63,12 +102,10 @@ class VaultRedirect extends Action implements HttpPostActionInterface, CsrfAware
      */
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
     {
-        /** @var Redirect $resultRedirect */
-        $resultRedirect = $this->resultRedirectFactory->create();
-        $resultRedirect->setPath('checkout/cart');
+        $this->redirect->setPath('checkout/cart');
 
         return new InvalidRequestException(
-            $resultRedirect,
+            $this->redirect,
             [__('Invalid form key. Please refresh the page.')]
         );
     }
@@ -91,58 +128,75 @@ class VaultRedirect extends Action implements HttpPostActionInterface, CsrfAware
     }
 
     /**
-     * Execute controller action to process payment with vault
+     * Execute the vault redirect action.
      *
      * @return Redirect
      */
     public function execute()
     {
-        /** @var Redirect $resultRedirect */
-        $resultRedirect = $this->resultRedirectFactory->create();
+        // Default redirect path on error
+        $redirectPath = 'checkout/cart';
+        $params = [];
 
         try {
-            // Check if customer is logged in
-            if (!$this->customerSession->isLoggedIn()) {
-                throw new LocalizedException(__('You must be logged in to use saved payment methods.'));
+            // Verify form key
+            if (!$this->formKeyValidator->validate($this->request)) {
+                throw new LocalizedException(__('Invalid form key. Please refresh the page and try again.'));
             }
 
-            $publicHash = $this->getRequest()->getParam('public_hash');
+            // Get the public hash from the request
+            $publicHash = (string) $this->request->getParam('public_hash');
             if (empty($publicHash)) {
-                throw new LocalizedException(__('Missing saved card information.'));
+                throw new LocalizedException(__('No payment method selected.'));
             }
 
-            // Try to get cart ID from request params first, then from session
-            $cartId = $this->getRequest()->getParam('quote_id');
-
-            // If not in request, try to get from session
-            if (empty($cartId)) {
-                $cartId = (string) $this->checkoutSession->getQuoteId();
+            // Get the last real order
+            /** @var OrderInterface $order */
+            $order = $this->checkoutSession->getLastRealOrder();
+            if (!$order || !$order->getEntityId()) {
+                throw new LocalizedException(__('No order found. Please return to checkout and try again.'));
             }
 
-            if (empty($cartId)) {
-                throw new LocalizedException(__('No active cart found. Please return to the cart page and try again.'));
+            // Create the payment using the vault token and order data
+            $result = $this->createLoggedMoneiPaymentVault->execute(
+                (string) $order->getQuoteId(),
+                $publicHash
+            );
+
+            // Store payment ID in the session
+            if (isset($result['success']) && $result['success'] && !empty($result['payment_id'])) {
+                $this->checkoutSession->setLastMoneiPaymentId($result['payment_id']);
+
+                $this->logger->info('Vault payment created successfully', [
+                    'order_id' => $order->getIncrementId(),
+                    'payment_id' => $result['payment_id'],
+                ]);
             }
 
-            // Call the service to create payment and get redirect URL
-            $result = $this->createLoggedMoneiPaymentVault->execute($cartId, $publicHash);
-
-            // If we have a redirect URL, redirect directly to it
-            if (!empty($result[0]['redirectUrl'])) {
-                return $resultRedirect->setUrl($result[0]['redirectUrl']);
+            // Check for successful payment creation
+            if (isset($result['success']) && $result['success'] && !empty($result['redirect_url'])) {
+                // Set external URL for redirection
+                $this->redirect->setUrl($result['redirect_url']);
+                return $this->redirect;
             }
 
-            // If no redirect URL was returned, redirect to checkout page with error
-            $this->messageManager->addErrorMessage(__('There was a problem processing your payment. Please try again.'));
-            return $resultRedirect->setPath('checkout/cart');
+            throw new LocalizedException(__('Unable to process payment. Please try again.'));
         } catch (LocalizedException $e) {
             $this->messageManager->addErrorMessage($e->getMessage());
-            return $resultRedirect->setPath('checkout/cart');
+            $this->logger->critical('MONEI Vault Redirect Error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
         } catch (\Exception $e) {
-            $this->messageManager->addExceptionMessage(
-                $e,
-                __('Something went wrong with the payment. Please try again later.')
-            );
-            return $resultRedirect->setPath('checkout/cart');
+            $this->messageManager->addErrorMessage(__('An error occurred while processing your payment. Please try again.'));
+            $this->logger->critical('MONEI Vault Redirect Error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
         }
+
+        // Redirect to cart on failure
+        $this->redirect->setPath($redirectPath, $params);
+        return $this->redirect;
     }
 }

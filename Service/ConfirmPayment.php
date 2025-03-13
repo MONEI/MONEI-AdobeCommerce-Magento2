@@ -30,8 +30,8 @@ class ConfirmPayment extends AbstractApiService implements ConfirmPaymentInterfa
      * @var array
      */
     private $requiredArguments = [
-        'paymentId',
-        'paymentToken'
+        'payment_id',
+        'payment_token'
     ];
 
     /**
