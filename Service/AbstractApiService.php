@@ -195,7 +195,9 @@ abstract class AbstractApiService
         $result = [];
         foreach ($data as $key => $value) {
             // Convert camelCase to snake_case
-            $snakeKey = strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $key));
+            $snakeKey = is_string($key)
+                ? strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $key))
+                : $key;
 
             // If value is an array, recursively convert its keys too
             if (is_array($value)) {
