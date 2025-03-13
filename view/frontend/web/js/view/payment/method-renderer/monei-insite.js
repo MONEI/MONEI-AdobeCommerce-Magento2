@@ -13,7 +13,8 @@ define([
   'Magento_Ui/js/model/messageList',
   'mage/url',
   'Magento_Checkout/js/model/full-screen-loader',
-  'Monei_MoneiPayment/js/utils/error-handler'
+  'Monei_MoneiPayment/js/utils/error-handler',
+  'Monei_MoneiPayment/js/utils/payment-handler'
 ], function (
   ko,
   Component,
@@ -25,7 +26,8 @@ define([
   globalMessageList,
   url,
   fullScreenLoader,
-  errorHandler
+  errorHandler,
+  paymentHandler
 ) {
   'use strict';
 
@@ -134,6 +136,12 @@ define([
      */
     handleApiError: function (error) {
       errorHandler.handleApiError(error);
+    },
+
+    /** Confirm the payment in monei */
+    moneiTokenHandler: function (paymentId, token) {
+      // Use the common payment handler utility
+      return paymentHandler.moneiTokenHandler(this, paymentId, token);
     }
   });
 });
