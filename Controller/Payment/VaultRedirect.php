@@ -187,16 +187,52 @@ class VaultRedirect implements HttpPostActionInterface, CsrfAwareActionInterface
                 'exception' => $e,
                 'trace' => $e->getTraceAsString()
             ]);
+
+            // Restore quote to cart when error occurs
+            $this->restoreQuoteToCart();
         } catch (\Exception $e) {
             $this->messageManager->addErrorMessage(__('An error occurred while processing your payment. Please try again.'));
             $this->logger->critical('MONEI Vault Redirect Error: ' . $e->getMessage(), [
                 'exception' => $e,
                 'trace' => $e->getTraceAsString()
             ]);
+
+            // Restore quote to cart when error occurs
+            $this->restoreQuoteToCart();
         }
 
         // Redirect to cart on failure
         $this->redirect->setPath($redirectPath, $params);
         return $this->redirect;
+    }
+
+    /**
+     * Restore the quote to cart after a payment error
+     *
+     * @return void
+     */
+    private function restoreQuoteToCart(): void
+    {
+        try {
+            $this->checkoutSession->restoreQuote();
+            $order = $this->checkoutSession->getLastRealOrder();
+            if ($order && $order->getIncrementId()) {
+                $this->logger->info('Restored quote for order: ' . $order->getIncrementId());
+            } else {
+                $this->logger->info('Restored quote');
+            }
+        } catch (\Exception $e) {
+            $orderId = null;
+            $order = $this->checkoutSession->getLastRealOrder();
+            if ($order) {
+                $orderId = $order->getIncrementId();
+            }
+
+            if ($orderId) {
+                $this->logger->error('Failed to restore quote for order ' . $orderId . ': ' . $e->getMessage());
+            } else {
+                $this->logger->error('Failed to restore quote: ' . $e->getMessage());
+            }
+        }
     }
 }

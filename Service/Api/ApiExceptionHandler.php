@@ -75,7 +75,7 @@ class ApiExceptionHandler
         switch ($statusCode) {
             case 400:
                 throw new LocalizedException(
-                    __('Invalid request data: %1', $errorMessage)
+                    __('Invalid request: %1', $errorMessage)
                 );
             case 401:
                 throw new LocalizedException(

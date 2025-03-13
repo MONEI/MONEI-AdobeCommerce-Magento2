@@ -116,7 +116,7 @@
 "Custom json style for the google and apple component. View more info <a href=\"https://docs.monei.com/docs/monei-js/reference/#paymentrequest-options\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>","Estilo json personalizado para el componente de google y apple. Ver más información <a href=\"https://docs.monei.com/docs/monei-js/reference/#paymentrequest-options\" target=\"_blank\" rel=\"noopener noreferrer\">aquí</a>"
 "You must register your domain in the \"MONEI Dashboard\" to use Apple Pay. For more information, click <a href=\"https://dashboard.monei.com/settings/payment-methods\" target=\"_blank\" rel=\"noopener noreferrer\">here</a>.","Debe registrar su dominio en el \"Panel de MONEI\" para usar Apple Pay. Para más información, haga clic <a href=\"https://dashboard.monei.com/settings/payment-methods\" target=\"_blank\" rel=\"noopener noreferrer\">aquí</a>."
 "Allowed Countries","Países Permitidos"
-"Invalid request data: %1","Datos de solicitud no válidos: %1"
+"Invalid request: %1","Datos de solicitud no válidos: %1"
 "Payment required: %1","Pago requerido: %1"
 "Resource not found: %1","Recurso no encontrado: %1"
 "Operation conflict: %1","Conflicto de operación: %1"

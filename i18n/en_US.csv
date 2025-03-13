@@ -41,7 +41,7 @@
 "The order has been successfully canceled.","The order has been successfully canceled."
 "Order cancellation failed: %1","Order cancellation failed: %1"
 "An unexpected error occurred during payment cancellation. Please check the logs for more details.","An unexpected error occurred during payment cancellation. Please check the logs for more details."
-"Invalid request data: %1","Invalid request data: %1"
+"Invalid request: %1","Invalid request: %1"
 "Payment required: %1","Payment required: %1"
 "Resource not found: %1","Resource not found: %1"
 "Operation conflict: %1","Operation conflict: %1"
