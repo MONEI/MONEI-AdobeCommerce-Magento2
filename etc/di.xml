@@ -33,6 +33,8 @@
                 type="Monei\MoneiPayment\Service\RefundPayment"/>
     <preference for="Monei\MoneiPayment\Api\Service\CapturePaymentInterface"
                 type="Monei\MoneiPayment\Service\CapturePayment"/>
+    <preference for="Monei\MoneiPayment\Api\Service\ConfirmPaymentInterface"
+                type="Monei\MoneiPayment\Service\ConfirmPayment"/>
     <preference for="Monei\MoneiPayment\Api\Service\GenerateInvoiceInterface"
                 type="Monei\MoneiPayment\Service\GenerateInvoice"/>
     <preference for="Magento\Sales\Controller\Adminhtml\Order\Creditmemo\Save"

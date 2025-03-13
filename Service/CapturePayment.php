@@ -78,11 +78,7 @@ class CapturePayment extends AbstractApiService implements CapturePaymentInterfa
             function (MoneiClient $moneiSdk) use ($data, $captureRequest) {
                 return $moneiSdk->payments->capture($data['paymentId'], $captureRequest);
             },
-            [
-                'paymentId' => $data['paymentId'],
-                'amount' => $data['amount']
-            ],
-            $data['storeId'] ?? null
+            $data
         );
     }
 }

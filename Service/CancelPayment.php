@@ -84,10 +84,7 @@ class CancelPayment extends AbstractApiService implements CancelPaymentInterface
             function (MoneiClient $moneiSdk) use ($data, $cancelRequest) {
                 return $moneiSdk->payments->cancel($data['payment_id'], $cancelRequest);
             },
-            [
-                'payment_id' => $data['payment_id'],
-                'cancellation_reason' => $data['cancellation_reason']
-            ]
+            $data
         );
     }
 }

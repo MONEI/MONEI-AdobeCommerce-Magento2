@@ -11,14 +11,9 @@ define([
   'Magento_Vault/js/view/payment/method-renderer/vault',
   'Magento_Checkout/js/model/payment/additional-validators',
   'Magento_Checkout/js/model/full-screen-loader',
-  'Magento_Checkout/js/model/url-builder',
-  'Magento_Checkout/js/action/redirect-on-success',
   'Magento_Ui/js/model/messageList',
-  'mage/storage',
   'mage/url',
-  'moneijs',
-  'Monei_MoneiPayment/js/utils/error-handler',
-  'Monei_MoneiPayment/js/utils/payment-handler'
+  'Monei_MoneiPayment/js/utils/error-handler'
 ], function (
   ko,
   $,
@@ -27,14 +22,9 @@ define([
   VaultComponent,
   additionalValidators,
   fullScreenLoader,
-  urlBuilder,
-  redirectOnSuccessAction,
   globalMessageList,
-  storage,
   url,
-  monei,
-  errorHandler,
-  paymentHandler
+  errorHandler
 ) {
   'use strict';
 
@@ -43,11 +33,6 @@ define([
       template: 'Monei_MoneiPayment/payment/monei-card-vault',
       active: false,
       isMoneiVault: true,
-      paymentMethodTokenizationId: '',
-      paymentCardType: '',
-      paymentCardNumberLast4: '',
-      paymentCardExpMonth: '',
-      paymentCardExpYear: '',
       redirectUrl: '',
       cancelOrderUrl: '',
       completeUrl: '',
@@ -145,7 +130,6 @@ define([
     },
 
     placeOrder: function (data, event) {
-      /** Generate the payment token in monei  */
       var self = this;
 
       if (event) {
@@ -156,7 +140,6 @@ define([
 
       if (this.validate() && additionalValidators.validate()) {
         self.createOrderInMagento();
-
         return false;
       }
 
@@ -165,45 +148,73 @@ define([
       return false;
     },
 
-    // Create pending order in Magento
+    // Create pending order in Magento using form submission
     createOrderInMagento: function () {
-      var self = this,
-        serviceUrl = urlBuilder.createUrl('/checkout/createmoneipaymentvault', {}),
-        payload = {
-          cartId: quote.getQuoteId(),
-          publicHash: this.getToken()
-        };
+      var self = this;
 
-      storage
-        .post(serviceUrl, JSON.stringify(payload))
-        .done(function (response) {
-          response = response.shift();
-          self.getPlaceOrderDeferredObject().done(function () {
-            self.afterPlaceOrder(response.id, response.paymentToken);
-          });
+      fullScreenLoader.startLoader();
+
+      // Submit order using the Magento place order functionality
+      self
+        .getPlaceOrderDeferredObject()
+        .done(function () {
+          // After order is placed, submit a form to redirect to payment
+          self.submitPaymentForm();
         })
         .fail(function (response) {
-          var error = JSON.parse(response.responseText);
-          errorHandler.handleApiError(error);
           fullScreenLoader.stopLoader();
           self.isPlaceOrderActionAllowed(true);
+
+          if (response && response.responseText) {
+            try {
+              var error = JSON.parse(response.responseText);
+              errorHandler.handleApiError(error);
+            } catch (e) {
+              // Display generic error message if response is not JSON
+              globalMessageList.addErrorMessage({
+                message: $.mage.__('There was an error processing your payment. Please try again.')
+              });
+            }
+          }
         });
 
       return true;
     },
 
-    afterPlaceOrder: function (paymentId, token) {
-      this.moneiTokenHandler(paymentId, token);
+    // Submit the vault redirect form
+    submitPaymentForm: function () {
+      // Find the form in the DOM
+      var form = $('#monei-vault-redirect-form');
+
+      if (form.length) {
+        // Set the public hash in the form
+        $('#monei-vault-public-hash').val(this.getToken());
+
+        // Submit the form
+        form.submit();
+      } else {
+        console.error('Monei vault redirect form not found in the DOM');
+        globalMessageList.addErrorMessage({
+          message: $.mage.__('There was an error processing your payment. Please try again.')
+        });
+        fullScreenLoader.stopLoader();
+        this.isPlaceOrderActionAllowed(true);
+      }
     },
 
-    /** Confirm the payment in monei */
-    moneiTokenHandler: function (paymentId, token) {
-      // Use the common payment handler utility
-      return paymentHandler.moneiTokenHandler(this, paymentId, token);
+    // Handle payment errors from the backend
+    handlePaymentError: function (response) {
+      // Display error message
+      globalMessageList.addErrorMessage({
+        message: $.mage.__('There was an error processing your payment. Please try again.')
+      });
+
+      fullScreenLoader.stopLoader();
+      this.isPlaceOrderActionAllowed(true);
     },
 
     /**
-     * Redirect to success page.
+     * Redirect to cancel page
      */
     redirectToCancelOrder: function () {
       window.location.replace(url.build(this.cancelOrderUrl));

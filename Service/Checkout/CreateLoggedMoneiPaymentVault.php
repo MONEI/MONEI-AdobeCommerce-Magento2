@@ -18,6 +18,7 @@ use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentVaultInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
+use Monei\MoneiPayment\Api\Service\ConfirmPaymentInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
@@ -61,6 +62,13 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
     private CreatePayment $createPayment;
 
     /**
+     * Service to confirm payment in Monei.
+     *
+     * @var ConfirmPaymentInterface
+     */
+    private ConfirmPaymentInterface $confirmPayment;
+
+    /**
      * Constructor for CreateLoggedMoneiPaymentVault.
      *
      * @param Logger $logger Logger for tracking operations
@@ -73,6 +81,7 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
      * @param PaymentTokenManagementInterface $tokenManagement For handling saved payment methods
      * @param CreatePayment $createPayment Service to create payment in Monei
      * @param GetPaymentInterface $getPaymentService Service to retrieve payment details
+     * @param ConfirmPaymentInterface $confirmPayment Service to confirm payment in Monei
      */
     public function __construct(
         Logger $logger,
@@ -84,7 +93,8 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
         GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress,
         PaymentTokenManagementInterface $tokenManagement,
         CreatePayment $createPayment,
-        GetPaymentInterface $getPaymentService
+        GetPaymentInterface $getPaymentService,
+        ConfirmPaymentInterface $confirmPayment
     ) {
         parent::__construct(
             $logger,
@@ -98,6 +108,7 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
         $this->getAddressDetailsByQuoteAddress = $getAddressDetailsByQuoteAddress;
         $this->tokenManagement = $tokenManagement;
         $this->createPayment = $createPayment;
+        $this->confirmPayment = $confirmPayment;
     }
 
     /**
@@ -119,7 +130,7 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
         $this->quoteRepository->save($quote);
 
         // Check if the quote already has a payment ID to prevent double payment
-        $existingPayment = $this->checkExistingPayment($quote);
+        $existingPayment = $this->checkExistingPaymentWithToken($quote, $paymentToken);
         if ($existingPayment !== null) {
             return $existingPayment;
         }
@@ -135,13 +146,12 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
             // Save payment ID to quote for future reference
             $this->savePaymentIdToQuote($quote, $paymentId);
 
-            // Return a properly formatted array with payment properties as expected by the frontend
             return $this->createPaymentResult($paymentId, [
-                'paymentToken' => $paymentToken->getGatewayToken()
+                'redirectUrl' => $result->getNextAction()->getRedirectUrl()
             ]);
         }, [
             'publicHash' => $publicHash,
-            'customerId' => $quote->getCustomerId(),
+            'customerId' => $quote->getCustomer()->getId(),
             'quote_id' => $quote->getId(),
             'reserved_order_id' => $quote->getReservedOrderId()
         ]);
@@ -162,12 +172,12 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
             $quote = $this->resolveQuote($cartId);
 
             // Verify customer is logged in
-            if (!$quote->getCustomerId()) {
+            if (!$quote->getCustomer() || !$quote->getCustomer()->getId()) {
                 throw new LocalizedException(__('Customer must be logged in to use saved cards'));
             }
 
             // Get the payment token
-            $paymentToken = $this->tokenManagement->getByPublicHash($publicHash, $quote->getCustomerId());
+            $paymentToken = $this->tokenManagement->getByPublicHash($publicHash, $quote->getCustomer()->getId());
             if (!$paymentToken || !$paymentToken->getEntityId()) {
                 throw new LocalizedException(__('The requested saved card was not found'));
             }
@@ -191,6 +201,60 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
     }
 
     /**
+     * Checks if a quote already has a payment ID
+     *
+     * @param Quote $quote The quote to check
+     * @return array|null Returns payment data array if valid payment exists, null otherwise
+     */
+    protected function checkExistingPayment(Quote $quote): ?array
+    {
+        return $this->checkExistingPaymentWithToken($quote, null);
+    }
+
+    /**
+     * Checks if a quote already has a payment ID and confirms it if it does, using the provided token
+     *
+     * @param Quote $quote The quote to check
+     * @param PaymentTokenInterface|null $paymentToken The vault payment token to use
+     * @return array|null Returns payment data array if valid payment exists, null otherwise
+     */
+    protected function checkExistingPaymentWithToken(Quote $quote, ?PaymentTokenInterface $paymentToken): ?array
+    {
+        $existingPaymentId = parent::checkExistingPayment($quote);
+        if ($existingPaymentId === null || $paymentToken === null) {
+            return $existingPaymentId;
+        }
+
+        return $this->executeApiCall(__METHOD__, function () use ($quote, $paymentToken, $existingPaymentId) {
+            // Extract the payment ID from the result array
+            $paymentId = $existingPaymentId[0]['id'] ?? '';
+            if (empty($paymentId)) {
+                return null;
+            }
+
+            // Prepare payment data for confirmation
+            $confirmData = $this->preparePaymentData($quote, $paymentToken);
+            $confirmData['payment_id'] = $paymentId;
+
+            // Confirm the existing payment
+            $result = $this->confirmPayment->execute($confirmData);
+
+            // Return the payment result with redirect URL if available
+            $additionalData = [];
+            if ($result->getNextAction() && $result->getNextAction()->getRedirectUrl()) {
+                $additionalData['redirectUrl'] = $result->getNextAction()->getRedirectUrl();
+            }
+
+            return $this->createPaymentResult($paymentId, $additionalData);
+        }, [
+            'payment_id' => $existingPaymentId[0]['id'] ?? '',
+            'quote_id' => $quote->getId(),
+            'customer_id' => $quote->getCustomer()->getId(),
+            'reserved_order_id' => $quote->getReservedOrderId()
+        ]);
+    }
+
+    /**
      * Prepare payment data from quote and token
      *
      * @param Quote $quote The quote to prepare payment data from
@@ -201,12 +265,16 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
     {
         // Get shipping address or fallback to billing if shipping is not available
         $shippingAddress = $quote->getShippingAddress();
+
         if (!$shippingAddress || !$shippingAddress->getId()) {
             $shippingAddress = $quote->getBillingAddress();
         }
 
         // Start with the base payment data
         $paymentData = $this->prepareBasePaymentData($quote);
+
+        // Add payment token to additional data
+        $paymentData['payment_token'] = $paymentToken->getGatewayToken();
 
         // Add customer-specific data
         $paymentData['customer'] = $this->getCustomerDetailsByQuote->execute($quote);

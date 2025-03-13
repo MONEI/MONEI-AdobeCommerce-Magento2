@@ -107,11 +107,7 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
             function (MoneiClient $moneiSdk) use ($paymentRequest) {
                 return $moneiSdk->payments->create($paymentRequest);
             },
-            [
-                'order_id' => $data['order_id'],
-                'amount' => $data['amount'],
-                'currency' => $data['currency']
-            ]
+            $data
         );
     }
 
@@ -155,6 +151,11 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
             if (!$hasMbwayOrMultibanco) {
                 $paymentRequest->setTransactionType(PaymentTransactionType::AUTH);
             }
+        }
+
+        // Set payment token if available
+        if (isset($data['payment_token'])) {
+            $paymentRequest->setPaymentToken($data['payment_token']);
         }
 
         // Set customer information if available

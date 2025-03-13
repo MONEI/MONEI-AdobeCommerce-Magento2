@@ -93,12 +93,7 @@ class RefundPayment extends AbstractApiService implements RefundPaymentInterface
             function (MoneiClient $moneiSdk) use ($data, $refundRequest) {
                 return $moneiSdk->payments->refund($data['payment_id'], $refundRequest);
             },
-            [
-                'payment_id' => $data['payment_id'],
-                'refund_reason' => $data['refund_reason'],
-                'amount' => $data['amount']
-            ],
-            $data['store_id'] ?? null
+            $data
         );
     }
 }

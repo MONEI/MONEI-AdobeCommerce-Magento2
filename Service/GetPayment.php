@@ -51,12 +51,15 @@ class GetPayment extends AbstractApiService implements GetPaymentInterface
             throw new LocalizedException(__('Payment ID is required to retrieve payment details'));
         }
 
+        // Create data array for logging
+        $data = ['payment_id' => $payment_id];
+
         return $this->executeMoneiSdkCall(
             'getPayment',
             function (MoneiClient $moneiSdk) use ($payment_id) {
                 return $moneiSdk->payments->get($payment_id);
             },
-            ['payment_id' => $payment_id]
+            $data
         );
     }
 }
