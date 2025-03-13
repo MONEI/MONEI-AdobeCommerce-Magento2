@@ -102,20 +102,6 @@ define([
       return selectPaymentMethod;
     },
 
-    /**
-     * Redirect to cancel page.
-     */
-    redirectToCancelOrder: function () {
-      window.location.replace(url.build(this.cancelOrderUrl));
-    },
-
-    /**
-     * Redirect to complete page with status parameter.
-     */
-    redirectToFailOrder: function (status) {
-      window.location.replace(url.build(this.completeUrl + '?status=' + status));
-    },
-
     getPaymentCode: function () {
       return 'method_' + this.getCode();
     },

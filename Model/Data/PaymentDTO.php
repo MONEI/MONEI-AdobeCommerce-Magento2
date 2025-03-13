@@ -9,14 +9,21 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Model\Data;
 
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Phrase;
 use Monei\Model\PaymentStatus;
 use Monei\MoneiPayment\Model\Payment\Status;
+use Monei\MoneiPayment\Model\Service\StatusCodeHandler;
 
 /**
  * Data Transfer Object for MONEI payment data
  */
 class PaymentDTO
 {
+    /**
+     * @var StatusCodeHandler
+     */
+    private StatusCodeHandler $statusCodeHandler;
+
     /**
      * @var string
      */
@@ -68,8 +75,19 @@ class PaymentDTO
     private array $rawData;
 
     /**
+     * @var string|null Status code when available (e.g. E201)
+     */
+    private ?string $statusCode = null;
+
+    /**
+     * @var string|null Status message when available
+     */
+    private ?string $statusMessage = null;
+
+    /**
      * PaymentDTO constructor.
      *
+     * @param StatusCodeHandler $statusCodeHandler
      * @param string $id
      * @param string $status
      * @param int $amountInCents Amount in smallest currency unit (cents)
@@ -81,6 +99,7 @@ class PaymentDTO
      * @param array $rawData
      */
     public function __construct(
+        StatusCodeHandler $statusCodeHandler,
         string $id,
         string $status,
         int $amountInCents,
@@ -91,6 +110,7 @@ class PaymentDTO
         $metadata = null,
         array $rawData = []
     ) {
+        $this->statusCodeHandler = $statusCodeHandler;
         $this->id = $id;
         $this->status = $status;
         $this->amountInCents = $amountInCents;
@@ -111,16 +131,20 @@ class PaymentDTO
         }
 
         $this->rawData = $rawData;
+
+        // Extract status code from raw data using the status code handler service
+        $this->statusCode = $this->statusCodeHandler->extractStatusCodeFromData($rawData);
     }
 
     /**
      * Create a PaymentDTO from array data
      *
+     * @param StatusCodeHandler $statusCodeHandler
      * @param array $data
      * @return self
      * @throws LocalizedException
      */
-    public static function fromArray(array $data): self
+    public static function fromArray(StatusCodeHandler $statusCodeHandler, array $data): self
     {
         // Handle case when we get the data inside a 'response' key from the API
         if (isset($data['response']) && is_array($data['response'])) {
@@ -153,6 +177,7 @@ class PaymentDTO
         }
 
         return new self(
+            $statusCodeHandler,
             $data['id'],
             $data['status'],
             $amountInCents,
@@ -168,11 +193,12 @@ class PaymentDTO
     /**
      * Create a PaymentDTO from MONEI SDK Payment object
      *
+     * @param StatusCodeHandler $statusCodeHandler
      * @param \Monei\Model\Payment $payment
      * @return self
      * @throws LocalizedException
      */
-    public static function fromPaymentObject(\Monei\Model\Payment $payment): self
+    public static function fromPaymentObject(StatusCodeHandler $statusCodeHandler, \Monei\Model\Payment $payment): self
     {
         // Extract data using getters rather than relying on object serialization
         try {
@@ -191,10 +217,25 @@ class PaymentDTO
                 $data['metadata'] = $payment->getMetadata();
             }
 
+            // Add status code if available - safely check if the method exists
+            if (method_exists($payment, 'getStatusCode')) {
+                try {
+                    $statusCode = $payment->getStatusCode();
+                    if ($statusCode) {
+                        $data['statusCode'] = $statusCode;
+                    }
+                } catch (\Exception $e) {
+                    // Silently handle the case when the method exists but fails
+                }
+            } elseif (isset($payment->statusCode)) {
+                // Try to access the property directly if it exists
+                $data['statusCode'] = $payment->statusCode;
+            }
+
             // Store the original payment object for reference
             $data['original_payment'] = $payment;
 
-            return self::fromArray($data);
+            return self::fromArray($statusCodeHandler, $data);
         } catch (\Exception $e) {
             throw new LocalizedException(__('Failed to convert Payment object to DTO: %1', $e->getMessage()));
         }
@@ -298,6 +339,57 @@ class PaymentDTO
     public function getRawData(): array
     {
         return $this->rawData;
+    }
+
+    /**
+     * Get status code if available
+     *
+     * @return string|null
+     */
+    public function getStatusCode(): ?string
+    {
+        return $this->statusCode;
+    }
+
+    /**
+     * Get status message if available
+     *
+     * @return string|null
+     */
+    public function getStatusMessage(): ?string
+    {
+        // If we have a direct status message, return it
+        if ($this->statusMessage !== null) {
+            return $this->statusMessage;
+        }
+
+        // If we have a status code but no message, get the message from the handler
+        if ($this->statusCode !== null) {
+            return $this->statusCodeHandler->getStatusMessage($this->statusCode)->__toString();
+        }
+
+        // No status code or message available
+        return null;
+    }
+
+    /**
+     * Check if the payment was successful based on status code
+     *
+     * @return bool
+     */
+    public function hasSuccessfulStatusCode(): bool
+    {
+        return $this->statusCodeHandler->isSuccessCode($this->statusCode);
+    }
+
+    /**
+     * Check if payment has an error status
+     *
+     * @return bool
+     */
+    public function hasErrorStatus(): bool
+    {
+        return $this->statusCodeHandler->isErrorCode($this->statusCode);
     }
 
     /**
@@ -470,5 +562,175 @@ class PaymentDTO
         $paymentMethodType = $this->getPaymentMethodType();
 
         return $paymentMethodType === \Monei\Model\PaymentMethods::PAYMENT_METHODS_APPLE_PAY;
+    }
+
+    /**
+     * Set payment ID
+     *
+     * @param string $id
+     * @return self
+     */
+    public function setId(string $id): self
+    {
+        $this->id = $id;
+        return $this;
+    }
+
+    /**
+     * Set payment status
+     *
+     * @param string $status
+     * @return self
+     */
+    public function setStatus(string $status): self
+    {
+        $this->status = $status;
+        return $this;
+    }
+
+    /**
+     * Set payment amount in currency units (e.g., euros, dollars)
+     *
+     * @param float $amount
+     * @return self
+     */
+    public function setAmount(float $amount): self
+    {
+        $this->amount = $amount;
+        return $this;
+    }
+
+    /**
+     * Set payment amount in cents/smallest currency unit (as received from API)
+     *
+     * @param int $amountInCents
+     * @return self
+     */
+    public function setAmountInCents(int $amountInCents): self
+    {
+        $this->amountInCents = $amountInCents;
+        return $this;
+    }
+
+    /**
+     * Set payment currency
+     *
+     * @param string $currency
+     * @return self
+     */
+    public function setCurrency(string $currency): self
+    {
+        $this->currency = $currency;
+        return $this;
+    }
+
+    /**
+     * Set order ID
+     *
+     * @param string $orderId
+     * @return self
+     */
+    public function setOrderId(string $orderId): self
+    {
+        $this->orderId = $orderId;
+        return $this;
+    }
+
+    /**
+     * Set created at timestamp
+     *
+     * @param string|null $createdAt
+     * @return self
+     */
+    public function setCreatedAt(?string $createdAt): self
+    {
+        $this->createdAt = $createdAt;
+        return $this;
+    }
+
+    /**
+     * Set updated at timestamp
+     *
+     * @param string|null $updatedAt
+     * @return self
+     */
+    public function setUpdatedAt(?string $updatedAt): self
+    {
+        $this->updatedAt = $updatedAt;
+        return $this;
+    }
+
+    /**
+     * Set metadata
+     *
+     * @param array|null $metadata
+     * @return self
+     */
+    public function setMetadata(?array $metadata): self
+    {
+        $this->metadata = $metadata;
+        return $this;
+    }
+
+    /**
+     * Set raw data
+     *
+     * @param array $rawData
+     * @return self
+     */
+    public function setRawData(array $rawData): self
+    {
+        $this->rawData = $rawData;
+        return $this;
+    }
+
+    /**
+     * Set status code
+     *
+     * @param string|null $statusCode
+     * @return self
+     */
+    public function setStatusCode(?string $statusCode): self
+    {
+        $this->statusCode = $statusCode;
+        return $this;
+    }
+
+    /**
+     * Set status message
+     *
+     * @param string|null $statusMessage
+     * @return self
+     */
+    public function setStatusMessage(?string $statusMessage): self
+    {
+        $this->statusMessage = $statusMessage;
+        return $this;
+    }
+
+    /**
+     * Update from array (used for API data)
+     *
+     * @param array $data
+     * @return self
+     */
+    public function updateFromArray(array $data): self
+    {
+        $this->setId($data['id'] ?? '');
+        $this->setOrderId($data['orderId'] ?? '');
+        $this->setStatus($data['status'] ?? '');
+        $this->setAmount($data['amount'] ?? 0);
+        $this->setCurrency($data['currency'] ?? '');
+        $this->setRawData($data);
+
+        // Extract status code and message
+        $statusCode = $this->statusCodeHandler->extractStatusCodeFromData($data);
+        $statusMessage = $this->statusCodeHandler->extractStatusMessageFromData($data);
+
+        // Set status code and message
+        $this->setStatusCode($statusCode);
+        $this->setStatusMessage($statusMessage);
+
+        return $this;
     }
 }

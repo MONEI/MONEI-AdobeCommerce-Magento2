@@ -57,4 +57,14 @@ interface PaymentInfoInterface
      * Flag indicating if the payment is voided
      */
     public const PAYMENT_IS_VOIDED = 'monei_is_voided';
+
+    /**
+     * Constant for payment error code
+     */
+    public const PAYMENT_ERROR_CODE = 'monei_error_code';
+
+    /**
+     * Constant for payment error message
+     */
+    public const PAYMENT_ERROR_MESSAGE = 'monei_error_message';
 }

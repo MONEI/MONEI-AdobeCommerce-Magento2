@@ -9,9 +9,11 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Controller\Payment;
 
 use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface as Config;
 use Magento\Framework\App\Request\Http as HttpRequest;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\Response\Http as HttpResponse;
+use Magento\Framework\App\Context;
 use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\Json;
@@ -74,6 +76,16 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     private $verifiedPayment = null;
 
     /**
+     * @var \Monei\MoneiPayment\Model\Data\PaymentDTOFactory
+     */
+    private \Monei\MoneiPayment\Model\Data\PaymentDTOFactory $paymentDtoFactory;
+
+    /**
+     * @var Config
+     */
+    private Config $config;
+
+    /**
      * @param Logger $logger
      * @param JsonFactory $resultJsonFactory
      * @param PaymentProcessorInterface $paymentProcessor
@@ -81,6 +93,8 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
      * @param OrderRepositoryInterface $orderRepository
      * @param HttpRequest $request
      * @param HttpResponse $response
+     * @param \Monei\MoneiPayment\Model\Data\PaymentDTOFactory $paymentDtoFactory
+     * @param Config $config
      */
     public function __construct(
         Logger $logger,
@@ -89,7 +103,9 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         MoneiApiClient $apiClient,
         OrderRepositoryInterface $orderRepository,
         HttpRequest $request,
-        HttpResponse $response
+        HttpResponse $response,
+        \Monei\MoneiPayment\Model\Data\PaymentDTOFactory $paymentDtoFactory,
+        Config $config
     ) {
         $this->logger = $logger;
         $this->resultJsonFactory = $resultJsonFactory;
@@ -98,6 +114,8 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         $this->orderRepository = $orderRepository;
         $this->request = $request;
         $this->response = $response;
+        $this->paymentDtoFactory = $paymentDtoFactory;
+        $this->config = $config;
     }
 
     /**
@@ -138,8 +156,8 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
                 }
 
                 try {
-                    // Create a PaymentDTO instance from the array data
-                    $paymentDTO = PaymentDTO::fromArray($paymentData);
+                    // Create a PaymentDTO object
+                    $paymentDTO = $this->paymentDtoFactory->createFromArray($paymentData);
 
                     // Process the payment with the payment processor
                     $result = $this->paymentProcessor->process(

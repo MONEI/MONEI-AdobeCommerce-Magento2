@@ -16,12 +16,13 @@ use Magento\Framework\Controller\Result\RedirectFactory;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\OrderFactory;
-use Monei\Model\PaymentStatus;
 use Monei\Model\PaymentMethods;
+use Monei\Model\PaymentStatus;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Api\PaymentProcessorInterface;
 use Monei\MoneiPayment\Model\Api\MoneiApiClient;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
+use Monei\MoneiPayment\Model\Data\PaymentDTOFactory;
 use Monei\MoneiPayment\Model\Payment\Status;
 use Monei\MoneiPayment\Service\Logger;
 
@@ -83,6 +84,11 @@ class Complete implements HttpGetActionInterface
     private OrderFactory $orderFactory;
 
     /**
+     * @var PaymentDTOFactory
+     */
+    private PaymentDTOFactory $paymentDtoFactory;
+
+    /**
      * @param OrderRepositoryInterface $orderRepository
      * @param RedirectFactory $resultRedirectFactory
      * @param Logger $logger
@@ -93,6 +99,7 @@ class Complete implements HttpGetActionInterface
      * @param Session $checkoutSession
      * @param ManagerInterface $messageManager
      * @param OrderFactory $orderFactory
+     * @param PaymentDTOFactory $paymentDtoFactory
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
@@ -104,7 +111,8 @@ class Complete implements HttpGetActionInterface
         HttpRequest $request,
         Session $checkoutSession,
         ManagerInterface $messageManager,
-        OrderFactory $orderFactory
+        OrderFactory $orderFactory,
+        PaymentDTOFactory $paymentDtoFactory
     ) {
         $this->orderRepository = $orderRepository;
         $this->resultRedirectFactory = $resultRedirectFactory;
@@ -116,6 +124,7 @@ class Complete implements HttpGetActionInterface
         $this->checkoutSession = $checkoutSession;
         $this->messageManager = $messageManager;
         $this->orderFactory = $orderFactory;
+        $this->paymentDtoFactory = $paymentDtoFactory;
     }
 
     /**
@@ -150,7 +159,7 @@ class Complete implements HttpGetActionInterface
                 if ($result instanceof Redirect) {
                     return $result;
                 }
-                $orderId = $result; // If not a redirect, it's the order ID
+                $orderId = $result;  // If not a redirect, it's the order ID
             }
 
             // Wait for any ongoing payment processing
@@ -158,7 +167,6 @@ class Complete implements HttpGetActionInterface
 
             // Main payment processing logic
             return $this->processPayment($paymentId, $orderId, $params);
-
         } catch (\Exception $e) {
             $this->logger->error('[Complete] Unhandled exception', [
                 'error' => $e->getMessage(),
@@ -217,7 +225,7 @@ class Complete implements HttpGetActionInterface
         try {
             // Try to get payment from API first
             $paymentObject = $this->getPaymentService->execute($paymentId);
-            $paymentData = PaymentDTO::fromPaymentObject($paymentObject);
+            $paymentData = $this->paymentDtoFactory->createFromPaymentObject($paymentObject);
             $orderId = $paymentData->getOrderId();
 
             if ($orderId) {
@@ -287,7 +295,7 @@ class Complete implements HttpGetActionInterface
         try {
             // Get payment data from the API
             $paymentObject = $this->getPaymentService->execute($paymentId);
-            $paymentDTO = PaymentDTO::fromPaymentObject($paymentObject);
+            $paymentDTO = $this->paymentDtoFactory->createFromPaymentObject($paymentObject);
 
             // Update order ID if we got a valid one from the payment
             $orderId = $paymentDTO->getOrderId();
@@ -398,20 +406,30 @@ class Complete implements HttpGetActionInterface
     {
         $this->logger->info('[Complete] Payment status indicates failure', [
             'payment_id' => $paymentDTO->getId(),
-            'status' => $paymentDTO->getStatus()
+            'status' => $paymentDTO->getStatus(),
+            'error_code' => $paymentDTO->getStatusCode(),
+            'error_message' => $paymentDTO->getStatusMessage()
         ]);
 
         // Restore the checkout session quote for failed payments
         $this->safelyRestoreQuote();
 
-        // Show appropriate error message based on status
-        if ($paymentDTO->isCanceled()) {
+        // Get error code and error message if available
+        $errorMessage = $paymentDTO->getStatusMessage();
+
+        // Show appropriate error message based on error code or status
+        if ($errorMessage) {
+            // Use the specific error message from MONEI if available
+            $this->messageManager->addErrorMessage(
+                __('Payment error: %1', $errorMessage)
+            );
+        } elseif ($paymentDTO->isCanceled()) {
             $this->messageManager->addErrorMessage(
                 __('Your payment was canceled. Your cart has been restored so you can try again.')
             );
         } elseif ($paymentDTO->isExpired()) {
             $this->messageManager->addErrorMessage(
-                __('Your payment has expired. Your cart has been restored so you can try again.')
+                __('Your payment expired. Your cart has been restored so you can try again.')
             );
         } else {
             $this->messageManager->addErrorMessage(
@@ -480,8 +498,15 @@ class Complete implements HttpGetActionInterface
                 'currency' => $params['currency'] ?? 'EUR'
             ];
 
+            // Add error code if available in params
+            if (isset($params['errorCode'])) {
+                $paymentData['statusCode'] = $params['errorCode'];
+            } elseif (isset($params['error_code'])) {
+                $paymentData['statusCode'] = $params['error_code'];
+            }
+
             // Create PaymentDTO and process
-            $paymentDTO = PaymentDTO::fromArray($paymentData);
+            $paymentDTO = $this->paymentDtoFactory->createFromArray($paymentData);
             $result = $this->paymentProcessor->process(
                 $paymentDTO->getOrderId(),
                 $paymentDTO->getId(),
@@ -490,8 +515,21 @@ class Complete implements HttpGetActionInterface
 
             $this->logger->debug('[Complete] Failed payment processing result', [
                 'success' => $result->isSuccess(),
-                'message' => $result->getMessage()
+                'message' => $result->getMessage(),
+                'error_code' => $paymentDTO->getStatusCode()
             ]);
+
+            // Show error message to customer if we have error code details
+            $errorMessage = $paymentDTO->getStatusMessage();
+            if ($errorMessage) {
+                $this->messageManager->addErrorMessage(
+                    __('Payment error: %1', $errorMessage)
+                );
+            } else {
+                $this->messageManager->addErrorMessage(
+                    __('There was a problem processing your payment. Your cart has been restored so you can try again.')
+                );
+            }
 
             // Restore the quote for the customer to try again
             $this->safelyRestoreQuote();

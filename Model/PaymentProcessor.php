@@ -93,6 +93,11 @@ class PaymentProcessor implements PaymentProcessorInterface
     private CreateVaultPayment $createVaultPayment;
 
     /**
+     * @var \Monei\MoneiPayment\Model\Data\PaymentDTOFactory
+     */
+    private \Monei\MoneiPayment\Model\Data\PaymentDTOFactory $paymentDtoFactory;
+
+    /**
      * @param OrderRepositoryInterface $orderRepository
      * @param InvoiceService $invoiceService
      * @param LockManagerInterface $lockManager
@@ -104,6 +109,7 @@ class PaymentProcessor implements PaymentProcessorInterface
      * @param GetPaymentInterface $getPaymentInterface
      * @param OrderFactory $orderFactory
      * @param CreateVaultPayment $createVaultPayment
+     * @param \Monei\MoneiPayment\Model\Data\PaymentDTOFactory $paymentDtoFactory
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
@@ -116,7 +122,8 @@ class PaymentProcessor implements PaymentProcessorInterface
         SearchCriteriaBuilder $searchCriteriaBuilder,
         GetPaymentInterface $getPaymentInterface,
         OrderFactory $orderFactory,
-        CreateVaultPayment $createVaultPayment
+        CreateVaultPayment $createVaultPayment,
+        \Monei\MoneiPayment\Model\Data\PaymentDTOFactory $paymentDtoFactory
     ) {
         $this->orderRepository = $orderRepository;
         $this->invoiceService = $invoiceService;
@@ -129,6 +136,7 @@ class PaymentProcessor implements PaymentProcessorInterface
         $this->getPaymentInterface = $getPaymentInterface;
         $this->orderFactory = $orderFactory;
         $this->createVaultPayment = $createVaultPayment;
+        $this->paymentDtoFactory = $paymentDtoFactory;
     }
 
     /**
@@ -150,7 +158,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             }
 
             // Create PaymentDTO from payment data
-            $payment = PaymentDTO::fromArray($paymentData);
+            $payment = $this->paymentDtoFactory->createFromArray($paymentData);
 
             // Process the payment with locking
             $result = $this->processPayment($order, $payment);
@@ -304,7 +312,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                 throw new LocalizedException(__('Failed to fetch payment data: %1', $paymentData['error'] ?? 'Unknown error'));
             }
 
-            $payment = PaymentDTO::fromArray($paymentData);
+            $payment = $this->paymentDtoFactory->createFromArray($paymentData);
 
             // Process the payment
             return $this->processPayment($order, $payment);
@@ -591,6 +599,8 @@ class PaymentProcessor implements PaymentProcessorInterface
     {
         $incrementId = $order->getIncrementId();
         $paymentId = $payment->getId();
+        $errorCode = $payment->getStatusCode();
+        $errorMessage = $payment->getStatusMessage();
 
         try {
             // Check if order is already canceled
@@ -607,6 +617,16 @@ class PaymentProcessor implements PaymentProcessorInterface
             // Update payment information
             $this->updatePaymentInformation($order, $payment);
 
+            // Build cancellation comment with error details if available
+            $comment = __('Payment error');
+            if ($errorCode && $errorMessage) {
+                $comment = __('Payment error with code %1: %2', $errorCode, $errorMessage);
+            } elseif ($payment->isCanceled()) {
+                $comment = __('Payment was canceled by the customer or the payment processor');
+            } elseif ($payment->isExpired()) {
+                $comment = __('Payment expired');
+            }
+
             // Cancel the order
             $state = $order->getState();
             $allowedStatesToCancel = [
@@ -617,28 +637,32 @@ class PaymentProcessor implements PaymentProcessorInterface
             if (in_array($state, $allowedStatesToCancel)) {
                 $order->setState(Order::STATE_CANCELED);
                 $order->setStatus(Order::STATE_CANCELED);
+                $order->addCommentToStatusHistory($comment);
                 $this->orderRepository->save($order);
 
                 $this->logger->info(sprintf(
-                    '[Order canceled] Order %s, payment %s',
+                    '[Order canceled] Order %s, payment %s, error_code: %s',
                     $incrementId,
-                    $paymentId
+                    $paymentId,
+                    $errorCode ?? 'n/a'
                 ));
             } else {
                 $this->logger->warning(sprintf(
-                    '[Order could not be canceled] Order %s, payment %s, state: %s',
+                    '[Order could not be canceled] Order %s, payment %s, state: %s, error_code: %s',
                     $incrementId,
                     $paymentId,
-                    $order->getState()
+                    $order->getState(),
+                    $errorCode ?? 'n/a'
                 ));
             }
 
             return true;
         } catch (Exception $e) {
             $this->logger->error(sprintf(
-                '[Error handling failed payment] Order %s, payment %s: %s',
+                '[Error handling failed payment] Order %s, payment %s, error_code: %s, exception: %s',
                 $incrementId,
                 $paymentId,
+                $errorCode ?? 'n/a',
                 $e->getMessage()
             ));
 
@@ -735,6 +759,15 @@ class PaymentProcessor implements PaymentProcessorInterface
             $orderPayment->setAdditionalInformation(PaymentInfoInterface::PAYMENT_AMOUNT, $payment->getAmount());
             $orderPayment->setAdditionalInformation(PaymentInfoInterface::PAYMENT_CURRENCY, $payment->getCurrency());
             $orderPayment->setAdditionalInformation(PaymentInfoInterface::PAYMENT_UPDATED_AT, $payment->getUpdatedAt());
+
+            // Store status code information if available
+            if ($payment->getStatusCode()) {
+                $orderPayment->setAdditionalInformation(PaymentInfoInterface::PAYMENT_ERROR_CODE, $payment->getStatusCode());
+                $statusMessage = $payment->getStatusMessage();
+                if ($statusMessage) {
+                    $orderPayment->setAdditionalInformation(PaymentInfoInterface::PAYMENT_ERROR_MESSAGE, $statusMessage);
+                }
+            }
 
             if ($payment->isAuthorized()) {
                 $orderPayment->setAdditionalInformation(PaymentInfoInterface::PAYMENT_IS_AUTHORIZED, true);
@@ -840,7 +873,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             throw new LocalizedException(__('Failed to fetch payment data: %1', $paymentData['error'] ?? 'Unknown error'));
         }
 
-        return PaymentDTO::fromArray($paymentData);
+        return $this->paymentDtoFactory->createFromArray($paymentData);
     }
 
     /**

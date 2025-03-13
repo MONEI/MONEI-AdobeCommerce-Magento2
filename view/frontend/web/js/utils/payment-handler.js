@@ -7,8 +7,9 @@ define([
   'Magento_Checkout/js/action/redirect-on-success',
   'Magento_Checkout/js/model/full-screen-loader',
   'Monei_MoneiPayment/js/utils/error-handler',
-  'moneijs'
-], function ($, redirectOnSuccessAction, fullScreenLoader, errorHandler, monei) {
+  'moneijs',
+  'mage/url'
+], function ($, redirectOnSuccessAction, fullScreenLoader, errorHandler, monei, url) {
   'use strict';
 
   return {
@@ -46,9 +47,12 @@ define([
           }
         })
         .catch(function (error) {
+          fullScreenLoader.stopLoader();
           errorHandler.handleApiError(error);
-          if (typeof component.redirectToCancelOrder === 'function') {
-            component.redirectToCancelOrder();
+          if (component.cancelOrderUrl) {
+            setTimeout(function () {
+              window.location.replace(url.build(component.cancelOrderUrl));
+            }, 3000);
           }
         });
     }

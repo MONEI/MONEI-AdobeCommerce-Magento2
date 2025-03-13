@@ -13,7 +13,8 @@ define([
   'Magento_Checkout/js/model/full-screen-loader',
   'Magento_Ui/js/model/messageList',
   'mage/url',
-  'Monei_MoneiPayment/js/utils/error-handler'
+  'Monei_MoneiPayment/js/utils/error-handler',
+  'Monei_MoneiPayment/js/utils/payment-handler'
 ], function (
   ko,
   $,
@@ -24,7 +25,8 @@ define([
   fullScreenLoader,
   globalMessageList,
   url,
-  errorHandler
+  errorHandler,
+  paymentHandler
 ) {
   'use strict';
 
@@ -158,14 +160,8 @@ define([
       self
         .getPlaceOrderDeferredObject()
         .done(function () {
-          // Log successful order placement
-          console.log('Order successfully placed in Magento');
-
-          // Brief delay to ensure order is completely processed by Magento
-          setTimeout(function () {
-            // After order is placed, submit a form to redirect to payment
-            self.submitPaymentForm();
-          }, 500);
+          // After order is placed, submit a form to redirect to payment
+          self.submitPaymentForm();
         })
         .fail(function (response) {
           fullScreenLoader.stopLoader();
@@ -217,13 +213,6 @@ define([
 
       fullScreenLoader.stopLoader();
       this.isPlaceOrderActionAllowed(true);
-    },
-
-    /**
-     * Redirect to cancel page
-     */
-    redirectToCancelOrder: function () {
-      window.location.replace(url.build(this.cancelOrderUrl));
     }
   });
 });
