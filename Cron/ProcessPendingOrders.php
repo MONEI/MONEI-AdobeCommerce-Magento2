@@ -132,53 +132,62 @@ class ProcessPendingOrders
 
             if (!$paymentId) {
                 $this->logger->warning(sprintf('[Cron] Order %s has no payment ID', $incrementId));
-
                 continue;
             }
 
             // Skip if the order is already being processed
             if ($this->lockManager->isOrderLocked($incrementId)) {
                 $this->logger->info(sprintf('[Cron] Order %s is locked, skipping', $incrementId));
-
                 continue;
             }
 
-            $this->logger->info(sprintf('[Cron] Processing order %s with payment ID %s', $incrementId, $paymentId));
-
-            $orderDate = $order->getCreatedAt();
-            $currentDate = $this->date->date();
-            $daysDiff = (int) (strtotime($currentDate) - strtotime($orderDate)) / (60 * 60 * 24);
-
-            // Cancel payments older than 7 days
-            if ($daysDiff >= 7) {
-                $this->logger->info(sprintf('[Cron] Order %s is %d days old, canceling payment', $incrementId, $daysDiff));
-
-                try {
-                    $data = [
-                        'paymentId' => $paymentId,
-                        'cancellationReason' => 'abandoned',
-                    ];
-                    $this->cancelPaymentService->execute($data);
-
-                    // Process the canceled payment
-                    $this->paymentProcessor->processPaymentById($order, $paymentId);
-                } catch (\Exception $e) {
-                    $this->logger->error(sprintf(
-                        '[Cron] Error canceling payment for order %s: %s',
-                        $incrementId,
-                        $e->getMessage()
-                    ));
-                }
-
-                continue;
-            }
-
-            // Process the payment to check its current status
+            // Process the order using a lock to prevent concurrent processing
             try {
-                $this->paymentProcessor->processPaymentById($order, $paymentId);
+                $this->lockManager->executeWithOrderLock($incrementId, function () use ($order, $paymentId, $incrementId) {
+                    $this->logger->info(sprintf('[Cron] Processing order %s with payment ID %s', $incrementId, $paymentId));
+
+                    $orderDate = $order->getCreatedAt();
+                    $currentDate = $this->date->date();
+                    $daysDiff = (int) (strtotime($currentDate) - strtotime($orderDate)) / (60 * 60 * 24);
+
+                    // Cancel payments older than 7 days
+                    if ($daysDiff >= 7) {
+                        $this->logger->info(sprintf('[Cron] Order %s is %d days old, canceling payment', $incrementId, $daysDiff));
+
+                        try {
+                            $data = [
+                                'paymentId' => $paymentId,
+                                'cancellationReason' => 'abandoned',
+                            ];
+                            $this->cancelPaymentService->execute($data);
+
+                            // Process the canceled payment
+                            $this->paymentProcessor->processPaymentById($order, $paymentId);
+                        } catch (\Exception $e) {
+                            $this->logger->error(sprintf(
+                                '[Cron] Error canceling payment for order %s: %s',
+                                $incrementId,
+                                $e->getMessage()
+                            ));
+                        }
+
+                        return;
+                    }
+
+                    // Process the payment to check its current status
+                    try {
+                        $this->paymentProcessor->processPaymentById($order, $paymentId);
+                    } catch (\Exception $e) {
+                        $this->logger->error(sprintf(
+                            '[Cron] Error processing payment for order %s: %s',
+                            $incrementId,
+                            $e->getMessage()
+                        ));
+                    }
+                });
             } catch (\Exception $e) {
                 $this->logger->error(sprintf(
-                    '[Cron] Error processing payment for order %s: %s',
+                    '[Cron] Error acquiring lock for order %s: %s',
                     $incrementId,
                     $e->getMessage()
                 ));

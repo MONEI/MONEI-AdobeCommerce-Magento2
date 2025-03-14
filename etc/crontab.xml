@@ -3,10 +3,17 @@
   ~ @author Monei Team
   ~ @copyright Copyright © Monei (https://monei.com)
   -->
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
+<config
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd"
+>
   <group id="default">
-    <job name="monei_process_pending_orders" instance="Monei\MoneiPayment\Cron\ProcessPendingOrders" method="execute">
-      <schedule>0 0 * * *</schedule>
+    <job
+      name="monei_process_pending_orders"
+      instance="Monei\MoneiPayment\Cron\ProcessPendingOrders"
+      method="execute"
+    >
+      <schedule>0 * * * *</schedule>
     </job>
   </group>
 </config>
