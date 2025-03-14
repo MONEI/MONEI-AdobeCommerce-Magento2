@@ -5,8 +5,8 @@
 ?>
 <form id="monei-vault-redirect-form"
       method="post"
-      action="<?= $block->escapeUrl($block->getUrl('monei/payment/vaultredirect')) ?>"
+      action="<?= $escaper->escapeUrl($block->getUrl('monei/payment/vaultredirect')) ?>"
       style="display: none;">
-    <input type="hidden" name="form_key" value="<?= $block->escapeHtmlAttr($block->getFormKey()) ?>">
+    <input type="hidden" name="form_key" value="<?= $escaper->escapeHtmlAttr($block->getFormKey()) ?>">
     <input type="hidden" name="public_hash" id="monei-vault-public-hash" value="">
 </form>

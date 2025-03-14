@@ -9,7 +9,6 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Model\Data;
 
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Phrase;
 use Monei\Model\PaymentStatus;
 use Monei\MoneiPayment\Model\Payment\Status;
 use Monei\MoneiPayment\Model\Service\StatusCodeHandler;
@@ -565,6 +564,18 @@ class PaymentDTO
     }
 
     /**
+     * Check if payment method is PayPal
+     *
+     * @return bool
+     */
+    public function isPaypal(): bool
+    {
+        $paymentMethodType = $this->getPaymentMethodType();
+
+        return $paymentMethodType === \Monei\Model\PaymentMethods::PAYMENT_METHODS_PAYPAL;
+    }
+
+    /**
      * Set payment ID
      *
      * @param string $id
@@ -573,6 +584,7 @@ class PaymentDTO
     public function setId(string $id): self
     {
         $this->id = $id;
+
         return $this;
     }
 
@@ -585,6 +597,7 @@ class PaymentDTO
     public function setStatus(string $status): self
     {
         $this->status = $status;
+
         return $this;
     }
 
@@ -597,6 +610,7 @@ class PaymentDTO
     public function setAmount(float $amount): self
     {
         $this->amount = $amount;
+
         return $this;
     }
 
@@ -609,6 +623,7 @@ class PaymentDTO
     public function setAmountInCents(int $amountInCents): self
     {
         $this->amountInCents = $amountInCents;
+
         return $this;
     }
 
@@ -621,6 +636,7 @@ class PaymentDTO
     public function setCurrency(string $currency): self
     {
         $this->currency = $currency;
+
         return $this;
     }
 
@@ -633,6 +649,7 @@ class PaymentDTO
     public function setOrderId(string $orderId): self
     {
         $this->orderId = $orderId;
+
         return $this;
     }
 
@@ -645,6 +662,7 @@ class PaymentDTO
     public function setCreatedAt(?string $createdAt): self
     {
         $this->createdAt = $createdAt;
+
         return $this;
     }
 
@@ -657,6 +675,7 @@ class PaymentDTO
     public function setUpdatedAt(?string $updatedAt): self
     {
         $this->updatedAt = $updatedAt;
+
         return $this;
     }
 
@@ -669,6 +688,7 @@ class PaymentDTO
     public function setMetadata(?array $metadata): self
     {
         $this->metadata = $metadata;
+
         return $this;
     }
 
@@ -681,6 +701,7 @@ class PaymentDTO
     public function setRawData(array $rawData): self
     {
         $this->rawData = $rawData;
+
         return $this;
     }
 
@@ -693,6 +714,7 @@ class PaymentDTO
     public function setStatusCode(?string $statusCode): self
     {
         $this->statusCode = $statusCode;
+
         return $this;
     }
 
@@ -705,6 +727,7 @@ class PaymentDTO
     public function setStatusMessage(?string $statusMessage): self
     {
         $this->statusMessage = $statusMessage;
+
         return $this;
     }
 

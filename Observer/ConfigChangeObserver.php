@@ -104,6 +104,7 @@ class ConfigChangeObserver implements ObserverInterface
         foreach ($changedPaths as $path) {
             if (strpos($path, 'payment/monei_') === 0) {
                 $moneiConfigChanged = true;
+
                 break;
             }
         }
@@ -124,6 +125,7 @@ class ConfigChangeObserver implements ObserverInterface
 
             if (empty($domain)) {
                 $this->logger->error('Failed to extract domain from store URL for Apple Pay verification');
+
                 return;
             }
 

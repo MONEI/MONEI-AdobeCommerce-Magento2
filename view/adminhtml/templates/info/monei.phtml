@@ -79,7 +79,7 @@ $paymentInfo = $block->getPaymentInfo();
             <?php if (isset($paymentInfo['cardholderEmail']) && !empty($paymentInfo['cardholderEmail'])): ?>
                 <tr>
                     <th><?= $escaper->escapeHtml(__('Cardholder Email')) ?></th>
-                    <td><?= $escaper->escapeHtml($paymentInfo['cardholderEmail']) ?></td>
+                    <td><a href="mailto:<?= $escaper->escapeHtmlAttr($paymentInfo['cardholderEmail']) ?>"><?= $escaper->escapeHtml($paymentInfo['cardholderEmail']) ?></a></td>
                 </tr>
             <?php endif; ?>
 
@@ -118,6 +118,37 @@ $paymentInfo = $block->getPaymentInfo();
                         <?= $escaper->escapeHtml($paymentInfo['authorizationCode']) ?>
                     </td>
                 </tr>
+            <?php endif; ?>
+
+            <?php // PayPal-specific information ?>
+            <?php if (isset($paymentInfo['method']) && $paymentInfo['method'] === 'paypal'): ?>
+                <?php if (isset($paymentInfo['orderId']) && !empty($paymentInfo['orderId'])): ?>
+                    <tr>
+                        <th><?= $escaper->escapeHtml(__('PayPal Order ID')) ?></th>
+                        <td><?= $escaper->escapeHtml($paymentInfo['orderId']) ?></td>
+                    </tr>
+                <?php endif; ?>
+
+                <?php if (isset($paymentInfo['payerId']) && !empty($paymentInfo['payerId'])): ?>
+                    <tr>
+                        <th><?= $escaper->escapeHtml(__('PayPal Customer ID')) ?></th>
+                        <td><?= $escaper->escapeHtml($paymentInfo['payerId']) ?></td>
+                    </tr>
+                <?php endif; ?>
+
+                <?php if (isset($paymentInfo['email']) && !empty($paymentInfo['email'])): ?>
+                    <tr>
+                        <th><?= $escaper->escapeHtml(__('Customer Email')) ?></th>
+                        <td><a href="mailto:<?= $escaper->escapeHtmlAttr($paymentInfo['email']) ?>"><?= $escaper->escapeHtml($paymentInfo['email']) ?></a></td>
+                    </tr>
+                <?php endif; ?>
+
+                <?php if (isset($paymentInfo['name']) && !empty($paymentInfo['name'])): ?>
+                    <tr>
+                        <th><?= $escaper->escapeHtml(__('Customer Name')) ?></th>
+                        <td><?= $escaper->escapeHtml($paymentInfo['name']) ?></td>
+                    </tr>
+                <?php endif; ?>
             <?php endif; ?>
         </tbody>
     </table>

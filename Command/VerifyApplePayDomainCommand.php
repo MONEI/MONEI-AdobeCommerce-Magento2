@@ -101,14 +101,17 @@ class VerifyApplePayDomainCommand extends Command
             $result = $this->verifyApplePayDomain->execute($domain);
             $output->writeln('<info>Domain successfully registered with Apple Pay!</info>');
             $output->writeln('<info>Response: ' . json_encode($result) . '</info>');
+
             return Command::SUCCESS;
         } catch (LocalizedException $e) {
             $output->writeln('<error>' . $e->getMessage() . '</error>');
             $this->logger->error('Error when registering Apple Pay domain: ' . $e->getMessage());
+
             return Command::FAILURE;
         } catch (\Exception $e) {
             $output->writeln('<error>Unexpected error: ' . $e->getMessage() . '</error>');
             $this->logger->error('Unexpected error when registering Apple Pay domain: ' . $e->getMessage());
+
             return Command::FAILURE;
         }
     }

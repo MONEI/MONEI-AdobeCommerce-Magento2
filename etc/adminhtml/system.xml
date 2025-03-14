@@ -859,6 +859,123 @@
           </depends>
         </field>
         <!-- -->
+
+        <!-- PAYPAL INSITE -->
+        <field
+          id="heading9"
+          translate="label"
+          sortOrder="480"
+          showInDefault="1"
+          showInWebsite="1"
+          showInStore="1"
+        >
+          <label>Monei PayPal Insite:</label>
+          <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
+        </field>
+        <field
+          id="active_paypal_insite"
+          translate="label comment"
+          sortOrder="490"
+          type="select"
+          showInDefault="1"
+          showInWebsite="1"
+          showInStore="1"
+        >
+          <label>Enable</label>
+          <comment>Select 'Yes' if you want to enable this payment method. Otherwise 'No'.</comment>
+          <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+          <config_path>payment/monei_paypal/active</config_path>
+          <backend_model>Monei\MoneiPayment\Model\Config\Backend\EnablePayPal</backend_model>
+        </field>
+        <field
+          id="title_paypal_insite"
+          translate="label comment"
+          type="text"
+          sortOrder="500"
+          showInDefault="1"
+          showInWebsite="1"
+          showInStore="1"
+        >
+          <label>Title</label>
+          <comment>Text that will be displayed in checkout</comment>
+          <config_path>payment/monei_paypal/title</config_path>
+          <depends>
+            <field id="active_paypal_insite">1</field>
+          </depends>
+        </field>
+        <field
+          id="allowspecific_paypal_insite"
+          translate="label comment"
+          sortOrder="510"
+          type="allowspecific"
+          showInDefault="1"
+          showInWebsite="1"
+          showInStore="1"
+        >
+          <label>Allowed Countries</label>
+          <source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model>
+          <config_path>payment/monei_paypal/allowspecific</config_path>
+          <depends>
+            <field id="active_paypal_insite">1</field>
+          </depends>
+        </field>
+        <field
+          id="specificcountry_paypal_insite"
+          translate="label comment"
+          sortOrder="520"
+          type="multiselect"
+          showInDefault="1"
+          showInWebsite="1"
+          showInStore="1"
+        >
+          <label>Payment from Specific Countries</label>
+          <source_model>Magento\Directory\Model\Config\Source\Country</source_model>
+          <config_path>payment/monei_paypal/specificcountry</config_path>
+          <can_be_empty>1</can_be_empty>
+          <depends>
+            <field id="active_paypal_insite">1</field>
+            <field id="allowspecific_paypal_insite">1</field>
+          </depends>
+        </field>
+        <field
+          id="sort_order_paypal_insite"
+          translate="label comment"
+          sortOrder="530"
+          type="text"
+          showInDefault="1"
+          showInWebsite="1"
+        >
+          <label>Sort Order</label>
+          <tooltip>In which order the payment method will be displayed in checkout</tooltip>
+          <config_path>payment/monei_paypal/sort_order</config_path>
+          <frontend_class>validate-number</frontend_class>
+          <depends>
+            <field id="active_paypal_insite">1</field>
+          </depends>
+        </field>
+        <field
+          id="json_style_paypal_insite"
+          translate="label comment"
+          sortOrder="540"
+          type="textarea"
+          showInDefault="1"
+          showInWebsite="1"
+        >
+          <label>Json style</label>
+          <comment
+            ><![CDATA[Custom json style for the PayPal component. Must be valid JSON format. View
+            more info <a href="https://docs.monei.com/docs/monei-js/reference/#paypal-options"
+            target="_blank" rel="noopener noreferrer">here</a>]]></comment
+          >
+          <config_path>payment/monei_paypal/json_style</config_path>
+          <backend_model>Monei\MoneiPayment\Model\Config\Backend\JsonValidator</backend_model>
+          <frontend_class>validate-json</frontend_class>
+          <validate>validate-no-html-tags</validate>
+          <depends>
+            <field id="active_paypal_insite">1</field>
+          </depends>
+        </field>
+        <!-- -->
       </group>
     </section>
   </system>

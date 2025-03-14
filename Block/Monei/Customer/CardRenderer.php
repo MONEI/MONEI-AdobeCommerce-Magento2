@@ -83,6 +83,7 @@ class CardRenderer extends AbstractCardRenderer
     public function getIconUrl()
     {
         $brand = $this->getTokenDetails()['brand'] ?? '';
+
         return $this->paymentMethodHelper->getIconFromPaymentType('card', $brand);
     }
 

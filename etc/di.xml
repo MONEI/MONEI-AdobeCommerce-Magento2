@@ -28,6 +28,10 @@
     type="Monei\MoneiPayment\Model\Config\MoneiGoogleApplePaymentModuleConfig"
   />
   <preference
+    for="Monei\MoneiPayment\Api\Config\MoneiPaypalPaymentModuleConfigInterface"
+    type="Monei\MoneiPayment\Model\Config\MoneiPaypalPaymentModuleConfig"
+  />
+  <preference
     for="Monei\MoneiPayment\Api\Service\CreatePaymentInterface"
     type="Monei\MoneiPayment\Service\CreatePayment"
   />
@@ -455,6 +459,49 @@
     </arguments>
   </virtualType>
   <!-- End Monei MBWay redirect payment configuration  -->
+
+  <!-- Configuration for Monei PayPal payment -->
+  <virtualType
+    name="MoneiPaypalPaymentValueHandlerPool"
+    type="Magento\Payment\Gateway\Config\ValueHandlerPool"
+  >
+    <arguments>
+      <argument name="handlers" xsi:type="array">
+        <item name="default" xsi:type="string">MoneiPaypalPaymentValueHandler</item>
+      </argument>
+    </arguments>
+  </virtualType>
+  <virtualType
+    name="MoneiPaypalPaymentValueHandler"
+    type="Magento\Payment\Gateway\Config\ConfigValueHandler"
+  >
+    <arguments>
+      <argument name="configInterface" xsi:type="object">MoneiPaypalPaymentConfig</argument>
+    </arguments>
+  </virtualType>
+  <virtualType name="MoneiPaypalPaymentConfig" type="Magento\Payment\Gateway\Config\Config">
+    <arguments>
+      <argument name="methodCode" xsi:type="const"
+        >Monei\MoneiPayment\Model\Payment\Monei::PAYPAL_CODE</argument
+      >
+    </arguments>
+  </virtualType>
+  <virtualType name="MoneiPaypalPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
+    <arguments>
+      <argument name="code" xsi:type="const"
+        >Monei\MoneiPayment\Model\Payment\Monei::PAYPAL_CODE</argument
+      >
+      <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
+      <argument name="infoBlockType" xsi:type="string"
+        >Monei\MoneiPayment\Block\Info\Monei</argument
+      >
+      <argument name="valueHandlerPool" xsi:type="object"
+        >MoneiPaypalPaymentValueHandlerPool</argument
+      >
+      <argument name="commandPool" xsi:type="object">MoneiCommandPool</argument>
+    </arguments>
+  </virtualType>
+  <!-- End Monei PayPal payment configuration  -->
 
   <!-- Configure LockManager for MySQL implementation -->
   <type name="Magento\Framework\Lock\LockManagerInterface">

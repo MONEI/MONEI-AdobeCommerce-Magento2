@@ -10,7 +10,6 @@ namespace Monei\MoneiPayment\Helper;
 
 use Monei\Model\PaymentMethods;
 use Monei\MoneiPayment\Api\Helper\PaymentMethodFormatterInterface;
-use Monei\MoneiPayment\Helper\PaymentMethod;
 
 /**
  * Helper class for formatting payment method information
@@ -73,6 +72,7 @@ class PaymentMethodFormatter implements PaymentMethodFormatterInterface
                             $last3 = substr($paymentInfo['phoneNumber'], -3);
                             $paymentMethodDisplay .= ' •••••' . $last3;
                         }
+
                         break;
                 }
             } else {
@@ -80,6 +80,30 @@ class PaymentMethodFormatter implements PaymentMethodFormatterInterface
                 switch ($methodType) {
                     case PaymentMethods::PAYMENT_METHODS_PAYPAL:
                         $paymentMethodDisplay = 'PayPal';
+
+                        // Add additional PayPal information if available
+                        $paypalInfo = [];
+
+                        if (isset($paymentInfo['orderId']) && !empty($paymentInfo['orderId'])) {
+                            $paypalInfo[] = 'PayPal Order ID: ' . $paymentInfo['orderId'];
+                        }
+
+                        if (isset($paymentInfo['payerId']) && !empty($paymentInfo['payerId'])) {
+                            $paypalInfo[] = 'PayPal Customer ID: ' . $paymentInfo['payerId'];
+                        }
+
+                        if (isset($paymentInfo['email']) && !empty($paymentInfo['email'])) {
+                            $paypalInfo[] = 'Customer Email: ' . $paymentInfo['email'];
+                        }
+
+                        if (isset($paymentInfo['name']) && !empty($paymentInfo['name'])) {
+                            $paypalInfo[] = 'Customer Name: ' . $paymentInfo['name'];
+                        }
+
+                        if (!empty($paypalInfo)) {
+                            $paymentMethodDisplay .= ' (' . implode(', ', $paypalInfo) . ')';
+                        }
+
                         break;
                     default:
                         // Fallback: Convert camelCase to Title Case with spaces

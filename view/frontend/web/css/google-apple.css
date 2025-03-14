@@ -1,5 +1,6 @@
 #monei-google-apple-insite-payment-form {
-  width: 225px;
+  min-width: 150px;
+  min-height: 45px;
 }
 
 @media only screen and (max-width: 768px) {

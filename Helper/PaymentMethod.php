@@ -36,6 +36,7 @@ class PaymentMethod
     private const TYPE_MULTIBANCO = 'multibanco';
     private const TYPE_CARD = 'card';
     private const TYPE_DEFAULT = 'default';
+    private const TYPE_PAYPAL = 'paypal';
 
     /**
      * Card brand identifiers used for specific card icons
@@ -64,7 +65,8 @@ class PaymentMethod
         PaymentMethods::PAYMENT_METHODS_APPLE_PAY => self::TYPE_APPLE_PAY,
         PaymentMethods::PAYMENT_METHODS_MBWAY => self::TYPE_MBWAY,
         PaymentMethods::PAYMENT_METHODS_MULTIBANCO => self::TYPE_MULTIBANCO,
-        PaymentMethods::PAYMENT_METHODS_CARD => self::TYPE_CARD
+        PaymentMethods::PAYMENT_METHODS_CARD => self::TYPE_CARD,
+        PaymentMethods::PAYMENT_METHODS_PAYPAL => self::TYPE_PAYPAL
     ];
 
     /**
@@ -264,7 +266,7 @@ class PaymentMethod
                 'height' => '22px'
             ],
             self::TYPE_MBWAY => [
-                'name' => 'MB WAY',
+                'name' => 'MBWay',
                 'icon' => $this->getViewFileUrl('Monei_MoneiPayment::img/mbway.svg'),
                 'width' => '45px',
                 'height' => '22px'
@@ -279,6 +281,12 @@ class PaymentMethod
                 'name' => 'Card',
                 'icon' => $this->getViewFileUrl('Monei_MoneiPayment::img/cards/default.svg'),
                 'width' => '40px',
+                'height' => '22px'
+            ],
+            self::TYPE_PAYPAL => [
+                'name' => 'PayPal',
+                'icon' => $this->getViewFileUrl('Monei_MoneiPayment::img/paypal.svg'),
+                'width' => '83px',
                 'height' => '22px'
             ],
             // Card brands
@@ -410,6 +418,7 @@ class PaymentMethod
             foreach (Monei::PAYMENT_METHOD_MAP as $magentoCode => $moneiCodes) {
                 if (in_array($type, $moneiCodes) && isset($this->moneiToInternalTypeMap[$type])) {
                     $type = $this->moneiToInternalTypeMap[$type];
+
                     break;
                 }
             }

@@ -17,6 +17,7 @@ use Monei\MoneiPayment\Api\Config\MoneiBizumPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Config\MoneiCardPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Config\MoneiGoogleApplePaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use Monei\MoneiPayment\Api\Config\MoneiPaypalPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentMethodsInterface;
 use Monei\MoneiPayment\Helper\PaymentMethod;
 use Monei\MoneiPayment\Model\Config\Source\Mode;
@@ -64,6 +65,13 @@ class CheckoutConfigProvider implements ConfigProviderInterface
      * @var MoneiBizumPaymentModuleConfigInterface
      */
     private MoneiBizumPaymentModuleConfigInterface $moneiBizumPaymentModuleConfig;
+
+    /**
+     * Configuration settings specific to PayPal payment method.
+     *
+     * @var MoneiPaypalPaymentModuleConfigInterface
+     */
+    private MoneiPaypalPaymentModuleConfigInterface $moneiPaypalPaymentModuleConfig;
 
     /**
      * Interface for accessing store-related information.
@@ -116,6 +124,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
      * @param MoneiCardPaymentModuleConfigInterface $moneiCardPaymentConfig
      * @param MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentConfig
      * @param MoneiBizumPaymentModuleConfigInterface $moneiBizumPaymentModuleConfig
+     * @param MoneiPaypalPaymentModuleConfigInterface $moneiPaypalPaymentModuleConfig
      * @param GooglePayAvailability $googlePayAvailability
      * @param ApplePayAvailability $applePayAvailability
      * @param StoreManagerInterface $storeManager
@@ -129,6 +138,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
         MoneiCardPaymentModuleConfigInterface $moneiCardPaymentConfig,
         MoneiGoogleApplePaymentModuleConfigInterface $moneiGoogleApplePaymentConfig,
         MoneiBizumPaymentModuleConfigInterface $moneiBizumPaymentModuleConfig,
+        MoneiPaypalPaymentModuleConfigInterface $moneiPaypalPaymentModuleConfig,
         GooglePayAvailability $googlePayAvailability,
         ApplePayAvailability $applePayAvailability,
         StoreManagerInterface $storeManager,
@@ -139,6 +149,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
         $this->moneiGoogleApplePaymentConfig = $moneiGoogleApplePaymentConfig;
         $this->moneiBizumPaymentModuleConfig = $moneiBizumPaymentModuleConfig;
         $this->moneiCardPaymentConfig = $moneiCardPaymentConfig;
+        $this->moneiPaypalPaymentModuleConfig = $moneiPaypalPaymentModuleConfig;
         $this->googlePayAvailability = $googlePayAvailability;
         $this->applePayAvailability = $applePayAvailability;
         $this->moneiPaymentConfig = $moneiPaymentConfig;
@@ -166,6 +177,29 @@ class CheckoutConfigProvider implements ConfigProviderInterface
             'moneiPaymentIsEnabled' => $this->allMoneiPaymentModuleConfig->isAnyPaymentEnabled($storeId),
             'isMoneiTestMode' => Mode::MODE_TEST === $this->moneiPaymentConfig->getMode($storeId),
             'moneiLanguage' => $this->moneiPaymentConfig->getLanguage($storeId),
+            'moneiPaymentMethods' => [
+                'ALIPAY' => 'alipay',
+                'APPLE_PAY' => 'applePay',
+                'BANCONTACT' => 'bancontact',
+                'BIZUM' => 'bizum',
+                'BLIK' => 'blik',
+                'CARD' => 'card',
+                'CARD_PRESENT' => 'cardPresent',
+                'CLICK_TO_PAY' => 'clickToPay',
+                'COFIDIS' => 'cofidis',
+                'COFIDIS_LOAN' => 'cofidisLoan',
+                'EPS' => 'eps',
+                'GIROPAY' => 'giropay',
+                'GOOGLE_PAY' => 'googlePay',
+                'I_DEAL' => 'iDeal',
+                'KLARNA' => 'klarna',
+                'MBWAY' => 'mbway',
+                'MULTIBANCO' => 'multibanco',
+                'PAYPAL' => 'paypal',
+                'SEPA' => 'sepa',
+                'SOFORT' => 'sofort',
+                'TRUSTLY' => 'trustly'
+            ],
             'payment' => [
                 Monei::REDIRECT_CODE => [
                     'redirectUrl' => $this->urlBuilder->getUrl('monei/payment/redirect'),
@@ -235,6 +269,20 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                 Monei::MBWAY_REDIRECT_CODE => [
                     'icon' => $this->paymentMethodHelper->getIconFromPaymentType('mbway'),
                     'iconDimensions' => $this->paymentMethodHelper->getPaymentMethodDimensions('mbway'),
+                ],
+                Monei::PAYPAL_CODE => [
+                    'redirectUrl' => $this->urlBuilder->getUrl('monei/payment/redirect'),
+                    'cancelOrderUrl' => $this->urlBuilder->getUrl('monei/payment/cancel'),
+                    'completeUrl' => $this->urlBuilder->getUrl('monei/payment/complete'),
+                    'failOrderStatus' => [
+                        Status::EXPIRED,
+                        Status::CANCELED,
+                        Status::FAILED,
+                    ],
+                    'accountId' => $this->moneiPaymentConfig->getAccountId($storeId),
+                    'jsonStyle' => $this->moneiPaypalPaymentModuleConfig->getJsonStyle($storeId),
+                    'icon' => $this->paymentMethodHelper->getIconFromPaymentType('paypal'),
+                    'iconDimensions' => $this->paymentMethodHelper->getPaymentMethodDimensions('paypal'),
                 ]
             ],
             'vault' => [
@@ -416,6 +464,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
     {
         try {
             $paymentMethods = $this->getPaymentMethods->execute();
+
             return $paymentMethods->getPaymentMethods() ?? [];
         } catch (\Exception $e) {
             // Return empty array if API call fails

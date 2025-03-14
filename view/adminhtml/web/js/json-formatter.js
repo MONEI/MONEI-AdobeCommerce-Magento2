@@ -87,15 +87,11 @@ define(['jquery', 'jquery/ui', 'Magento_Ui/js/modal/alert', 'mage/translate'], f
     }
   });
 
-  // Wait for DOM to be ready
+  // Wait for DOM to be ready and apply the widget to all json textareas
   $(function () {
     try {
-      // Check if widget is registered
-      if ($.fn.moneiJsonFormatter) {
-        $('textarea.validate-json').moneiJsonFormatter({debug: true});
-      } else {
-        console.error('MONEI: moneiJsonFormatter widget not available');
-      }
+      $('textarea.validate-json').moneiJsonFormatter({debug: true});
+      console.log('MONEI: jsonFormatter initialized on textareas');
     } catch (e) {
       console.error('MONEI: Error initializing JSON fields', e);
     }

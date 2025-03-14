@@ -121,6 +121,7 @@ class StatusCodeHandler
     public function getStatusMessage(string $statusCode): Phrase
     {
         $message = self::STATUS_CODES[$statusCode] ?? 'Unknown status code: ' . $statusCode;
+
         return __($message);
     }
 
@@ -157,6 +158,7 @@ class StatusCodeHandler
         foreach (self::STATUS_CODES as $code => $message) {
             $localizedStatuses[$code] = __($message);
         }
+
         return $localizedStatuses;
     }
 

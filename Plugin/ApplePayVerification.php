@@ -77,6 +77,7 @@ class ApplePayVerification
         // Check if this is a request for the Apple Pay verification file
         if ($pathInfo === '/.well-known/apple-developer-merchantid-domain-association') {
             $this->serveApplePayVerificationFile();
+
             return null;
         }
     }

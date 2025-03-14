@@ -13,7 +13,6 @@ use Magento\Framework\App\Config\ScopeConfigInterface as Config;
 use Magento\Framework\App\Request\Http as HttpRequest;
 use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\Response\Http as HttpResponse;
-use Magento\Framework\App\Context;
 use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\Json;

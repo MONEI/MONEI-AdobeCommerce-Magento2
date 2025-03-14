@@ -46,6 +46,7 @@ class VaultRedirectForm extends Template
         if ($this->checkoutSession->getQuote()) {
             return (string) $this->checkoutSession->getQuote()->getId();
         }
+
         return '';
     }
 }

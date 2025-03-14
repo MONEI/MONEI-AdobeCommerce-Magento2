@@ -54,6 +54,8 @@ class Monei
 
     public const MBWAY_REDIRECT_CODE = 'monei_mbway_redirect';
 
+    public const PAYPAL_CODE = 'monei_paypal';
+
     public const PAYMENT_METHODS_MONEI = [
         self::REDIRECT_CODE,
         self::CARD_CODE,
@@ -62,6 +64,7 @@ class Monei
         self::GOOGLE_APPLE_CODE,
         self::MULTIBANCO_REDIRECT_CODE,
         self::MBWAY_REDIRECT_CODE,
+        self::PAYPAL_CODE,
     ];
 
     public const MONEI_GOOGLE_CODE = PaymentMethods::PAYMENT_METHODS_GOOGLE_PAY;
@@ -74,6 +77,7 @@ class Monei
         self::CARD_CODE => [PaymentMethods::PAYMENT_METHODS_CARD],
         self::MULTIBANCO_REDIRECT_CODE => [PaymentMethods::PAYMENT_METHODS_MULTIBANCO],
         self::MBWAY_REDIRECT_CODE => [PaymentMethods::PAYMENT_METHODS_MBWAY],
+        self::PAYPAL_CODE => [PaymentMethods::PAYMENT_METHODS_PAYPAL],
     ];
 
     public const REDIRECT_PAYMENT_MAP = [

@@ -177,6 +177,7 @@ class VaultRedirect implements HttpPostActionInterface, CsrfAwareActionInterface
             if (isset($result['success']) && $result['success'] && !empty($result['redirect_url'])) {
                 // Set external URL for redirection
                 $this->redirect->setUrl($result['redirect_url']);
+
                 return $this->redirect;
             }
 
@@ -203,6 +204,7 @@ class VaultRedirect implements HttpPostActionInterface, CsrfAwareActionInterface
 
         // Redirect to cart on failure
         $this->redirect->setPath($redirectPath, $params);
+
         return $this->redirect;
     }
 

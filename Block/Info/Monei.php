@@ -118,6 +118,8 @@ class Monei extends Info
                 $result['authorizationCode'] = $paymentData['authorizationCode'];
             }
 
+            $this->logger->info('Payment info: ' . json_encode($result));
+
             return $result;
         } catch (\Exception $e) {
             return null;

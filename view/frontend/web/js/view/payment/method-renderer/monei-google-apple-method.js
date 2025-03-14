@@ -13,7 +13,6 @@ define([
   'Magento_Ui/js/model/messageList',
   'Magento_Checkout/js/model/full-screen-loader',
   'Monei_MoneiPayment/js/utils/error-handler',
-  'Monei_MoneiPayment/js/utils/constants',
   'Monei_MoneiPayment/js/utils/payment-handler'
 ], function (
   ko,
@@ -26,7 +25,6 @@ define([
   globalMessageList,
   fullScreenLoader,
   errorHandler,
-  constants,
   paymentHandler
 ) {
   'use strict';
@@ -122,7 +120,7 @@ define([
 
     setTitle: function (result) {
       if (
-        result.paymentMethods.includes(constants.PAYMENT_METHODS.APPLE_PAY) &&
+        result.paymentMethods.includes(window.checkoutConfig.moneiPaymentMethods.APPLE_PAY) &&
         this.applePaySupported
       ) {
         this.paymentMethodTitle(window.checkoutConfig.payment[this.getCode()].appleTitle);

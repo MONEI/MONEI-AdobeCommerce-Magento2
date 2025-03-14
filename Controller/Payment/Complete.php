@@ -16,8 +16,6 @@ use Magento\Framework\Controller\Result\RedirectFactory;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\OrderFactory;
-use Monei\Model\PaymentMethods;
-use Monei\Model\PaymentStatus;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Api\PaymentProcessorInterface;
 use Monei\MoneiPayment\Model\Api\MoneiApiClient;
@@ -230,6 +228,7 @@ class Complete implements HttpGetActionInterface
 
             if ($orderId) {
                 $this->logger->info('[Complete] Retrieved order ID from payment: ' . $orderId);
+
                 return $orderId;
             }
         } catch (\Exception $e) {
@@ -239,6 +238,7 @@ class Complete implements HttpGetActionInterface
             $orderId = $this->getOrderIdFromSession();
             if ($orderId) {
                 $this->handleFailedPaymentWithSessionOrder($paymentId, $orderId, $params);
+
                 return $this->redirectToCart();
             }
         }
@@ -467,6 +467,7 @@ class Complete implements HttpGetActionInterface
             $order = $this->checkoutSession->getLastRealOrder();
             if ($order && $order->getIncrementId()) {
                 $this->logger->info('[Complete] Found order ID in session: ' . $order->getIncrementId());
+
                 return $order->getIncrementId();
             }
 
