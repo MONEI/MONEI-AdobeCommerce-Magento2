@@ -3,7 +3,10 @@
   ~ @author Monei Team
   ~ @copyright Copyright © Monei (https://monei.com)
   -->
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+<config
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd"
+>
   <default>
     <payment>
       <monei>
@@ -36,7 +39,7 @@
       <monei_card>
         <active>0</active>
         <model>MoneiCardPaymentFacade</model>
-            <title>Pay with card</title>
+        <title>Pay with card</title>
         <is_enabled_tokenization>0</is_enabled_tokenization>
         <allowspecific>0</allowspecific>
         <can_use_internal>1</can_use_internal>
@@ -51,7 +54,9 @@
         <can_authorize_vault>1</can_authorize_vault>
         <can_capture_vault>1</can_capture_vault>
         <order_place_redirect_url>1</order_place_redirect_url>
-        <json_style><![CDATA[{"base":{"height":"30px","padding":"0","font-size":"14px"},"input":{"height":"30px"}}]]></json_style>
+        <json_style
+          ><![CDATA[{"base":{"height":"30px","padding":"0","font-size":"14px"},"input":{"height":"30px"}}]]></json_style
+        >
       </monei_card>
       <monei_cc_vault>
         <active>1</active>
@@ -60,70 +65,70 @@
         <can_use_internal>0</can_use_internal>
       </monei_cc_vault>
       <monei_bizum>
-          <active>0</active>
-          <model>MoneiBizumPaymentFacade</model>
-          <title>Bizum</title>
-          <allowspecific>0</allowspecific>
-          <can_use_internal>1</can_use_internal>
-          <can_use_checkout>1</can_use_checkout>
-          <is_gateway>1</is_gateway>
-          <can_initialize>1</can_initialize>
-          <can_authorize>1</can_authorize>
-          <can_capture>1</can_capture>
-          <can_capture_partial>1</can_capture_partial>
-          <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
-          <can_refund>1</can_refund>
-          <json_style><![CDATA[{"base":{"height":"45px"}}]]></json_style>
+        <active>0</active>
+        <model>MoneiBizumPaymentFacade</model>
+        <title>Bizum</title>
+        <allowspecific>0</allowspecific>
+        <can_use_internal>1</can_use_internal>
+        <can_use_checkout>1</can_use_checkout>
+        <is_gateway>1</is_gateway>
+        <can_initialize>1</can_initialize>
+        <can_authorize>1</can_authorize>
+        <can_capture>1</can_capture>
+        <can_capture_partial>1</can_capture_partial>
+        <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+        <can_refund>1</can_refund>
+        <json_style><![CDATA[{"height":"45px"}]]></json_style>
       </monei_bizum>
       <monei_google_apple>
-          <active>0</active>
-          <model>MoneiGoogleApplePaymentFacade</model>
-          <title>Google/Apple Pay</title>
-          <title_google_insite>Google Pay</title_google_insite>
-          <title_apple_insite>Apple Pay</title_apple_insite>
-          <allowspecific>0</allowspecific>
-          <can_use_internal>1</can_use_internal>
-          <can_use_checkout>1</can_use_checkout>
-          <is_gateway>1</is_gateway>
-          <can_initialize>1</can_initialize>
-          <can_authorize>1</can_authorize>
-          <can_capture>1</can_capture>
-          <can_capture_partial>1</can_capture_partial>
-          <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
-          <can_refund>1</can_refund>
-          <json_style><![CDATA[{"base":{"height":"45px"}}]]></json_style>
+        <active>0</active>
+        <model>MoneiGoogleApplePaymentFacade</model>
+        <title>Google/Apple Pay</title>
+        <title_google_insite>Google Pay</title_google_insite>
+        <title_apple_insite>Apple Pay</title_apple_insite>
+        <allowspecific>0</allowspecific>
+        <can_use_internal>1</can_use_internal>
+        <can_use_checkout>1</can_use_checkout>
+        <is_gateway>1</is_gateway>
+        <can_initialize>1</can_initialize>
+        <can_authorize>1</can_authorize>
+        <can_capture>1</can_capture>
+        <can_capture_partial>1</can_capture_partial>
+        <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+        <can_refund>1</can_refund>
+        <json_style><![CDATA[{"height":"45px"}]]></json_style>
       </monei_google_apple>
       <monei_multibanco_redirect>
-          <active>0</active>
-          <model>MoneiMultibancoRedirectPaymentFacade</model>
-          <title>Multibanco</title>
-          <allowspecific>1</allowspecific>
-          <specificcountry>PT</specificcountry>
-          <can_use_internal>1</can_use_internal>
-          <can_use_checkout>1</can_use_checkout>
-          <is_gateway>1</is_gateway>
-          <can_initialize>1</can_initialize>
-          <can_authorize>1</can_authorize>
-          <can_capture>1</can_capture>
-          <can_capture_partial>1</can_capture_partial>
-          <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
-          <can_refund>1</can_refund>
+        <active>0</active>
+        <model>MoneiMultibancoRedirectPaymentFacade</model>
+        <title>Multibanco</title>
+        <allowspecific>1</allowspecific>
+        <specificcountry>PT</specificcountry>
+        <can_use_internal>1</can_use_internal>
+        <can_use_checkout>1</can_use_checkout>
+        <is_gateway>1</is_gateway>
+        <can_initialize>1</can_initialize>
+        <can_authorize>1</can_authorize>
+        <can_capture>1</can_capture>
+        <can_capture_partial>1</can_capture_partial>
+        <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+        <can_refund>1</can_refund>
       </monei_multibanco_redirect>
       <monei_mbway_redirect>
-          <active>0</active>
-          <model>MoneiMBWayRedirectPaymentFacade</model>
-          <title>MBWay</title>
-          <allowspecific>1</allowspecific>
-          <specificcountry>PT</specificcountry>
-          <can_use_internal>1</can_use_internal>
-          <can_use_checkout>1</can_use_checkout>
-          <is_gateway>1</is_gateway>
-          <can_initialize>1</can_initialize>
-          <can_authorize>1</can_authorize>
-          <can_capture>1</can_capture>
-          <can_capture_partial>1</can_capture_partial>
-          <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
-          <can_refund>1</can_refund>
+        <active>0</active>
+        <model>MoneiMBWayRedirectPaymentFacade</model>
+        <title>MBWay</title>
+        <allowspecific>1</allowspecific>
+        <specificcountry>PT</specificcountry>
+        <can_use_internal>1</can_use_internal>
+        <can_use_checkout>1</can_use_checkout>
+        <is_gateway>1</is_gateway>
+        <can_initialize>1</can_initialize>
+        <can_authorize>1</can_authorize>
+        <can_capture>1</can_capture>
+        <can_capture_partial>1</can_capture_partial>
+        <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+        <can_refund>1</can_refund>
       </monei_mbway_redirect>
     </payment>
   </default>

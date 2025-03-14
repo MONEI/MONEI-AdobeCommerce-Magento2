@@ -37,7 +37,7 @@ define([
     failOrderStatus: '',
     language: 'en',
     accountId: '',
-    jsonStyle: JSON.parse('{"base":{"height":"45px"}}'),
+    jsonStyle: JSON.parse('{"height":"45px"}'),
     isPlaceOrderActionAllowed: ko.observable(true),
 
     initialize: function () {

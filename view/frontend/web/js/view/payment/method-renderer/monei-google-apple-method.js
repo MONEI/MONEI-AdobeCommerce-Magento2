@@ -42,7 +42,7 @@ define([
     applePaySupported: '',
     language: 'en',
     accountId: '',
-    jsonStyle: JSON.parse('{"base":{"height":"45px"}}'),
+    jsonStyle: JSON.parse('{"height":"45px"}'),
     isEnabledGooglePay: ko.observable(false),
     isEnabledApplePay: ko.observable(false),
     paymentMethodTitle: ko.observable(''),
