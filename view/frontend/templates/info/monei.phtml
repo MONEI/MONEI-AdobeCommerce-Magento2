@@ -13,37 +13,8 @@ $paymentInfo = $block->getPaymentInfo();
 
     <?php if (!empty($paymentMethodDisplay)): ?>
         <div class="admin__page-section-item-content">
-            <?php if ($block->paymentMethodFormatter->getPaymentMethodIcon($paymentInfo)): ?>
-                <?= /* @noEscape */ $block->paymentMethodFormatter->getPaymentMethodIconHtml($paymentInfo, ['class' => 'payment-icon', 'style' => 'margin-right: 6px; vertical-align: middle;']) ?>
-            <?php endif; ?>
             <span class="payment_details"><?= $escaper->escapeHtml($paymentMethodDisplay) ?></span>
         </div>
-
-        <?php if (isset($paymentInfo['method']) && $paymentInfo['method'] === 'paypal'): ?>
-            <div class="payment-method-details">
-                <dl class="payment-method-details-list">
-                    <?php if (isset($paymentInfo['orderId']) && !empty($paymentInfo['orderId'])): ?>
-                        <dt><?= $escaper->escapeHtml(__('PayPal Order ID')) ?></dt>
-                        <dd><?= $escaper->escapeHtml($paymentInfo['orderId']) ?></dd>
-                    <?php endif; ?>
-
-                    <?php if (isset($paymentInfo['payerId']) && !empty($paymentInfo['payerId'])): ?>
-                        <dt><?= $escaper->escapeHtml(__('PayPal Customer ID')) ?></dt>
-                        <dd><?= $escaper->escapeHtml($paymentInfo['payerId']) ?></dd>
-                    <?php endif; ?>
-
-                    <?php if (isset($paymentInfo['email']) && !empty($paymentInfo['email'])): ?>
-                        <dt><?= $escaper->escapeHtml(__('Customer Email')) ?></dt>
-                        <dd><a href="mailto:<?= $escaper->escapeHtmlAttr($paymentInfo['email']) ?>"><?= $escaper->escapeHtml($paymentInfo['email']) ?></a></dd>
-                    <?php endif; ?>
-
-                    <?php if (isset($paymentInfo['name']) && !empty($paymentInfo['name'])): ?>
-                        <dt><?= $escaper->escapeHtml(__('Customer Name')) ?></dt>
-                        <dd><?= $escaper->escapeHtml($paymentInfo['name']) ?></dd>
-                    <?php endif; ?>
-                </dl>
-            </div>
-        <?php endif; ?>
     <?php endif; ?>
 <?php else: ?>
     <div class="admin__page-section-item-content">
