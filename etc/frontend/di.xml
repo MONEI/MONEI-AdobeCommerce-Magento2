@@ -18,7 +18,7 @@
     <arguments>
       <argument name="configProviders" xsi:type="array">
         <item name="monei_config_provider" xsi:type="object"
-          >Monei\MoneiPayment\Model\ConfigProvider</item
+          >Monei\MoneiPayment\Model\CheckoutConfigProvider</item
         >
       </argument>
     </arguments>

@@ -249,93 +249,93 @@ class PaymentMethod
                 'name' => 'Bizum',
                 'icon' => $this->getViewFileUrl('Monei_MoneiPayment::img/bizum.svg'),
                 'width' => '70px',
-                'height' => '24px'
+                'height' => '22px'
             ],
             self::TYPE_GOOGLE_PAY => [
                 'name' => 'Google Pay',
                 'icon' => $this->getViewFileUrl('Monei_MoneiPayment::img/google-pay.svg'),
                 'width' => '50px',
-                'height' => '24px'
+                'height' => '22px'
             ],
             self::TYPE_APPLE_PAY => [
                 'name' => 'Apple Pay',
                 'icon' => $this->getViewFileUrl('Monei_MoneiPayment::img/apple-pay.svg'),
                 'width' => '50px',
-                'height' => '24px'
+                'height' => '22px'
             ],
             self::TYPE_MBWAY => [
                 'name' => 'MB WAY',
                 'icon' => $this->getViewFileUrl('Monei_MoneiPayment::img/mbway.svg'),
                 'width' => '45px',
-                'height' => '24px'
+                'height' => '22px'
             ],
             self::TYPE_MULTIBANCO => [
                 'name' => 'Multibanco',
                 'icon' => $this->getViewFileUrl('Monei_MoneiPayment::img/multibanco.svg'),
                 'width' => '105px',
-                'height' => '24px'
+                'height' => '22px'
             ],
             self::TYPE_DEFAULT => [
                 'name' => 'Card',
                 'icon' => $this->getViewFileUrl('Monei_MoneiPayment::img/cards/default.svg'),
                 'width' => '40px',
-                'height' => '24px'
+                'height' => '22px'
             ],
             // Card brands
             self::CARD_TYPE_AMEX => [
                 'name' => 'American Express',
                 'icon' => $this->getViewFileUrl('Monei_MoneiPayment::img/cards/amex.svg'),
                 'width' => '40px',
-                'height' => '24px'
+                'height' => '22px'
             ],
             self::CARD_TYPE_DINERS => [
                 'name' => 'Diners Club',
                 'icon' => $this->getViewFileUrl('Monei_MoneiPayment::img/cards/diners.svg'),
                 'width' => '40px',
-                'height' => '24px'
+                'height' => '22px'
             ],
             self::CARD_TYPE_DISCOVER => [
                 'name' => 'Discover',
                 'icon' => $this->getViewFileUrl('Monei_MoneiPayment::img/cards/discover.svg'),
                 'width' => '40px',
-                'height' => '24px'
+                'height' => '22px'
             ],
             self::CARD_TYPE_JCB => [
                 'name' => 'JCB',
                 'icon' => $this->getViewFileUrl('Monei_MoneiPayment::img/cards/jcb.svg'),
                 'width' => '40px',
-                'height' => '24px'
+                'height' => '22px'
             ],
             self::CARD_TYPE_MAESTRO => [
                 'name' => 'Maestro',
                 'icon' => $this->getViewFileUrl('Monei_MoneiPayment::img/cards/maestro.svg'),
                 'width' => '40px',
-                'height' => '24px'
+                'height' => '22px'
             ],
             self::CARD_TYPE_MASTERCARD => [
                 'name' => 'MasterCard',
                 'icon' => $this->getViewFileUrl('Monei_MoneiPayment::img/cards/mastercard.svg'),
                 'width' => '40px',
-                'height' => '24px'
+                'height' => '22px'
             ],
             self::CARD_TYPE_UNIONPAY => [
                 'name' => 'UnionPay',
                 'icon' => $this->getViewFileUrl('Monei_MoneiPayment::img/cards/unionpay.svg'),
                 'width' => '40px',
-                'height' => '24px'
+                'height' => '22px'
             ],
             self::CARD_TYPE_VISA => [
                 'name' => 'Visa',
                 'icon' => $this->getViewFileUrl('Monei_MoneiPayment::img/cards/visa.svg'),
                 'width' => '40px',
-                'height' => '24px'
+                'height' => '22px'
             ],
             // Generic card
             self::TYPE_CARD => [
                 'name' => 'Card',
                 'icon' => $this->getViewFileUrl('Monei_MoneiPayment::img/cards/default.svg'),
                 'width' => '40px',
-                'height' => '24px'
+                'height' => '22px'
             ],
         ];
     }
