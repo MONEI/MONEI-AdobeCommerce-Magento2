@@ -10,12 +10,29 @@ namespace Monei\MoneiPayment\Helper;
 
 use Monei\Model\PaymentMethods;
 use Monei\MoneiPayment\Api\Helper\PaymentMethodFormatterInterface;
+use Monei\MoneiPayment\Helper\PaymentMethod;
 
 /**
  * Helper class for formatting payment method information
  */
 class PaymentMethodFormatter implements PaymentMethodFormatterInterface
 {
+    /**
+     * @var PaymentMethod
+     */
+    private $paymentMethodHelper;
+
+    /**
+     * PaymentMethodFormatter constructor.
+     *
+     * @param \Monei\MoneiPayment\Helper\PaymentMethod $paymentMethodHelper
+     */
+    public function __construct(
+        \Monei\MoneiPayment\Helper\PaymentMethod $paymentMethodHelper
+    ) {
+        $this->paymentMethodHelper = $paymentMethodHelper;
+    }
+
     /**
      * Format payment method display based on payment information
      *
@@ -30,7 +47,7 @@ class PaymentMethodFormatter implements PaymentMethodFormatterInterface
         if (isset($paymentInfo['brand']) && !empty($paymentInfo['brand'])) {
             // Card payment display
             $brand = strtolower($paymentInfo['brand']);
-            $paymentMethodDisplay = ucfirst($paymentInfo['brand']);
+            $paymentMethodDisplay = $this->paymentMethodHelper->getPaymentMethodName($brand);
 
             // Add card type inline if available
             if (isset($paymentInfo['type']) && !empty($paymentInfo['type'])) {
@@ -41,34 +58,33 @@ class PaymentMethodFormatter implements PaymentMethodFormatterInterface
                 $paymentMethodDisplay .= ' •••• ' . $paymentInfo['last4'];
             }
         } elseif (!empty($methodType)) {
-            // For non-card methods, format the method name nicely
-            switch ($methodType) {
-                case PaymentMethods::PAYMENT_METHODS_BIZUM:
-                    $paymentMethodDisplay = 'Bizum';
-                    // Add phone number for Bizum if available
-                    if (isset($paymentInfo['phoneNumber']) && !empty($paymentInfo['phoneNumber'])) {
-                        // Get last 3 digits of phone number
-                        $phoneLength = strlen($paymentInfo['phoneNumber']);
-                        $last3 = substr($paymentInfo['phoneNumber'], -3);
-                        $paymentMethodDisplay .= ' •••••' . $last3;
-                    }
+            // Get payment method display name using the helper
+            $methodDetails = $this->paymentMethodHelper->getPaymentMethodByMoneiCode($methodType);
 
-                    break;
-                case PaymentMethods::PAYMENT_METHODS_PAYPAL:
-                    $paymentMethodDisplay = 'PayPal';
+            if ($methodDetails && isset($methodDetails['name'])) {
+                $paymentMethodDisplay = $methodDetails['name'];
 
-                    break;
-                case PaymentMethods::PAYMENT_METHODS_MBWAY:
-                    $paymentMethodDisplay = 'MB WAY';
-
-                    break;
-                case PaymentMethods::PAYMENT_METHODS_MULTIBANCO:
-                    $paymentMethodDisplay = 'Multibanco';
-
-                    break;
-                default:
-                    // Fallback: Convert camelCase to Title Case with spaces
-                    $paymentMethodDisplay = ucfirst(preg_replace('/([a-z])([A-Z])/', '$1 $2', $methodType));
+                // Handle specific methods with extra formatting
+                switch ($methodType) {
+                    case PaymentMethods::PAYMENT_METHODS_BIZUM:
+                        // Add phone number for Bizum if available
+                        if (isset($paymentInfo['phoneNumber']) && !empty($paymentInfo['phoneNumber'])) {
+                            // Get last 3 digits of phone number
+                            $last3 = substr($paymentInfo['phoneNumber'], -3);
+                            $paymentMethodDisplay .= ' •••••' . $last3;
+                        }
+                        break;
+                }
+            } else {
+                // Handle specific methods not in the mapping
+                switch ($methodType) {
+                    case PaymentMethods::PAYMENT_METHODS_PAYPAL:
+                        $paymentMethodDisplay = 'PayPal';
+                        break;
+                    default:
+                        // Fallback: Convert camelCase to Title Case with spaces
+                        $paymentMethodDisplay = ucfirst(preg_replace('/([a-z])([A-Z])/', '$1 $2', $methodType));
+                }
             }
         }
 
@@ -83,10 +99,10 @@ class PaymentMethodFormatter implements PaymentMethodFormatterInterface
      */
     public function formatWalletDisplay(string $walletValue): string
     {
-        if ($walletValue === PaymentMethods::PAYMENT_METHODS_GOOGLE_PAY) {
-            return 'Google Pay';
-        } elseif ($walletValue === PaymentMethods::PAYMENT_METHODS_APPLE_PAY) {
-            return 'Apple Pay';
+        $methodDetails = $this->paymentMethodHelper->getPaymentMethodByMoneiCode($walletValue);
+
+        if ($methodDetails && isset($methodDetails['name'])) {
+            return $methodDetails['name'];
         } elseif ($walletValue === PaymentMethods::PAYMENT_METHODS_CLICK_TO_PAY) {
             return 'Click to Pay';
         } else {
@@ -133,5 +149,92 @@ class PaymentMethodFormatter implements PaymentMethodFormatterInterface
 
         // If we can't format it properly, return the original cleaned number
         return $phoneNumber;
+    }
+
+    /**
+     * Get payment method icon URL based on payment information
+     *
+     * @param array $paymentInfo Payment information array
+     * @return string|null Icon URL
+     */
+    public function getPaymentMethodIcon(array $paymentInfo): ?string
+    {
+        $methodType = $paymentInfo['method'] ?? '';
+        $cardType = strtolower($paymentInfo['brand'] ?? '');
+
+        if (!empty($methodType)) {
+            return $this->paymentMethodHelper->getIconFromPaymentType($methodType, $cardType);
+        } elseif (!empty($cardType)) {
+            return $this->paymentMethodHelper->getCardIcon($cardType);
+        }
+
+        return null;
+    }
+
+    /**
+     * Get payment method dimensions based on payment information
+     *
+     * @param array $paymentInfo Payment information array
+     * @return array Width and height values
+     */
+    public function getPaymentMethodDimensions(array $paymentInfo): array
+    {
+        $methodType = $paymentInfo['method'] ?? '';
+        $cardType = strtolower($paymentInfo['brand'] ?? '');
+
+        if (!empty($methodType)) {
+            $methodDetails = $this->paymentMethodHelper->getPaymentMethodByMoneiCode($methodType);
+            if ($methodDetails) {
+                return [
+                    'width' => $methodDetails['width'] ?? '40px',
+                    'height' => $methodDetails['height'] ?? '24px'
+                ];
+            }
+        } elseif (!empty($cardType)) {
+            return $this->paymentMethodHelper->getPaymentMethodDimensions($cardType);
+        }
+
+        return [
+            'width' => '40px',
+            'height' => '24px'
+        ];
+    }
+
+    /**
+     * Generate HTML for payment method icon
+     *
+     * @param array $paymentInfo Payment information array
+     * @param array $attributes Additional HTML attributes for the img tag
+     * @return string HTML img tag
+     */
+    public function getPaymentMethodIconHtml(array $paymentInfo, array $attributes = []): string
+    {
+        $iconUrl = $this->getPaymentMethodIcon($paymentInfo);
+        if (!$iconUrl) {
+            return '';
+        }
+
+        $dimensions = $this->getPaymentMethodDimensions($paymentInfo);
+        $alt = $this->formatPaymentMethodDisplay($paymentInfo);
+
+        $htmlAttributes = [
+            'src' => $iconUrl,
+            'alt' => $alt,
+            'title' => $alt,
+            'width' => $dimensions['width'],
+            'height' => $dimensions['height'],
+            'class' => 'payment-icon'
+        ];
+
+        // Merge with additional attributes
+        $htmlAttributes = array_merge($htmlAttributes, $attributes);
+
+        // Build HTML attributes string
+        $attributesString = '';
+        foreach ($htmlAttributes as $key => $value) {
+            $attributesString .= ' ' . $key . '="' . htmlspecialchars($value) . '"';
+        }
+
+        return '<img' . $attributesString . '>';
     }
 }

@@ -13,6 +13,9 @@ $paymentInfo = $block->getPaymentInfo();
 
     <?php if (!empty($paymentMethodDisplay)): ?>
         <div class="admin__page-section-item-content">
+            <?php if ($block->paymentMethodFormatter->getPaymentMethodIcon($paymentInfo)): ?>
+                <?= /* @noEscape */ $block->paymentMethodFormatter->getPaymentMethodIconHtml($paymentInfo, ['class' => 'payment-icon', 'style' => 'margin-right: 6px; vertical-align: middle;']) ?>
+            <?php endif; ?>
             <span class="payment_details"><?= $escaper->escapeHtml($paymentMethodDisplay) ?></span>
         </div>
     <?php endif; ?>

@@ -353,7 +353,18 @@ class PaymentMethod
                 '_secure' => $this->request->isSecure()
             ];
 
-            return $this->assetRepo->getUrlWithParams($fileId, $params);
+            // Start store emulation to ensure proper area context
+            $storeId = $this->storeManager->getStore()->getId();
+            $this->appEmulation->startEnvironmentEmulation($storeId);
+
+            try {
+                $url = $this->assetRepo->getUrlWithParams($fileId, $params);
+            } finally {
+                // Stop emulation regardless of success or failure
+                $this->appEmulation->stopEnvironmentEmulation();
+            }
+
+            return $url;
         } catch (LocalizedException $e) {
             return null;
         }

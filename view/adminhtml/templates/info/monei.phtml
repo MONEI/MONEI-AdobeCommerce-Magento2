@@ -5,9 +5,7 @@
  * @copyright Copyright © Monei (https://monei.com)
  */
 
-/**
- * @var $block \Monei\MoneiPayment\Block\Info\Monei
- */
+/** @var $block \Monei\MoneiPayment\Block\Info\Monei */
 $paymentTitle = $block->getPaymentTitle();
 $paymentInfo = $block->getPaymentInfo();
 ?>
@@ -29,16 +27,45 @@ $paymentInfo = $block->getPaymentInfo();
             <tr>
                 <th><?= $escaper->escapeHtml(__('Payment Method')) ?></th>
                 <td>
-                    <?= $escaper->escapeHtml($paymentMethodDisplay) ?>
+                    <?php if ($block->paymentMethodFormatter->getPaymentMethodIcon($paymentInfo)): ?>
+                        <?= /* @noEscape */ $block->paymentMethodFormatter->getPaymentMethodIconHtml($paymentInfo, ['class' => 'payment-icon', 'style' => 'vertical-align: middle;']) ?>
+                    <?php endif; ?>
+                    <?php
+                    // Show card type and last4 but not the brand name
+                    $cardDetails = '';
+                    if (isset($paymentInfo['type']) && !empty($paymentInfo['type'])) {
+                        $cardDetails .= ucfirst($paymentInfo['type']) . ' ';
+                    }
+                    if (isset($paymentInfo['last4']) && !empty($paymentInfo['last4'])) {
+                        $cardDetails .= '•••• ' . $paymentInfo['last4'];
+                    }
+
+                    if (!empty($cardDetails)) {
+                        echo $escaper->escapeHtml($cardDetails);
+                    } elseif (empty($block->paymentMethodFormatter->getPaymentMethodIcon($paymentInfo))) {
+                        // Fallback if no icon and no card details
+                        echo $escaper->escapeHtml($paymentMethodDisplay);
+                    }
+                    ?>
                 </td>
             </tr>
 
-            <?php if (isset($paymentInfo['tokenizationMethod']) && !empty($paymentInfo['tokenizationMethod'])):
+            <?php
+            if (isset($paymentInfo['tokenizationMethod']) && !empty($paymentInfo['tokenizationMethod'])):
                 $walletValue = $block->formatWalletDisplay($paymentInfo['tokenizationMethod']);
                 ?>
                 <tr>
                     <th><?= $escaper->escapeHtml(__('Digital Wallet')) ?></th>
-                    <td><?= $escaper->escapeHtml($walletValue) ?></td>
+                    <td>
+                        <?php
+                        $walletInfo = ['method' => $paymentInfo['tokenizationMethod']];
+                        if ($block->paymentMethodFormatter->getPaymentMethodIcon($walletInfo)):
+                            ?>
+                            <?= /* @noEscape */ $block->paymentMethodFormatter->getPaymentMethodIconHtml($walletInfo, ['class' => 'payment-icon', 'style' => 'vertical-align: middle;']) ?>
+                        <?php else: ?>
+                            <?= $escaper->escapeHtml($walletValue) ?>
+                        <?php endif; ?>
+                    </td>
                 </tr>
             <?php endif; ?>
 

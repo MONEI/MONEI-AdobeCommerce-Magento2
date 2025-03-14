@@ -53,7 +53,7 @@ class Monei extends Info
     /**
      * @var PaymentMethodFormatterInterface
      */
-    private PaymentMethodFormatterInterface $paymentMethodFormatter;
+    public PaymentMethodFormatterInterface $paymentMethodFormatter;
 
     /**
      * Constructor.
