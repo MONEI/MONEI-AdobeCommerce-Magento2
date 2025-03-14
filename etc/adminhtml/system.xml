@@ -243,7 +243,7 @@
           showInWebsite="1"
           showInStore="1"
         >
-          <label>Monei Redirect:</label>
+          <label>MONEI Redirect:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
         </field>
         <field
@@ -345,7 +345,7 @@
           showInWebsite="1"
           showInStore="1"
         >
-          <label>Monei Card Insite:</label>
+          <label>MONEI Card Insite:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
         </field>
         <field
@@ -477,7 +477,7 @@
           showInWebsite="1"
           showInStore="1"
         >
-          <label>Monei Bizum Insite:</label>
+          <label>MONEI Bizum Insite:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
         </field>
         <field
@@ -593,7 +593,7 @@
           showInWebsite="1"
           showInStore="1"
         >
-          <label>Monei Google and Apple Pay Insite:</label>
+          <label>MONEI Google and Apple Pay Insite:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
         </field>
         <field
@@ -747,6 +747,22 @@
           <backend_model>Monei\MoneiPayment\Model\Config\Backend\EnableMultibanco</backend_model>
         </field>
         <field
+          id="title_multibanco_redirect"
+          translate="label comment"
+          type="text"
+          sortOrder="395"
+          showInDefault="1"
+          showInWebsite="1"
+          showInStore="1"
+        >
+          <label>Title Multibanco</label>
+          <comment>Text that will be displayed in checkout for Multibanco</comment>
+          <config_path>payment/monei_multibanco_redirect/title</config_path>
+          <depends>
+            <field id="active_multibanco_redirect">1</field>
+          </depends>
+        </field>
+        <field
           id="allowspecific_multibanco_redirect"
           translate="label comment"
           sortOrder="400"
@@ -825,6 +841,22 @@
           <backend_model>Monei\MoneiPayment\Model\Config\Backend\EnableMBWay</backend_model>
         </field>
         <field
+          id="title_mbway_redirect"
+          translate="label comment"
+          type="text"
+          sortOrder="445"
+          showInDefault="1"
+          showInWebsite="1"
+          showInStore="1"
+        >
+          <label>Title MBWay</label>
+          <comment>Text that will be displayed in checkout for MBWay</comment>
+          <config_path>payment/monei_mbway_redirect/title</config_path>
+          <depends>
+            <field id="active_mbway_redirect">1</field>
+          </depends>
+        </field>
+        <field
           id="allowspecific_mbway_redirect"
           translate="label comment"
           sortOrder="450"
@@ -885,7 +917,7 @@
           showInWebsite="1"
           showInStore="1"
         >
-          <label>Monei PayPal Insite:</label>
+          <label>MONEI PayPal Insite:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
         </field>
         <field

@@ -400,6 +400,17 @@
       >
     </arguments>
   </virtualType>
+  <type name="Monei\MoneiPayment\Model\Config\MoneiMultibancoRedirectPaymentModuleConfig">
+    <arguments>
+      <argument name="scopeConfig" xsi:type="object"
+        >Magento\Framework\App\Config\ScopeConfigInterface</argument
+      >
+    </arguments>
+  </type>
+  <preference
+    for="Monei\MoneiPayment\Api\Config\MoneiMultibancoRedirectPaymentModuleConfigInterface"
+    type="Monei\MoneiPayment\Model\Config\MoneiMultibancoRedirectPaymentModuleConfig"
+  />
   <virtualType
     name="MoneiMultibancoRedirectPaymentFacade"
     type="Magento\Payment\Model\Method\Adapter"
@@ -446,6 +457,17 @@
       >
     </arguments>
   </virtualType>
+  <type name="Monei\MoneiPayment\Model\Config\MoneiMBWayRedirectPaymentModuleConfig">
+    <arguments>
+      <argument name="scopeConfig" xsi:type="object"
+        >Magento\Framework\App\Config\ScopeConfigInterface</argument
+      >
+    </arguments>
+  </type>
+  <preference
+    for="Monei\MoneiPayment\Api\Config\MoneiMBWayRedirectPaymentModuleConfigInterface"
+    type="Monei\MoneiPayment\Model\Config\MoneiMBWayRedirectPaymentModuleConfig"
+  />
   <virtualType name="MoneiMBWayRedirectPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
     <arguments>
       <argument name="code" xsi:type="const"

@@ -25,7 +25,7 @@ define(['Magento_Ui/js/model/messageList', 'jquery'], function (globalMessageLis
       if (this.isEnabled && (!this.accountId || !this.apiKey)) {
         globalMessageList.addErrorMessage({
           message: $.mage.__(
-            'Monei payment methods are not available. Please, check your Monei configuration.'
+            'MONEI payment methods are not available. Please, check your MONEI configuration.'
           )
         });
       }
