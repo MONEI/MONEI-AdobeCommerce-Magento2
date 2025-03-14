@@ -213,10 +213,9 @@ define([
             }
           })
           .catch(function (error) {
-            console.log(error);
-            fullScreenLoader.stopLoader();
-            //Enable the button of place order
-            self.isPlaceOrderActionAllowed(true);
+            deferred.reject({
+              message: $t('An error occurred with the payment. Please try again.')
+            });
           });
 
         return false;

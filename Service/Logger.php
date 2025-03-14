@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service;
 
+use Monei\MoneiPayment\Model\Config\Source\LogLevel;
 use Monolog\Logger as MonologLogger;
 
 /**
@@ -62,26 +63,14 @@ class Logger extends MonologLogger
     {
         if (empty($data)) {
             $this->debug("API Request: {$operation}", []);
-
             return;
         }
 
-        // Convert object to array if necessary
-        if (is_object($data)) {
-            if (method_exists($data, 'toArray')) {
-                $data = $data->toArray();
-            } elseif (method_exists($data, '__toArray')) {
-                $data = $data->__toArray();
-            } else {
-                $data = (array) $data;
-            }
-        }
-
-        // Sanitize sensitive data
+        // Convert and sanitize data
         $sanitizedData = $this->sanitizeData($data);
 
         // Pretty-print the JSON for the log
-        $prettyJson = json_encode(['request' => $sanitizedData], self::JSON_OPTIONS);
+        $prettyJson = $this->formatJsonForLog(['request' => $sanitizedData]);
         $this->debug("API Request: {$operation} " . $prettyJson);
     }
 
@@ -94,22 +83,11 @@ class Logger extends MonologLogger
      */
     public function logApiResponse(string $operation, $data): void
     {
-        // Convert object to array if necessary
-        if (is_object($data)) {
-            if (method_exists($data, 'toArray')) {
-                $data = $data->toArray();
-            } elseif (method_exists($data, '__toArray')) {
-                $data = $data->__toArray();
-            } else {
-                $data = (array) $data;
-            }
-        }
-
-        // Sanitize sensitive data
+        // Convert and sanitize data
         $sanitizedData = $this->sanitizeData($data);
 
         // Pretty-print the JSON for the log
-        $prettyJson = json_encode(['response' => $sanitizedData], self::JSON_OPTIONS);
+        $prettyJson = $this->formatJsonForLog(['response' => $sanitizedData]);
         $this->debug("API Response: {$operation} " . $prettyJson);
     }
 
@@ -127,7 +105,7 @@ class Logger extends MonologLogger
         $sanitizedData = $this->sanitizeData($context);
 
         // Pretty-print the JSON for the log
-        $prettyJson = json_encode($sanitizedData, self::JSON_OPTIONS);
+        $prettyJson = $this->formatJsonForLog($sanitizedData);
         $this->critical("API Error: {$operation} - {$message} " . $prettyJson);
     }
 
@@ -153,48 +131,27 @@ class Logger extends MonologLogger
         }
 
         // Pretty-print the JSON for the log
-        $prettyJson = json_encode($context, self::JSON_OPTIONS);
+        $prettyJson = $this->formatJsonForLog($context);
         $this->info("Payment {$type} " . $prettyJson);
     }
 
     /**
-     * {@inheritDoc}
+     * Format data as pretty JSON for logging
+     *
+     * @param array|object $data Data to format
+     * @return string Formatted JSON string
      */
-    public function debug($message, array $context = []): void
+    private function formatJsonForLog($data): string
     {
-        parent::debug($message, $context);
-    }
+        if (empty($data)) {
+            return '{}';
+        }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function info($message, array $context = []): void
-    {
-        parent::info($message, $context);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function warning($message, array $context = []): void
-    {
-        parent::warning($message, $context);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function error($message, array $context = []): void
-    {
-        parent::error($message, $context);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function critical($message, array $context = []): void
-    {
-        parent::critical($message, $context);
+        try {
+            return json_encode($data, self::JSON_OPTIONS) ?: '{}';
+        } catch (\Throwable $e) {
+            return json_encode(['error' => 'Unable to encode data to JSON', 'message' => $e->getMessage()]);
+        }
     }
 
     /**
@@ -225,7 +182,6 @@ class Logger extends MonologLogger
             // Mask sensitive fields - ensure key is a string before using strtolower
             if (is_string($key) && in_array(strtolower($key), array_map('strtolower', $this->sensitiveFields))) {
                 $data[$key] = self::MASKED_VALUE;
-
                 continue;
             }
 

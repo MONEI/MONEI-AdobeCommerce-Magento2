@@ -22,14 +22,11 @@ define(['jquery', 'loader', 'moneijs', 'mage/translate'], function ($, _, monei,
     $('#monei-payment-loading-container').trigger('processStart');
 
     function redirectToComplete() {
-      console.log('redirectToComplete');
-      var redirectUrl = completeUrl + '?id=' + encodeURIComponent(paymentId);
-
-      if (orderId) {
-        redirectUrl += '&order_id=' + encodeURIComponent(orderId);
+      if (this.successUrl) {
+        window.location.href = this.successUrl;
+      } else {
+        window.location.reload();
       }
-
-      window.location.href = redirectUrl;
     }
 
     function checkPaymentStatus() {
@@ -45,9 +42,6 @@ define(['jquery', 'loader', 'moneijs', 'mage/translate'], function ($, _, monei,
         .getPayment(paymentId)
         .then(function (result) {
           if (result && result.status) {
-            console.log('Payment status:', result.status);
-
-            // If payment has a final status, redirect to complete URL
             if (result.status !== 'PENDING') {
               // Redirect to complete endpoint with payment ID
               redirectToComplete();
@@ -63,7 +57,6 @@ define(['jquery', 'loader', 'moneijs', 'mage/translate'], function ($, _, monei,
           }
         })
         .catch(function (error) {
-          console.error('Error checking payment status:', error);
           // Error getting status, try again
           attempts++;
           setTimeout(checkPaymentStatus, checkInterval);

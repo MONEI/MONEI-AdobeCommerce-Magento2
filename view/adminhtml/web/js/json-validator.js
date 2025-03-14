@@ -22,15 +22,11 @@ define(['jquery', 'mage/translate', 'jquery/validate'], function ($, $t) {
             JSON.parse(value);
             return true;
           } catch (e) {
-            console.error('JSON validation error:', e.message);
             return false;
           }
         },
         $t('Please enter valid JSON. Examples: {"height":"45px"} or {"base":{"height":"30px"}}')
       );
-
-      // Debug message to confirm validator is registered
-      console.log('MONEI: JSON validator registered');
     }
 
     // Initialize validation on document ready
@@ -63,8 +59,6 @@ define(['jquery', 'mage/translate', 'jquery/validate'], function ($, $t) {
             }
           });
         });
-
-        console.log('MONEI: JSON validator initialization complete');
       } catch (e) {
         console.error('MONEI: Error initializing JSON validator', e);
       }

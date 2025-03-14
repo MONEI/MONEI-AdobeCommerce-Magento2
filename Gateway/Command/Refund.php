@@ -72,73 +72,73 @@ class Refund implements CommandInterface
             $paymentId = $payment->getLastTransId();
         }
 
-        // If payment ID is still empty, throw an exception
+        // Ensure we have a valid payment ID
         if (empty($paymentId)) {
-            $this->logger->critical('[Missing payment ID] Cannot refund payment without a valid payment ID');
-
-            throw new LocalizedException(__('Cannot process refund: Monei payment ID is missing.'));
+            $this->logger->logApiError(
+                'refund',
+                'Cannot refund payment without a valid payment ID',
+                ['order_id' => $payment->getOrder()->getIncrementId()]
+            );
+            throw new LocalizedException(__('Cannot refund payment: Missing payment ID'));
         }
 
-        $data = [
-            'paymentId' => $paymentId,
-            'amount' => $commandSubject['amount'],  // Amount will be converted to cents in the service
-            'refundReason' => $payment->getCreditmemo()->getData('refund_reason') ?? 'requested_by_customer',
-            'storeId' => (int) $order->getStoreId(),
-        ];
-
-        $this->logger->debug('[Refund payment request]');
-        $this->logger->debug(sprintf(
-            'Request data: paymentId=%s, amount=%s, reason=%s',
-            $paymentId,
-            $commandSubject['amount'],
-            $data['refundReason']
-        ));
-
         try {
+            // Prepare refund request data
+            $data = [
+                'amount' => $commandSubject['amount'],
+                'paymentId' => $paymentId,
+                'reason' => __('Order refund from Magento admin')
+            ];
+
+            // Log the refund request
+            $this->logger->logApiRequest('refund', [
+                'payment_id' => $paymentId,
+                'amount' => $commandSubject['amount'],
+                'order_id' => $payment->getOrder()->getIncrementId(),
+                'currency' => $payment->getOrder()->getOrderCurrencyCode()
+            ]);
+
             // Execute the refund request
             $response = $this->refundPaymentService->execute($data);
 
             // Log the response for debugging
-            $this->logger->debug('[Refund payment response]');
-            $this->logger->debug(sprintf(
-                'Response type: %s',
-                is_object($response) ? get_class($response) : gettype($response)
-            ));
+            $this->logger->logApiResponse('refund', $response);
 
             // Get the refund ID from the response
-            $refundId = $response->getId();
+            $refundId = $response['refund_id'] ?? null;
 
             if ($refundId) {
-                // Update payment transaction IDs
+                // Store the refund transaction ID
                 $payment->setTransactionId($refundId);
-                $payment->setLastTransId($refundId);
+                $payment->setIsTransactionClosed(true);
+                $payment->setShouldCloseParentTransaction(true);
 
-                // Update payment additional information
-                $payment->setAdditionalInformation(
-                    PaymentInfoInterface::PAYMENT_STATUS,
-                    $payment->getCreditmemo()->getBaseGrandTotal() >= $order->getBaseGrandTotal()
-                        ? Status::REFUNDED
-                        : Status::PARTIALLY_REFUNDED
+                $this->logger->logPaymentEvent(
+                    'refund_success',
+                    $payment->getOrder()->getIncrementId(),
+                    $paymentId,
+                    ['refund_id' => $refundId]
                 );
-
-                $this->logger->info(sprintf(
-                    '[Refund transaction ID stored] Order %s, transaction ID: %s',
-                    $order->getIncrementId(),
-                    $refundId
-                ));
             } else {
-                $this->logger->warning(sprintf(
-                    '[No refund ID found in response] Order %s',
-                    $order->getIncrementId()
-                ));
+                $this->logger->logApiError(
+                    'refund',
+                    'No refund ID found in response',
+                    [
+                        'order_id' => $payment->getOrder()->getIncrementId(),
+                        'payment_id' => $paymentId
+                    ]
+                );
             }
         } catch (\Exception $e) {
-            $this->logger->error(sprintf(
-                '[Refund payment error] Order %s: %s',
-                $order->getIncrementId(),
-                $e->getMessage()
-            ));
-
+            $this->logger->logApiError(
+                'refund',
+                'Refund payment error: ' . $e->getMessage(),
+                [
+                    'order_id' => $payment->getOrder()->getIncrementId(),
+                    'payment_id' => $paymentId,
+                    'amount' => $commandSubject['amount']
+                ]
+            );
             throw new LocalizedException(__('Error processing refund: %1', $e->getMessage()));
         }
 

@@ -44,6 +44,22 @@
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
         </field>
         <field
+          id="log_level"
+          translate="label comment"
+          sortOrder="25"
+          type="select"
+          showInDefault="1"
+          showInWebsite="1"
+          showInStore="1"
+        >
+          <label>Log Level</label>
+          <comment
+            >Select the logging level for debug purposes. Higher levels include all lower
+            levels.</comment
+          >
+          <source_model>Monei\MoneiPayment\Model\Config\Source\LogLevel</source_model>
+        </field>
+        <field
           id="mode"
           translate="label comment"
           sortOrder="30"

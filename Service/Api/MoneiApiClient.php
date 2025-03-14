@@ -104,7 +104,10 @@ class MoneiApiClient
                 // Store the SDK instance in cache
                 $this->instances[$cacheKey] = $monei;
 
-                $this->logger->debug('SDK initialized', ['store_id' => $currentStoreId]);
+                $this->logger->logApiRequest('sdk_init', [
+                    'store_id' => $currentStoreId,
+                    'mode' => $apiKey ? 'custom' : 'config'
+                ]);
             } catch (LocalizedException $e) {
                 $this->logger->logApiError('initSdk', $e->getMessage(), [
                     'store_id' => $currentStoreId
@@ -198,8 +201,9 @@ class MoneiApiClient
             // Store the SDK instance in cache
             $this->instances[$cacheKey] = $monei;
 
-            $this->logger->debug('SDK reinitialized with provided API key', [
-                'store_id' => $currentStoreId
+            $this->logger->logApiRequest('sdk_reinit', [
+                'api_key_length' => strlen($apiKey),
+                'with_custom_key' => true
             ]);
 
             return $monei;
@@ -252,39 +256,36 @@ class MoneiApiClient
      */
     public function convertResponseToArray($response): array
     {
-        // Already an array
         if (is_array($response)) {
             return $response;
         }
 
-        // Null response
         if ($response === null) {
             return [];
         }
 
-        try {
-            // For SDK models, use the jsonSerialize method directly
-            if (method_exists($response, 'jsonSerialize')) {
-                return (array) $response->jsonSerialize();
+        if (is_object($response)) {
+            if (method_exists($response, 'toArray')) {
+                return $response->toArray();
             }
 
-            // Fallback for any other object types
-            if (is_object($response)) {
+            if (method_exists($response, '__toArray')) {
+                return $response->__toArray();
+            }
+
+            try {
+                // Try to convert using JSON serialization
                 return json_decode(json_encode($response), true) ?: [];
+            } catch (\Throwable $e) {
+                $this->logger->logApiError('response_conversion', 'Failed to convert response to array', [
+                    'response_type' => get_class($response),
+                    'error' => $e->getMessage()
+                ]);
+                return ['error' => 'Failed to convert response: ' . $e->getMessage()];
             }
-
-            // For any other types, return empty array
-            return [];
-        } catch (\Exception $e) {
-            $this->logger->warning('Failed to convert response to array', [
-                'exception' => get_class($e),
-                'message' => $e->getMessage(),
-                'response_type' => gettype($response),
-                'response_class' => is_object($response) ? get_class($response) : null
-            ]);
-
-            return [];
         }
+
+        return ['data' => $response];
     }
 
     /**
@@ -303,7 +304,7 @@ class MoneiApiClient
             : $this->moduleConfig->getProductionApiKey($storeId);
 
         // Log configuration details in debug mode only
-        $this->logger->debug('API configuration loaded', [
+        $this->logger->logApiRequest('api_config_load', [
             'store_id' => $storeId,
             'mode' => $isTestMode ? 'Test' : 'Production',
             'api_key_configured' => !empty($apiKey)

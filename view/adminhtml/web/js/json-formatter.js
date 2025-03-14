@@ -25,15 +25,8 @@ define(['jquery', 'jquery/ui', 'Magento_Ui/js/modal/alert', 'mage/translate'], f
      * @private
      */
     _create: function () {
-      if (this.options.debug) {
-        console.log('MONEI: Initializing JSON Formatter widget', this.element);
-      }
-
-      try {
-        this._bindFormatButton();
-      } catch (e) {
-        console.error('MONEI: Error initializing JSON Formatter widget', e);
-      }
+      this._bindEvents();
+      this._updateTextarea();
     },
 
     /**
@@ -91,7 +84,6 @@ define(['jquery', 'jquery/ui', 'Magento_Ui/js/modal/alert', 'mage/translate'], f
   $(function () {
     try {
       $('textarea.validate-json').moneiJsonFormatter({debug: true});
-      console.log('MONEI: jsonFormatter initialized on textareas');
     } catch (e) {
       console.error('MONEI: Error initializing JSON fields', e);
     }
