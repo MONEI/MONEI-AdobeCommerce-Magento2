@@ -16,10 +16,10 @@ use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentInSiteInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
+use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use Monei\MoneiPayment\Service\CreatePayment;
 use Monei\MoneiPayment\Service\Logger;
 
 /**
@@ -40,9 +40,9 @@ class CreateLoggedMoneiPaymentInSite extends AbstractCheckoutService implements 
     /**
      * Service for creating Monei payments.
      *
-     * @var CreatePayment
+     * @var CreatePaymentInterface
      */
-    private CreatePayment $createPayment;
+    private CreatePaymentInterface $createPayment;
 
     /**
      * Customer details service
@@ -69,7 +69,7 @@ class CreateLoggedMoneiPaymentInSite extends AbstractCheckoutService implements 
      * @param GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote Customer details service
      * @param GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress Address details service
      * @param MoneiPaymentModuleConfigInterface $moduleConfig Module configuration
-     * @param CreatePayment $createPayment Payment creation service
+     * @param CreatePaymentInterface $createPayment Payment creation service
      * @param GetPaymentInterface $getPaymentService Service to retrieve payment details
      */
     public function __construct(
@@ -81,7 +81,7 @@ class CreateLoggedMoneiPaymentInSite extends AbstractCheckoutService implements 
         GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote,
         GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress,
         MoneiPaymentModuleConfigInterface $moduleConfig,
-        CreatePayment $createPayment,
+        CreatePaymentInterface $createPayment,
         GetPaymentInterface $getPaymentService
     ) {
         parent::__construct(

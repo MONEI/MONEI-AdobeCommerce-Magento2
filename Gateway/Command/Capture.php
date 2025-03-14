@@ -16,7 +16,7 @@ use Monei\MoneiPayment\Api\Data\PaymentInfoInterface;
 use Monei\MoneiPayment\Api\Service\CapturePaymentInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Model\Payment\Status;
-use Psr\Log\LoggerInterface;
+use Monei\MoneiPayment\Service\Logger;
 
 /**
  * Capture Monei payment command.
@@ -29,17 +29,17 @@ class Capture implements CommandInterface
     private $capturePaymentService;
 
     /**
-     * @var LoggerInterface
+     * @var Logger
      */
     private $logger;
 
     /**
      * @param CapturePaymentInterface $capturePaymentService
-     * @param LoggerInterface $logger
+     * @param Logger $logger
      */
     public function __construct(
         CapturePaymentInterface $capturePaymentService,
-        LoggerInterface $logger
+        Logger $logger
     ) {
         $this->capturePaymentService = $capturePaymentService;
         $this->logger = $logger;

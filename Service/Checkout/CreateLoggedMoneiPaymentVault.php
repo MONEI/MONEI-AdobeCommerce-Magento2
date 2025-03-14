@@ -19,10 +19,10 @@ use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentVaultInterfa
 use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
 use Monei\MoneiPayment\Api\Service\ConfirmPaymentInterface;
+use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use Monei\MoneiPayment\Service\CreatePayment;
 use Monei\MoneiPayment\Service\Logger;
 
 /**
@@ -57,9 +57,9 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
     /**
      * Service to create payment in Monei.
      *
-     * @var CreatePayment
+     * @var CreatePaymentInterface
      */
-    private CreatePayment $createPayment;
+    private CreatePaymentInterface $createPayment;
 
     /**
      * Service to confirm payment in Monei.
@@ -79,7 +79,7 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
      * @param GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote Service to retrieve customer details
      * @param GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress Service to retrieve address details
      * @param PaymentTokenManagementInterface $tokenManagement For handling saved payment methods
-     * @param CreatePayment $createPayment Service to create payment in Monei
+     * @param CreatePaymentInterface $createPayment Service to create payment in Monei
      * @param GetPaymentInterface $getPaymentService Service to retrieve payment details
      * @param ConfirmPaymentInterface $confirmPayment Service to confirm payment in Monei
      */
@@ -92,7 +92,7 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
         GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote,
         GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress,
         PaymentTokenManagementInterface $tokenManagement,
-        CreatePayment $createPayment,
+        CreatePaymentInterface $createPayment,
         GetPaymentInterface $getPaymentService,
         ConfirmPaymentInterface $confirmPayment
     ) {

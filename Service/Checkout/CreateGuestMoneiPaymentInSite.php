@@ -18,10 +18,10 @@ use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateGuestMoneiPaymentInSiteInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
+use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use Monei\MoneiPayment\Service\CreatePayment;
 use Monei\MoneiPayment\Service\Logger;
 
 /**
@@ -63,9 +63,9 @@ class CreateGuestMoneiPaymentInSite extends AbstractCheckoutService implements C
     /**
      * Create Payment Service.
      *
-     * @var CreatePayment
+     * @var CreatePaymentInterface
      */
-    private CreatePayment $createPayment;
+    private CreatePaymentInterface $createPayment;
 
     /**
      * Constructor for CreateGuestMoneiPaymentInSite.
@@ -79,7 +79,7 @@ class CreateGuestMoneiPaymentInSite extends AbstractCheckoutService implements C
      * @param GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote Service to get customer details from a quote
      * @param GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress Service to get address details
      * @param MoneiPaymentModuleConfigInterface $moduleConfig Module configuration
-     * @param CreatePayment $createPayment Service for creating MONEI payments
+     * @param CreatePaymentInterface $createPayment Service for creating MONEI payments
      * @param GetPaymentInterface $getPaymentService Service to retrieve payment details
      */
     public function __construct(
@@ -92,7 +92,7 @@ class CreateGuestMoneiPaymentInSite extends AbstractCheckoutService implements C
         GetCustomerDetailsByQuoteInterface $getCustomerDetailsByQuote,
         GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress,
         MoneiPaymentModuleConfigInterface $moduleConfig,
-        CreatePayment $createPayment,
+        CreatePaymentInterface $createPayment,
         GetPaymentInterface $getPaymentService
     ) {
         parent::__construct(

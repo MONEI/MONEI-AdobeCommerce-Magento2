@@ -6,13 +6,12 @@
 
 declare(strict_types=1);
 
-namespace Monei\MoneiPayment\Service;
+namespace Monei\MoneiPayment\Service\Api;
 
 use Magento\Framework\Exception\LocalizedException;
 use Monei\Model\Payment;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
-use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
-use Monei\MoneiPayment\Service\Api\MoneiApiClient;
+use Monei\MoneiPayment\Service\Logger;
 use Monei\MoneiClient;
 
 /**

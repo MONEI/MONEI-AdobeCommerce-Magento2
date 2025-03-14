@@ -11,11 +11,12 @@ namespace Monei\MoneiPayment\Gateway\Command;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Gateway\Command\ResultInterface;
 use Magento\Payment\Gateway\CommandInterface;
+use Monei\Model\PaymentRefundReason;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
 use Monei\MoneiPayment\Api\Data\PaymentInfoInterface;
 use Monei\MoneiPayment\Api\Service\RefundPaymentInterface;
 use Monei\MoneiPayment\Model\Payment\Status;
-use Psr\Log\LoggerInterface;
+use Monei\MoneiPayment\Service\Logger;
 
 /**
  * Refund Monei payment command.
@@ -28,7 +29,7 @@ class Refund implements CommandInterface
     private $refundPaymentService;
 
     /**
-     * @var LoggerInterface
+     * @var Logger
      */
     private $logger;
 
@@ -36,11 +37,11 @@ class Refund implements CommandInterface
      * Constructor.
      *
      * @param RefundPaymentInterface $refundPaymentService Service for processing refunds
-     * @param LoggerInterface $logger Logger for tracking operations
+     * @param Logger $logger Logger for tracking operations
      */
     public function __construct(
         RefundPaymentInterface $refundPaymentService,
-        LoggerInterface $logger
+        Logger $logger
     ) {
         $this->refundPaymentService = $refundPaymentService;
         $this->logger = $logger;
@@ -83,11 +84,43 @@ class Refund implements CommandInterface
         }
 
         try {
+            // Get refund reason from credit memo data if available
+            $refundReason = PaymentRefundReason::REQUESTED_BY_CUSTOMER;  // Default fallback
+
+            // Get credit memo data from payment
+            $creditMemo = null;
+            if (isset($commandSubject['payment']) && method_exists($commandSubject['payment'], 'getCreditmemo')) {
+                $creditMemo = $commandSubject['payment']->getCreditmemo();
+            }
+
+            // If we have credit memo data, check for a refund reason
+            if ($creditMemo && $creditMemo->getRefundReason()) {
+                $refundReason = $creditMemo->getRefundReason();
+
+                // Validate that the refund reason is one of the allowed values
+                $allowedReasons = [
+                    PaymentRefundReason::DUPLICATED,
+                    PaymentRefundReason::FRAUDULENT,
+                    PaymentRefundReason::REQUESTED_BY_CUSTOMER
+                ];
+
+                if (!in_array($refundReason, $allowedReasons, true)) {
+                    $this->logger->logApiError(
+                        'refund',
+                        'Invalid refund reason: ' . $refundReason,
+                        ['order_id' => $payment->getOrder()->getIncrementId()]
+                    );
+
+                    // Fallback to default reason
+                    $refundReason = PaymentRefundReason::REQUESTED_BY_CUSTOMER;
+                }
+            }
+
             // Prepare refund request data
             $data = [
                 'amount' => $commandSubject['amount'],
                 'paymentId' => $paymentId,
-                'reason' => __('Order refund from Magento admin')
+                'refund_reason' => $refundReason
             ];
 
             // Log the refund request
@@ -95,7 +128,8 @@ class Refund implements CommandInterface
                 'payment_id' => $paymentId,
                 'amount' => $commandSubject['amount'],
                 'order_id' => $payment->getOrder()->getIncrementId(),
-                'currency' => $payment->getOrder()->getOrderCurrencyCode()
+                'currency' => $payment->getOrder()->getOrderCurrencyCode(),
+                'refund_reason' => $refundReason
             ]);
 
             // Execute the refund request

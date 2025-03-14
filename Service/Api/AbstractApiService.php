@@ -6,12 +6,11 @@
 
 declare(strict_types=1);
 
-namespace Monei\MoneiPayment\Service;
+namespace Monei\MoneiPayment\Service\Api;
 
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
-use Monei\MoneiPayment\Service\Api\MoneiApiClient;
+use Monei\MoneiPayment\Service\Logger;
 use Monei\ApiException;
 use Monei\MoneiClient;
 

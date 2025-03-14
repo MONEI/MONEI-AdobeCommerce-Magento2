@@ -17,9 +17,9 @@ use Monei\Model\Payment;
 use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Model\Payment\Status;
+use Monei\MoneiPayment\Service\Api\AbstractApiService;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
-use Monei\MoneiPayment\Service\AbstractApiService;
 use Monei\MoneiPayment\Service\Logger;
 
 /**
