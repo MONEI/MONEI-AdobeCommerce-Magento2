@@ -21,6 +21,7 @@ Accept payments through [MONEI](https://monei.com) in your Adobe Commerce (Magen
       - [Option 2: Direct Download from Main Branch](#option-2-direct-download-from-main-branch)
     - [Before You Begin](#before-you-begin)
   - [Configuration](#configuration)
+  - [Available Commands](#available-commands)
   - [MONEI PHP SDK](#monei-php-sdk)
   - [Demo](#demo)
   - [Development](#development)
@@ -28,7 +29,7 @@ Accept payments through [MONEI](https://monei.com) in your Adobe Commerce (Magen
     - [Code Quality Tools](#code-quality-tools)
       - [Prerequisites](#prerequisites)
       - [Setting up development environment](#setting-up-development-environment)
-      - [Available Commands](#available-commands)
+      - [Available Commands](#available-commands-1)
     - [Environment Variables](#environment-variables)
     - [Prettier Setup](#prettier-setup)
   - [Troubleshooting](#troubleshooting)
@@ -52,6 +53,7 @@ MONEI Payments for Adobe Commerce (Magento 2) allows you to seamlessly integrate
 - Detailed transaction reporting in your MONEI dashboard
 - Customizable payment experience to match your store's design
 - Integration with the official MONEI PHP SDK for reliable API communication
+- Automatic Apple Pay domain verification when configuration is saved
 
 ## Requirements
 
@@ -137,6 +139,20 @@ When testing your integration:
 5. Save the configuration
 
 For detailed configuration instructions, please refer to our [official documentation](https://docs.monei.com/docs/e-commerce/adobe-commerce/).
+
+## Available Commands
+
+This module provides several Magento CLI commands to help you manage MONEI payments and configurations. All commands are located in the `@Command` folder:
+
+```bash
+# Register a domain with Apple Pay through MONEI
+php bin/magento monei:verify-apple-pay-domain <domain>
+
+# Update order status labels in the database
+php bin/magento monei:update-status-labels
+```
+
+These commands are useful for testing, troubleshooting, and automating various MONEI payment operations from the command line.
 
 ## MONEI PHP SDK
 

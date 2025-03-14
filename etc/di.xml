@@ -120,20 +120,11 @@
   <type name="Magento\Framework\Console\CommandList">
     <arguments>
       <argument name="commands" xsi:type="array">
-        <item name="moneiCreatePayment" xsi:type="object"
-          >Monei\MoneiPayment\Command\CreatePaymentCommand</item
-        >
-        <item name="moneiGetPayment" xsi:type="object"
-          >Monei\MoneiPayment\Command\GetPaymentCommand</item
-        >
-        <item name="moneiCancelPayment" xsi:type="object"
-          >Monei\MoneiPayment\Command\CancelPaymentCommand</item
-        >
-        <item name="moneiRefundPayment" xsi:type="object"
-          >Monei\MoneiPayment\Command\RefundPaymentCommand</item
-        >
         <item name="moneiUpdateStatusLabels" xsi:type="object"
-          >Monei\MoneiPayment\Console\Command\UpdateStatusLabels</item
+          >Monei\MoneiPayment\Command\UpdateStatusLabels</item
+        >
+        <item name="moneiVerifyApplePayDomain" xsi:type="object"
+          >Monei\MoneiPayment\Command\VerifyApplePayDomainCommand</item
         >
       </argument>
     </arguments>
@@ -864,5 +855,18 @@
       >
     </arguments>
   </type>
+
+  <type name="Magento\Framework\App\FrontController">
+    <plugin
+      name="monei_apple_pay_domain_verification"
+      type="Monei\MoneiPayment\Plugin\ApplePayVerification"
+      sortOrder="10"
+    />
+  </type>
+
+  <preference
+    for="Monei\MoneiPayment\Api\Service\VerifyApplePayDomainInterface"
+    type="Monei\MoneiPayment\Service\VerifyApplePayDomain"
+  />
 </config>
 <!-- Updated configuration for dependency injection fix -->

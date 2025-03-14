@@ -1,6 +1,6 @@
 <?php
 
-namespace Monei\MoneiPayment\Console\Command;
+namespace Monei\MoneiPayment\Command;
 
 use Magento\Framework\App\State;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
