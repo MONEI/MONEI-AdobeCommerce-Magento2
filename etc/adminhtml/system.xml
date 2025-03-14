@@ -604,24 +604,6 @@
           >
         </field>
         <field
-          id="notification1"
-          translate="label comment"
-          sortOrder="335"
-          showInDefault="1"
-          showInWebsite="1"
-          showInStore="1"
-        >
-          <label>Enable Apple Pay</label>
-          <comment
-            ><![CDATA[You must register your domain in the "MONEI Dashboard" to use Apple Pay. For
-            more information, click <a href="https://dashboard.monei.com/settings/payment-methods"
-            target="_blank" rel="noopener noreferrer">here</a>.]]></comment
-          >
-          <frontend_model
-            >Monei\MoneiPayment\Block\System\Config\Form\Field\ApplePayNotice</frontend_model
-          >
-        </field>
-        <field
           id="title_google_insite"
           translate="label comment"
           type="text"
