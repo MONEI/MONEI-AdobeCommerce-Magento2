@@ -226,6 +226,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                     'googlePayDimensions' => $this->paymentMethodHelper->getPaymentMethodDimensions('google_pay'),
                     'applePayIcon' => $this->paymentMethodHelper->getIconFromPaymentType('apple_pay'),
                     'applePayDimensions' => $this->paymentMethodHelper->getPaymentMethodDimensions('apple_pay'),
+                    'availablePaymentMethods' => $this->getAvailablePaymentMethodsList($storeId),
                 ],
                 Monei::MULTIBANCO_REDIRECT_CODE => [
                     'icon' => $this->paymentMethodHelper->getIconFromPaymentType('multibanco'),
@@ -403,5 +404,22 @@ class CheckoutConfigProvider implements ConfigProviderInterface
         $paymentConfig['iconHeight'] = (int) str_replace('px', '', $dimensions['height']);
 
         return $paymentConfig;
+    }
+
+    /**
+     * Get available payment methods list for frontend usage
+     *
+     * @param int|null $storeId
+     * @return array
+     */
+    private function getAvailablePaymentMethodsList(?int $storeId = null): array
+    {
+        try {
+            $paymentMethods = $this->getPaymentMethods->execute();
+            return $paymentMethods->getPaymentMethods() ?? [];
+        } catch (\Exception $e) {
+            // Return empty array if API call fails
+            return [];
+        }
     }
 }

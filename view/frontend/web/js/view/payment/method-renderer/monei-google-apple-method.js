@@ -101,9 +101,9 @@ define([
     },
 
     checkPaymentMethods: function () {
-      monei.api
-        .getPaymentMethods({accountId: this.accountId})
-        .then((result) => this.setTitle(result));
+      var availableMethods =
+        window.checkoutConfig.payment[this.getCode()].availablePaymentMethods || [];
+      this.setTitle({paymentMethods: availableMethods});
     },
 
     getPaymentCode: function () {
