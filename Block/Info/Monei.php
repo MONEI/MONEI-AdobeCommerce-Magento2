@@ -87,8 +87,6 @@ class Monei extends Info
     public function getPaymentInfo()
     {
         if (!$this->getInfo() || !$this->getInfo()->getOrder()) {
-            $this->logger->debug('Payment Info: Missing order information');
-
             return null;
         }
 
@@ -97,37 +95,14 @@ class Monei extends Info
         $monei_payment_id = $payment->getAdditionalInformation(PaymentInfoInterface::PAYMENT_ID);
 
         if (!$monei_payment_id) {
-            $this->logger->debug('Payment Info: Missing Monei payment ID in order', [
-                'order_id' => $this->getInfo()->getOrder()->getIncrementId()
-            ]);
-
             return null;
         }
-
-        $this->logger->debug('Payment Info: Retrieving payment data', [
-            'payment_id' => $monei_payment_id,
-            'order_id' => $this->getInfo()->getOrder()->getIncrementId()
-        ]);
 
         try {
             /** @var Payment $payment */
             $payment = $this->paymentService->execute($monei_payment_id);
 
-            // Convert SDK Payment object to array using json_encode/json_decode
-            $this->logger->debug('Payment Info: Converting Payment object to array');
             $paymentData = json_decode(json_encode($payment), true);
-
-            $this->logger->debug('Payment Info: Payment data structure', [
-                'has_payment_method' => isset($paymentData['paymentMethod']),
-                'payment_data_keys' => array_keys($paymentData)
-            ]);
-
-            if (!isset($paymentData['paymentMethod'])) {
-                $this->logger->debug('Payment Info: Missing paymentMethod key in payment data');
-
-                return null;
-            }
-
             $result = $this->processPaymentMethodData($paymentData['paymentMethod']);
 
             // Add the payment ID to the result
@@ -143,19 +118,8 @@ class Monei extends Info
                 $result['authorizationCode'] = $paymentData['authorizationCode'];
             }
 
-            $this->logger->debug('Payment Info: Processed payment method result', [
-                'result' => $result
-            ]);
-
             return $result;
         } catch (\Exception $e) {
-            $this->logger->debug('Payment Info: Exception during payment data processing', [
-                'payment_id' => $monei_payment_id,
-                'exception' => get_class($e),
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
             return null;
         }
     }
@@ -169,14 +133,8 @@ class Monei extends Info
     private function processPaymentMethodData(?array $paymentMethodData): ?array
     {
         if (!$paymentMethodData) {
-            $this->logger->debug('Payment method data is null');
-
             return null;
         }
-
-        $this->logger->debug('Processing payment method data', [
-            'payment_method_keys' => array_keys($paymentMethodData)
-        ]);
 
         $result = [];
         foreach ($paymentMethodData as $payKey => $payValue) {
@@ -190,10 +148,6 @@ class Monei extends Info
                 $result[$key] = $key === 'expiration' ? date('m/y', $value) : $value;
             }
         }
-
-        $this->logger->debug('Final processed payment method data', [
-            'result' => $result
-        ]);
 
         return $result;
     }
