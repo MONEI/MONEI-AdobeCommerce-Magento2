@@ -77,18 +77,6 @@
         </fieldset>
       </div>
 
-      <!-- ko if: getCardIconContainer() && getCardIconContainer().html -->
-      <div class="monei-available-cards">
-        <label class="label">
-          <span data-bind="i18n: 'Supported cards:'"></span>
-        </label>
-        <div
-          class="monei-card-brands-container"
-          data-bind="html: getCardIconContainer().html"
-        ></div>
-      </div>
-      <!-- /ko -->
-
       <!-- ko if: (isVaultEnabled())-->
       <div class="field choice">
         <input
