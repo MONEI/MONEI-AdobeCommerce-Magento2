@@ -34,7 +34,6 @@
         <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
         <can_refund>1</can_refund>
         <order_place_redirect_url>1</order_place_redirect_url>
-        <language>en</language>
       </monei>
       <monei_card>
         <active>0</active>

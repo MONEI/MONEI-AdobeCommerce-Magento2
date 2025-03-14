@@ -214,8 +214,8 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
     /**
      * Get the language for the Monei payment interface.
      *
-     * First tries to use the store's locale language if supported by Monei,
-     * otherwise falls back to the configured language.
+     * Uses the store's locale language if supported by Monei,
+     * otherwise defaults to English.
      *
      * @param int|null $storeId The store ID to check the configuration for
      *
@@ -223,7 +223,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      */
     public function getLanguage(?int $storeId = null): string
     {
-        // First, try to get the store's locale code
+        // Get the store's locale code
         $locale = $this->scopeConfig->getValue(
             'general/locale/code',
             ScopeInterface::SCOPE_STORE,
@@ -241,12 +241,8 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
             return strtolower($localeLanguage);
         }
 
-        // Otherwise, fall back to the configured value
-        return (string) $this->scopeConfig->getValue(
-            self::LANGUAGE,
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
+        // Default to English if the language is not supported
+        return 'en';
     }
 
     /**

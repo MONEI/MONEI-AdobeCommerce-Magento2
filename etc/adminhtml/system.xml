@@ -121,18 +121,6 @@
           </depends>
         </field>
         <field
-          id="language"
-          translate="label comment"
-          type="select"
-          sortOrder="50"
-          showInDefault="1"
-          showInWebsite="1"
-          showInStore="1"
-        >
-          <label>Language</label>
-          <source_model>Monei\MoneiPayment\Model\Config\Source\Language</source_model>
-        </field>
-        <field
           id="heading2"
           translate="label"
           sortOrder="60"
