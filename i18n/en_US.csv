@@ -129,3 +129,14 @@
 "Transaction declined due to insufficient funds","Transaction declined due to insufficient funds"
 "The user has canceled the payment","The user has canceled the payment"
 "Unknown error code: %1","Unknown error code: %1"
+"You do not have permission to save this configuration.","You do not have permission to save this configuration."
+"Invalid JSON format in %1 field: %2. Please ensure that you provide valid JSON. Examples:
+                - For a simple style: {"height":"45px"}
+                - For nested properties: {"base":{"height":"30px","padding":"0"},"input":{"height":"30px"}}
+                - Make sure all property names and string values are enclosed in double quotes
+                - No trailing commas allowed after the last property","Invalid JSON format in %1 field: %2. Please ensure that you provide valid JSON. Examples:
+                - For a simple style: {"height":"45px"}
+                - For nested properties: {"base":{"height":"30px","padding":"0"},"input":{"height":"30px"}}
+                - Make sure all property names and string values are enclosed in double quotes
+                - No trailing commas allowed after the last property"
+"The resource isn't set.","The resource isn't set."

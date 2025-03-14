@@ -868,5 +868,14 @@
     for="Monei\MoneiPayment\Api\Service\VerifyApplePayDomainInterface"
     type="Monei\MoneiPayment\Service\VerifyApplePayDomain"
   />
+
+  <!-- Configuration for JSON validators -->
+  <type name="Monei\MoneiPayment\Model\Config\Backend\JsonValidator">
+    <arguments>
+      <argument name="policyInterface" xsi:type="object"
+        >Magento\Framework\Authorization\Policy\DefaultPolicy</argument
+      >
+    </arguments>
+  </type>
 </config>
 <!-- Updated configuration for dependency injection fix -->

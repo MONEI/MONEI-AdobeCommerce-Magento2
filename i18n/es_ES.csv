@@ -162,3 +162,14 @@
 "Multibanco","Multibanco"
 "MBWay","MBWay"
 "Processing Payment","Procesando Pago"
+"You do not have permission to save this configuration.","No tiene permiso para guardar esta configuración."
+"Invalid JSON format in %1 field: %2. Please ensure that you provide valid JSON. Examples:
+                - For a simple style: {"height":"45px"}
+                - For nested properties: {"base":{"height":"30px","padding":"0"},"input":{"height":"30px"}}
+                - Make sure all property names and string values are enclosed in double quotes
+                - No trailing commas allowed after the last property","Formato JSON no válido en el campo %1: %2. Por favor, asegúrese de proporcionar un JSON válido. Ejemplos:
+                - Para un estilo simple: {"height":"45px"}
+                - Para propiedades anidadas: {"base":{"height":"30px","padding":"0"},"input":{"height":"30px"}}
+                - Asegúrese de que todos los nombres de propiedad y valores de cadena estén entre comillas dobles
+                - No se permiten comas finales después de la última propiedad"
+"The resource isn't set.","El recurso no está establecido."
