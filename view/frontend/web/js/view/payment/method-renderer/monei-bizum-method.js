@@ -55,6 +55,22 @@ define([
       this.jsonStyle = window.checkoutConfig.payment[this.getCode()].jsonStyle ?? this.jsonStyle;
     },
 
+    /**
+     * Get payment icon configuration
+     * @returns {Object|null}
+     */
+    getIcon: function () {
+      if (window.checkoutConfig.payment[this.getCode()].icon) {
+        var iconDimensions = window.checkoutConfig.payment[this.getCode()].iconDimensions || {};
+        return {
+          url: window.checkoutConfig.payment[this.getCode()].icon,
+          width: iconDimensions.width || 70,
+          height: iconDimensions.height || 45
+        };
+      }
+      return null;
+    },
+
     createMoneiPayment: function () {
       if ($.trim($('#' + this.idBizumContainer).html()) === '') {
         fullScreenLoader.startLoader();

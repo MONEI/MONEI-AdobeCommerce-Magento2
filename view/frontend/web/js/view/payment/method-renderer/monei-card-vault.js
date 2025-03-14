@@ -120,15 +120,65 @@ define([
     },
 
     /**
-     * @param {String} type
-     * @returns {Boolean}
+     * Get card brand icon data
+     * @param {String} type Card brand/type
+     * @returns {Object} Icon data with url, width, height and title
      */
     getIcons: function (type) {
-      var cardBrandType = window.checkoutConfig.vault[this.code].card_icons[type] ?? '';
+      // Normalize type to lowercase for consistency
+      var normalizedType = type ? type.toLowerCase() : 'default';
 
-      return window.checkoutConfig.payment.ccform.icons.hasOwnProperty(cardBrandType)
-        ? window.checkoutConfig.payment.ccform.icons[cardBrandType]
-        : false;
+      // Primary source: direct icons from vault config
+      if (
+        window.checkoutConfig.vault[this.code].icons &&
+        window.checkoutConfig.vault[this.code].icons[normalizedType]
+      ) {
+        return window.checkoutConfig.vault[this.code].icons[normalizedType];
+      }
+
+      // Fallback 1: Try to map the card type through card_icons mapping
+      var mappedType = null;
+      if (window.checkoutConfig.vault[this.code].card_icons) {
+        mappedType =
+          window.checkoutConfig.vault[this.code].card_icons[type] ||
+          window.checkoutConfig.vault[this.code].card_icons[normalizedType];
+
+        if (mappedType && window.checkoutConfig.vault[this.code].icons[mappedType]) {
+          return window.checkoutConfig.vault[this.code].icons[mappedType];
+        }
+      }
+
+      // Fallback 2: Try with standard CC form icons
+      if (
+        mappedType &&
+        window.checkoutConfig.payment.ccform.icons &&
+        window.checkoutConfig.payment.ccform.icons[mappedType]
+      ) {
+        return window.checkoutConfig.payment.ccform.icons[mappedType];
+      }
+
+      if (
+        window.checkoutConfig.payment.ccform.icons &&
+        window.checkoutConfig.payment.ccform.icons[normalizedType]
+      ) {
+        return window.checkoutConfig.payment.ccform.icons[normalizedType];
+      }
+
+      // Fallback 3: Return default icon from vault config
+      if (
+        window.checkoutConfig.vault[this.code].icons &&
+        window.checkoutConfig.vault[this.code].icons.default
+      ) {
+        return window.checkoutConfig.vault[this.code].icons.default;
+      }
+
+      // Last resort fallback (should never reach here if config is correct)
+      return {
+        url: '',
+        width: 40,
+        height: 30,
+        title: type || 'Card'
+      };
     },
 
     placeOrder: function (data, event) {

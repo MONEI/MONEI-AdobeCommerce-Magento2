@@ -116,6 +116,25 @@ define([
     },
 
     /**
+     * Get payment icon configuration
+     * @returns {Object|null}
+     */
+    getIcon: function () {
+      if (
+        window.checkoutConfig.payment[this.getCode()] &&
+        window.checkoutConfig.payment[this.getCode()].icon
+      ) {
+        var iconDimensions = window.checkoutConfig.payment[this.getCode()].iconDimensions || {};
+        return {
+          url: window.checkoutConfig.payment[this.getCode()].icon,
+          width: iconDimensions.width || 40,
+          height: iconDimensions.height || 30
+        };
+      }
+      return null;
+    },
+
+    /**
      * Handle API error responses with proper message formatting
      *
      * @param {Object} error The error response object

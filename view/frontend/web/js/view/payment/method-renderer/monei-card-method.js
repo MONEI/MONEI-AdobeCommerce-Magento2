@@ -17,7 +17,9 @@ define([
   'Magento_Checkout/js/model/full-screen-loader',
   'Magento_Vault/js/view/payment/vault-enabler',
   'Monei_MoneiPayment/js/utils/error-handler',
-  'Monei_MoneiPayment/js/utils/payment-handler'
+  'Monei_MoneiPayment/js/utils/payment-handler',
+  'mage/url',
+  'Monei_MoneiPayment/js/utils/card-type-detector'
 ], function (
   ko,
   $,
@@ -33,13 +35,22 @@ define([
   fullScreenLoader,
   VaultEnabler,
   errorHandler,
-  paymentHandler
+  paymentHandler,
+  cardTypeDetector
 ) {
   'use strict';
 
   return Component.extend({
     defaults: {
-      template: 'Monei_MoneiPayment/payment/monei-card-insite'
+      template: 'Monei_MoneiPayment/payment/monei-card-insite',
+      paymentMethodTitleBase: '',
+      availableCards: ko.observableArray([]),
+      cardImages: ko.observableArray([]),
+      cardData: {
+        brand: '',
+        last4: '',
+        isValid: false
+      }
     },
     redirectAfterPlaceOrder: true,
     cardInput: null,
@@ -65,6 +76,10 @@ define([
 
       this.vaultEnabler = new VaultEnabler();
       this.vaultEnabler.setPaymentCode(this.getVaultCode());
+
+      this.initCardBrands();
+      // Save the base payment title before any modifications for brand display
+      this.paymentMethodTitleBase = this.getTitle();
 
       return this;
     },
@@ -149,6 +164,11 @@ define([
           } else {
             self.container.classList.remove('is-invalid');
             self.errorText.innerText = '';
+          }
+
+          // Handle card brand detection
+          if (event.brand) {
+            self.updateCardBrandDisplay(event.brand);
           }
         },
         onFocus: function () {
@@ -263,6 +283,131 @@ define([
      */
     getVaultCode: function () {
       return window.checkoutConfig.payment[this.getCode()].ccVaultCode;
+    },
+
+    /**
+     * Initialize available card brands from the config
+     */
+    initCardBrands: function () {
+      if (
+        window.checkoutConfig.payment[this.getCode()] &&
+        window.checkoutConfig.payment[this.getCode()].icons
+      ) {
+        var icons = window.checkoutConfig.payment[this.getCode()].icons;
+        var brands = [];
+        var cardImages = [];
+
+        // Add available card brands
+        for (var brand in icons) {
+          if (icons.hasOwnProperty(brand) && brand !== 'default') {
+            brands.push(brand);
+            cardImages.push({
+              url: icons[brand].url,
+              width: icons[brand].width,
+              height: icons[brand].height,
+              title: icons[brand].title
+            });
+          }
+        }
+
+        this.availableCards(brands);
+        this.cardImages(cardImages);
+      }
+    },
+
+    /**
+     * Get combined card brand icons as HTML
+     * @returns {string}
+     */
+    getCardBrandsHtml: function () {
+      var images = this.cardImages();
+      var html = '';
+
+      if (images.length > 0) {
+        for (var i = 0; i < images.length; i++) {
+          html +=
+            '<img src="' +
+            images[i].url +
+            '" ' +
+            'alt="' +
+            images[i].title +
+            '" ' +
+            'class="card-brand-icon" ' +
+            'style="height: 24px; margin-right: 5px;" />';
+        }
+      }
+
+      return html;
+    },
+
+    /**
+     * Get card icon container for display in the payment method
+     * @returns {Object|null}
+     */
+    getCardIconContainer: function () {
+      if (this.availableCards().length > 0) {
+        return {
+          html: this.getCardBrandsHtml()
+        };
+      }
+
+      // Return null instead of falling back to the standard icon
+      return null;
+    },
+
+    /**
+     * Get payment icon configuration
+     * @returns {Object|null}
+     */
+    getIcon: function () {
+      if (
+        window.checkoutConfig.payment[this.getCode()] &&
+        window.checkoutConfig.payment[this.getCode()].icon
+      ) {
+        var iconDimensions = window.checkoutConfig.payment[this.getCode()].iconDimensions || {};
+        return {
+          url: window.checkoutConfig.payment[this.getCode()].icon,
+          width: iconDimensions.width || 40,
+          height: iconDimensions.height || 30
+        };
+      }
+      return null;
+    },
+
+    /**
+     * Update the display based on detected card brand
+     *
+     * @param {string} brand The detected card brand
+     */
+    updateCardBrandDisplay: function (brand) {
+      if (!brand) {
+        return;
+      }
+
+      // Convert the brand to lowercase for consistent matching
+      brand = brand.toLowerCase();
+
+      // Find the detected brand in our available cards
+      var availableCards = this.availableCards();
+      if (availableCards.indexOf(brand) >= 0) {
+        // Get the icon for this brand
+        var icons = window.checkoutConfig.payment[this.getCode()].icons;
+        if (icons && icons[brand]) {
+          // Update display to highlight this card brand
+          var cardBrandIcons = document.querySelectorAll('.monei-card-brands img.card-brand-icon');
+          if (cardBrandIcons && cardBrandIcons.length > 0) {
+            for (var i = 0; i < cardBrandIcons.length; i++) {
+              // Reset all icons to default opacity
+              cardBrandIcons[i].style.opacity = '0.5';
+
+              // Highlight the detected brand
+              if (cardBrandIcons[i].alt.toLowerCase().indexOf(brand) >= 0) {
+                cardBrandIcons[i].style.opacity = '1';
+              }
+            }
+          }
+        }
+      }
     }
   });
 });

@@ -34,6 +34,24 @@ define([
       }
 
       return title;
+    },
+
+    /**
+     * Get payment icon configuration
+     * @returns {Object|null}
+     */
+    getIcon: function() {
+      if (window.checkoutConfig.payment[this.getCode()] &&
+          window.checkoutConfig.payment[this.getCode()].icon) {
+        var config = window.checkoutConfig.payment[this.getCode()];
+        var iconDimensions = config.iconDimensions || {};
+        return {
+          url: config.icon,
+          width: iconDimensions.width || 40,
+          height: iconDimensions.height || 30
+        };
+      }
+      return null;
     }
   });
 });

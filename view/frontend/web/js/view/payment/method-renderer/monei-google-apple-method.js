@@ -69,6 +69,37 @@ define([
       this.isEnabledApplePay(window.checkoutConfig.payment[this.getCode()].isEnabledApplePay);
     },
 
+    /**
+     * Get payment icon configuration based on detected payment method
+     * @returns {Object|null}
+     */
+    getIcon: function () {
+      if (!window.checkoutConfig.payment[this.getCode()]) {
+        return null;
+      }
+
+      var config = window.checkoutConfig.payment[this.getCode()];
+      var isApplePay = this.applePaySupported && this.isEnabledApplePay();
+
+      if (isApplePay && config.applePayIcon) {
+        var dimensions = config.applePayDimensions || {};
+        return {
+          url: config.applePayIcon,
+          width: dimensions.width || 50,
+          height: dimensions.height || 30
+        };
+      } else if (config.googlePayIcon) {
+        var dimensions = config.googlePayDimensions || {};
+        return {
+          url: config.googlePayIcon,
+          width: dimensions.width || 50,
+          height: dimensions.height || 30
+        };
+      }
+
+      return null;
+    },
+
     checkPaymentMethods: function () {
       monei.api
         .getPaymentMethods({accountId: this.accountId})

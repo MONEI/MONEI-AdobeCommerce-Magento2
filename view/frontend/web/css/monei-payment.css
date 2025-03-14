@@ -1,6 +1,210 @@
-.payment-method.monei-payment-methods .payment-method-title label {
-  display: inline-flex;
+.payment-method.monei-payment-methods .payment-method-title {
+  display: flex;
+  align-items: center;
 }
-.payment-method.monei-payment-methods .payment-method-title label span:first-child {
-  padding-right: 10px;
+
+.payment-method.monei-payment-methods .payment-method-title .radio {
+  margin-right: 12px;
+}
+
+/* CSS-based icon styling (fallback) */
+.payment-method.monei-payment-methods .monei-payment-icon {
+  display: inline-block;
+  margin-left: 10px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  vertical-align: middle;
+  min-width: 40px;
+  min-height: 30px;
+}
+
+/* Image-based icons (preferred) */
+.payment-method .payment-method-title label img.payment-icon {
+  margin-left: 8px;
+  vertical-align: middle;
+  max-height: 45px;
+  object-fit: contain;
+}
+
+/* Specific payment method icons (fallbacks) */
+.payment-method#method_monei_bizum .payment-method-title label span.monei-payment-icon {
+  background-image: url(../img/bizum.svg);
+  width: 70px;
+  height: 45px;
+}
+
+.payment-method#method_monei_google_pay .payment-method-title label span.monei-payment-icon {
+  background-image: url(../img/google-pay.svg);
+  width: 50px;
+  height: 30px;
+}
+
+.payment-method#method_monei_apple_pay .payment-method-title label span.monei-payment-icon {
+  background-image: url(../img/apple-pay.svg);
+  width: 50px;
+  height: 30px;
+}
+
+.payment-method#method_monei_multibanco_redirect
+  .payment-method-title
+  label
+  span.monei-payment-icon {
+  background-image: url(../img/multibanco.svg);
+  width: 105px;
+  height: 30px;
+}
+
+.payment-method#method_monei_mbway_redirect .payment-method-title label span.monei-payment-icon {
+  background-image: url(../img/mbway.svg);
+  width: 70px;
+  height: 30px;
+}
+
+.payment-method#method_monei_card .payment-method-title label span.monei-payment-icon {
+  background-image: url(../img/cards.svg);
+  width: 220px;
+  height: 30px;
+}
+
+.payment-method.monei-payment-methods .monei-payment-icon img.monei-icon {
+  height: 24px;
+  width: auto;
+  margin-right: 4px;
+  object-fit: contain;
+}
+
+/* Monei styles for stored cards */
+.payment-method.monei-payments .payment-method-title {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.monei-icon-container {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.monei-icon-container img.monei-icon {
+  margin-right: 12px;
+}
+
+.monei-icon-container .card-details {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.monei-icon-container .type {
+  font-weight: 600;
+  margin-right: 5px;
+  font-size: 14px;
+}
+
+.monei-icon-container .card-number {
+  font-size: 14px;
+  margin-right: 5px;
+}
+
+/* Fix for small screens */
+@media only screen and (max-width: 767px) {
+  .monei-icon-container {
+    flex-direction: column;
+    align-items: flex-start;
+    padding-top: 5px;
+  }
+
+  .monei-icon-container .card-details {
+    margin-top: 8px;
+  }
+
+  .payment-method.monei-payments .payment-method-title label {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .monei-icon-container img.monei-icon {
+    margin-bottom: 5px;
+  }
+
+  .payment-method .payment-method-title label img.payment-icon {
+    margin-top: 5px;
+  }
+}
+
+.payment-method-title .monei-payment-icon {
+  display: inline-block;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+
+.payment-method.monei-payment-methods .monei-card-brands {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  vertical-align: middle;
+  flex-wrap: wrap;
+}
+
+.payment-method.monei-payment-methods .monei-card-brands img.card-brand-icon {
+  height: 24px;
+  width: auto;
+  margin-right: 4px;
+  margin-bottom: 4px;
+  object-fit: contain;
+}
+
+@media only screen and (max-width: 767px) {
+  .payment-method.monei-payment-methods .monei-card-brands {
+    display: flex;
+    margin-top: 8px;
+    margin-left: 0;
+  }
+}
+
+.monei-available-cards {
+  margin: 10px 0 15px;
+}
+
+.monei-available-cards .monei-card-brands-container {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 5px;
+}
+
+.monei-available-cards .card-brand-icon {
+  height: 30px;
+  width: auto;
+  margin-right: 10px;
+  margin-bottom: 5px;
+  transition: opacity 0.3s ease;
+}
+
+/* Card field styling */
+.payment-method.monei-payment-methods #monei-insite-card-input {
+  border: 1px solid #c2c2c2;
+  border-radius: 1px;
+  padding: 0 9px;
+  transition: border-color 0.3s ease;
+}
+
+.payment-method.monei-payment-methods #monei-insite-card-input.is-focused {
+  border-color: #006bb4;
+  box-shadow: 0 0 3px 1px rgba(0, 107, 180, 0.3);
+}
+
+.payment-method.monei-payment-methods #monei-insite-card-input.is-invalid {
+  border-color: #e02b27;
+}
+
+.payment-method.monei-payment-methods #monei-insite-card-error {
+  color: #e02b27;
+  font-size: 12px;
+  margin-top: 3px;
+  min-height: 15px;
 }

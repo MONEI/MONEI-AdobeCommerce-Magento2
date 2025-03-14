@@ -17,7 +17,8 @@ use Monei\MoneiPayment\Api\Config\MoneiBizumPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Config\MoneiCardPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Config\MoneiGoogleApplePaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
-use Monei\MoneiPayment\Block\Monei\Customer\CardRenderer;
+use Monei\MoneiPayment\Api\Service\GetPaymentMethodsInterface;
+use Monei\MoneiPayment\Helper\PaymentMethod;
 use Monei\MoneiPayment\Model\Config\Source\Mode;
 use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Model\Payment\Status;
@@ -93,6 +94,20 @@ class CheckoutConfigProvider implements ConfigProviderInterface
     private ApplePayAvailability $applePayAvailability;
 
     /**
+     * Payment method helper for icons and formatting.
+     *
+     * @var PaymentMethod
+     */
+    private PaymentMethod $paymentMethodHelper;
+
+    /**
+     * Service to get available payment methods
+     *
+     * @var GetPaymentMethodsInterface
+     */
+    private GetPaymentMethodsInterface $getPaymentMethods;
+
+    /**
      * Constructor.
      *
      * @param UrlInterface $urlBuilder
@@ -104,6 +119,8 @@ class CheckoutConfigProvider implements ConfigProviderInterface
      * @param GooglePayAvailability $googlePayAvailability
      * @param ApplePayAvailability $applePayAvailability
      * @param StoreManagerInterface $storeManager
+     * @param PaymentMethod $paymentMethodHelper
+     * @param GetPaymentMethodsInterface $getPaymentMethods
      */
     public function __construct(
         UrlInterface $urlBuilder,
@@ -114,7 +131,9 @@ class CheckoutConfigProvider implements ConfigProviderInterface
         MoneiBizumPaymentModuleConfigInterface $moneiBizumPaymentModuleConfig,
         GooglePayAvailability $googlePayAvailability,
         ApplePayAvailability $applePayAvailability,
-        StoreManagerInterface $storeManager
+        StoreManagerInterface $storeManager,
+        PaymentMethod $paymentMethodHelper,
+        GetPaymentMethodsInterface $getPaymentMethods
     ) {
         $this->allMoneiPaymentModuleConfig = $allMoneiPaymentModuleConfig;
         $this->moneiGoogleApplePaymentConfig = $moneiGoogleApplePaymentConfig;
@@ -125,6 +144,8 @@ class CheckoutConfigProvider implements ConfigProviderInterface
         $this->moneiPaymentConfig = $moneiPaymentConfig;
         $this->urlBuilder = $urlBuilder;
         $this->storeManager = $storeManager;
+        $this->paymentMethodHelper = $paymentMethodHelper;
+        $this->getPaymentMethods = $getPaymentMethods;
     }
 
     /**
@@ -139,7 +160,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
     {
         $storeId = $this->getStoreId();
 
-        return [
+        $config = [
             'moneiAccountId' => $this->moneiPaymentConfig->getAccountId($storeId),
             'moneiApiKey' => $this->moneiPaymentConfig->getApiKey($storeId),
             'moneiPaymentIsEnabled' => $this->allMoneiPaymentModuleConfig->isAnyPaymentEnabled($storeId),
@@ -169,6 +190,8 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                     'isEnabledTokenization' => $this->moneiCardPaymentConfig->isEnabledTokenization($storeId),
                     'ccVaultCode' => Monei::CC_VAULT_CODE,
                     'jsonStyle' => $this->moneiCardPaymentConfig->getJsonStyle($storeId),
+                    'icon' => $this->paymentMethodHelper->getIconFromPaymentType('card'),
+                    'icons' => $this->getCardIcons(),
                 ],
                 Monei::BIZUM_CODE => [
                     'redirectUrl' => $this->urlBuilder->getUrl('monei/payment/redirect'),
@@ -181,6 +204,8 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                     ],
                     'accountId' => $this->moneiPaymentConfig->getAccountId($storeId),
                     'jsonStyle' => $this->moneiBizumPaymentModuleConfig->getJsonStyle($storeId),
+                    'icon' => $this->paymentMethodHelper->getIconFromPaymentType('bizum'),
+                    'iconDimensions' => $this->paymentMethodHelper->getPaymentMethodDimensions('bizum'),
                 ],
                 Monei::GOOGLE_APPLE_CODE => [
                     'isEnabledGooglePay' => $this->googlePayAvailability->execute(),
@@ -197,11 +222,24 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                     ],
                     'accountId' => $this->moneiPaymentConfig->getAccountId($storeId),
                     'jsonStyle' => $this->moneiGoogleApplePaymentConfig->getJsonStyle($storeId),
+                    'googlePayIcon' => $this->paymentMethodHelper->getIconFromPaymentType('google_pay'),
+                    'googlePayDimensions' => $this->paymentMethodHelper->getPaymentMethodDimensions('google_pay'),
+                    'applePayIcon' => $this->paymentMethodHelper->getIconFromPaymentType('apple_pay'),
+                    'applePayDimensions' => $this->paymentMethodHelper->getPaymentMethodDimensions('apple_pay'),
                 ],
+                Monei::MULTIBANCO_REDIRECT_CODE => [
+                    'icon' => $this->paymentMethodHelper->getIconFromPaymentType('multibanco'),
+                    'iconDimensions' => $this->paymentMethodHelper->getPaymentMethodDimensions('multibanco'),
+                ],
+                Monei::MBWAY_REDIRECT_CODE => [
+                    'icon' => $this->paymentMethodHelper->getIconFromPaymentType('mbway'),
+                    'iconDimensions' => $this->paymentMethodHelper->getPaymentMethodDimensions('mbway'),
+                ]
             ],
             'vault' => [
                 Monei::CC_VAULT_CODE => [
-                    'card_icons' => CardRenderer::ICON_TYPE_BY_BRAND,
+                    'icons' => $this->getCardIcons(),
+                    'card_icons' => $this->getCardIconTypeMapping(),
                     'redirectUrl' => $this->urlBuilder->getUrl('monei/payment/redirect'),
                     'cancelOrderUrl' => $this->urlBuilder->getUrl('monei/payment/cancel'),
                     'completeUrl' => $this->urlBuilder->getUrl('monei/payment/complete'),
@@ -214,6 +252,8 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                 ],
             ],
         ];
+
+        return $config;
     }
 
     /**
@@ -226,5 +266,142 @@ class CheckoutConfigProvider implements ConfigProviderInterface
         } catch (NoSuchEntityException $e) {
             return 0;
         }
+    }
+
+    /**
+     * Get mapping between card types and icon codes for the vault
+     *
+     * @return array
+     */
+    private function getCardIconTypeMapping(): array
+    {
+        $mapping = [];
+        $availableBrands = $this->getAvailableCardBrands();
+
+        foreach ($availableBrands as $brand) {
+            // Use lowercase brand as key for consistency
+            $mapping[strtolower($brand)] = strtolower($brand);
+
+            // Add variations for compatibility (capitalized, uppercase)
+            $mapping[ucfirst(strtolower($brand))] = strtolower($brand);
+            $mapping[strtoupper($brand)] = strtolower($brand);
+        }
+
+        // Add default fallback
+        $mapping['default'] = 'default';
+
+        return $mapping;
+    }
+
+    /**
+     * Get available card brands from Monei API
+     *
+     * @return array
+     */
+    private function getAvailableCardBrands(): array
+    {
+        try {
+            $paymentMethods = $this->getPaymentMethods->execute();
+
+            // Access card brands through the metadata.card.brands property
+            $cardBrands = [];
+            $metadata = $paymentMethods->getMetadata();
+
+            if ($metadata && $metadata->getCard() && $metadata->getCard()->getBrands()) {
+                $cardBrands = $metadata->getCard()->getBrands();
+            }
+
+            $availableBrands = [];
+
+            foreach ($cardBrands as $brand) {
+                $availableBrands[] = strtolower($brand);
+            }
+
+            // Ensure we have some defaults if no brands were returned
+            if (empty($availableBrands)) {
+                $availableBrands = ['visa', 'mastercard', 'amex', 'discover', 'diners', 'jcb', 'unionpay', 'maestro'];
+            }
+
+            return array_unique($availableBrands);
+        } catch (\Exception $e) {
+            // Return default brands if API call fails
+            return ['visa', 'mastercard', 'amex', 'discover', 'diners', 'jcb', 'unionpay', 'maestro'];
+        }
+    }
+
+    /**
+     * Get card icons for JavaScript configuration.
+     *
+     * @return array
+     */
+    private function getCardIcons(): array
+    {
+        $paymentMethodDetails = $this->paymentMethodHelper->getPaymentMethodDetails();
+        $icons = [];
+
+        // Get available brands from API
+        $availableBrands = $this->getAvailableCardBrands();
+
+        // Add card brand icons
+        foreach ($availableBrands as $brand) {
+            if (isset($paymentMethodDetails[$brand])) {
+                $dimensions = $this->paymentMethodHelper->getPaymentMethodDimensions($brand);
+                $icons[$brand] = [
+                    'url' => $paymentMethodDetails[$brand]['icon'],
+                    'width' => (int) str_replace('px', '', $dimensions['width']),
+                    'height' => (int) str_replace('px', '', $dimensions['height']),
+                    'title' => $paymentMethodDetails[$brand]['name']
+                ];
+            }
+        }
+
+        // Add default icon
+        $dimensions = $this->paymentMethodHelper->getPaymentMethodDimensions('default');
+        $icons['default'] = [
+            'url' => $paymentMethodDetails['default']['icon'],
+            'width' => (int) str_replace('px', '', $dimensions['width']),
+            'height' => (int) str_replace('px', '', $dimensions['height']),
+            'title' => __('Card')
+        ];
+
+        return $icons;
+    }
+
+    /**
+     * Get payment method configuration with icon information
+     *
+     * @param string $methodCode
+     * @param string|null $appendIcon
+     * @return array
+     */
+    private function getMethodConfig(string $methodCode, ?string $appendIcon = null): array
+    {
+        $paymentConfig = [];
+        $paymentActionUrl = $this->urlBuilder->getUrl('monei/action');
+        $completeUrl = $this->urlBuilder->getUrl('monei/payment/complete');
+        $cancelOrderUrl = $this->urlBuilder->getUrl('monei/payment/cancel');
+        $failOrderStatus = Status::STATUS_FAILED;
+
+        // Basic configuration
+        $paymentConfig['completeUrl'] = $completeUrl;
+        $paymentConfig['cancelOrderUrl'] = $cancelOrderUrl;
+        $paymentConfig['failOrderStatus'] = $failOrderStatus;
+        $paymentConfig['accountId'] = $this->moneiPaymentConfig->getApiKey();
+
+        // Add payment icon
+        $paymentType = str_replace('monei_', '', $methodCode);
+        if ($appendIcon) {
+            $paymentType = $appendIcon;
+        }
+
+        // Get icon URL
+        $paymentConfig['icon'] = $this->paymentMethodHelper->getIconFromPaymentType($paymentType);
+
+        // Get icon dimensions
+        $dimensions = $this->paymentMethodHelper->getPaymentMethodDimensions($paymentType);
+        $paymentConfig['iconWidth'] = (int) str_replace('px', '', $dimensions['width']);
+        $paymentConfig['iconHeight'] = (int) str_replace('px', '', $dimensions['height']);
+
+        return $paymentConfig;
     }
 }

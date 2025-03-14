@@ -1,11 +1,3 @@
-.payment-method#method_monei_google_pay .payment-method-title label span.monei-payment-icon {
-  background: url(../img/google-pay.svg) no-repeat;
-  width: 50px;
-}
-.payment-method#method_monei_apple_pay .payment-method-title label span.monei-payment-icon {
-  background: url(../img/apple-pay.svg) no-repeat;
-  width: 50px;
-}
 #monei-google-apple-insite-payment-form {
   width: 225px;
 }

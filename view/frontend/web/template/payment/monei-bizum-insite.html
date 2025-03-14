@@ -26,7 +26,22 @@
     />
     <label data-bind="attr: {'for': getCode()}" class="label custom-control-label">
       <span data-bind="text: getTitle()"></span>
+      <!-- ko if: getIcon() -->
+      <img
+        data-bind="
+          attr: {
+            'src': getIcon().url,
+            'alt': getTitle(),
+            'width': getIcon().width,
+            'height': getIcon().height
+          }
+        "
+        class="payment-icon"
+      />
+      <!-- /ko -->
+      <!-- ko ifnot: getIcon() -->
       <span class="monei-payment-icon"></span>
+      <!-- /ko -->
     </label>
   </div>
   <div class="payment-method-content">

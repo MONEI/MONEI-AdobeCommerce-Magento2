@@ -26,7 +26,9 @@
     />
     <label data-bind="attr: {'for': getCode()}" class="label custom-control-label">
       <span data-bind="text: getTitle()"></span>
-      <span class="monei-payment-icon"></span>
+      <!-- ko if: getCardIconContainer() && getCardIconContainer().html -->
+      <span class="monei-card-brands" data-bind="html: getCardIconContainer().html"></span>
+      <!-- /ko -->
     </label>
   </div>
   <div class="payment-method-content">
@@ -74,6 +76,18 @@
           </div>
         </fieldset>
       </div>
+
+      <!-- ko if: getCardIconContainer() && getCardIconContainer().html -->
+      <div class="monei-available-cards">
+        <label class="label">
+          <span data-bind="i18n: 'Supported cards:'"></span>
+        </label>
+        <div
+          class="monei-card-brands-container"
+          data-bind="html: getCardIconContainer().html"
+        ></div>
+      </div>
+      <!-- /ko -->
 
       <!-- ko if: (isVaultEnabled())-->
       <div class="field choice">
