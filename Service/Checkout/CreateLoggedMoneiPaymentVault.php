@@ -201,12 +201,13 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
 
             throw new LocalizedException(__('Quote or payment card information not found'));
         } catch (\Exception $e) {
-            $this->logger->error('Error resolving quote or token: ' . $e->getMessage(), [
+            $this->logger->error('Error retrieving payment token', [
                 'cartId' => $cartId,
-                'publicHash' => $publicHash
+                'publicHash' => $publicHash,
+                'error' => $e->getMessage()
             ]);
 
-            throw new LocalizedException(__('An error occurred retrieving payment information'));
+            throw new LocalizedException(__('Could not retrieve the saved card information.'));
         }
     }
 

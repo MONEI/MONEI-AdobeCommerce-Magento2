@@ -1,0 +1,34 @@
+<?php
+/**
+ * Bootstrap file for PHPUnit tests
+ * 
+ * @copyright Copyright © Monei (https://monei.com)
+ */
+
+// @codingStandardsIgnoreFile
+require_once realpath(__DIR__ . '/../vendor/autoload.php');
+
+/**
+ * Define application path constants
+ */
+define('BP', dirname(__DIR__)); // Monei module base path
+define('TESTS_TEMP_DIR', dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'var' . DIRECTORY_SEPARATOR . 'tmp');
+
+// Create temp directory if it doesn't exist
+if (!is_dir(TESTS_TEMP_DIR)) {
+    mkdir(TESTS_TEMP_DIR, 0777, true);
+}
+
+/**
+ * Set custom error handler to convert warnings to exceptions
+ */
+set_error_handler(function ($errno, $errstr, $errfile, $errline) {
+    // Only handle warnings and notices to avoid interfering with more serious errors
+    if (!(error_reporting() & $errno)) {
+        return;
+    }
+    throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+});
+
+// Extend include path to allow PHPUnit to find Magento classes referenced in our tests
+set_include_path(get_include_path() . PATH_SEPARATOR . dirname(dirname(dirname(__DIR__))));

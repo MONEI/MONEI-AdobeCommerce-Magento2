@@ -137,8 +137,8 @@ abstract class AbstractCheckoutService extends AbstractApiService
             $payment = $this->getPaymentService->execute($existingPaymentId);
 
             // Check if payment has pending status and same amount
-
-            $isPending = $payment->getStatus() === Status::PENDING && $payment->getNextAction()->getRedirectUrl() === $isUnconfirmed = $payment->getNextAction()->getType() === 'CONFIRM';
+            $isPending = $payment->getStatus() === Status::PENDING;
+            $isUnconfirmed = $payment->getNextAction() && $payment->getNextAction()->getType() === 'CONFIRM';
             $isSameAmount = $payment->getAmount() === $currentAmount;
 
             if ($isPending && $isUnconfirmed && $isSameAmount) {
