@@ -27,32 +27,6 @@ class Logger extends MonologLogger
     public const JSON_OPTIONS = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
 
     /**
-     * Mask for sensitive data in logs
-     */
-    private const MASKED_VALUE = '*** REDACTED ***';
-
-    /**
-     * List of sensitive fields that should be masked in logs
-     *
-     * @var array
-     */
-    private array $sensitiveFields = [
-        'api_key',
-        'apiKey',
-        'password',
-        'secret',
-        'token',
-        'credential',
-        'cvv',
-        'cvc',
-        'card_number',
-        'cardNumber',
-        'pan',
-        'security_code',
-        'securityCode'
-    ];
-
-    /**
      * Log API request with standardized format
      *
      * @param string $operation Operation name
@@ -66,11 +40,7 @@ class Logger extends MonologLogger
             return;
         }
 
-        // Convert and sanitize data
-        $sanitizedData = $this->sanitizeData($data);
-
-        // Pretty-print the JSON for the log
-        $prettyJson = $this->formatJsonForLog(['request' => $sanitizedData]);
+        $prettyJson = $this->formatJsonForLog(['request' => $data]);
         $this->debug("API Request: {$operation} " . $prettyJson);
     }
 
@@ -83,11 +53,7 @@ class Logger extends MonologLogger
      */
     public function logApiResponse(string $operation, $data): void
     {
-        // Convert and sanitize data
-        $sanitizedData = $this->sanitizeData($data);
-
-        // Pretty-print the JSON for the log
-        $prettyJson = $this->formatJsonForLog(['response' => $sanitizedData]);
+        $prettyJson = $this->formatJsonForLog(['response' => $data]);
         $this->debug("API Response: {$operation} " . $prettyJson);
     }
 
@@ -101,11 +67,7 @@ class Logger extends MonologLogger
      */
     public function logApiError(string $operation, string $message, array $context = []): void
     {
-        // Sanitize sensitive data
-        $sanitizedData = $this->sanitizeData($context);
-
-        // Pretty-print the JSON for the log
-        $prettyJson = $this->formatJsonForLog($sanitizedData);
+        $prettyJson = $this->formatJsonForLog($context);
         $this->critical("API Error: {$operation} - {$message} " . $prettyJson);
     }
 
@@ -126,11 +88,9 @@ class Logger extends MonologLogger
         ];
 
         if (!empty($data)) {
-            // Sanitize sensitive data
-            $context['data'] = $this->sanitizeData($data);
+            $context['data'] = $data;
         }
 
-        // Pretty-print the JSON for the log
         $prettyJson = $this->formatJsonForLog($context);
         $this->info("Payment {$type} " . $prettyJson);
     }
@@ -152,45 +112,5 @@ class Logger extends MonologLogger
         } catch (\Throwable $e) {
             return json_encode(['error' => 'Unable to encode data to JSON', 'message' => $e->getMessage()]);
         }
-    }
-
-    /**
-     * Sanitize sensitive data for logging
-     *
-     * @param array|object $data
-     * @return array
-     */
-    private function sanitizeData($data): array
-    {
-        // If data is an object, convert it to an array
-        if (is_object($data)) {
-            if (method_exists($data, 'toArray')) {
-                $data = $data->toArray();
-            } elseif (method_exists($data, '__toArray')) {
-                $data = $data->__toArray();
-            } else {
-                $data = (array) $data;
-            }
-        }
-
-        // If not an array by now, return empty array
-        if (!is_array($data)) {
-            return [];
-        }
-
-        foreach ($data as $key => $value) {
-            // Mask sensitive fields - ensure key is a string before using strtolower
-            if (is_string($key) && in_array(strtolower($key), array_map('strtolower', $this->sensitiveFields))) {
-                $data[$key] = self::MASKED_VALUE;
-                continue;
-            }
-
-            // Recurse into arrays and objects
-            if (is_array($value) || is_object($value)) {
-                $data[$key] = $this->sanitizeData($value);
-            }
-        }
-
-        return $data;
     }
 }
