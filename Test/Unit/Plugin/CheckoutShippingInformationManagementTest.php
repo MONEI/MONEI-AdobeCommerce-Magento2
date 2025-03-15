@@ -66,59 +66,69 @@ class CheckoutShippingInformationManagementTest extends TestCase
 
         // Mock ShippingInformationManagement
         $shippingInformationManagementMock = $this->createMock(ShippingInformationManagement::class);
-        
+
         // Mock ShippingInformationInterface
         $addressInformationMock = $this->createMock(ShippingInformationInterface::class);
-        
+
         // Mock ShippingAddress
         $shippingAddressMock = $this->createMock(AddressInterface::class);
-        $shippingAddressMock->expects($this->any())
+        $shippingAddressMock
+            ->expects($this->any())
             ->method('getCountryId')
             ->willReturn($countryId);
-        
-        $addressInformationMock->expects($this->any())
+
+        $addressInformationMock
+            ->expects($this->any())
             ->method('getShippingAddress')
             ->willReturn($shippingAddressMock);
-        
+
         // Mock PaymentDetailsInterface
         $paymentDetailsMock = $this->createMock(PaymentDetailsInterface::class);
-        
+
         // Mock proceed callable
         $proceed = function () use ($paymentDetailsMock) {
             return $paymentDetailsMock;
         };
-        
+
         // Set up payment methods
         $nonMoneiPaymentMethod = $this->createMock(PaymentMethodInterface::class);
-        $nonMoneiPaymentMethod->expects($this->any())
+        $nonMoneiPaymentMethod
+            ->expects($this->any())
             ->method('getCode')
             ->willReturn('checkmo');
-            
+
         $moneiPaymentMethod = $this->createMock(PaymentMethodInterface::class);
-        $moneiPaymentMethod->expects($this->any())
+        $moneiPaymentMethod
+            ->expects($this->any())
             ->method('getCode')
             ->willReturn(Monei::CARD_CODE);
-            
+
         $paymentMethods = [$nonMoneiPaymentMethod, $moneiPaymentMethod];
-        
-        $paymentDetailsMock->expects($this->once())
+
+        $paymentDetailsMock
+            ->expects($this->once())
             ->method('getPaymentMethods')
             ->willReturn($paymentMethods);
-            
-        $paymentDetailsMock->expects($this->once())
+
+        $paymentDetailsMock
+            ->expects($this->once())
             ->method('setPaymentMethods')
             ->with([$nonMoneiPaymentMethod])
             ->willReturnSelf();
-            
+
         // Configure module config mock to return empty API credentials
-        $this->moneiPaymentModuleConfigMock->expects($this->once())
+        $this
+            ->moneiPaymentModuleConfigMock
+            ->expects($this->once())
             ->method('getAccountId')
             ->willReturn('');
-            
-        $this->moneiPaymentModuleConfigMock->expects($this->once())
+
+        $this
+            ->moneiPaymentModuleConfigMock
+            ->expects($this->once())
             ->method('getApiKey')
             ->willReturn('');
-            
+
         // Execute the plugin method
         $result = $this->plugin->aroundSaveAddressInformation(
             $shippingInformationManagementMock,
@@ -126,10 +136,10 @@ class CheckoutShippingInformationManagementTest extends TestCase
             $cartId,
             $addressInformationMock
         );
-        
+
         $this->assertSame($paymentDetailsMock, $result);
     }
-    
+
     /**
      * Test when API keys are configured and some payment methods are available for the country
      */
@@ -142,81 +152,96 @@ class CheckoutShippingInformationManagementTest extends TestCase
 
         // Mock ShippingInformationManagement
         $shippingInformationManagementMock = $this->createMock(ShippingInformationManagement::class);
-        
+
         // Mock ShippingInformationInterface
         $addressInformationMock = $this->createMock(ShippingInformationInterface::class);
-        
+
         // Mock ShippingAddress
         $shippingAddressMock = $this->createMock(AddressInterface::class);
-        $shippingAddressMock->expects($this->any())
+        $shippingAddressMock
+            ->expects($this->any())
             ->method('getCountryId')
             ->willReturn($countryId);
-        
-        $addressInformationMock->expects($this->any())
+
+        $addressInformationMock
+            ->expects($this->any())
             ->method('getShippingAddress')
             ->willReturn($shippingAddressMock);
-        
+
         // Mock PaymentDetailsInterface
         $paymentDetailsMock = $this->createMock(PaymentDetailsInterface::class);
-        
+
         // Mock proceed callable
         $proceed = function () use ($paymentDetailsMock) {
             return $paymentDetailsMock;
         };
-        
+
         // Set up payment methods
         $nonMoneiPaymentMethod = $this->createMock(PaymentMethodInterface::class);
-        $nonMoneiPaymentMethod->expects($this->any())
+        $nonMoneiPaymentMethod
+            ->expects($this->any())
             ->method('getCode')
             ->willReturn('checkmo');
-            
+
         $moneiCardPaymentMethod = $this->createMock(PaymentMethodInterface::class);
-        $moneiCardPaymentMethod->expects($this->any())
+        $moneiCardPaymentMethod
+            ->expects($this->any())
             ->method('getCode')
             ->willReturn(Monei::CARD_CODE);
-            
+
         $moneiBizumPaymentMethod = $this->createMock(PaymentMethodInterface::class);
-        $moneiBizumPaymentMethod->expects($this->any())
+        $moneiBizumPaymentMethod
+            ->expects($this->any())
             ->method('getCode')
             ->willReturn(Monei::BIZUM_CODE);
-            
+
         $paymentMethods = [$nonMoneiPaymentMethod, $moneiCardPaymentMethod, $moneiBizumPaymentMethod];
-        
-        $paymentDetailsMock->expects($this->once())
+
+        $paymentDetailsMock
+            ->expects($this->once())
             ->method('getPaymentMethods')
             ->willReturn($paymentMethods);
-            
+
         // Configure module config mock to return API credentials
-        $this->moneiPaymentModuleConfigMock->expects($this->once())
+        $this
+            ->moneiPaymentModuleConfigMock
+            ->expects($this->once())
             ->method('getAccountId')
             ->willReturn($accountId);
-            
-        $this->moneiPaymentModuleConfigMock->expects($this->once())
+
+        $this
+            ->moneiPaymentModuleConfigMock
+            ->expects($this->once())
             ->method('getApiKey')
             ->willReturn($apiKey);
-            
+
         // Configure country payment methods mock
-        $availablePaymentMethods = ['CARD', 'BIZUM']; // Card and Bizum available in Spain
-        $this->countryPaymentMethodsMock->expects($this->once())
+        $availablePaymentMethods = ['CARD', 'BIZUM'];  // Card and Bizum available in Spain
+        $this
+            ->countryPaymentMethodsMock
+            ->expects($this->once())
             ->method('execute')
             ->with($countryId)
             ->willReturn($availablePaymentMethods);
-            
+
         // Configure payment method map mock
-        $this->paymentMethodMapMock->expects($this->exactly(3))
+        $this
+            ->paymentMethodMapMock
+            ->expects($this->exactly(3))
             ->method('execute')
             ->willReturnMap([
-                ['checkmo', []], // Non-Monei payment method
-                [Monei::CARD_CODE, ['CARD']], // Card payment method
-                [Monei::BIZUM_CODE, ['BIZUM']] // Bizum payment method
+                ['checkmo', []],  // Non-Monei payment method
+                [Monei::CARD_CODE, ['CARD']],  // Card payment method
+                [Monei::BIZUM_CODE, ['BIZUM']]  // Bizum payment method
             ]);
-            
+
         // Only set filtered payment methods
-        $paymentDetailsMock->expects($this->once())
+        $paymentDetailsMock
+            ->expects($this->once())
             ->method('setPaymentMethods')
             ->with([$nonMoneiPaymentMethod, $moneiCardPaymentMethod, $moneiBizumPaymentMethod])
             ->willReturnSelf();
-            
+
         // Execute the plugin method
         $result = $this->plugin->aroundSaveAddressInformation(
             $shippingInformationManagementMock,
@@ -224,91 +249,105 @@ class CheckoutShippingInformationManagementTest extends TestCase
             $cartId,
             $addressInformationMock
         );
-        
+
         $this->assertSame($paymentDetailsMock, $result);
     }
-    
+
     /**
      * Test when API keys are configured but payment method is not available for the country
      */
     public function testAroundSaveAddressInformationWithUnavailablePaymentMethod()
     {
         $cartId = 1;
-        $countryId = 'US'; // United States
+        $countryId = 'US';  // United States
         $accountId = 'test_account_id';
         $apiKey = 'test_api_key';
 
         // Mock ShippingInformationManagement
         $shippingInformationManagementMock = $this->createMock(ShippingInformationManagement::class);
-        
+
         // Mock ShippingInformationInterface
         $addressInformationMock = $this->createMock(ShippingInformationInterface::class);
-        
+
         // Mock ShippingAddress
         $shippingAddressMock = $this->createMock(AddressInterface::class);
-        $shippingAddressMock->expects($this->any())
+        $shippingAddressMock
+            ->expects($this->any())
             ->method('getCountryId')
             ->willReturn($countryId);
-        
-        $addressInformationMock->expects($this->any())
+
+        $addressInformationMock
+            ->expects($this->any())
             ->method('getShippingAddress')
             ->willReturn($shippingAddressMock);
-        
+
         // Mock PaymentDetailsInterface
         $paymentDetailsMock = $this->createMock(PaymentDetailsInterface::class);
-        
+
         // Mock proceed callable
         $proceed = function () use ($paymentDetailsMock) {
             return $paymentDetailsMock;
         };
-        
+
         // Set up payment methods
         $nonMoneiPaymentMethod = $this->createMock(PaymentMethodInterface::class);
-        $nonMoneiPaymentMethod->expects($this->any())
+        $nonMoneiPaymentMethod
+            ->expects($this->any())
             ->method('getCode')
             ->willReturn('checkmo');
-            
+
         $moneiBizumPaymentMethod = $this->createMock(PaymentMethodInterface::class);
-        $moneiBizumPaymentMethod->expects($this->any())
+        $moneiBizumPaymentMethod
+            ->expects($this->any())
             ->method('getCode')
             ->willReturn(Monei::BIZUM_CODE);
-            
+
         $paymentMethods = [$nonMoneiPaymentMethod, $moneiBizumPaymentMethod];
-        
-        $paymentDetailsMock->expects($this->once())
+
+        $paymentDetailsMock
+            ->expects($this->once())
             ->method('getPaymentMethods')
             ->willReturn($paymentMethods);
-            
+
         // Configure module config mock to return API credentials
-        $this->moneiPaymentModuleConfigMock->expects($this->once())
+        $this
+            ->moneiPaymentModuleConfigMock
+            ->expects($this->once())
             ->method('getAccountId')
             ->willReturn($accountId);
-            
-        $this->moneiPaymentModuleConfigMock->expects($this->once())
+
+        $this
+            ->moneiPaymentModuleConfigMock
+            ->expects($this->once())
             ->method('getApiKey')
             ->willReturn($apiKey);
-            
+
         // Configure country payment methods mock - Bizum not available in US
-        $availablePaymentMethods = ['CARD']; // Only Card available in US
-        $this->countryPaymentMethodsMock->expects($this->once())
+        $availablePaymentMethods = ['CARD'];  // Only Card available in US
+        $this
+            ->countryPaymentMethodsMock
+            ->expects($this->once())
             ->method('execute')
             ->with($countryId)
             ->willReturn($availablePaymentMethods);
-            
+
         // Configure payment method map mock
-        $this->paymentMethodMapMock->expects($this->exactly(2))
+        $this
+            ->paymentMethodMapMock
+            ->expects($this->exactly(2))
             ->method('execute')
             ->willReturnMap([
-                ['checkmo', []], // Non-Monei payment method
-                [Monei::BIZUM_CODE, ['BIZUM']] // Bizum payment method (not available in US)
+                ['checkmo', []],  // Non-Monei payment method
+                [Monei::BIZUM_CODE, ['BIZUM']]  // Bizum payment method (not available in US)
             ]);
-            
+
         // Only set filtered payment methods (only non-Monei payment method)
-        $paymentDetailsMock->expects($this->once())
+        $paymentDetailsMock
+            ->expects($this->once())
             ->method('setPaymentMethods')
             ->with([$nonMoneiPaymentMethod])
             ->willReturnSelf();
-            
+
         // Execute the plugin method
         $result = $this->plugin->aroundSaveAddressInformation(
             $shippingInformationManagementMock,
@@ -316,7 +355,7 @@ class CheckoutShippingInformationManagementTest extends TestCase
             $cartId,
             $addressInformationMock
         );
-        
+
         $this->assertSame($paymentDetailsMock, $result);
     }
 }

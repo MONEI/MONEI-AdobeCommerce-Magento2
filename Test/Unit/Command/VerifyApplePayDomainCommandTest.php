@@ -3,12 +3,10 @@
 namespace Monei\MoneiPayment\Test\Unit\Command;
 
 use Magento\Framework\App\State;
-use Magento\Framework\Exception\LocalizedException;
 use Monei\MoneiPayment\Api\Service\VerifyApplePayDomainInterface;
 use Monei\MoneiPayment\Command\VerifyApplePayDomainCommand;
 use Monei\MoneiPayment\Service\Logger;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 
 /**
  * Test case for VerifyApplePayDomainCommand

@@ -4,13 +4,12 @@ namespace Monei\MoneiPayment\Test\Unit\Service;
 
 use Magento\Framework\DB\Transaction;
 use Magento\Framework\DB\TransactionFactory;
-use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\InvoiceRepositoryInterface;
-use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Email\Sender\InvoiceSender;
 use Magento\Sales\Model\Order\Invoice;
 use Magento\Sales\Model\Order\Payment;
 use Magento\Sales\Model\Service\InvoiceService as MagentoInvoiceService;
+use Magento\Sales\Model\Order;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Service\InvoiceService;
@@ -82,7 +81,7 @@ class InvoiceServiceTest extends TestCase
      * @var Transaction|MockObject
      */
     private $transactionMock;
- 
+
     /**
      * Set up test environment
      */
@@ -102,7 +101,7 @@ class InvoiceServiceTest extends TestCase
         $this->paymentMock = $this->createMock(Payment::class);
         $this->invoiceMock = $this->createMock(Invoice::class);
         $this->transactionMock = $this->createMock(Transaction::class);
-        
+
         // Create the service instance to test
         $this->invoiceService = new InvoiceService(
             $this->magentoInvoiceServiceMock,

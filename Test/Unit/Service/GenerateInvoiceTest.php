@@ -4,14 +4,14 @@ namespace Monei\MoneiPayment\Test\Unit\Service;
 
 use Magento\Framework\DB\Transaction;
 use Magento\Framework\DB\TransactionFactory;
-use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Invoice;
 use Magento\Sales\Model\Order\Payment;
+use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
 use Monei\MoneiPayment\Api\LockManagerInterface;
-use Monei\MoneiPayment\Service\GenerateInvoice;
 use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
+use Monei\MoneiPayment\Service\GenerateInvoice;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 

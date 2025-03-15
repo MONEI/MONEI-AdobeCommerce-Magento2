@@ -4,7 +4,6 @@ namespace Monei\MoneiPayment\Test\Unit\Plugin;
 
 use Magento\Framework\App\Area;
 use Magento\Framework\App\State;
-use Magento\Framework\Phrase;
 use Magento\Sales\Model\Order\StatusLabel;
 use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Plugin\SalesOrderStatusLabel;
@@ -50,7 +49,7 @@ class SalesOrderStatusLabelTest extends TestCase
         // Data from provider
         $moneiStatus = Monei::STATUS_MONEI_PENDING;
         $expectedLabel = 'Pending';
-        
+
         // Set up app state mock to return frontend area
         $this->appStateMock->method('getAreaCode')->willReturn(Area::AREA_FRONTEND);
 
@@ -74,7 +73,7 @@ class SalesOrderStatusLabelTest extends TestCase
     {
         // Setup test data
         $moneiStatus = Monei::STATUS_MONEI_PENDING;
-        
+
         // Set up app state mock to return admin area
         $this->appStateMock->method('getAreaCode')->willReturn(Area::AREA_ADMINHTML);
 

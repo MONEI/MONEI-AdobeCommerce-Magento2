@@ -36,13 +36,13 @@ class SalesOrderConfigTest extends TestCase
             'complete',
             'closed'
         ];
-        
+
         // Create subject mock
         $configMock = $this->createMock(Config::class);
-        
+
         // Execute the plugin method
         $result = $this->plugin->afterGetVisibleOnFrontStatuses($configMock, $defaultStatuses);
-        
+
         // Expected MONEI statuses that should be added
         $expectedMoneiStatuses = [
             Monei::STATUS_MONEI_PENDING,
@@ -53,22 +53,22 @@ class SalesOrderConfigTest extends TestCase
             Monei::STATUS_MONEI_PARTIALLY_REFUNDED,
             Monei::STATUS_MONEI_REFUNDED
         ];
-        
+
         // Assert that all default statuses are still present
         foreach ($defaultStatuses as $status) {
             $this->assertContains($status, $result, "Default status '$status' should be preserved");
         }
-        
+
         // Assert that all MONEI statuses are added
         foreach ($expectedMoneiStatuses as $status) {
             $this->assertContains($status, $result, "MONEI status '$status' should be added");
         }
-        
+
         // Assert that the total count is correct (default + MONEI statuses)
         $this->assertCount(
             count($defaultStatuses) + count($expectedMoneiStatuses),
             $result,
-            "Result should contain all default and MONEI statuses"
+            'Result should contain all default and MONEI statuses'
         );
     }
 }

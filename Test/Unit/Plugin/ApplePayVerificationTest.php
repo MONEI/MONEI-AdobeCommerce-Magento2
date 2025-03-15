@@ -2,12 +2,12 @@
 
 namespace Monei\MoneiPayment\Test\Unit\Plugin;
 
-use Magento\Framework\App\FrontControllerInterface;
 use Magento\Framework\App\Request\Http as RequestHttp;
 use Magento\Framework\App\Response\Http as ResponseHttp;
+use Magento\Framework\App\FrontControllerInterface;
 use Magento\Framework\Filesystem\Driver\File;
-use Magento\Framework\Module\Dir;
 use Magento\Framework\Module\Dir\Reader;
+use Magento\Framework\Module\Dir;
 use Monei\MoneiPayment\Plugin\ApplePayVerification;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -79,13 +79,15 @@ class ApplePayVerificationTest extends TestCase
     public function testRegularRequestsPassThrough(): void
     {
         // Setup request mock to return a regular path
-        $this->requestMock
+        $this
+            ->requestMock
             ->expects($this->once())
             ->method('getPathInfo')
             ->willReturn('/catalog/product/view');
 
         // The file system should not be accessed
-        $this->fileMock
+        $this
+            ->fileMock
             ->expects($this->never())
             ->method('isExists');
 
@@ -105,38 +107,44 @@ class ApplePayVerificationTest extends TestCase
         // We can only test up to the point where the file is found and served
 
         // Setup request mock to return the Apple Pay verification path
-        $this->requestMock
+        $this
+            ->requestMock
             ->expects($this->once())
             ->method('getPathInfo')
             ->willReturn('/.well-known/apple-developer-merchantid-domain-association');
 
         // Setup module reader to return a file path
         $filePath = '/path/to/apple-developer-merchantid-domain-association';
-        $this->moduleReaderMock
+        $this
+            ->moduleReaderMock
             ->method('getModuleDir')
             ->with(Dir::MODULE_VIEW_DIR, 'Monei_MoneiPayment')
             ->willReturn('/path/to');
 
         // Setup file mock to indicate the file exists
-        $this->fileMock
+        $this
+            ->fileMock
             ->method('isExists')
             ->with($filePath)
             ->willReturn(true);
 
         // Setup expectation that file content is retrieved
-        $this->fileMock
+        $this
+            ->fileMock
             ->method('fileGetContents')
             ->with($filePath)
             ->willReturn('Apple Pay verification file content');
-            
+
         // Expect specific headers to be set
-        $this->responseMock
+        $this
+            ->responseMock
             ->expects($this->once())
             ->method('setHeader')
             ->with('Content-Type', 'text/plain');
-            
+
         // Expect the response body to be set
-        $this->responseMock
+        $this
+            ->responseMock
             ->expects($this->once())
             ->method('setBody')
             ->with('Apple Pay verification file content');
@@ -148,45 +156,50 @@ class ApplePayVerificationTest extends TestCase
         } catch (\Exception $e) {
             $this->fail('An exception was thrown: ' . $e->getMessage());
         }
-        
+
         // Since we can't verify beyond the exit() call, this test is incomplete
         $this->markTestIncomplete(
             'This test cannot fully verify the method due to the exit() call.'
         );
     }
-    
+
     /**
      * Test handling when the Apple Pay verification file is not found
      */
     public function testHandlesFileNotFound(): void
     {
         // Setup request mock to return the Apple Pay verification path
-        $this->requestMock
+        $this
+            ->requestMock
             ->expects($this->once())
             ->method('getPathInfo')
             ->willReturn('/.well-known/apple-developer-merchantid-domain-association');
 
         // Setup module reader to return a file path
         $filePath = '/path/to/apple-developer-merchantid-domain-association';
-        $this->moduleReaderMock
+        $this
+            ->moduleReaderMock
             ->method('getModuleDir')
             ->with(Dir::MODULE_VIEW_DIR, 'Monei_MoneiPayment')
             ->willReturn('/path/to');
 
         // Setup file mock to indicate the file does not exist
-        $this->fileMock
+        $this
+            ->fileMock
             ->method('isExists')
             ->with($filePath)
             ->willReturn(false);
-            
+
         // Expect an error to be logged
-        $this->loggerMock
+        $this
+            ->loggerMock
             ->expects($this->once())
             ->method('error')
             ->with($this->stringContains('Apple Pay verification file not found'));
-            
+
         // Expect 404 status code to be set
-        $this->responseMock
+        $this
+            ->responseMock
             ->expects($this->once())
             ->method('setHttpResponseCode')
             ->with(404);

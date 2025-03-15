@@ -4,16 +4,13 @@ namespace Monei\MoneiPayment\Test\Unit\Model;
 
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\StoreManagerInterface;
-use Monei\MoneiClient;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
-use Monei\MoneiPayment\Model\Config\Source\Mode;
 use Monei\MoneiPayment\Model\Config\Source\ModuleVersion;
 use Monei\MoneiPayment\Model\MoneiApiClient;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient as ServiceMoneiApiClient;
 use Monei\MoneiPayment\Service\Logger;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use ReflectionClass;
 
 class MoneiApiClientTest extends TestCase
 {
@@ -93,35 +90,35 @@ class MoneiApiClientTest extends TestCase
     public function testConvertResponseToArray(): void
     {
         // Create a test object
-        $testObject = (object)[
+        $testObject = (object) [
             'id' => 'pay_123456',
             'amount' => 100,
             'currency' => 'EUR',
             'status' => 'COMPLETED',
-            'customer' => (object)[
+            'customer' => (object) [
                 'name' => 'John Doe',
                 'email' => 'john@example.com'
             ],
             'items' => [
-                (object)['name' => 'Product 1', 'quantity' => 1],
-                (object)['name' => 'Product 2', 'quantity' => 2],
+                (object) ['name' => 'Product 1', 'quantity' => 1],
+                (object) ['name' => 'Product 2', 'quantity' => 2],
             ]
         ];
-        
+
         // Convert to array
         $result = $this->moneiApiClient->convertResponseToArray($testObject);
-        
+
         // Verify the result is an array with correct structure
         $this->assertIsArray($result);
         $this->assertEquals('pay_123456', $result['id']);
         $this->assertEquals(100, $result['amount']);
         $this->assertEquals('EUR', $result['currency']);
         $this->assertEquals('COMPLETED', $result['status']);
-        
+
         // Check nested objects are converted
         $this->assertIsArray($result['customer']);
         $this->assertEquals('John Doe', $result['customer']['name']);
-        
+
         // Check arrays of objects are converted
         $this->assertIsArray($result['items']);
         $this->assertIsArray($result['items'][0]);

@@ -2,11 +2,11 @@
 
 namespace Monei\MoneiPayment\Test\Unit\Command;
 
+use Magento\Framework\App\State;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Monei\MoneiPayment\Command\UpdateStatusLabels;
 use Monei\MoneiPayment\Setup\Patch\Data\UpdateOrderStatusLabels;
 use PHPUnit\Framework\TestCase;
-use Magento\Framework\App\State;
 
 /**
  * Test case for UpdateStatusLabels command
