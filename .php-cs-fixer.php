@@ -9,7 +9,8 @@
 $finder = PhpCsFixer\Finder::create()
     ->in(__DIR__)
     ->exclude('vendor')
-    ->exclude('node_modules');
+    ->exclude('node_modules')
+    ->exclude('var');
 
 $config = new PhpCsFixer\Config();
 return $config
@@ -31,7 +32,7 @@ return $config
         'no_unused_imports' => true,
         'no_whitespace_in_blank_line' => true,
         'object_operator_without_whitespace' => true,
-        'ordered_imports' => true,
+        'ordered_imports' => false,
         'standardize_not_equals' => true,
         'ternary_operator_spaces' => true,
         // Additional Magento 2 specific rules for docblocks
@@ -55,4 +56,5 @@ return $config
         'whitespace_after_comma_in_array' => true,
     ])
     ->setFinder($finder)
-    ->setRiskyAllowed(true);  // Some DocBlock rules are considered risky
+    ->setRiskyAllowed(true)  // Some DocBlock rules are considered risky
+    ->setParallelConfig(PhpCsFixer\Runner\Parallel\ParallelConfigFactory::detect());

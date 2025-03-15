@@ -2,6 +2,8 @@ parameters:
     level: 4
     treatPhpDocTypesAsCertain: false
     reportUnmatchedIgnoredErrors: false
+    bootstrapFiles:
+        - phpstan-bootstrap.php
     fileExtensions:
         - php
         - phtml
@@ -9,8 +11,11 @@ parameters:
         - .
     excludePaths:
         - vendor/*
-        - Test/*
+        - var/*
         - node_modules/*
+    # Parallel processing
+    parallel:
+        maximumNumberOfProcesses: 4
     ignoreErrors:
         # Magento extension attributes system - safe to ignore
         - '#Call to an undefined method [a-zA-Z0-9\\_]+::set(Data|ExtensionAttributes)\(\)#'
