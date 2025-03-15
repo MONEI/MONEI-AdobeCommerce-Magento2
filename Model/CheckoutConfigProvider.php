@@ -429,7 +429,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
         $paymentActionUrl = $this->urlBuilder->getUrl('monei/action');
         $completeUrl = $this->urlBuilder->getUrl('monei/payment/complete');
         $cancelOrderUrl = $this->urlBuilder->getUrl('monei/payment/cancel');
-        $failOrderStatus = Status::STATUS_FAILED;
+        $failOrderStatus = Status::FAILED;
 
         // Basic configuration
         $paymentConfig['completeUrl'] = $completeUrl;

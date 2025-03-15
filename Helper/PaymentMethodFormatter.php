@@ -10,6 +10,7 @@ namespace Monei\MoneiPayment\Helper;
 
 use Monei\Model\PaymentMethods;
 use Monei\MoneiPayment\Api\Helper\PaymentMethodFormatterInterface;
+use \Monei\MoneiPayment\Helper\PaymentMethod;
 
 /**
  * Helper class for formatting payment method information
@@ -27,7 +28,7 @@ class PaymentMethodFormatter implements PaymentMethodFormatterInterface
      * @param \Monei\MoneiPayment\Helper\PaymentMethod $paymentMethodHelper
      */
     public function __construct(
-        \Monei\MoneiPayment\Helper\PaymentMethod $paymentMethodHelper
+        PaymentMethod $paymentMethodHelper
     ) {
         $this->paymentMethodHelper = $paymentMethodHelper;
     }
@@ -127,8 +128,6 @@ class PaymentMethodFormatter implements PaymentMethodFormatterInterface
 
         if ($methodDetails && isset($methodDetails['name'])) {
             return $methodDetails['name'];
-        } elseif ($walletValue === PaymentMethods::PAYMENT_METHODS_CLICK_TO_PAY) {
-            return 'Click to Pay';
         } else {
             // Handle any other values by adding spaces before capital letters and capitalizing first letter
             return ucfirst(preg_replace('/([a-z])([A-Z])/', '$1 $2', $walletValue));

@@ -19,6 +19,7 @@ use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Monei\MoneiPayment\Api\PaymentProcessorInterface;
+use Monei\MoneiPayment\Controller\Payment\InvalidPaymentDataException;
 use Monei\MoneiPayment\Model\Api\MoneiApiClient;
 use Monei\MoneiPayment\Model\Data\PaymentDTOFactory;
 use Monei\MoneiPayment\Service\Logger;

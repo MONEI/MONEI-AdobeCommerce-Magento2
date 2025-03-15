@@ -53,12 +53,15 @@
     }
   },
   "scripts": {
-    "cs:lint": "./magento.sh phpcs",
-    "cs:fix": "./magento.sh phpcbf",
-    "analyze": "./magento.sh analyse",
+    "test": "vendor/bin/phpunit -c Test/phpunit.xml",
+    "test:unit": "vendor/bin/phpunit -c Test/phpunit.xml --testsuite='MONEI Payment Module Unit Tests'",
+    "test:coverage": "vendor/bin/phpunit -c Test/phpunit.xml --coverage-html=Test/coverage-report",
+    "cs:lint": "./bin.sh phpcs",
+    "cs:fix": "./bin.sh phpcbf || true",
+    "analyze": "./bin.sh analyse",
     "format:check": "./pretty-php.phar --check .",
     "format:fix": "./pretty-php.phar . || true",
-    "i18n:collect": "./magento.sh i18n:collect-phrases",
+    "i18n:collect": "./bin.sh i18n:collect-phrases",
     "fix:all": [
       "@cs:fix",
       "@format:fix"
