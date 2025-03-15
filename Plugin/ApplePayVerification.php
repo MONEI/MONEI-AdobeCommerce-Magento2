@@ -14,6 +14,7 @@ use Magento\Framework\App\FrontControllerInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Filesystem\Driver\File;
+use Magento\Framework\HTTP\Client\Curl;
 use Magento\Framework\Module\Dir\Reader;
 use Magento\Framework\Module\Dir;
 use Psr\Log\LoggerInterface;
@@ -23,6 +24,8 @@ use Psr\Log\LoggerInterface;
  */
 class ApplePayVerification
 {
+    private const MONEI_APPLE_PAY_FILE_URL = 'https://assets.monei.com/apple-pay/apple-developer-merchantid-domain-association/';
+
     /**
      * @var File
      */
@@ -44,21 +47,29 @@ class ApplePayVerification
     private $response;
 
     /**
+     * @var Curl
+     */
+    private $curl;
+
+    /**
      * @param File $file
      * @param Reader $moduleReader
      * @param LoggerInterface $logger
      * @param ResponseHttp $response
+     * @param Curl $curl
      */
     public function __construct(
         File $file,
         Reader $moduleReader,
         LoggerInterface $logger,
-        ResponseHttp $response
+        ResponseHttp $response,
+        Curl $curl
     ) {
         $this->file = $file;
         $this->moduleReader = $moduleReader;
         $this->logger = $logger;
         $this->response = $response;
+        $this->curl = $curl;
     }
 
     /**
@@ -89,21 +100,19 @@ class ApplePayVerification
      */
     private function serveApplePayVerificationFile(): void
     {
-        $filePath = $this->moduleReader->getModuleDir(
-            Dir::MODULE_VIEW_DIR,
-            'Monei_MoneiPayment'
-        ) . '/frontend/web/apple-developer-merchantid-domain-association';
-
         try {
-            if ($this->file->isExists($filePath)) {
-                $fileContent = $this->file->fileGetContents($filePath);
+            $this->curl->get(self::MONEI_APPLE_PAY_FILE_URL);
+            $statusCode = $this->curl->getStatus();
+
+            if ($statusCode === 200) {
+                $fileContent = $this->curl->getBody();
                 $this->response->setHeader('Content-Type', 'text/plain');
                 $this->response->setBody($fileContent);
                 $this->response->sendResponse();
                 exit;
             } else {
-                $this->logger->error('Apple Pay verification file not found: ' . $filePath);
-                $this->response->setHttpResponseCode(404);
+                $this->logger->error('Failed to fetch Apple Pay verification file. Status code: ' . $statusCode);
+                $this->response->setHttpResponseCode($statusCode);
                 $this->response->sendResponse();
                 exit;
             }
