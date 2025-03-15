@@ -1,17 +1,27 @@
 ---
 description: Always check this file for instructions on how to run magento commands
-globs:
+globs: 
+alwaysApply: false
 ---
 Magento is configued using markshust/docker-magento.
 
-Use `./magento.sh command` to run magento commands
+## Code Quality Scripts
+
+Run these scripts from the module directory:
+- `composer cs:lint`: Run PHP CodeSniffer to check coding standards
+- `composer cs:fix`: Run PHP CodeSniffer to automatically fix coding standards issues
+- `composer analyze`: Run PHPStan static analysis
+- `composer format:check`: Check PHP code formatting
+- `composer format:fix`: Fix PHP code formatting
+- `composer fix:all`: Run all code fixers (cs:fix and format:fix)
+- `composer check:all`: Run all code checks (cs:lint, analyze, and format:check)
 
 ## Custom CLI Commands
 
 - `bin/analyse`: Run `phpstan analyse` within the container to statically analyse code, passing in directory to analyse. Ex. `bin/analyse app/code`
 - `bin/bash`: Drop into the bash prompt of your Docker container. The `phpfpm` container should be mainly used to access the filesystem within Docker.
 - `bin/blackfire`: Disable or enable Blackfire. Accepts argument `disable`, `enable`, or `status`. Ex. `bin/blackfire enable`
-- `bin/cache-clean`: Access the [cache-clean](mdc:MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/https:/github.com/mage2tv/magento-cache-clean) CLI. Note the watcher is automatically started at startup in `bin/start`. Ex. `bin/cache-clean config full_page`
+- `bin/cache-clean`: Access the [cache-clean](mdc:MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/https:/github.com/mage2tv/magento-cache-clean) CLI. Note the watcher is automatically started at startup in `bin/start`. Ex. `bin/cache-clean config full_page`
 - `bin/check-dependencies`: Provides helpful recommendations for dependencies tailored to the chosen Magento version.
 - `bin/cli`: Run any CLI command without going into the bash prompt. Ex. `bin/cli ls`
 - `bin/clinotty`: Run any CLI command with no TTY. Ex. `bin/clinotty chmod u+x bin/magento`
@@ -41,7 +51,7 @@ Use `./magento.sh command` to run magento commands
 - `bin/mftf`: Run the Magento MFTF. Ex: `bin/mftf build:project`
 - `bin/mysql`: Run the MySQL CLI with database config from `env/db.env`. Ex. `bin/mysql -e "EXPLAIN core_config_data"` or`bin/mysql < magento.sql`
 - `bin/mysqldump`: Backup the Magento database. Ex. `bin/mysqldump > magento.sql`
-- `bin/n98-magerun2`: Access the [n98-magerun2](mdc:MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/https:/github.com/netz98/n98-magerun2) CLI. Ex: `bin/n98-magerun2 dev:console`
+- `bin/n98-magerun2`: Access the [n98-magerun2](mdc:MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/MoneiPayment/https:/github.com/netz98/n98-magerun2) CLI. Ex: `bin/n98-magerun2 dev:console`
 - `bin/node`: Run the node binary. Ex. `bin/node --version`
 - `bin/npm`: Run the npm binary. Ex. `bin/npm install`
 - `bin/phpcbf`: Auto-fix PHP_CodeSniffer errors with Magento2 options. Ex. `bin/phpcbf <path-to-extension>`

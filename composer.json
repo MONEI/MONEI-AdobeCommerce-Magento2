@@ -30,17 +30,6 @@
     "monei/monei-php-sdk": "^2.6",
     "monolog/monolog": "2.*"
   },
-  "require-dev": {
-    "bitexpert/phpstan-magento": "^0.11.0",
-    "friendsofphp/php-cs-fixer": "^3.38",
-    "magento/magento-coding-standard": "^34.0",
-    "magento/php-compatibility-fork": "^0.1",
-    "phpdocumentor/reflection-docblock": "^5.6",
-    "phpstan/extension-installer": "^1.4",
-    "phpstan/phpstan": "^1.12",
-    "phpunit/phpunit": "^12.0",
-    "squizlabs/php_codesniffer": "^3.7"
-  },
   "conflict": {
     "magento/product-community-edition": "<2.4.4"
   },
@@ -64,35 +53,20 @@
     }
   },
   "scripts": {
-    "lint": "vendor/bin/phpcs --standard=phpcs.xml .",
-    "fix": "vendor/bin/phpcbf --standard=phpcs.xml . || true",
-    "cs:check": "vendor/bin/php-cs-fixer check --config=.php-cs-fixer.php .",
-    "cs:fix": "vendor/bin/php-cs-fixer fix --config=.php-cs-fixer.php . || true",
-    "phpstan": "vendor/bin/phpstan analyse --memory-limit=8G -c phpstan.neon",
-    "pretty:check": "./pretty-php.phar --check .",
-    "pretty:diff": "./pretty-php.phar --diff .",
-    "pretty:fix": "./pretty-php.phar . || true",
-    "test": "vendor/bin/phpunit -c Test/phpunit.xml",
-    "test:unit": "vendor/bin/phpunit -c Test/phpunit.xml --testsuite='MONEI Payment Module Unit Tests'",
-    "test:coverage": "vendor/bin/phpunit -c Test/phpunit.xml --coverage-html=Test/coverage-report",
-    "i18n:collect": "./magento.sh i18n:collect-phrases -o app/code/Monei/MoneiPayment/i18n/en_US.csv app/code/Monei/MoneiPayment/MoneiPayment",
+    "cs:lint": "./magento.sh phpcs",
+    "cs:fix": "./magento.sh phpcbf",
+    "analyze": "./magento.sh phpstan",
+    "format:check": "./pretty-php.phar --check .",
+    "format:fix": "./pretty-php.phar . || true",
+    "i18n:collect": "./magento.sh i18n:collect-phrases",
     "fix:all": [
-      "@fix",
       "@cs:fix",
-      "@pretty:fix"
+      "@format:fix"
     ],
     "check:all": [
-      "@cs:check",
-      "@lint",
-      "@phpstan",
-      "@pretty:check",
-      "@test"
-    ],
-    "post-install-cmd": [
-      "([ $COMPOSER_DEV_MODE -eq 0 ] || vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/,../../magento/php-compatibility-fork/)"
-    ],
-    "post-update-cmd": [
-      "([ $COMPOSER_DEV_MODE -eq 0 ] || vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/,../../magento/php-compatibility-fork/)"
+      "@cs:lint",
+      "@analyze",
+      "@format:check"
     ]
   },
   "repositories": {

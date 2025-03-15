@@ -53,7 +53,7 @@ $refundReasons = $refundReasonsViewModel->getData();
                                 <div class="shipping-description-content">
                                     <?= $escaper->escapeHtml(__('Total Shipping Charges')) ?>:
 
-                                    <?php if ($this
+                                    <?php if ($block
                                         ->helper(\Magento\Tax\Helper\Data::class)
                                         ->displaySalesPriceInclTax($block->getSource()->getStoreId())
                                     ): ?>
@@ -64,7 +64,7 @@ $refundReasons = $refundReasonsViewModel->getData();
                                     <?php $_incl = $block->displayShippingPriceInclTax($_order); ?>
 
                                     <?= /* @noEscape */ $_excl ?>
-                                    <?php if ($this
+                                    <?php if ($block
                                         ->helper(\Magento\Tax\Helper\Data::class)
                                         ->displaySalesBothPrices($block->getSource()->getStoreId()) && $_incl != $_excl
                                     ): ?>

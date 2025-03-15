@@ -1,0 +1,25 @@
+# MONEI Payment Module for Magento 2
+
+## Commands
+```bash
+# Code quality
+composer cs:lint                   # Run PHPCS code sniffer
+composer cs:fix                    # Fix coding standards with PHPCBF
+composer analyze                   # Run PHPStan static analysis
+composer format:check             # Check formatting with pretty-php
+composer format:fix               # Fix formatting with pretty-php
+composer fix:all                  # Run all fixers (cs:fix and format:fix)
+composer check:all               # Run all code quality checks (cs:lint, analyze, format:check)
+
+# Frontend
+yarn format                        # Format frontend code with prettier
+
+# Magento commands (using helper script)
+./magento.sh setup:di:compile      # Compile dependency injection
+./magento.sh setup:upgrade         # Run module upgrades
+./magento.sh cache:clean           # Clean caches
+./magento.sh cache:flush           # Flush all caches
+./magento.sh module:enable Monei_MoneiPayment  # Enable module
+```
+
+## Code Style

@@ -1,23 +1,20 @@
 ---
-description: Project setup and available tools
-globs:
+description: 
+globs: 
+alwaysApply: true
 ---
 # MONEI Payment Module for Magento 2
 
 ## Commands
 ```bash
 # Code quality
-composer lint                      # Run PHPCS code sniffer
-composer fix                       # Fix coding standards with PHPCBF
-composer fix:all                   # Run all fixers (PHPCBF, PHP-CS-Fixer, pretty-php)
-composer check:all                 # Run all code quality checks
-composer cs:check                  # Check with PHP-CS-Fixer
-composer cs:fix                    # Fix with PHP-CS-Fixer
-composer phpstan                   # Run static analysis (level 4)
-composer phpstan:strict            # Run stricter static analysis (level 7)
-composer phpstan:single-file       # Analyze single file (path as argument)
-composer pretty:check              # Check formatting with pretty-php
-composer pretty:fix                # Fix formatting with pretty-php
+composer cs:lint                   # Run PHPCS code sniffer
+composer cs:fix                    # Fix coding standards with PHPCBF
+composer analyze                   # Run PHPStan static analysis
+composer format:check             # Check formatting with pretty-php
+composer format:fix               # Fix formatting with pretty-php
+composer fix:all                  # Run all fixers (cs:fix and format:fix)
+composer check:all               # Run all code quality checks (cs:lint, analyze, format:check)
 
 # Frontend
 yarn format                        # Format frontend code with prettier

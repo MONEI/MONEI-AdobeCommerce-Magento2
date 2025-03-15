@@ -1,5 +1,0 @@
----
-description: General guidelines
-globs: 
----
-write out step by step the exact plan in details, then cross check your logic and DO NOT WRITE ANY CODE until explicitly told by user
