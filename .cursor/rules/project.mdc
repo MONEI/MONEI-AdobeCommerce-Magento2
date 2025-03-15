@@ -11,10 +11,11 @@ alwaysApply: true
 composer cs:lint                   # Run PHPCS code sniffer
 composer cs:fix                    # Fix coding standards with PHPCBF
 composer analyze                   # Run PHPStan static analysis
-composer format:check             # Check formatting with pretty-php
-composer format:fix               # Fix formatting with pretty-php
-composer fix:all                  # Run all fixers (cs:fix and format:fix)
-composer check:all               # Run all code quality checks (cs:lint, analyze, format:check)
+composer format:check              # Check formatting with pretty-php
+composer format:fix                # Fix formatting with pretty-php
+composer fix:all                   # Run all fixers (cs:fix and format:fix)
+composer check:all                 # Run all code quality checks (cs:lint, analyze, format:check)
+composer test                      # Run tests
 
 # Frontend
 yarn format                        # Format frontend code with prettier

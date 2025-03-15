@@ -6,6 +6,7 @@ use Magento\Framework\App\Request\Http as RequestHttp;
 use Magento\Framework\App\Response\Http as ResponseHttp;
 use Magento\Framework\App\FrontControllerInterface;
 use Magento\Framework\Filesystem\Driver\File;
+use Magento\Framework\HTTP\Client\Curl;
 use Magento\Framework\Module\Dir\Reader;
 use Magento\Framework\Module\Dir;
 use Monei\MoneiPayment\Plugin\ApplePayVerification;
@@ -18,6 +19,8 @@ use Psr\Log\LoggerInterface;
  */
 class ApplePayVerificationTest extends TestCase
 {
+    private const MONEI_APPLE_PAY_FILE_URL = 'https://assets.monei.com/apple-pay/apple-developer-merchantid-domain-association/';
+
     /**
      * @var ApplePayVerification
      */
@@ -54,6 +57,11 @@ class ApplePayVerificationTest extends TestCase
     private $requestMock;
 
     /**
+     * @var Curl|MockObject
+     */
+    private $curlMock;
+
+    /**
      * Set up test environment
      */
     protected function setUp(): void
@@ -64,12 +72,14 @@ class ApplePayVerificationTest extends TestCase
         $this->responseMock = $this->createMock(ResponseHttp::class);
         $this->frontControllerMock = $this->createMock(FrontControllerInterface::class);
         $this->requestMock = $this->createMock(RequestHttp::class);
+        $this->curlMock = $this->createMock(Curl::class);
 
         $this->plugin = new ApplePayVerification(
             $this->fileMock,
             $this->moduleReaderMock,
             $this->loggerMock,
-            $this->responseMock
+            $this->responseMock,
+            $this->curlMock
         );
     }
 
@@ -99,13 +109,10 @@ class ApplePayVerificationTest extends TestCase
     }
 
     /**
-     * Test the Apple Pay verification file is served when it exists
+     * Test the Apple Pay verification file is fetched and served successfully
      */
     public function testApplePayVerificationFileIsServedWhenExists(): void
     {
-        // This test is limited because exit() will terminate PHPUnit
-        // We can only test up to the point where the file is found and served
-
         // Setup request mock to return the Apple Pay verification path
         $this
             ->requestMock
@@ -113,26 +120,23 @@ class ApplePayVerificationTest extends TestCase
             ->method('getPathInfo')
             ->willReturn('/.well-known/apple-developer-merchantid-domain-association');
 
-        // Setup module reader to return a file path
-        $filePath = '/path/to/apple-developer-merchantid-domain-association';
+        // Setup curl mock for successful response
         $this
-            ->moduleReaderMock
-            ->method('getModuleDir')
-            ->with(Dir::MODULE_VIEW_DIR, 'Monei_MoneiPayment')
-            ->willReturn('/path/to');
+            ->curlMock
+            ->expects($this->once())
+            ->method('get')
+            ->with(self::MONEI_APPLE_PAY_FILE_URL);
 
-        // Setup file mock to indicate the file exists
         $this
-            ->fileMock
-            ->method('isExists')
-            ->with($filePath)
-            ->willReturn(true);
+            ->curlMock
+            ->expects($this->once())
+            ->method('getStatus')
+            ->willReturn(200);
 
-        // Setup expectation that file content is retrieved
         $this
-            ->fileMock
-            ->method('fileGetContents')
-            ->with($filePath)
+            ->curlMock
+            ->expects($this->once())
+            ->method('getBody')
             ->willReturn('Apple Pay verification file content');
 
         // Expect specific headers to be set
@@ -150,23 +154,21 @@ class ApplePayVerificationTest extends TestCase
             ->with('Apple Pay verification file content');
 
         // We can't fully test the method because it calls exit()
-        // This test will pass if no exceptions are thrown
         try {
             $this->plugin->beforeDispatch($this->frontControllerMock, $this->requestMock);
         } catch (\Exception $e) {
             $this->fail('An exception was thrown: ' . $e->getMessage());
         }
 
-        // Since we can't verify beyond the exit() call, this test is incomplete
         $this->markTestIncomplete(
             'This test cannot fully verify the method due to the exit() call.'
         );
     }
 
     /**
-     * Test handling when the Apple Pay verification file is not found
+     * Test handling when the Apple Pay verification file request fails
      */
-    public function testHandlesFileNotFound(): void
+    public function testHandlesRequestFailure(): void
     {
         // Setup request mock to return the Apple Pay verification path
         $this
@@ -175,34 +177,72 @@ class ApplePayVerificationTest extends TestCase
             ->method('getPathInfo')
             ->willReturn('/.well-known/apple-developer-merchantid-domain-association');
 
-        // Setup module reader to return a file path
-        $filePath = '/path/to/apple-developer-merchantid-domain-association';
+        // Setup curl mock for failed response
         $this
-            ->moduleReaderMock
-            ->method('getModuleDir')
-            ->with(Dir::MODULE_VIEW_DIR, 'Monei_MoneiPayment')
-            ->willReturn('/path/to');
+            ->curlMock
+            ->expects($this->once())
+            ->method('get')
+            ->with(self::MONEI_APPLE_PAY_FILE_URL);
 
-        // Setup file mock to indicate the file does not exist
         $this
-            ->fileMock
-            ->method('isExists')
-            ->with($filePath)
-            ->willReturn(false);
+            ->curlMock
+            ->expects($this->once())
+            ->method('getStatus')
+            ->willReturn(404);
 
         // Expect an error to be logged
         $this
             ->loggerMock
             ->expects($this->once())
             ->method('error')
-            ->with($this->stringContains('Apple Pay verification file not found'));
+            ->with($this->stringContains('Failed to fetch Apple Pay verification file'));
 
-        // Expect 404 status code to be set
+        // Expect error status code to be set
         $this
             ->responseMock
             ->expects($this->once())
             ->method('setHttpResponseCode')
             ->with(404);
+
+        // We can't fully test the method because it calls exit()
+        $this->markTestIncomplete(
+            'This test cannot fully verify the method due to the exit() call.'
+        );
+    }
+
+    /**
+     * Test handling when an exception occurs during the request
+     */
+    public function testHandlesException(): void
+    {
+        // Setup request mock to return the Apple Pay verification path
+        $this
+            ->requestMock
+            ->expects($this->once())
+            ->method('getPathInfo')
+            ->willReturn('/.well-known/apple-developer-merchantid-domain-association');
+
+        // Setup curl mock to throw exception
+        $this
+            ->curlMock
+            ->expects($this->once())
+            ->method('get')
+            ->with(self::MONEI_APPLE_PAY_FILE_URL)
+            ->willThrowException(new \Exception('Network error'));
+
+        // Expect an error to be logged
+        $this
+            ->loggerMock
+            ->expects($this->once())
+            ->method('error')
+            ->with($this->stringContains('Error serving Apple Pay verification file'));
+
+        // Expect 500 status code to be set
+        $this
+            ->responseMock
+            ->expects($this->once())
+            ->method('setHttpResponseCode')
+            ->with(500);
 
         // We can't fully test the method because it calls exit()
         $this->markTestIncomplete(
