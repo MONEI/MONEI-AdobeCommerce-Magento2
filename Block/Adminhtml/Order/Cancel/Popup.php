@@ -11,7 +11,6 @@ namespace Monei\MoneiPayment\Block\Adminhtml\Order\Cancel;
 use Magento\Backend\Block\Template\Context;
 use Magento\Backend\Block\Template;
 use Magento\Directory\Helper\Data as DirectoryHelper;
-use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Monei\MoneiPayment\Model\Config\Source\CancelReason;
@@ -80,6 +79,7 @@ class Popup extends Template
                 $this->currentOrder = $this->orderRepository->get($orderId);
             }
         }
+
         return $this->currentOrder;
     }
 

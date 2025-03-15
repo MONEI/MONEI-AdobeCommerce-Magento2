@@ -9,12 +9,12 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Model\Config\Backend;
 
 use Magento\Framework\App\Cache\TypeListInterface;
+use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Value;
 use Magento\Framework\Data\Collection\AbstractDb;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Model\Context;
-use Magento\Framework\App\Config\Storage\WriterInterface;
 use Monei\MoneiPayment\Registry\AccountId as RegistryAccountId;
 
 class AccountId extends Value
@@ -67,7 +67,7 @@ class AccountId extends Value
     {
         if ($this->getValue()) {
             $this->registryAccountId->set($this->getValue());
-            
+
             // Store the value in a more persistent way than the registry
             $this->configWriter->save(
                 'monei/account_id_storage',
@@ -79,10 +79,10 @@ class AccountId extends Value
 
         return parent::beforeSave();
     }
-    
+
     /**
      * Get registry object
-     * 
+     *
      * @return object
      */
     protected function _getRegistry()
