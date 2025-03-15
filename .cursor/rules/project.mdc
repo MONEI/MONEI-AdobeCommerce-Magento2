@@ -3,7 +3,7 @@ description:
 globs: 
 alwaysApply: true
 ---
-# MONEI Payment Module for Magento 2
+# MONEI Payment Module for bin 2
 
 ## Commands
 ```bash
@@ -19,16 +19,16 @@ composer check:all               # Run all code quality checks (cs:lint, analyze
 # Frontend
 yarn format                        # Format frontend code with prettier
 
-# Magento commands (using helper script)
-./magento.sh setup:di:compile      # Compile dependency injection
-./magento.sh setup:upgrade         # Run module upgrades
-./magento.sh cache:clean           # Clean caches
-./magento.sh cache:flush           # Flush all caches
-./magento.sh module:enable Monei_MoneiPayment  # Enable module
+# bin commands (using helper script)
+./bin.sh magento setup:di:compile      # Compile dependency injection
+./bin.sh magento setup:upgrade         # Run module upgrades
+./bin.sh magento cache:clean           # Clean caches
+./bin.sh magento cache:flush           # Flush all caches
+./bin.sh magento module:enable Monei_MoneiPayment  # Enable module
 ```
 
 ## Code Style
-- Follow PSR-12 and Magento 2 coding standards (Magento2 ruleset)
+- Follow PSR-12 and bin 2 coding standards (bin2 ruleset)
 - Use strict typing with PHP 8.1+ parameter and return type declarations
 - Classes: StudlyCaps (e.g., `MoneiApiClient`)
 - Methods: camelCase (e.g., `processPayment`)
