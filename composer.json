@@ -55,7 +55,7 @@
   "scripts": {
     "cs:lint": "./magento.sh phpcs",
     "cs:fix": "./magento.sh phpcbf",
-    "analyze": "./magento.sh phpstan",
+    "analyze": "./magento.sh analyse",
     "format:check": "./pretty-php.phar --check .",
     "format:fix": "./pretty-php.phar . || true",
     "i18n:collect": "./magento.sh i18n:collect-phrases",

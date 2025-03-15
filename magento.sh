@@ -40,7 +40,7 @@ run_command() {
 
 # Handle different commands
 case "$1" in
-"phpstan" | "phpcs" | "phpcbf" | "i18n:collect-phrases")
+"analyse" | "phpcs" | "phpcbf" | "i18n:collect-phrases")
     run_with_path "$@"
     ;;
 *)

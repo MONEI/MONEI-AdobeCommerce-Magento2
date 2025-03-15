@@ -29,6 +29,7 @@ node_modules
 /examples/*
 
 pretty-php.phar
+pretty-php.phar.asc
 
 # Development symlinks
 /dev/vendor_symlink
