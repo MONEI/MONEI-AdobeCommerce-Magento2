@@ -20,15 +20,15 @@ class TypeOfPayment implements OptionSourceInterface
     public const TYPE_AUTHORIZED = 2;
 
     /**
-     * Get array of options for payment type configuration
+     * Get array of options for payment type configuration.
      *
      * @return array Array of options: [['label' => string, 'value' => int]]
      */
     public function toOptionArray(): array
     {
         return [
-            ['label' => __('Pre-authorized'), 'value' => self::TYPE_PRE_AUTHORIZED],
-            ['label' => __('Authorized'), 'value' => self::TYPE_AUTHORIZED],
+            ['label' => __('Authorize'), 'value' => self::TYPE_PRE_AUTHORIZED],
+            ['label' => __('Authorize and Capture'), 'value' => self::TYPE_AUTHORIZED],
         ];
     }
 }

@@ -1,13 +1,10 @@
-.payment-method#method_monei_bizum .payment-method-title label span.monei-payment-icon{
-    background: url(../img/bizum.svg) no-repeat;
-    width: 70px;
-}
 #monei-bizum-insite-payment-form {
-    width: 225px;
+  min-width: 220px;
+  min-height: 45px;
 }
 
 @media only screen and (max-width: 768px) {
-    #monei-bizum-insite-payment-form {
-        width: 100%;
-    }
+  #monei-bizum-insite-payment-form {
+    width: 100%;
+  }
 }

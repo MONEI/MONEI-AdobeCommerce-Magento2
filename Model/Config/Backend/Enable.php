@@ -13,12 +13,12 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Value;
 use Magento\Framework\Data\Collection\AbstractDb;
 use Magento\Framework\Message\ManagerInterface;
-use Magento\Framework\Model\Context;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
+use Magento\Framework\Model\Context;
 use Magento\Framework\Registry;
 use Monei\MoneiPayment\Model\Payment\Monei;
-use Monei\MoneiPayment\Service\Shared\GetAvailableMoneiPaymentMethods;
-use Monei\MoneiPayment\Service\Shared\GetMoneiPaymentCodesByMagentoPaymentCode;
+use Monei\MoneiPayment\Service\Shared\AvailablePaymentMethods;
+use Monei\MoneiPayment\Service\Shared\PaymentMethodMap;
 
 /**
  * Get Monei payment method configuration class.
@@ -27,27 +27,30 @@ class Enable extends Value
 {
     /**
      * Message manager for admin notifications.
+     *
      * @var ManagerInterface
      */
     protected ManagerInterface $messageManager;
 
     /**
      * Service to get Monei payment codes by Magento payment code.
-     * @var GetMoneiPaymentCodesByMagentoPaymentCode
+     *
+     * @var PaymentMethodMap
      */
-    private GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode;
+    private PaymentMethodMap $paymentMethodMap;
 
     /**
      * Service to get available Monei payment methods.
-     * @var GetAvailableMoneiPaymentMethods
+     *
+     * @var AvailablePaymentMethods
      */
-    private GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods;
+    private AvailablePaymentMethods $availablePaymentMethods;
 
     /**
      * Enable constructor.
      *
-     * @param GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods
-     * @param GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode
+     * @param AvailablePaymentMethods $availablePaymentMethods
+     * @param PaymentMethodMap $paymentMethodMap
      * @param Context $context
      * @param Registry $registry
      * @param ScopeConfigInterface $config
@@ -58,8 +61,8 @@ class Enable extends Value
      * @param array $data
      */
     public function __construct(
-        GetAvailableMoneiPaymentMethods $getAvailableMoneiPaymentMethods,
-        GetMoneiPaymentCodesByMagentoPaymentCode $getMoneiPaymentCodesByMagentoPaymentCode,
+        AvailablePaymentMethods $availablePaymentMethods,
+        PaymentMethodMap $paymentMethodMap,
         Context $context,
         Registry $registry,
         ScopeConfigInterface $config,
@@ -70,8 +73,8 @@ class Enable extends Value
         array $data = []
     ) {
         parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);
-        $this->getAvailableMoneiPaymentMethods = $getAvailableMoneiPaymentMethods;
-        $this->getMoneiPaymentCodesByMagentoPaymentCode = $getMoneiPaymentCodesByMagentoPaymentCode;
+        $this->availablePaymentMethods = $availablePaymentMethods;
+        $this->paymentMethodMap = $paymentMethodMap;
         $this->messageManager = $messageManager;
     }
 
@@ -82,17 +85,18 @@ class Enable extends Value
      */
     protected function getAvailablePaymentMethods(): array
     {
-        return $this->getAvailableMoneiPaymentMethods->execute();
+        return $this->availablePaymentMethods->execute();
     }
 
     /**
      * Get Monei payment codes that correspond to a specific Magento payment code.
      *
      * @param string $magentoPaymentCode Magento payment method code
+     *
      * @return array List of corresponding Monei payment method codes
      */
     protected function getMoneiPaymentCodesByMagentoPaymentCode(string $magentoPaymentCode): array
     {
-        return $this->getMoneiPaymentCodesByMagentoPaymentCode->execute($magentoPaymentCode);
+        return $this->paymentMethodMap->execute($magentoPaymentCode);
     }
 }

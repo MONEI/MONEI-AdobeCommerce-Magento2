@@ -21,14 +21,17 @@ Accept payments through [MONEI](https://monei.com) in your Adobe Commerce (Magen
       - [Option 2: Direct Download from Main Branch](#option-2-direct-download-from-main-branch)
     - [Before You Begin](#before-you-begin)
   - [Configuration](#configuration)
+  - [Available Commands](#available-commands)
+  - [MONEI PHP SDK](#monei-php-sdk)
   - [Demo](#demo)
   - [Development](#development)
     - [Docker Setup](#docker-setup)
     - [Code Quality Tools](#code-quality-tools)
       - [Prerequisites](#prerequisites)
       - [Setting up development environment](#setting-up-development-environment)
-      - [Available Commands](#available-commands)
+      - [Available Commands](#available-commands-1)
     - [Environment Variables](#environment-variables)
+    - [Prettier Setup](#prettier-setup)
   - [Troubleshooting](#troubleshooting)
   - [Contributing](#contributing)
   - [License](#license)
@@ -49,12 +52,15 @@ MONEI Payments for Adobe Commerce (Magento 2) allows you to seamlessly integrate
 - Real-time payment notifications and order status updates
 - Detailed transaction reporting in your MONEI dashboard
 - Customizable payment experience to match your store's design
+- Integration with the official MONEI PHP SDK for reliable API communication
+- Automatic Apple Pay domain verification when configuration is saved
 
 ## Requirements
 
 - PHP: ^8.1.0
 - Magento: >=2.4.5
 - MONEI Account ([Sign up here](https://monei.com/signup))
+- MONEI PHP SDK: ^2.4.3 (automatically installed with Composer)
 
 ## Installation
 
@@ -91,13 +97,24 @@ php magento/bin/magento cache:flush
 1. Download the latest release from the [GitHub repository](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/releases)
 2. Extract the contents to your `app/code/Monei/MoneiPayment` directory
 3. Follow steps 2-4 from the Composer installation instructions
+4. Install the MONEI PHP SDK:
+
+```bash
+composer require monei/monei-php-sdk:^2.4.3
+```
 
 #### Option 2: Direct Download from Main Branch
 
 1. Download the [latest version](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/archive/refs/heads/main.zip) from the main branch
 2. Create a directory called `app/code/Monei/MoneiPayment` inside your Magento 2 project
 3. Unzip the downloaded archive in this directory
-4. Go to your Adobe Commerce (Magento 2) root directory and run:
+4. Install the MONEI PHP SDK:
+
+```bash
+composer require monei/monei-php-sdk:^2.4.3
+```
+
+5. Go to your Adobe Commerce (Magento 2) root directory and run:
 
 ```bash
 php bin/magento module:enable Monei_MoneiPayment
@@ -109,6 +126,7 @@ php bin/magento cache:clean
 ### Before You Begin
 
 When testing your integration:
+
 - Use your [test mode](https://docs.monei.com/docs/testing) API Key from [MONEI Dashboard → Settings → API Access](https://dashboard.monei.com/settings/api)
 - Check the status of test payments in your [MONEI Dashboard → Payments](https://dashboard.monei.com/payments) (in test mode)
 
@@ -121,6 +139,33 @@ When testing your integration:
 5. Save the configuration
 
 For detailed configuration instructions, please refer to our [official documentation](https://docs.monei.com/docs/e-commerce/adobe-commerce/).
+
+## Available Commands
+
+This module provides several Magento CLI commands to help you manage MONEI payments and configurations. All commands are located in the `@Command` folder:
+
+```bash
+# Register a domain with Apple Pay through MONEI
+php bin/magento monei:verify-apple-pay-domain <domain>
+
+# Update order status labels in the database
+php bin/magento monei:update-status-labels
+```
+
+These commands are useful for testing, troubleshooting, and automating various MONEI payment operations from the command line.
+
+## MONEI PHP SDK
+
+This module integrates with the official [MONEI PHP SDK](https://github.com/MONEI/monei-php-sdk) version 2.4.3 or higher. The SDK provides a reliable and well-maintained interface to the MONEI API, handling:
+
+- Payment creation, retrieval, and management
+- Webhook signature verification
+- Error handling and exceptions
+- Proper API authentication
+
+The SDK is automatically installed when you install the module via Composer. If you installed the module manually, make sure to install the SDK separately as shown in the installation instructions.
+
+For detailed information on how to use the MONEI PHP SDK in your custom code, see our [SDK Integration Guide](docs/MONEI_PHP_SDK.md).
 
 ## Demo
 
@@ -172,10 +217,10 @@ composer lint
 composer fix
 
 # Run PHP-CS-Fixer check
-composer cs-check
+composer cs:check
 
 # Run PHP-CS-Fixer auto-fix
-composer cs-fix
+composer cs:fix
 
 # Run PHP_CodeSniffer check
 composer phpcs
@@ -183,11 +228,24 @@ composer phpcs
 # Run PHP_CodeSniffer auto-fix
 composer phpcbf
 
+# Run pretty-php check
+composer pretty:check
+
+# Run pretty-php with diff output
+composer pretty:diff
+
+# Run pretty-php auto-fix
+composer pretty:fix
+
+# Run all fixers (PHP_CodeSniffer, PHP-CS-Fixer, and pretty-php)
+composer fix:all
+
 # Check for critical security issues
 ./scripts/check-critical.sh
 ```
 
 The code quality tools check for:
+
 - PHP syntax errors
 - PSR-12 and Magento 2 coding standards
 - Code style and formatting
@@ -206,6 +264,39 @@ SKIP_CS_FIXER=1 composer lint
 # Run fix script with only CS Fixer (skips PHP_CodeSniffer)
 FIX_CS_ONLY=1 composer fix
 ```
+
+### Prettier Setup
+
+This project uses Prettier for code formatting. To get started:
+
+1. Install dependencies:
+
+   ```bash
+   yarn install
+   ```
+
+2. Format all files:
+
+   ```bash
+   yarn format
+   ```
+
+3. Format only staged files:
+
+   ```bash
+   yarn format:staged
+   ```
+
+4. Check for formatting issues without making changes:
+
+   ```bash
+   yarn format:check
+   ```
+
+5. VS Code Integration:
+   Install the [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extension for VS Code.
+
+The configuration supports formatting for JavaScript, TypeScript, JSON, HTML, XML, CSS, LESS, YAML, and Markdown files. PHP files are handled by Pretty PHP.
 
 ## Troubleshooting
 
@@ -249,22 +340,11 @@ The MONEI Payment Module for Adobe Commerce (Magento 2) adheres to Magento Marke
 
 ### Validation
 
-```bash
-# Run complete validation with all severity levels
-composer lint
+We use multiple tools to ensure code quality:
 
-# Check only Marketplace critical issues (severity 10)
-composer lint:marketplace
-
-# Run PHP style validation
-composer lint:style
-
-# Run both marketplace and style validations
-composer validate
-
-# Generate detailed reports in reports/ directory
-composer report
-```
+- **PHP_CodeSniffer**: Checks for PSR-12 and Magento 2 coding standards
+- **PHP-CS-Fixer**: Fixes code style issues automatically
+- **pretty-php**: Formats code for readability and consistency (see [pretty-php documentation](docs/PRETTY-PHP.md))
 
 ### Fixing Code Issues
 
@@ -274,4 +354,3 @@ composer fix
 ```
 
 For detailed information about Magento Marketplace validation, please see [docs/MARKETPLACE_VALIDATION.md](docs/MARKETPLACE_VALIDATION.md).
-

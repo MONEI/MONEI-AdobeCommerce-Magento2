@@ -19,7 +19,7 @@ class TypeOfConnection implements OptionSourceInterface
     public const TYPE_INSITE = 'insite';
 
     /**
-     * Get array of options for connection type configuration
+     * Get array of options for connection type configuration.
      *
      * @return array Array of options: [['label' => string, 'value' => string]]
      */

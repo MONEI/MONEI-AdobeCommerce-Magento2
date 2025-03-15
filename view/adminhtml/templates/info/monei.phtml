@@ -5,63 +5,67 @@
  * @copyright Copyright © Monei (https://monei.com)
  */
 
-/**
- * @var $block \Monei\MoneiPayment\Block\Info\Monei
- */
+/** @var $block \Monei\MoneiPayment\Block\Info\Monei */
 $paymentTitle = $block->getPaymentTitle();
 $paymentInfo = $block->getPaymentInfo();
 ?>
 <?php if (is_array($paymentInfo)): ?>
-    <?php
-    // Prepare combined payment method display
-    $paymentMethodDisplay = '';
-
-    if (isset($paymentInfo['brand']) && !empty($paymentInfo['brand'])) {
-        $brand = strtolower($paymentInfo['brand']);
-        $paymentMethodDisplay = ucfirst($paymentInfo['brand']);
-
-        // Add card type inline if available
-        if (isset($paymentInfo['type']) && !empty($paymentInfo['type'])) {
-            $paymentMethodDisplay .= ' ' . ucfirst($paymentInfo['type']);
-        }
-
-        if (isset($paymentInfo['last4']) && !empty($paymentInfo['last4'])) {
-            $paymentMethodDisplay .= ' •••• ' . $paymentInfo['last4'];
-        }
-    } elseif (isset($paymentInfo['method']) && !empty($paymentInfo['method'])) {
-        $method = $paymentInfo['method'];
-        $paymentMethodDisplay = ucfirst($method);
-    }
-    ?>
+    <?php $paymentMethodDisplay = $block->getFormattedPaymentMethodDisplay(); ?>
 
     <table class="data-table admin__table-secondary">
         <tbody>
+            <?php if (isset($paymentInfo['id']) && !empty($paymentInfo['id'])): ?>
+            <tr>
+                <th><?= $escaper->escapeHtml(__('Payment ID')) ?></th>
+                <td>
+                    <a href="https://dashboard.monei.com/payments/<?= $escaper->escapeHtml($paymentInfo['id']) ?>" target="_blank">
+                        <?= $escaper->escapeHtml($paymentInfo['id']) ?>
+                    </a>
+                </td>
+            </tr>
+            <?php endif; ?>
             <tr>
                 <th><?= $escaper->escapeHtml(__('Payment Method')) ?></th>
                 <td>
-                    <?= $escaper->escapeHtml($paymentMethodDisplay) ?>
+                    <?php if ($block->paymentMethodFormatter->getPaymentMethodIcon($paymentInfo)): ?>
+                        <?= /* @noEscape */ $block->paymentMethodFormatter->getPaymentMethodIconHtml($paymentInfo, ['class' => 'payment-icon', 'style' => 'vertical-align: middle;']) ?>
+                    <?php endif; ?>
+                    <?php
+                    // Show card type and last4 but not the brand name
+                    $cardDetails = '';
+                    if (isset($paymentInfo['type']) && !empty($paymentInfo['type'])) {
+                        $cardDetails .= ucfirst($paymentInfo['type']) . ' ';
+                    }
+                    if (isset($paymentInfo['last4']) && !empty($paymentInfo['last4'])) {
+                        $cardDetails .= '•••• ' . $paymentInfo['last4'];
+                    }
+
+                    if (!empty($cardDetails)) {
+                        echo $escaper->escapeHtml($cardDetails);
+                    } elseif (empty($block->paymentMethodFormatter->getPaymentMethodIcon($paymentInfo))) {
+                        // Fallback if no icon and no card details
+                        echo $escaper->escapeHtml($paymentMethodDisplay);
+                    }
+                    ?>
                 </td>
             </tr>
 
-            <?php if (isset($paymentInfo['tokenizationMethod']) && !empty($paymentInfo['tokenizationMethod'])):
-                // Pretty print tokenizationMethod value
-                $walletValue = $paymentInfo['tokenizationMethod'];
-
-                // Convert camelCase to readable format (e.g., googlePay -> Google Pay)
-                if ($walletValue === 'googlePay') {
-                    $walletValue = 'Google Pay';
-                } elseif ($walletValue === 'applePay') {
-                    $walletValue = 'Apple Pay';
-                } elseif ($walletValue === 'clickToPay') {
-                    $walletValue = 'Click to Pay';
-                } else {
-                    // Handle any other values by adding spaces before capital letters and capitalizing first letter
-                    $walletValue = ucfirst(preg_replace('/([a-z])([A-Z])/', '$1 $2', $walletValue));
-                }
+            <?php
+            if (isset($paymentInfo['tokenizationMethod']) && !empty($paymentInfo['tokenizationMethod'])):
+                $walletValue = $block->formatWalletDisplay($paymentInfo['tokenizationMethod']);
                 ?>
                 <tr>
                     <th><?= $escaper->escapeHtml(__('Digital Wallet')) ?></th>
-                    <td><?= $escaper->escapeHtml($walletValue) ?></td>
+                    <td>
+                        <?php
+                        $walletInfo = ['method' => $paymentInfo['tokenizationMethod']];
+                        if ($block->paymentMethodFormatter->getPaymentMethodIcon($walletInfo)):
+                            ?>
+                            <?= /* @noEscape */ $block->paymentMethodFormatter->getPaymentMethodIconHtml($walletInfo, ['class' => 'payment-icon', 'style' => 'vertical-align: middle;']) ?>
+                        <?php else: ?>
+                            <?= $escaper->escapeHtml($walletValue) ?>
+                        <?php endif; ?>
+                    </td>
                 </tr>
             <?php endif; ?>
 
@@ -72,33 +76,84 @@ $paymentInfo = $block->getPaymentInfo();
                 </tr>
             <?php endif; ?>
 
-            <?php if (isset($paymentInfo['bank']) && !empty($paymentInfo['bank'])): ?>
+            <?php if (isset($paymentInfo['cardholderEmail']) && !empty($paymentInfo['cardholderEmail'])): ?>
                 <tr>
-                    <th><?= $escaper->escapeHtml(__('Issuing Bank')) ?></th>
-                    <td><?= $escaper->escapeHtml($paymentInfo['bank']) ?></td>
+                    <th><?= $escaper->escapeHtml(__('Cardholder Email')) ?></th>
+                    <td><a href="mailto:<?= $escaper->escapeHtmlAttr($paymentInfo['cardholderEmail']) ?>"><?= $escaper->escapeHtml($paymentInfo['cardholderEmail']) ?></a></td>
                 </tr>
             <?php endif; ?>
 
             <?php if (isset($paymentInfo['phoneNumber']) && !empty($paymentInfo['phoneNumber'])): ?>
                 <tr>
                     <th><?= $escaper->escapeHtml(__('Phone Number')) ?></th>
-                    <td><?= $escaper->escapeHtml($paymentInfo['phoneNumber']) ?></td>
+                    <td><?= $escaper->escapeHtml($block->formatPhoneNumber($paymentInfo['phoneNumber'])) ?></td>
+                </tr>
+            <?php endif; ?>
+
+            <?php if (isset($paymentInfo['iban']) && !empty($paymentInfo['iban'])): ?>
+                <tr>
+                    <th><?= $escaper->escapeHtml(__('IBAN')) ?></th>
+                    <td><?= $escaper->escapeHtml($paymentInfo['iban']) ?></td>
+                </tr>
+            <?php endif; ?>
+
+            <?php if (isset($paymentInfo['accountName']) && !empty($paymentInfo['accountName'])): ?>
+                <tr>
+                    <th><?= $escaper->escapeHtml(__('Account Holder')) ?></th>
+                    <td><?= $escaper->escapeHtml($paymentInfo['accountName']) ?></td>
                 </tr>
             <?php endif; ?>
 
             <?php if (isset($paymentInfo['country']) && !empty($paymentInfo['country'])): ?>
                 <tr>
-                    <th><?= $escaper->escapeHtml(__('Country')) ?></th>
+                    <th><?= $escaper->escapeHtml(__('Country Code')) ?></th>
                     <td><?= $escaper->escapeHtml($paymentInfo['country']) ?></td>
                 </tr>
             <?php endif; ?>
+
+            <?php if (isset($paymentInfo['authorizationCode']) && !empty($paymentInfo['authorizationCode'])): ?>
+                <tr>
+                    <th><?= $escaper->escapeHtml(__('Authorization Code')) ?></th>
+                    <td>
+                        <?= $escaper->escapeHtml($paymentInfo['authorizationCode']) ?>
+                    </td>
+                </tr>
+            <?php endif; ?>
+
+            <?php if (isset($paymentInfo['email']) && !empty($paymentInfo['email'])): ?>
+                <tr>
+                    <th><?= $escaper->escapeHtml(__('Customer Email')) ?></th>
+                    <td><a href="mailto:<?= $escaper->escapeHtmlAttr($paymentInfo['email']) ?>"><?= $escaper->escapeHtml($paymentInfo['email']) ?></a></td>
+                </tr>
+            <?php endif; ?>
+
+            <?php if (isset($paymentInfo['name']) && !empty($paymentInfo['name'])): ?>
+                <tr>
+                    <th><?= $escaper->escapeHtml(__('Customer Name')) ?></th>
+                    <td><?= $escaper->escapeHtml($paymentInfo['name']) ?></td>
+                </tr>
+            <?php endif; ?>
+
+            <?php // PayPal-specific information ?>
+            <?php if (isset($paymentInfo['method']) && $paymentInfo['method'] === 'paypal'): ?>
+                <?php if (isset($paymentInfo['orderId']) && !empty($paymentInfo['orderId'])): ?>
+                    <tr>
+                        <th><?= $escaper->escapeHtml(__('PayPal Order ID')) ?></th>
+                        <td><?= $escaper->escapeHtml($paymentInfo['orderId']) ?></td>
+                    </tr>
+                <?php endif; ?>
+
+                <?php if (isset($paymentInfo['payerId']) && !empty($paymentInfo['payerId'])): ?>
+                    <tr>
+                        <th><?= $escaper->escapeHtml(__('PayPal Customer ID')) ?></th>
+                        <td><?= $escaper->escapeHtml($paymentInfo['payerId']) ?></td>
+                    </tr>
+                <?php endif; ?>
+            <?php endif; ?>
         </tbody>
     </table>
-
-    <?php if (isset($paymentInfo['currency']) && !empty($paymentInfo['currency'])): ?>
-        <div style="margin-top: 10px; font-style: italic; color: #666; font-size: 13px;">
-            <?= $escaper->escapeHtml(__('The order was placed using')) ?>
-            <?= $escaper->escapeHtml($paymentInfo['currency']) ?>.
-        </div>
-    <?php endif; ?>
+<?php else: ?>
+    <div class="message message-notice">
+        <div><?= $escaper->escapeHtml(__('Payment details will be available after payment confirmation')) ?></div>
+    </div>
 <?php endif; ?>

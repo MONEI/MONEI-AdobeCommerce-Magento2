@@ -29,8 +29,6 @@ interface MoneiPaymentModuleConfigInterface
 
     public const PRODUCTION_API_KEY = 'payment/monei/production_api_key';
 
-    public const LANGUAGE = 'payment/monei/language';
-
     public const TITLE = 'payment/monei/title';
 
     public const DESCRIPTION = 'payment/monei/description';
@@ -46,6 +44,10 @@ interface MoneiPaymentModuleConfigInterface
     public const SPECIFIC_COUNTRIES = 'payment/monei/specificcountry';
 
     public const SORT_ORDER = 'payment/monei/sort_order';
+
+    public const SEND_ORDER_EMAIL = 'payment/monei/send_order_email';
+
+    public const SEND_INVOICE_EMAIL = 'payment/monei/send_invoice_email';
 
     /**
      * Check if payment method is enabled.
@@ -125,7 +127,7 @@ interface MoneiPaymentModuleConfigInterface
     public function getProductionApiKey($storeId = null): string;
 
     /**
-     * Get language.
+     * Get language based on store locale.
      *
      * @param ?int $storeId
      */
@@ -186,4 +188,18 @@ interface MoneiPaymentModuleConfigInterface
      * @param int|null $storeId
      */
     public function getSortOrder($storeId = null): int;
+
+    /**
+     * Check if invoice emails should be sent.
+     *
+     * @param int|null $storeId
+     */
+    public function shouldSendInvoiceEmail($storeId = null): bool;
+
+    /**
+     * Check if order emails should be sent after payment confirmation.
+     *
+     * @param int|null $storeId
+     */
+    public function shouldSendOrderEmail($storeId = null): bool;
 }

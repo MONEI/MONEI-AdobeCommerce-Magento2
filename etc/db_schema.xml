@@ -3,19 +3,71 @@
   ~ @author Monei Team
   ~ @copyright Copyright © Monei (https://monei.com)
   -->
-<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
-  <table name="pending_monei_orders" resource="default" engine="innodb" comment="Monei B2bCatalogByCustomerGroup Rule Table">
-    <column xsi:type="int" name="entity_id" unsigned="true" nullable="false" identity="true" comment="ID"/>
-    <column xsi:type="varchar" name="order_increment_id" nullable="true" length="50" comment="Order Increment ID"/>
+<schema
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd"
+>
+  <table
+    name="pending_monei_orders"
+    resource="default"
+    engine="innodb"
+    comment="MONEI B2bCatalogByCustomerGroup Rule Table"
+  >
+    <column
+      xsi:type="int"
+      name="entity_id"
+      unsigned="true"
+      nullable="false"
+      identity="true"
+      comment="ID"
+    />
+    <column
+      xsi:type="varchar"
+      name="order_increment_id"
+      nullable="true"
+      length="50"
+      comment="Order Increment ID"
+    />
+    <column
+      xsi:type="smallint"
+      name="save_monei_tokenization"
+      unsigned="true"
+      nullable="false"
+      identity="false"
+      default="0"
+      comment="Save MONEI tokenization?"
+    />
     <constraint xsi:type="primary" referenceId="PRIMARY">
-      <column name="entity_id"/>
+      <column name="entity_id" />
     </constraint>
   </table>
   <table name="quote">
-    <column xsi:type="varchar" name="monei_payment_id" nullable="true" length="255" comment="Monei Payment Id"/>
-    <column xsi:type="smallint" name="save_monei_tokenization" unsigned="true" nullable="false" identity="false" default="0" comment="Save monei tokenization?"/>
+    <column
+      xsi:type="varchar"
+      name="monei_payment_id"
+      nullable="true"
+      length="255"
+      comment="MONEI Payment Id"
+    />
+    <column
+      xsi:type="smallint"
+      name="save_monei_tokenization"
+      unsigned="true"
+      nullable="false"
+      identity="false"
+      default="0"
+      comment="Save MONEI tokenization?"
+    />
   </table>
   <table name="sales_order">
-    <column xsi:type="smallint" name="save_monei_tokenization" unsigned="true" nullable="false" identity="false" default="0" comment="Save monei tokenization?"/>
+    <column
+      xsi:type="smallint"
+      name="save_monei_tokenization"
+      unsigned="true"
+      nullable="false"
+      identity="false"
+      default="0"
+      comment="Save MONEI tokenization?"
+    />
   </table>
 </schema>

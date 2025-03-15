@@ -1,0 +1,26 @@
+# Dependencies
+node_modules
+vendor
+.yarn
+
+# Build outputs
+/dist
+/build
+/var
+
+# Generated files
+*.min.js
+*.min.css
+composer.lock
+yarn.lock
+package-lock.json
+
+# Cache
+.php-cs-fixer.cache
+.phpstan-cache
+
+# Misc
+.git
+.github
+.vscode
+.cursor

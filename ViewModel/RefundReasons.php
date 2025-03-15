@@ -20,7 +20,7 @@ class RefundReasons implements ArgumentInterface
     private $reasonsSource;
 
     /**
-     * Constructor
+     * Constructor.
      *
      * @param CancelReason $reasonsSource
      */

@@ -16,7 +16,7 @@ interface CreateLoggedMoneiPaymentVaultInterface
      * @param string $cartId
      * @param string $publicHash
      *
-     * @return array
+     * @return mixed[]
      */
-    public function execute(string $cartId, string $publicHash): array;
+    public function execute(string $cartId, string $publicHash);
 }

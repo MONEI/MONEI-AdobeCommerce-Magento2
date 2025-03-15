@@ -1,0 +1,63 @@
+<?php
+/** @copyright Copyright © Monei (https://monei.com) */
+
+/** @var \Magento\Framework\View\Element\Template $block */
+/** @var \Magento\Framework\Escaper $escaper */
+/** @var \Monei\MoneiPayment\ViewModel\Order\PaymentInfo $viewModel */
+$viewModel = $block->getData('view_model');
+$order = $viewModel->getOrder();
+$payment = $order->getPayment();
+?>
+
+<?php if ($payment && $payment->getMethod() === 'monei_payment'): ?>
+    <div class="admin__page-section-item-content">
+        <div class="monei-payment-details">
+            <h3><?= $escaper->escapeHtml(__('MONEI Payment Details')) ?></h3>
+            <table class="data-table admin__table-secondary">
+                <tbody>
+                    <?php if ($paymentId = $payment->getAdditionalInformation(\Monei\MoneiPayment\Api\Data\PaymentInfoInterface::PAYMENT_ID)): ?>
+                    <tr>
+                        <th><?= $escaper->escapeHtml(__('Payment ID:')) ?></th>
+                        <td><?= $escaper->escapeHtml($paymentId) ?></td>
+                    </tr>
+                    <?php endif; ?>
+
+                    <?php if ($paymentStatus = $payment->getAdditionalInformation(\Monei\MoneiPayment\Api\Data\PaymentInfoInterface::PAYMENT_STATUS)): ?>
+                    <tr>
+                        <th><?= $escaper->escapeHtml(__('Status:')) ?></th>
+                        <td><?= $escaper->escapeHtml($paymentStatus) ?></td>
+                    </tr>
+                    <?php endif; ?>
+
+                    <?php if ($errorCode = $payment->getAdditionalInformation(\Monei\MoneiPayment\Api\Data\PaymentInfoInterface::PAYMENT_ERROR_CODE)): ?>
+                    <tr>
+                        <th><?= $escaper->escapeHtml(__('Error Code:')) ?></th>
+                        <td><?= $escaper->escapeHtml($errorCode) ?></td>
+                    </tr>
+                    <?php endif; ?>
+
+                    <?php if ($errorMessage = $payment->getAdditionalInformation(\Monei\MoneiPayment\Api\Data\PaymentInfoInterface::PAYMENT_ERROR_MESSAGE)): ?>
+                    <tr>
+                        <th><?= $escaper->escapeHtml(__('Error Message:')) ?></th>
+                        <td><?= $escaper->escapeHtml($errorMessage) ?></td>
+                    </tr>
+                    <?php endif; ?>
+
+                    <?php if ($paymentAmount = $payment->getAdditionalInformation(\Monei\MoneiPayment\Api\Data\PaymentInfoInterface::PAYMENT_AMOUNT)): ?>
+                    <tr>
+                        <th><?= $escaper->escapeHtml(__('Amount:')) ?></th>
+                        <td><?= $escaper->escapeHtml($paymentAmount) ?> <?= $escaper->escapeHtml($payment->getAdditionalInformation(\Monei\MoneiPayment\Api\Data\PaymentInfoInterface::PAYMENT_CURRENCY)) ?></td>
+                    </tr>
+                    <?php endif; ?>
+
+                    <?php if ($updatedAt = $payment->getAdditionalInformation(\Monei\MoneiPayment\Api\Data\PaymentInfoInterface::PAYMENT_UPDATED_AT)): ?>
+                    <tr>
+                        <th><?= $escaper->escapeHtml(__('Last Updated:')) ?></th>
+                        <td><?= $escaper->escapeHtml($updatedAt) ?></td>
+                    </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+<?php endif; ?>

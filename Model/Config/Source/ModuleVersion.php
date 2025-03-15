@@ -12,8 +12,8 @@ use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Value;
 use Magento\Framework\Data\Collection\AbstractDb;
-use Magento\Framework\Model\Context;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
+use Magento\Framework\Model\Context;
 use Magento\Framework\Module\ResourceInterface;
 use Magento\Framework\Registry;
 
@@ -63,17 +63,19 @@ class ModuleVersion extends Value
     /**
      * Inject current installed module version as the config value.
      *
-     * @return void
+     * @return $this
      */
     public function afterLoad()
     {
         $version = $this->moduleResource->getDbVersion('Monei_MoneiPayment');
 
         $this->setValue($version);
+
+        return $this;
     }
 
     /**
-     * Get current installed module version
+     * Get current installed module version.
      *
      * @return string|false
      */

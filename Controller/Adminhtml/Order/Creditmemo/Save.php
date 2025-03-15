@@ -14,7 +14,6 @@ use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Phrase;
 use Magento\Sales\Api\CreditmemoManagementInterface;
 use Magento\Sales\Controller\Adminhtml\Order\CreditmemoLoader;
 use Magento\Sales\Helper\Data as SalesData;
@@ -33,10 +32,14 @@ class Save extends Action implements HttpPostActionInterface
      */
     public const ADMIN_RESOURCE = 'Magento_Sales::sales_creditmemo';
 
-    /** @var CreditmemoLoader */
+    /**
+     * @var CreditmemoLoader
+     */
     protected $creditmemoLoader;
 
-    /** @var CreditmemoSender */
+    /**
+     * @var CreditmemoSender
+     */
     protected $creditmemoSender;
 
     /**
@@ -44,7 +47,9 @@ class Save extends Action implements HttpPostActionInterface
      */
     protected $resultForwardFactory;
 
-    /** @var SalesData */
+    /**
+     * @var SalesData
+     */
     private $salesData;
 
     /**
@@ -95,7 +100,7 @@ class Save extends Action implements HttpPostActionInterface
             if ($creditmemo) {
                 if (!$creditmemo->isValidGrandTotal()) {
                     throw new LocalizedException(
-                        new Phrase('The credit memo\'s total must be positive.')
+                        __("The credit memo's total must be positive.")
                     );
                 }
 
@@ -117,7 +122,7 @@ class Save extends Action implements HttpPostActionInterface
                 if (isset($data['do_offline'])) {
                     if (!$data['do_offline'] && !empty($data['refund_customerbalance_return_enable'])) {
                         throw new LocalizedException(
-                            new Phrase('Cannot create online refund for Refund to Store Credit.')
+                            __('Cannot create online refund for Refund to Store Credit.')
                         );
                     }
                 }
@@ -148,7 +153,7 @@ class Save extends Action implements HttpPostActionInterface
             $this->_getSession()->setFormData($data);
         } catch (\Exception $e) {
             $this->_objectManager->get(LoggerInterface::class)->critical($e);
-            $this->messageManager->addErrorMessage(__('We can\'t save the credit memo right now.'));
+            $this->messageManager->addErrorMessage(__("We can't save the credit memo right now."));
         }
         $resultRedirect->setPath('sales/*/new', ['_current' => true]);
 

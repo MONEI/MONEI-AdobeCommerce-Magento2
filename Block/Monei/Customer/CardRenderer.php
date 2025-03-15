@@ -10,6 +10,7 @@ namespace Monei\MoneiPayment\Block\Monei\Customer;
 
 use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Block\AbstractCardRenderer;
+use Monei\MoneiPayment\Helper\PaymentMethod;
 use Monei\MoneiPayment\Model\Payment\Monei;
 
 /**
@@ -21,14 +22,26 @@ use Monei\MoneiPayment\Model\Payment\Monei;
  */
 class CardRenderer extends AbstractCardRenderer
 {
-    public const ICON_TYPE_BY_BRAND = [
-        'visa' => 'VI',
-        'mastercard' => 'MC',
-        'diners' => 'DN',
-        'amex' => 'AE',
-        'jcb' => 'JCB',
-        'unionpay' => 'UN',
-    ];
+    /**
+     * @var PaymentMethod
+     */
+    private $paymentMethodHelper;
+
+    /**
+     * @param \Magento\Framework\View\Element\Template\Context $context
+     * @param PaymentMethod $paymentMethodHelper
+     * @param \Magento\Payment\Model\CcConfigProvider $iconsProvider
+     * @param array $data
+     */
+    public function __construct(
+        \Magento\Framework\View\Element\Template\Context $context,
+        PaymentMethod $paymentMethodHelper,
+        \Magento\Payment\Model\CcConfigProvider $iconsProvider,
+        array $data = []
+    ) {
+        parent::__construct($context, $iconsProvider, $data);
+        $this->paymentMethodHelper = $paymentMethodHelper;
+    }
 
     /**
      * Check if payment token can be rendered.
@@ -69,9 +82,9 @@ class CardRenderer extends AbstractCardRenderer
      */
     public function getIconUrl()
     {
-        $brand = $this->getTokenDetails()['brand'];
+        $brand = $this->getTokenDetails()['brand'] ?? '';
 
-        return $this->getIconForType($this->getPaymentIcon($brand))['url'];
+        return $this->paymentMethodHelper->getIconFromPaymentType('card', $brand);
     }
 
     /**
@@ -81,9 +94,15 @@ class CardRenderer extends AbstractCardRenderer
      */
     public function getIconHeight()
     {
-        $brand = $this->getTokenDetails()['brand'];
+        $brand = $this->getTokenDetails()['brand'] ?? '';
+        $height = $this->paymentMethodHelper->getPaymentMethodHeight($brand);
 
-        return $this->getIconForType($this->getPaymentIcon($brand))['height'];
+        // Convert pixel string to int (e.g., '30px' to 30)
+        if ($height) {
+            return (int) str_replace('px', '', $height);
+        }
+
+        return 30;  // Default height if not found
     }
 
     /**
@@ -93,18 +112,38 @@ class CardRenderer extends AbstractCardRenderer
      */
     public function getIconWidth()
     {
-        $brand = $this->getTokenDetails()['brand'];
+        $brand = $this->getTokenDetails()['brand'] ?? '';
+        $width = $this->paymentMethodHelper->getPaymentMethodWidth($brand);
 
-        return $this->getIconForType($this->getPaymentIcon($brand))['width'];
+        // Convert pixel string to int (e.g., '40px' to 40)
+        if ($width) {
+            return (int) str_replace('px', '', $width);
+        }
+
+        return 40;  // Default width if not found
     }
 
     /**
-     * Get payment icon code by brand.
+     * Get card type or brand name.
      *
-     * @param string $brandCard
+     * @return string
      */
-    private function getPaymentIcon(string $brandCard): string
+    public function getCardType()
     {
-        return self::ICON_TYPE_BY_BRAND[$brandCard] ?? $brandCard;
+        $brand = $this->getTokenDetails()['brand'] ?? '';
+
+        // Try to get name from our payment method configuration
+        $cardType = $this->paymentMethodHelper->getPaymentMethodName($brand);
+
+        // If we don't have a specific name and get a generic one (based on formatting the code)
+        // Try to make it look better
+        if ($cardType === ucwords(str_replace('_', ' ', $brand))) {
+            // Use title case instead of all uppercase for common card types
+            if (strtolower($brand) === 'visa' || strtolower($brand) === 'mastercard') {
+                $cardType = ucfirst(strtolower($brand));
+            }
+        }
+
+        return $cardType ?: __('Card');
     }
 }

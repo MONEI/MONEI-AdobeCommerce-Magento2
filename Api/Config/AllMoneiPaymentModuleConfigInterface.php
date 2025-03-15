@@ -17,6 +17,7 @@ interface AllMoneiPaymentModuleConfigInterface
      * Check if any payment methods is enabled.
      *
      * @param int|null $storeId
+     *
      * @return bool
      */
     public function isAnyPaymentEnabled($storeId = null): bool;

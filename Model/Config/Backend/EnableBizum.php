@@ -15,7 +15,7 @@ class EnableBizum extends Enable
     protected const PAYMENT_METHOD_CODE = Monei::BIZUM_CODE;
 
     /**
-     * Process value before saving
+     * Process value before saving.
      *
      * @return EnableBizum
      */
@@ -34,7 +34,7 @@ class EnableBizum extends Enable
     }
 
     /**
-     * Check if payment method is available in Monei account
+     * Check if payment method is available in Monei account.
      *
      * @return bool
      */
