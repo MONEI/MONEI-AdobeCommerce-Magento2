@@ -8,8 +8,6 @@ use Magento\Framework\App\Response\Http as HttpResponse;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Sales\Api\OrderRepositoryInterface;
-use Monei\ApiException;
-use Monei\MoneiClient;
 use Monei\Model\Payment;
 use Monei\MoneiPayment\Api\PaymentProcessingResultInterface;
 use Monei\MoneiPayment\Api\PaymentProcessorInterface;
@@ -18,6 +16,7 @@ use Monei\MoneiPayment\Model\Api\MoneiApiClient;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
 use Monei\MoneiPayment\Model\Data\PaymentDTOFactory;
 use Monei\MoneiPayment\Service\Logger;
+use Monei\MoneiClient;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 

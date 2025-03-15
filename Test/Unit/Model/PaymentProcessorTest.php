@@ -3,25 +3,23 @@
 namespace Monei\MoneiPayment\Test\Unit\Model;
 
 use Magento\Framework\Api\SearchCriteriaBuilder;
-use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
-use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
+use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
-use Monei\MoneiPayment\Api\Data\PaymentInfoInterface;
-use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
+use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Model\Api\MoneiApiClient;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
 use Monei\MoneiPayment\Model\Data\PaymentDTOFactory;
 use Monei\MoneiPayment\Model\Data\PaymentProcessingResult;
 use Monei\MoneiPayment\Model\PaymentProcessor;
+use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 use Monei\MoneiPayment\Service\InvoiceService;
 use Monei\MoneiPayment\Service\Logger;
-use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -189,9 +187,11 @@ class PaymentProcessorTest extends TestCase
         $this->paymentDtoMock->method('isCanceled')->willReturn(false);
         $this->paymentDtoMock->method('isExpired')->willReturn(false);
         $this->paymentDtoMock->method('getStatusCode')->willReturn(null);
-        
+
         // Set up payment dto factory
-        $this->paymentDtoFactoryMock->method('createFromArray')
+        $this
+            ->paymentDtoFactoryMock
+            ->method('createFromArray')
             ->with(['status' => 'SUCCEEDED'])
             ->willReturn($this->paymentDtoMock);
 
@@ -224,9 +224,11 @@ class PaymentProcessorTest extends TestCase
         // Set up payment dto
         $this->paymentDtoMock->method('getId')->willReturn('pay_123456');
         $this->paymentDtoMock->method('getStatus')->willReturn('SUCCEEDED');
-        
+
         // Set up payment dto factory
-        $this->paymentDtoFactoryMock->method('createFromArray')
+        $this
+            ->paymentDtoFactoryMock
+            ->method('createFromArray')
             ->with(['status' => 'SUCCEEDED'])
             ->willReturn($this->paymentDtoMock);
 
@@ -248,14 +250,14 @@ class PaymentProcessorTest extends TestCase
         // Test when order is locked
         $this->lockManagerMock->method('isOrderLocked')->with('123456')->willReturn(true);
         $this->lockManagerMock->method('isPaymentLocked')->with('123456', 'pay_123456')->willReturn(false);
-        
+
         $this->assertTrue($this->paymentProcessor->isProcessing('123456', 'pay_123456'));
 
         // Test when payment is locked
         $this->lockManagerMock = $this->createMock(LockManagerInterface::class);
         $this->lockManagerMock->method('isOrderLocked')->with('123456')->willReturn(false);
         $this->lockManagerMock->method('isPaymentLocked')->with('123456', 'pay_123456')->willReturn(true);
-        
+
         $this->paymentProcessor = new PaymentProcessor(
             $this->orderRepositoryMock,
             $this->invoiceServiceMock,
@@ -277,7 +279,7 @@ class PaymentProcessorTest extends TestCase
         $this->lockManagerMock = $this->createMock(LockManagerInterface::class);
         $this->lockManagerMock->method('isOrderLocked')->with('123456')->willReturn(false);
         $this->lockManagerMock->method('isPaymentLocked')->with('123456', 'pay_123456')->willReturn(false);
-        
+
         $this->paymentProcessor = new PaymentProcessor(
             $this->orderRepositoryMock,
             $this->invoiceServiceMock,
@@ -303,21 +305,21 @@ class PaymentProcessorTest extends TestCase
             'id' => 'pay_123456',
             'status' => 'SUCCEEDED'
         ];
-        
+
         $this->assertTrue($this->paymentProcessor->validatePaymentData($validData));
-        
+
         // Invalid data - missing id
         $invalidData1 = [
             'status' => 'SUCCEEDED'
         ];
-        
+
         $this->assertFalse($this->paymentProcessor->validatePaymentData($invalidData1));
-        
+
         // Invalid data - missing status
         $invalidData2 = [
             'id' => 'pay_123456'
         ];
-        
+
         $this->assertFalse($this->paymentProcessor->validatePaymentData($invalidData2));
     }
 }

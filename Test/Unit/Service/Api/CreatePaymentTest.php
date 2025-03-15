@@ -7,15 +7,15 @@ use Magento\Framework\Url;
 use Monei\Model\CreatePaymentRequest;
 use Monei\Model\Payment;
 use Monei\Model\PaymentTransactionType;
-use Monei\MoneiClient;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Model\Config\Source\TypeOfPayment;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\CreatePayment;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\Logger;
-use PHPUnit\Framework\TestCase;
+use Monei\MoneiClient;
 use Monei\PaymentsApi;
+use PHPUnit\Framework\TestCase;
 
 class CreatePaymentTest extends TestCase
 {
@@ -98,7 +98,9 @@ class CreatePaymentTest extends TestCase
         $paymentMock = $this->createMock(Payment::class);
 
         // Set up payment API to return our mock
-        $this->paymentsApiMock->expects($this->once())
+        $this
+            ->paymentsApiMock
+            ->expects($this->once())
             ->method('create')
             ->with($this->isInstanceOf(CreatePaymentRequest::class))
             ->willReturn($paymentMock);
@@ -139,10 +141,13 @@ class CreatePaymentTest extends TestCase
 
         // Set up payment API to return our mock and capture the request
         $capturedRequest = null;
-        $this->paymentsApiMock->expects($this->once())
+        $this
+            ->paymentsApiMock
+            ->expects($this->once())
             ->method('create')
             ->with($this->callback(function (CreatePaymentRequest $request) use (&$capturedRequest) {
                 $capturedRequest = $request;
+
                 return true;
             }))
             ->willReturn($paymentMock);
@@ -183,7 +188,7 @@ class CreatePaymentTest extends TestCase
 
         // Verify the result is our mock
         $this->assertSame($paymentMock, $result);
-        
+
         // Verify the request parameters
         $this->assertEquals(1000, $capturedRequest->getAmount());
         $this->assertEquals('EUR', $capturedRequest->getCurrency());

@@ -8,7 +8,6 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service;
 
-use Monei\MoneiPayment\Model\Config\Source\LogLevel;
 use Monolog\Logger as MonologLogger;
 
 /**
@@ -37,6 +36,7 @@ class Logger extends MonologLogger
     {
         if (empty($data)) {
             $this->debug("API Request: {$operation}", []);
+
             return;
         }
 

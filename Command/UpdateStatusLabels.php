@@ -2,6 +2,7 @@
 
 namespace Monei\MoneiPayment\Command;
 
+use Magento\Framework\App\Area;
 use Magento\Framework\App\State;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Monei\MoneiPayment\Setup\Patch\Data\UpdateOrderStatusLabels;
@@ -74,7 +75,7 @@ class UpdateStatusLabels extends Command
     {
         try {
             $this->state->emulateAreaCode(
-                \Magento\Framework\App\Area::AREA_ADMINHTML,
+                Area::AREA_ADMINHTML,
                 function () use ($output) {
                     $output->writeln('<info>Updating MONEI order status labels...</info>');
                     $this->updateOrderStatusLabels->apply();

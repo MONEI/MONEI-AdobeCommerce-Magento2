@@ -13,7 +13,9 @@ use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\View\Asset\Repository;
 use Magento\Framework\View\Design\Theme\ThemeProviderInterface;
+use Magento\Framework\View\DesignInterface;
 use Magento\Store\Model\App\Emulation;
+use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Monei\Model\PaymentMethods;
 use Monei\MoneiPayment\Model\Payment\Monei;
@@ -390,8 +392,8 @@ class PaymentMethod
         }
 
         $themeId = $this->scopeConfig->getValue(
-            \Magento\Framework\View\DesignInterface::XML_PATH_THEME_ID,
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
+            DesignInterface::XML_PATH_THEME_ID,
+            ScopeInterface::SCOPE_STORE,
             $this->storeManager->getStore()->getId()
         );
 

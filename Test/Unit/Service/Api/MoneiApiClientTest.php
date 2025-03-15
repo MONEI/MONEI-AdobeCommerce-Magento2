@@ -3,10 +3,8 @@
 namespace Monei\MoneiPayment\Test\Unit\Service\Api;
 
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\StoreManagerInterface;
-use Monei\MoneiClient;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Model\Config\Source\ModuleVersion;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
@@ -115,7 +113,7 @@ class MoneiApiClientTest extends TestCase
         $this->assertEquals([], $this->moneiApiClient->convertResponseToArray(null));
 
         // Test with object that has toArray method
-        $objectWithToArray = new class {
+        $objectWithToArray = new class() {
             public function toArray()
             {
                 return ['converted' => 'data'];
@@ -124,7 +122,7 @@ class MoneiApiClientTest extends TestCase
         $this->assertEquals(['converted' => 'data'], $this->moneiApiClient->convertResponseToArray($objectWithToArray));
 
         // Test with standard object
-        $stdObject = (object)['prop' => 'value'];
+        $stdObject = (object) ['prop' => 'value'];
         $this->assertEquals(['prop' => 'value'], $this->moneiApiClient->convertResponseToArray($stdObject));
 
         // Test with scalar

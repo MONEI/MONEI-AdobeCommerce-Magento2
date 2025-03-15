@@ -15,7 +15,6 @@ use Monei\Model\PaymentRefundReason;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
 use Monei\MoneiPayment\Api\Data\PaymentInfoInterface;
 use Monei\MoneiPayment\Api\Service\RefundPaymentInterface;
-use Monei\MoneiPayment\Model\Payment\Status;
 use Monei\MoneiPayment\Service\Logger;
 
 /**
@@ -80,6 +79,7 @@ class Refund implements CommandInterface
                 'Cannot refund payment without a valid payment ID',
                 ['order_id' => $payment->getOrder()->getIncrementId()]
             );
+
             throw new LocalizedException(__('Cannot refund payment: Missing payment ID'));
         }
 
@@ -173,6 +173,7 @@ class Refund implements CommandInterface
                     'amount' => $commandSubject['amount']
                 ]
             );
+
             throw new LocalizedException(__('Error processing refund: %1', $e->getMessage()));
         }
 

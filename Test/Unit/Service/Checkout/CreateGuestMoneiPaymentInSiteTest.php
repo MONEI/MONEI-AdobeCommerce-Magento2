@@ -300,7 +300,8 @@ class CreateGuestMoneiPaymentInSiteTest extends TestCase
         $currency = 'EUR';
 
         // Create a service mock that will bypass the actual API call
-        $servicePartialMock = $this->getMockBuilder(CreateGuestMoneiPaymentInSite::class)
+        $servicePartialMock = $this
+            ->getMockBuilder(CreateGuestMoneiPaymentInSite::class)
             ->setConstructorArgs([
                 $this->loggerMock,
                 $this->exceptionHandlerMock,
@@ -316,23 +317,28 @@ class CreateGuestMoneiPaymentInSiteTest extends TestCase
             ])
             ->onlyMethods(['checkExistingPayment'])
             ->getMock();
-            
+
         // Make the mock return our expected response directly
-        $servicePartialMock->method('checkExistingPayment')
+        $servicePartialMock
+            ->method('checkExistingPayment')
             ->willReturn([['id' => $existingPaymentId]]);
-        
+
         // Mock required methods to reach checkExistingPayment
-        $this->maskedQuoteIdToQuoteIdMock->method('execute')
+        $this
+            ->maskedQuoteIdToQuoteIdMock
+            ->method('execute')
             ->with($maskedCartId)
             ->willReturn($quoteId);
-            
+
         $this->quoteMock = $this->createMock(QuoteStub::class);
         $this->quoteMock->method('getId')->willReturn($quoteId);
         $this->quoteMock->method('reserveOrderId')->willReturnSelf();
-        
-        $this->checkoutSessionMock->method('getQuote')
+
+        $this
+            ->checkoutSessionMock
+            ->method('getQuote')
             ->willReturn($this->quoteMock);
-            
+
         // Execute the service
         $result = $servicePartialMock->execute($maskedCartId, $email);
 
@@ -407,19 +413,19 @@ class CreateGuestMoneiPaymentInSiteTest extends TestCase
         $this->quoteMock->method('getData')->with(QuoteInterface::ATTR_FIELD_MONEI_PAYMENT_ID)->willReturn(null);
         $this->quoteMock->method('getBaseGrandTotal')->willReturn($amount);
         $this->quoteMock->method('getBaseCurrencyCode')->willReturn($currency);
-        
+
         // Configure checkout session to return our new mock
         $this->checkoutSessionMock->method('getQuote')->willReturn($this->quoteMock);
-        
+
         // Skip address mocking to avoid issues with executeBilling call in getAddressDetailsByQuoteAddress
         // Just mock the service results directly
         $customerDetails = ['email' => $email, 'name' => 'Test Customer'];
         $this->getCustomerDetailsByQuoteMock->method('execute')->willReturn($customerDetails);
-        
+
         // Mock address details services results instead of the address methods
         $billingDetails = ['address' => ['city' => 'Test City']];
         $this->getAddressDetailsByQuoteAddressMock->method('executeBilling')->willReturn($billingDetails);
-        
+
         $shippingDetails = ['address' => ['city' => 'Test City']];
         $this->getAddressDetailsByQuoteAddressMock->method('executeShipping')->willReturn($shippingDetails);
 

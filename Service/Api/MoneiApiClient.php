@@ -281,6 +281,7 @@ class MoneiApiClient
                     'response_type' => get_class($response),
                     'error' => $e->getMessage()
                 ]);
+
                 return ['error' => 'Failed to convert response: ' . $e->getMessage()];
             }
         }

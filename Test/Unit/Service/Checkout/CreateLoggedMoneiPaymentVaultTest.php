@@ -9,11 +9,8 @@ use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
-use Magento\Vault\Api\PaymentTokenRepositoryInterface;
-use Magento\Vault\Model\PaymentTokenFactory;
 use Monei\Model\Payment;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
-use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
 use Monei\MoneiPayment\Api\Service\ConfirmPaymentInterface;
@@ -171,36 +168,45 @@ class CreateLoggedMoneiPaymentVaultTest extends TestCase
         $this->paymentTokenMock->method('getEntityId')->willReturn(1);
 
         // Set up token management to return our token mock
-        $this->tokenManagementMock->method('getByPublicHash')
+        $this
+            ->tokenManagementMock
+            ->method('getByPublicHash')
             ->with($publicHash, 1)
             ->willReturn($this->paymentTokenMock);
 
         // Configure checkout session to return quote mock
-        $this->checkoutSessionMock->method('getQuote')
+        $this
+            ->checkoutSessionMock
+            ->method('getQuote')
             ->willReturn($this->quoteMock);
 
         // Mock the payment creation instead
         $paymentMock = $this->createMock(\Monei\Model\Payment::class);
         $nextActionMock = new class($redirectUrl) {
             private string $redirectUrl;
-            
-            public function __construct(string $redirectUrl) {
+
+            public function __construct(string $redirectUrl)
+            {
                 $this->redirectUrl = $redirectUrl;
             }
-            
-            public function getRedirectUrl() {
+
+            public function getRedirectUrl()
+            {
                 return $this->redirectUrl;
             }
-            
-            public function getType() {
+
+            public function getType()
+            {
                 return 'REDIRECT';
             }
         };
-        
+
         $paymentMock->method('getId')->willReturn($paymentId);
         $paymentMock->method('getNextAction')->willReturn($nextActionMock);
-        
-        $this->createPaymentMock->method('execute')
+
+        $this
+            ->createPaymentMock
+            ->method('execute')
             ->willReturn($paymentMock);
 
         // Execute the service
@@ -268,7 +274,8 @@ class CreateLoggedMoneiPaymentVaultTest extends TestCase
 
         // Mock exception handler directly in the API service class
         // Override the executeApiCall method to throw our custom exception
-        $service = $this->getMockBuilder(CreateLoggedMoneiPaymentVault::class)
+        $service = $this
+            ->getMockBuilder(CreateLoggedMoneiPaymentVault::class)
             ->setConstructorArgs([
                 $this->loggerMock,
                 $this->exceptionHandlerMock,
@@ -284,10 +291,11 @@ class CreateLoggedMoneiPaymentVaultTest extends TestCase
             ])
             ->onlyMethods(['executeApiCall'])
             ->getMock();
-        
-        $service->method('executeApiCall')
+
+        $service
+            ->method('executeApiCall')
             ->willThrowException(new LocalizedException(__('Error processing payment with saved card')));
-            
+
         $this->createVaultPaymentService = $service;
 
         try {

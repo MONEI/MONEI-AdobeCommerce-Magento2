@@ -13,6 +13,7 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Monei\MoneiPayment\Service\Logger;
 use Monei\ApiException;
 use Monei\MoneiClient;
+use InvalidArgumentException;
 
 /**
  * Abstract base class for MONEI API services
@@ -120,7 +121,7 @@ abstract class AbstractApiService
     ) {
         // Verify required dependencies
         if (!$this->apiClient || !$this->exceptionHandler) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Cannot execute MONEI SDK call: MoneiApiClient or ApiExceptionHandler is missing.'
             );
         }

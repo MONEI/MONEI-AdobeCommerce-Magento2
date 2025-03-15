@@ -9,15 +9,14 @@ use Magento\Sales\Model\Order;
 use Monei\Model\Payment;
 use Monei\Model\PaymentStatus;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
-use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
 use Monei\MoneiPayment\Api\PaymentProcessingResultInterface;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
 use Monei\MoneiPayment\Model\Data\PaymentDTOFactory;
 use Monei\MoneiPayment\Model\PaymentProcessor;
 use Monei\MoneiPayment\Service\Api\CreatePayment;
 use Monei\MoneiPayment\Service\Api\GetPayment;
-use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Integration test that simulates a full payment flow
@@ -88,7 +87,7 @@ class PaymentFlowTest extends TestCase
 
         // 2. Set up payment request data
         $paymentRequestData = [
-            'amount' => 9999, // 99.99 EUR in cents
+            'amount' => 9999,  // 99.99 EUR in cents
             'currency' => 'EUR',
             'order_id' => '100000123',
             'customer' => [
@@ -115,13 +114,15 @@ class PaymentFlowTest extends TestCase
         $paymentResponseMock->method('getOrderId')->willReturn('100000123');
 
         // 4. Mock the payment creation service
-        $this->createPaymentService->method('execute')
+        $this
+            ->createPaymentService
+            ->method('execute')
             ->with($this->callback(function ($data) use ($paymentRequestData) {
                 // Verify essential parameters
-                return isset($data['amount']) 
-                    && isset($data['currency']) 
-                    && isset($data['order_id'])
-                    && isset($data['shipping_details']);
+                return isset($data['amount']) &&
+                    isset($data['currency']) &&
+                    isset($data['order_id']) &&
+                    isset($data['shipping_details']);
             }))
             ->willReturn($paymentResponseMock);
 
@@ -135,7 +136,9 @@ class PaymentFlowTest extends TestCase
         $paymentDtoMock->method('getOrderId')->willReturn('100000123');
         $paymentDtoMock->method('isSucceeded')->willReturn(true);
 
-        $this->paymentDtoFactory->method('createFromArray')
+        $this
+            ->paymentDtoFactory
+            ->method('createFromArray')
             ->willReturn($paymentDtoMock);
 
         // 6. Mock the payment processor
@@ -143,12 +146,15 @@ class PaymentFlowTest extends TestCase
         $processingResultMock->method('isSuccess')->willReturn(true);
         $processingResultMock->method('getStatus')->willReturn(PaymentStatus::SUCCEEDED);
 
-        $this->paymentProcessor->method('process')
+        $this
+            ->paymentProcessor
+            ->method('process')
             ->with('100000123', 'pay_123456789', $this->anything())
             ->willReturn($processingResultMock);
 
         // 7. Execute the payment flow (this would be called by a controller in real code)
         $paymentId = null;
+
         try {
             // Create the payment
             $payment = $this->createPaymentService->execute($paymentRequestData);
@@ -210,7 +216,9 @@ class PaymentFlowTest extends TestCase
         $paymentResponseMock->method('getOrderId')->willReturn('100000124');
 
         // 4. Mock the payment creation service
-        $this->createPaymentService->method('execute')
+        $this
+            ->createPaymentService
+            ->method('execute')
             ->with($this->anything())
             ->willReturn($paymentResponseMock);
 
@@ -227,7 +235,9 @@ class PaymentFlowTest extends TestCase
         $paymentDtoMock->method('getStatusCode')->willReturn('E001');
         $paymentDtoMock->method('getStatusMessage')->willReturn('Payment declined');
 
-        $this->paymentDtoFactory->method('createFromArray')
+        $this
+            ->paymentDtoFactory
+            ->method('createFromArray')
             ->willReturn($paymentDtoMock);
 
         // 6. Mock the payment processor for failed payment
@@ -237,12 +247,15 @@ class PaymentFlowTest extends TestCase
         $processingResultMock->method('getErrorMessage')->willReturn('Payment declined');
         $processingResultMock->method('getStatusCode')->willReturn('E001');
 
-        $this->paymentProcessor->method('process')
+        $this
+            ->paymentProcessor
+            ->method('process')
             ->with('100000124', 'pay_987654321', $this->anything())
             ->willReturn($processingResultMock);
 
         // 7. Execute the payment flow
         $paymentId = null;
+
         try {
             // Create the payment
             $payment = $this->createPaymentService->execute($paymentRequestData);

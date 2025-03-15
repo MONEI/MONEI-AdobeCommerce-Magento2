@@ -24,13 +24,13 @@ class PaymentDTOTest extends TestCase
     protected function setUp(): void
     {
         $this->statusCodeHandlerMock = $this->createMock(StatusCodeHandler::class);
-        
+
         // Create a basic PaymentDTO instance for testing
         $this->paymentDto = new PaymentDTO(
             $this->statusCodeHandlerMock,
             'pay_123456',
             PaymentStatus::SUCCEEDED,
-            1000, // 10.00 in cents
+            1000,  // 10.00 in cents
             'EUR',
             '000000123',
             '2023-01-01T12:00:00Z',
@@ -52,11 +52,11 @@ class PaymentDTOTest extends TestCase
         $this->assertEquals('2023-01-01T12:00:00Z', $this->paymentDto->getCreatedAt());
         $this->assertEquals('2023-01-01T12:05:00Z', $this->paymentDto->getUpdatedAt());
         $this->assertEquals(['customField' => 'value'], $this->paymentDto->getMetadata());
-        
+
         // Test setters update values correctly
         $this->paymentDto->setId('pay_updated');
         $this->assertEquals('pay_updated', $this->paymentDto->getId());
-        
+
         $this->paymentDto->setStatus(PaymentStatus::FAILED);
         $this->assertEquals(PaymentStatus::FAILED, $this->paymentDto->getStatus());
     }
@@ -68,13 +68,13 @@ class PaymentDTOTest extends TestCase
         $this->assertTrue($this->paymentDto->isSucceeded());
         $this->assertFalse($this->paymentDto->isAuthorized());
         $this->assertFalse($this->paymentDto->isFailed());
-        
+
         // Test with AUTHORIZED status
         $this->paymentDto->setStatus(PaymentStatus::AUTHORIZED);
         $this->assertFalse($this->paymentDto->isSucceeded());
         $this->assertTrue($this->paymentDto->isAuthorized());
         $this->assertFalse($this->paymentDto->isFailed());
-        
+
         // Test with FAILED status
         $this->paymentDto->setStatus(PaymentStatus::FAILED);
         $this->assertFalse($this->paymentDto->isSucceeded());
@@ -84,7 +84,9 @@ class PaymentDTOTest extends TestCase
 
     public function testFromArray(): void
     {
-        $this->statusCodeHandlerMock->method('extractStatusCodeFromData')
+        $this
+            ->statusCodeHandlerMock
+            ->method('extractStatusCodeFromData')
             ->willReturn('E001');
 
         $paymentData = [
@@ -97,9 +99,9 @@ class PaymentDTOTest extends TestCase
             'updatedAt' => '2023-02-01T10:01:00Z',
             'metadata' => ['source' => 'test']
         ];
-        
+
         $dto = PaymentDTO::fromArray($this->statusCodeHandlerMock, $paymentData);
-        
+
         $this->assertEquals('pay_789', $dto->getId());
         $this->assertEquals(PaymentStatus::PENDING, $dto->getStatus());
         $this->assertEquals(25.0, $dto->getAmount());
@@ -122,11 +124,13 @@ class PaymentDTOTest extends TestCase
         $paymentMock->method('getUpdatedAt')->willReturn('2023-03-01T15:02:00Z');
         $paymentMock->method('getMetadata')->willReturn(['channel' => 'web']);
 
-        $this->statusCodeHandlerMock->method('extractStatusCodeFromData')
+        $this
+            ->statusCodeHandlerMock
+            ->method('extractStatusCodeFromData')
             ->willReturn(null);
-        
+
         $dto = PaymentDTO::fromPaymentObject($this->statusCodeHandlerMock, $paymentMock);
-        
+
         $this->assertEquals('pay_abc', $dto->getId());
         $this->assertEquals(PaymentStatus::SUCCEEDED, $dto->getStatus());
         $this->assertEquals(50.0, $dto->getAmount());
@@ -138,7 +142,7 @@ class PaymentDTOTest extends TestCase
     public function testFromArrayWithMissingRequiredFields(): void
     {
         $this->expectException(LocalizedException::class);
-        
+
         // Missing 'status' field
         $invalidData = [
             'id' => 'pay_invalid',
@@ -146,7 +150,7 @@ class PaymentDTOTest extends TestCase
             'currency' => 'EUR',
             'orderId' => '000000999'
         ];
-        
+
         PaymentDTO::fromArray($this->statusCodeHandlerMock, $invalidData);
     }
 }

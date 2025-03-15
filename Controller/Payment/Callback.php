@@ -20,7 +20,7 @@ use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Monei\MoneiPayment\Api\PaymentProcessorInterface;
 use Monei\MoneiPayment\Model\Api\MoneiApiClient;
-use Monei\MoneiPayment\Model\Data\PaymentDTO;
+use Monei\MoneiPayment\Model\Data\PaymentDTOFactory;
 use Monei\MoneiPayment\Service\Logger;
 use Exception;
 
@@ -75,9 +75,9 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     private $verifiedPayment = null;
 
     /**
-     * @var \Monei\MoneiPayment\Model\Data\PaymentDTOFactory
+     * @var PaymentDTOFactory
      */
-    private \Monei\MoneiPayment\Model\Data\PaymentDTOFactory $paymentDtoFactory;
+    private PaymentDTOFactory $paymentDtoFactory;
 
     /**
      * @var Config
@@ -92,7 +92,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
      * @param OrderRepositoryInterface $orderRepository
      * @param HttpRequest $request
      * @param HttpResponse $response
-     * @param \Monei\MoneiPayment\Model\Data\PaymentDTOFactory $paymentDtoFactory
+     * @param PaymentDTOFactory $paymentDtoFactory
      * @param Config $config
      */
     public function __construct(
@@ -103,7 +103,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         OrderRepositoryInterface $orderRepository,
         HttpRequest $request,
         HttpResponse $response,
-        \Monei\MoneiPayment\Model\Data\PaymentDTOFactory $paymentDtoFactory,
+        PaymentDTOFactory $paymentDtoFactory,
         Config $config
     ) {
         $this->logger = $logger;
@@ -154,6 +154,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
                     'status' => $payment->getStatus() ?? 'null',
                     'order_id' => $payment->getOrderId() ?? 'null'
                 ]);
+
                 return $this->sendErrorResponse();
             }
 
@@ -177,6 +178,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
                     'order_id' => $payment->getOrderId() ?? null
                 ]);
                 $this->errorMessage = $result->getMessage();
+
                 return $this->sendErrorResponse();
             }
         } catch (InvalidPaymentDataException $e) {
@@ -184,18 +186,21 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
                 'received_data' => $this->getRequest()->getContent()
             ]);
             $this->errorMessage = $e->getMessage();
+
             return $this->sendErrorResponse();
         } catch (InvalidSignatureException $e) {
             $this->logger->logApiError('callback_process', 'Invalid signature or payment data', [
                 'received_data' => $this->getRequest()->getContent()
             ]);
             $this->errorMessage = $e->getMessage();
+
             return $this->sendErrorResponse();
         } catch (\Exception $e) {
             $this->logger->logApiError('callback_process', 'Error processing callback: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
             $this->errorMessage = $e->getMessage();
+
             return $this->sendErrorResponse();
         }
 
@@ -212,6 +217,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
             $this->logger->logApiError('callback_signature', 'Missing signature header', [
                 'headers' => $this->getRequest()->getHeaders()->toArray()
             ]);
+
             return false;
         }
 
@@ -226,6 +232,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
                 'headers' => $this->getRequest()->getHeaders()->toArray(),
                 'content_length' => strlen($this->getRequest()->getContent())
             ]);
+
             return false;
         }
     }

@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Model\Data;
 
 use Magento\Framework\Exception\LocalizedException;
+use Monei\Model\PaymentMethods;
 use Monei\Model\PaymentStatus;
 use Monei\MoneiPayment\Model\Payment\Status;
 use Monei\MoneiPayment\Model\Service\StatusCodeHandler;
@@ -500,7 +501,7 @@ class PaymentDTO
     {
         $paymentMethodType = $this->getPaymentMethodType();
 
-        return $paymentMethodType === \Monei\Model\PaymentMethods::PAYMENT_METHODS_MBWAY;
+        return $paymentMethodType === PaymentMethods::PAYMENT_METHODS_MBWAY;
     }
 
     /**
@@ -512,7 +513,7 @@ class PaymentDTO
     {
         $paymentMethodType = $this->getPaymentMethodType();
 
-        return $paymentMethodType === \Monei\Model\PaymentMethods::PAYMENT_METHODS_CARD;
+        return $paymentMethodType === PaymentMethods::PAYMENT_METHODS_CARD;
     }
 
     /**
@@ -524,7 +525,7 @@ class PaymentDTO
     {
         $paymentMethodType = $this->getPaymentMethodType();
 
-        return $paymentMethodType === \Monei\Model\PaymentMethods::PAYMENT_METHODS_BIZUM;
+        return $paymentMethodType === PaymentMethods::PAYMENT_METHODS_BIZUM;
     }
 
     /**
@@ -536,7 +537,7 @@ class PaymentDTO
     {
         $paymentMethodType = $this->getPaymentMethodType();
 
-        return $paymentMethodType === \Monei\Model\PaymentMethods::PAYMENT_METHODS_MULTIBANCO;
+        return $paymentMethodType === PaymentMethods::PAYMENT_METHODS_MULTIBANCO;
     }
 
     /**
@@ -548,7 +549,7 @@ class PaymentDTO
     {
         $paymentMethodType = $this->getPaymentMethodType();
 
-        return $paymentMethodType === \Monei\Model\PaymentMethods::PAYMENT_METHODS_GOOGLE_PAY;
+        return $paymentMethodType === PaymentMethods::PAYMENT_METHODS_GOOGLE_PAY;
     }
 
     /**
@@ -560,7 +561,7 @@ class PaymentDTO
     {
         $paymentMethodType = $this->getPaymentMethodType();
 
-        return $paymentMethodType === \Monei\Model\PaymentMethods::PAYMENT_METHODS_APPLE_PAY;
+        return $paymentMethodType === PaymentMethods::PAYMENT_METHODS_APPLE_PAY;
     }
 
     /**
@@ -572,7 +573,7 @@ class PaymentDTO
     {
         $paymentMethodType = $this->getPaymentMethodType();
 
-        return $paymentMethodType === \Monei\Model\PaymentMethods::PAYMENT_METHODS_PAYPAL;
+        return $paymentMethodType === PaymentMethods::PAYMENT_METHODS_PAYPAL;
     }
 
     /**

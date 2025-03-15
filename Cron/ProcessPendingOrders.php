@@ -132,12 +132,14 @@ class ProcessPendingOrders
 
             if (!$paymentId) {
                 $this->logger->warning(sprintf('[Cron] Order %s has no payment ID', $incrementId));
+
                 continue;
             }
 
             // Skip if the order is already being processed
             if ($this->lockManager->isOrderLocked($incrementId)) {
                 $this->logger->info(sprintf('[Cron] Order %s is locked, skipping', $incrementId));
+
                 continue;
             }
 

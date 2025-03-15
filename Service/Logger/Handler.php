@@ -13,7 +13,6 @@ use Magento\Framework\Logger\Handler\Base;
 use Magento\Store\Model\ScopeInterface;
 use Monei\MoneiPayment\Model\Config\Source\LogLevel;
 use Monei\MoneiPayment\Service\Logger;
-use Monolog\Logger as MonologLogger;
 
 /**
  * Log handler for Monei payment operations

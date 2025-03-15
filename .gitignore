@@ -36,3 +36,4 @@ pretty-php.phar
 
 # Temporary files
 /tmp/*
+Test/.phpunit.cache/test-results

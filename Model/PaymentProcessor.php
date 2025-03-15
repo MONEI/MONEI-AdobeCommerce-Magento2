@@ -25,6 +25,7 @@ use Monei\MoneiPayment\Api\PaymentProcessingResultInterface;
 use Monei\MoneiPayment\Api\PaymentProcessorInterface;
 use Monei\MoneiPayment\Model\Api\MoneiApiClient;
 use Monei\MoneiPayment\Model\Data\PaymentDTO;
+use Monei\MoneiPayment\Model\Data\PaymentDTOFactory;
 use Monei\MoneiPayment\Model\Data\PaymentProcessingResult;
 use Monei\MoneiPayment\Model\Payment\Status;
 use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
@@ -93,9 +94,9 @@ class PaymentProcessor implements PaymentProcessorInterface
     private CreateVaultPayment $createVaultPayment;
 
     /**
-     * @var \Monei\MoneiPayment\Model\Data\PaymentDTOFactory
+     * @var PaymentDTOFactory
      */
-    private \Monei\MoneiPayment\Model\Data\PaymentDTOFactory $paymentDtoFactory;
+    private PaymentDTOFactory $paymentDtoFactory;
 
     /**
      * @param OrderRepositoryInterface $orderRepository
@@ -109,7 +110,7 @@ class PaymentProcessor implements PaymentProcessorInterface
      * @param GetPaymentInterface $getPaymentInterface
      * @param OrderFactory $orderFactory
      * @param CreateVaultPayment $createVaultPayment
-     * @param \Monei\MoneiPayment\Model\Data\PaymentDTOFactory $paymentDtoFactory
+     * @param PaymentDTOFactory $paymentDtoFactory
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
@@ -123,7 +124,7 @@ class PaymentProcessor implements PaymentProcessorInterface
         GetPaymentInterface $getPaymentInterface,
         OrderFactory $orderFactory,
         CreateVaultPayment $createVaultPayment,
-        \Monei\MoneiPayment\Model\Data\PaymentDTOFactory $paymentDtoFactory
+        PaymentDTOFactory $paymentDtoFactory
     ) {
         $this->orderRepository = $orderRepository;
         $this->invoiceService = $invoiceService;

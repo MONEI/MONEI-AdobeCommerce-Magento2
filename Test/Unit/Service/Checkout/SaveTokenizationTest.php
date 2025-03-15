@@ -89,12 +89,16 @@ class SaveTokenizationTest extends TestCase
         $this->quoteMock->method('getId')->willReturn(1);
 
         // The quote should have tokenization flag set
-        $this->quoteMock->expects($this->once())
+        $this
+            ->quoteMock
+            ->expects($this->once())
             ->method('setData')
             ->with(QuoteInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, $isVaultChecked);
 
         // Repository should save the quote
-        $this->quoteRepositoryMock->expects($this->once())
+        $this
+            ->quoteRepositoryMock
+            ->expects($this->once())
             ->method('save')
             ->with($this->quoteMock);
 
@@ -119,26 +123,32 @@ class SaveTokenizationTest extends TestCase
         $this->quoteMock->method('getId')->willReturn(1);
 
         // The quote should have tokenization flag set
-        $this->quoteMock->expects($this->once())
+        $this
+            ->quoteMock
+            ->expects($this->once())
             ->method('setData')
             ->with(QuoteInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, $isVaultChecked);
 
         // Repository throws an exception when saving
-        $this->quoteRepositoryMock->expects($this->once())
+        $this
+            ->quoteRepositoryMock
+            ->expects($this->once())
             ->method('save')
             ->with($this->quoteMock)
             ->willThrowException(new \Exception($exceptionMessage));
 
         // Logger should log the error
-        $this->loggerMock->expects($this->once())
+        $this
+            ->loggerMock
+            ->expects($this->once())
             ->method('error')
             ->with(
                 $this->stringContains('Error saving tokenization flag'),
                 $this->callback(function ($context) use ($cartId, $isVaultChecked) {
-                    return isset($context['cartId']) 
-                        && isset($context['isVaultChecked']) 
-                        && $context['cartId'] === $cartId 
-                        && $context['isVaultChecked'] === $isVaultChecked;
+                    return isset($context['cartId']) &&
+                        isset($context['isVaultChecked']) &&
+                        $context['cartId'] === $cartId &&
+                        $context['isVaultChecked'] === $isVaultChecked;
                 })
             );
 
@@ -161,15 +171,19 @@ class SaveTokenizationTest extends TestCase
 
         // Mock the resolveQuote method to throw an exception
         $this->checkoutSessionMock->method('getQuote')->willReturn(null);
-        $this->quoteRepositoryMock->expects($this->once())
+        $this
+            ->quoteRepositoryMock
+            ->expects($this->once())
             ->method('get')
             ->with($cartId)
             ->willThrowException(new \Exception($exceptionMessage));
 
-        // In PHPUnit 12, withConsecutive() was removed. We need to create a custom callback 
+        // In PHPUnit 12, withConsecutive() was removed. We need to create a custom callback
         // that checks both invocations
         $logCallCount = 0;
-        $this->loggerMock->expects($this->exactly(2))
+        $this
+            ->loggerMock
+            ->expects($this->exactly(2))
             ->method('error')
             ->with(
                 $this->callback(function ($message) use (&$logCallCount) {
@@ -179,17 +193,19 @@ class SaveTokenizationTest extends TestCase
                     } elseif ($logCallCount === 2) {
                         return str_contains($message, 'Error saving tokenization flag');
                     }
+
                     return false;
                 }),
                 $this->callback(function ($context) use (&$logCallCount, $cartId, $isVaultChecked) {
                     if ($logCallCount === 1) {
                         return isset($context['cartId']) && $context['cartId'] === $cartId;
                     } elseif ($logCallCount === 2) {
-                        return isset($context['cartId']) 
-                            && isset($context['isVaultChecked']) 
-                            && $context['cartId'] === $cartId 
-                            && $context['isVaultChecked'] === $isVaultChecked;
+                        return isset($context['cartId']) &&
+                            isset($context['isVaultChecked']) &&
+                            $context['cartId'] === $cartId &&
+                            $context['isVaultChecked'] === $isVaultChecked;
                     }
+
                     return false;
                 })
             );

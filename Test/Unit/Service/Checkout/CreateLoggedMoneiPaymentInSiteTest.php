@@ -8,7 +8,6 @@ use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
 use Monei\Model\Payment;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
-use Monei\MoneiPayment\Api\Data\QuoteInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
@@ -132,7 +131,8 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
         $amount = 100.0;
 
         // Create a partial mock of the service
-        $service = $this->getMockBuilder(CreateLoggedMoneiPaymentInSite::class)
+        $service = $this
+            ->getMockBuilder(CreateLoggedMoneiPaymentInSite::class)
             ->setConstructorArgs([
                 $this->loggerMock,
                 $this->exceptionHandlerMock,
@@ -158,18 +158,21 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
         $this->quoteMock->method('getShippingAddress')->willReturn($this->quoteAddressMock);
 
         // Set up mock for resolveQuote to return our prepared mock
-        $service->method('resolveQuote')
+        $service
+            ->method('resolveQuote')
             ->with($cartId)
             ->willReturn($this->quoteMock);
 
         // No existing payment
-        $service->method('checkExistingPayment')
+        $service
+            ->method('checkExistingPayment')
             ->willReturn(null);
 
         // Mock executeApiCall to return a successful result
         $apiCallResult = [['id' => $paymentId]];
-        
-        $service->method('executeApiCall')
+
+        $service
+            ->method('executeApiCall')
             ->willReturn($apiCallResult);
 
         // Execute the service
@@ -226,7 +229,8 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
         $existingPaymentId = 'pay_existing123';
 
         // Create a partial mock of the service
-        $service = $this->getMockBuilder(CreateLoggedMoneiPaymentInSite::class)
+        $service = $this
+            ->getMockBuilder(CreateLoggedMoneiPaymentInSite::class)
             ->setConstructorArgs([
                 $this->loggerMock,
                 $this->exceptionHandlerMock,
@@ -247,14 +251,16 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
         $this->quoteMock->method('reserveOrderId')->willReturnSelf();
 
         // Set up mock for resolveQuote to return our prepared mock
-        $service->method('resolveQuote')
+        $service
+            ->method('resolveQuote')
             ->with($cartId)
             ->willReturn($this->quoteMock);
 
         // Simulate existing payment
         $existingPaymentResult = [['id' => $existingPaymentId]];
-        
-        $service->method('checkExistingPayment')
+
+        $service
+            ->method('checkExistingPayment')
             ->willReturn($existingPaymentResult);
 
         // Execute the service
@@ -277,7 +283,8 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
         $amount = 100.0;
 
         // Create a partial mock of the service
-        $service = $this->getMockBuilder(CreateLoggedMoneiPaymentInSite::class)
+        $service = $this
+            ->getMockBuilder(CreateLoggedMoneiPaymentInSite::class)
             ->setConstructorArgs([
                 $this->loggerMock,
                 $this->exceptionHandlerMock,
@@ -303,18 +310,21 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
         $this->quoteMock->method('getShippingAddress')->willReturn($this->quoteAddressMock);
 
         // Set up mock for resolveQuote to return our prepared mock
-        $service->method('resolveQuote')
+        $service
+            ->method('resolveQuote')
             ->with($cartId)
             ->willReturn($this->quoteMock);
 
         // No existing payment
-        $service->method('checkExistingPayment')
+        $service
+            ->method('checkExistingPayment')
             ->willReturn(null);
 
         // Mock executeApiCall to create payment and validate no allowed_payment_methods is set
         $apiCallResult = [['id' => $paymentId]];
-        
-        $service->method('executeApiCall')
+
+        $service
+            ->method('executeApiCall')
             ->willReturn($apiCallResult);
 
         // Execute the service with empty methods

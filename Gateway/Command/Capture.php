@@ -112,6 +112,7 @@ class Capture implements CommandInterface
                 'Cannot capture payment without a valid payment ID',
                 ['order_id' => $incrementId]
             );
+
             throw new LocalizedException(__('Missing payment ID. Cannot capture this payment.'));
         }
 
