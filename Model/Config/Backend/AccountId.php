@@ -15,8 +15,12 @@ use Magento\Framework\App\Config\Value;
 use Magento\Framework\Data\Collection\AbstractDb;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Model\Context;
+use Magento\Framework\Registry;
 use Monei\MoneiPayment\Registry\AccountId as RegistryAccountId;
 
+/**
+ * Backend model for handling MONEI account ID configuration.
+ */
 class AccountId extends Value
 {
     /**
@@ -27,35 +31,45 @@ class AccountId extends Value
     private RegistryAccountId $registryAccountId;
 
     /**
+     * Config writer for persistent storage.
+     *
      * @var WriterInterface
      */
-    private $configWriter;
+    private WriterInterface $configWriter;
+
+    /**
+     * @var Registry
+     */
+    private Registry $registry;
 
     /**
      * Constructor.
      *
-     * @param RegistryAccountId $registryAccountId
      * @param Context $context
-     * @param WriterInterface $configWriter
+     * @param Registry $registry
      * @param ScopeConfigInterface $config
      * @param TypeListInterface $cacheTypeList
+     * @param RegistryAccountId $registryAccountId
+     * @param WriterInterface $configWriter
      * @param AbstractResource|null $resource
      * @param AbstractDb|null $resourceCollection
      * @param array $data
      */
     public function __construct(
-        RegistryAccountId $registryAccountId,
         Context $context,
-        WriterInterface $configWriter,
+        Registry $registry,
         ScopeConfigInterface $config,
         TypeListInterface $cacheTypeList,
+        RegistryAccountId $registryAccountId,
+        WriterInterface $configWriter,
         ?AbstractResource $resource = null,
         ?AbstractDb $resourceCollection = null,
         array $data = []
     ) {
-        $this->configWriter = $configWriter;
         $this->registryAccountId = $registryAccountId;
-        parent::__construct($context, $this->_getRegistry(), $config, $cacheTypeList, $resource, $resourceCollection, $data);
+        $this->configWriter = $configWriter;
+        $this->registry = $registry;
+        parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);
     }
 
     /**
@@ -83,12 +97,10 @@ class AccountId extends Value
     /**
      * Get registry object
      *
-     * @return object
+     * @return Registry
      */
-    protected function _getRegistry()
+    protected function _getRegistry(): Registry
     {
-        // Return empty object to satisfy parent constructor
-        // This is a temporary solution while we migrate away from Registry
-        return new \stdClass();
+        return $this->registry;
     }
 }

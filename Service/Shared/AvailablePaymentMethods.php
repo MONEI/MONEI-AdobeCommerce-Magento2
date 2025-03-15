@@ -49,19 +49,28 @@ class AvailablePaymentMethods
     }
 
     /**
+     * Load payment methods data from API if not already loaded
+     *
+     * @return void
+     */
+    private function loadData(): void
+    {
+        if (!$this->availablePaymentMethods && !$this->metadataPaymentMethods) {
+            /** @var PaymentMethods $response */
+            $response = $this->getPaymentMethodsService->execute();
+            $this->availablePaymentMethods = $response->getPaymentMethods() ?? [];
+            $this->metadataPaymentMethods = $response->getMetadata() ?? [];
+        }
+    }
+
+    /**
      * Get available payment methods.
      *
      * @return array List of available payment methods
      */
     public function execute(): array
     {
-        if (!$this->availablePaymentMethods) {
-            /** @var PaymentMethods $response */
-            $response = $this->getPaymentMethodsService->execute();
-            $this->availablePaymentMethods = $response->getPaymentMethods() ?? [];
-            $this->metadataPaymentMethods = $response->getMetadata() ?? [];
-        }
-
+        $this->loadData();
         return $this->availablePaymentMethods;
     }
 
@@ -72,13 +81,7 @@ class AvailablePaymentMethods
      */
     public function getMetadataPaymentMethods()
     {
-        if (!$this->metadataPaymentMethods) {
-            /** @var PaymentMethods $response */
-            $response = $this->getPaymentMethodsService->execute();
-            $this->availablePaymentMethods = $response->getPaymentMethods() ?? [];
-            $this->metadataPaymentMethods = $response->getMetadata() ?? [];
-        }
-
+        $this->loadData();
         return $this->metadataPaymentMethods;
     }
 }

@@ -12,6 +12,7 @@ use Magento\Checkout\Model\ConfigProviderInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Model\StoreManagerInterface;
+use Monei\Model\PaymentMethods;
 use Monei\MoneiPayment\Api\Config\AllMoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Config\MoneiBizumPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Config\MoneiCardPaymentModuleConfigInterface;
@@ -114,6 +115,26 @@ class CheckoutConfigProvider implements ConfigProviderInterface
      * @var GetPaymentMethodsInterface
      */
     private GetPaymentMethodsInterface $getPaymentMethods;
+
+    /**
+     * Cached payment methods response
+     *
+     * @var PaymentMethods|null
+     */
+    private ?PaymentMethods $paymentMethodsResponse = null;
+
+    /**
+     * Get cached payment methods response
+     *
+     * @return PaymentMethods
+     */
+    private function getPaymentMethodsResponse(): PaymentMethods
+    {
+        if ($this->paymentMethodsResponse === null) {
+            $this->paymentMethodsResponse = $this->getPaymentMethods->execute();
+        }
+        return $this->paymentMethodsResponse;
+    }
 
     /**
      * Constructor.
@@ -350,7 +371,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
     private function getAvailableCardBrands(): array
     {
         try {
-            $paymentMethods = $this->getPaymentMethods->execute();
+            $paymentMethods = $this->getPaymentMethodsResponse();
 
             // Access card brands through the metadata.card.brands property
             $cardBrands = [];
@@ -463,7 +484,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
     private function getAvailablePaymentMethodsList(?int $storeId = null): array
     {
         try {
-            $paymentMethods = $this->getPaymentMethods->execute();
+            $paymentMethods = $this->getPaymentMethodsResponse();
 
             return $paymentMethods->getPaymentMethods() ?? [];
         } catch (\Exception $e) {

@@ -972,5 +972,25 @@
       <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
     </arguments>
   </type>
+
+  <!-- AccountId Backend Model Configuration -->
+  <type name="Monei\MoneiPayment\Model\Config\Backend\AccountId">
+    <arguments>
+      <argument name="context" xsi:type="object">Magento\Framework\Model\Context</argument>
+      <argument name="registry" xsi:type="object">Magento\Framework\Registry</argument>
+      <argument name="config" xsi:type="object"
+        >Magento\Framework\App\Config\ScopeConfigInterface</argument
+      >
+      <argument name="cacheTypeList" xsi:type="object"
+        >Magento\Framework\App\Cache\TypeListInterface</argument
+      >
+      <argument name="registryAccountId" xsi:type="object"
+        >Monei\MoneiPayment\Registry\AccountId</argument
+      >
+      <argument name="configWriter" xsi:type="object"
+        >Magento\Framework\App\Config\Storage\WriterInterface</argument
+      >
+    </arguments>
+  </type>
 </config>
 <!-- Updated configuration for dependency injection fix -->

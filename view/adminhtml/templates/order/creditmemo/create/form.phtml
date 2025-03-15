@@ -10,6 +10,7 @@
 /* @var \Magento\Sales\Block\Adminhtml\Order\Creditmemo\Create\Form $block */
 $refundReasonsViewModel = $block->getData('refundReasonsViewModel');
 $refundReasons = $refundReasonsViewModel->getData();
+$taxHelper = \Magento\Framework\App\ObjectManager::getInstance()->get(\Magento\Tax\Helper\Data::class);
 ?>
 <form id="edit_form" method="post" action="<?= $escaper->escapeUrl($block->getSaveUrl()) ?>">
     <?= $block->getBlockHtml('formkey') ?>
@@ -53,10 +54,7 @@ $refundReasons = $refundReasonsViewModel->getData();
                                 <div class="shipping-description-content">
                                     <?= $escaper->escapeHtml(__('Total Shipping Charges')) ?>:
 
-                                    <?php if ($block
-                                        ->helper(\Magento\Tax\Helper\Data::class)
-                                        ->displaySalesPriceInclTax($block->getSource()->getStoreId())
-                                    ): ?>
+                                    <?php if ($taxHelper->displaySalesPriceInclTax($block->getSource()->getStoreId())): ?>
                                         <?php $_excl = $block->displayShippingPriceInclTax($_order); ?>
                                     <?php else: ?>
                                         <?php $_excl = $block->displayPriceAttribute('shipping_amount', false, ' '); ?>
@@ -64,10 +62,7 @@ $refundReasons = $refundReasonsViewModel->getData();
                                     <?php $_incl = $block->displayShippingPriceInclTax($_order); ?>
 
                                     <?= /* @noEscape */ $_excl ?>
-                                    <?php if ($block
-                                        ->helper(\Magento\Tax\Helper\Data::class)
-                                        ->displaySalesBothPrices($block->getSource()->getStoreId()) && $_incl != $_excl
-                                    ): ?>
+                                    <?php if ($taxHelper->displaySalesBothPrices($block->getSource()->getStoreId()) && $_incl != $_excl): ?>
                                         (<?= $escaper->escapeHtml(__('Incl. Tax')) ?> <?= /* @noEscape */ $_incl ?>)
                                     <?php endif; ?>
                                 </div>
