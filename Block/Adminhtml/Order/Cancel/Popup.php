@@ -11,9 +11,9 @@ namespace Monei\MoneiPayment\Block\Adminhtml\Order\Cancel;
 use Magento\Backend\Block\Template\Context;
 use Magento\Backend\Block\Template;
 use Magento\Directory\Helper\Data as DirectoryHelper;
-use Magento\Framework\Json\Helper\Data as JsonHelper;
-use Magento\Framework\Registry;
-use Magento\Sales\Model\Order;
+use Magento\Framework\Serialize\SerializerInterface;
+use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Sales\Api\OrderRepositoryInterface;
 use Monei\MoneiPayment\Model\Config\Source\CancelReason;
 
 /**
@@ -22,9 +22,9 @@ use Monei\MoneiPayment\Model\Config\Source\CancelReason;
 class Popup extends Template
 {
     /**
-     * @var Registry
+     * @var OrderRepositoryInterface
      */
-    private $registry;
+    private $orderRepository;
 
     /**
      * @var CancelReason
@@ -32,26 +32,31 @@ class Popup extends Template
     private $source;
 
     /**
+     * @var OrderInterface|null
+     */
+    private $currentOrder;
+
+    /**
      * Constructor.
      *
-     * @param Registry $registry Core registry
+     * @param OrderRepositoryInterface $orderRepository Order repository
      * @param CancelReason $source Cancel reason source model
      * @param Context $context Block context
      * @param array $data Additional data
-     * @param JsonHelper|null $jsonHelper JSON helper
+     * @param \Magento\Framework\Json\Helper\Data|null $serializer JSON serializer
      * @param DirectoryHelper|null $directoryHelper Directory helper
      */
     public function __construct(
-        Registry $registry,
+        OrderRepositoryInterface $orderRepository,
         CancelReason $source,
         Context $context,
         array $data = [],
-        ?JsonHelper $jsonHelper = null,
+        ?\Magento\Framework\Json\Helper\Data $serializer = null,
         ?DirectoryHelper $directoryHelper = null
     ) {
-        parent::__construct($context, $data, $jsonHelper, $directoryHelper);
-        $this->registry = $registry;
+        $this->orderRepository = $orderRepository;
         $this->source = $source;
+        parent::__construct($context, $data, $serializer, $directoryHelper);
     }
 
     /**
@@ -65,11 +70,17 @@ class Popup extends Template
     /**
      * Retrieve order model object.
      *
-     * @return Order
+     * @return OrderInterface
      */
-    public function getOrder(): Order
+    public function getOrder(): OrderInterface
     {
-        return $this->registry->registry('sales_order');
+        if ($this->currentOrder === null) {
+            $orderId = $this->getRequest()->getParam('order_id');
+            if ($orderId) {
+                $this->currentOrder = $this->orderRepository->get($orderId);
+            }
+        }
+        return $this->currentOrder;
     }
 
     /**

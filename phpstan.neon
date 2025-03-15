@@ -2,8 +2,6 @@ parameters:
     level: 4
     treatPhpDocTypesAsCertain: false
     reportUnmatchedIgnoredErrors: false
-    bootstrapFiles:
-        - phpstan-bootstrap.php
     fileExtensions:
         - php
         - phtml
@@ -15,31 +13,6 @@ parameters:
         - node_modules/*
     # Parallel processing
     parallel:
-        maximumNumberOfProcesses: 4
-    ignoreErrors:
-        # Magento extension attributes system - safe to ignore
-        - '#Call to an undefined method [a-zA-Z0-9\\_]+::set(Data|ExtensionAttributes)\(\)#'
-
-        # Magento Factory pattern - these are generated at runtime
-        - '#has unknown class Magento\\Sales\\Model\\OrderFactory as its type#'
-        - '#Parameter \$orderFactory of method .+ has invalid type Magento\\Sales\\Model\\OrderFactory#'
-        - '#Call to method create\(\) on an unknown class Magento\\Sales\\Model\\OrderFactory#'
-
-        # Safe to ignore - these factory classes are valid in Magento but PHPStan can't resolve them
-        - '#has unknown class Magento\\Backend\\Model\\View\\Result\\ForwardFactory as its type#'
-        - '#has unknown class Magento\\Framework\\DB\\TransactionFactory as its type#'
-        - '#has unknown class Magento\\Vault\\Model\\Ui\\TokenUiComponentInterfaceFactory as its type#'
-        - '#has unknown class GuzzleHttp\\ClientFactory as its type#'
-
-        # Magento interface methods that exist but PHPStan can't see
-        - '#Call to an undefined method Magento\\Framework\\App\\RequestInterface::getPost\(\)#'
-        - '#Call to an undefined method Magento\\Sales\\Api\\Data\\OrderInterface::(getId|getData|prepareInvoice|addRelatedObject|setCanSendNewEmailFlag)\(\)#'
-        - '#Call to an undefined method Magento\\Quote\\Api\\Data\\CartInterface::(getEntityId|getShippingAddress|getCustomerFirstname|getCustomerLastname|getCustomerEmail)\(\)#'
-
-        # Magento API design patterns - these are known behavior
-        - '#Method Magento\\Sales\\Api\\Data\\OrderPaymentInterface::setAdditionalInformation\(\) invoked with 2 parameters, 1 required#'
-        - '#Method Magento\\Sales\\Api\\Data\\OrderPaymentInterface::getAdditionalInformation\(\) invoked with 1 parameter, 0 required#'
-
-        # Deprecated class usage warnings - we should fix these but they don't affect functionality
-        - '#Parameter \$registry of method .+ has typehint with deprecated class Magento\\Framework\\Registry#'
-        - '#Parameter \$jsonHelper of method .+ has typehint with deprecated class Magento\\Framework\\Json\\Helper\\Data#'
+        maximumNumberOfProcesses: 8
+includes:
+    - vendor/bitexpert/phpstan-magento/extension.neon

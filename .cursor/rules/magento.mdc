@@ -1,6 +1,6 @@
 ---
 description: Always check this file for instructions on how to run magento commands
-globs: 
+globs:
 ---
 Magento is configued using markshust/docker-magento.
 

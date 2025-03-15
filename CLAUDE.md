@@ -1,6 +1,7 @@
 # MONEI Payment Module Development Guide
 
 ## Build & Testing Commands
+
 - Lint: `composer lint` - Run code style checks
 - Fix code style: `composer fix` - Auto-fix coding standards issues
 - Fix all styles: `composer fix:all` - Run all fixers
@@ -11,6 +12,7 @@
 - Generate coverage: `composer test:coverage` - Generate HTML test coverage report
 
 ## Magento Commands
+
 - Enable module: `php bin/magento module:enable Monei_MoneiPayment`
 - Update module: `php bin/magento setup:upgrade`
 - Deploy static content: `php bin/magento setup:static-content:deploy`
@@ -18,6 +20,7 @@
 - Run specific command: `php bin/magento monei:verify-apple-pay-domain <domain>`
 
 ## Code Style Guidelines
+
 - Follow PSR-12 and Magento 2 coding standards
 - Class names: PascalCase (e.g., `PaymentProcessor`)
 - Methods/variables: camelCase (e.g., `processPayment()`)
@@ -29,6 +32,7 @@
 - Document all methods with PHPDoc comments
 
 ## Testing Guidelines
+
 - Unit tests for all Model and Service classes
 - Use mocks for external dependencies
 - Follow naming convention: `ClassNameTest` in matching directories
@@ -38,6 +42,7 @@
 - Keep test coverage above 80% for core payment classes
 
 ### Key Test Classes and Their Purpose
+
 1. `PaymentDTOTest`: Validates the data transfer object functionality and payment status checks
 2. `PaymentProcessingResultTest`: Tests the payment processing result object
 3. `MoneiApiClientTest`: Tests API client initialization and communication with MONEI API
@@ -49,12 +54,14 @@
 9. `PaymentFlowTest`: Integration tests for full payment processing flow
 
 ### Stubs and Mocking
+
 - `MoneiStubs.php`: Contains stub implementations for the MONEI SDK classes
 - `MagentoStubs.php`: Contains stub implementations for Magento framework classes
 - Use PHPUnit's `createMock()` for creating test doubles
 - For complex dependencies, create custom stub classes
 
 ### Running Tests
+
 - Run all tests: `composer test`
 - Run with detailed output: `vendor/bin/phpunit -c Test/phpunit.xml --testdox`
 - Run a specific test suite: `vendor/bin/phpunit -c Test/phpunit.xml --testsuite="MONEI Payment Module Unit Tests"`

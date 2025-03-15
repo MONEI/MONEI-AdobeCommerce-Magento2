@@ -86,7 +86,6 @@ abstract class AbstractService
      * @param ModuleVersion $moduleVersion Module version provider
      */
     public function __construct(
-        /** @phpstan-ignore-next-line */
         ClientFactory $clientFactory,
         MoneiPaymentModuleConfigInterface $moduleConfig,
         StoreManagerInterface $storeManager,

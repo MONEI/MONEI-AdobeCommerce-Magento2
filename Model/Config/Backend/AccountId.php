@@ -14,7 +14,7 @@ use Magento\Framework\App\Config\Value;
 use Magento\Framework\Data\Collection\AbstractDb;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Model\Context;
-use Magento\Framework\Registry;
+use Magento\Framework\App\Config\Storage\WriterInterface;
 use Monei\MoneiPayment\Registry\AccountId as RegistryAccountId;
 
 class AccountId extends Value
@@ -27,11 +27,16 @@ class AccountId extends Value
     private RegistryAccountId $registryAccountId;
 
     /**
+     * @var WriterInterface
+     */
+    private $configWriter;
+
+    /**
      * Constructor.
      *
      * @param RegistryAccountId $registryAccountId
      * @param Context $context
-     * @param Registry $registry
+     * @param WriterInterface $configWriter
      * @param ScopeConfigInterface $config
      * @param TypeListInterface $cacheTypeList
      * @param AbstractResource|null $resource
@@ -41,15 +46,16 @@ class AccountId extends Value
     public function __construct(
         RegistryAccountId $registryAccountId,
         Context $context,
-        Registry $registry,
+        WriterInterface $configWriter,
         ScopeConfigInterface $config,
         TypeListInterface $cacheTypeList,
         ?AbstractResource $resource = null,
         ?AbstractDb $resourceCollection = null,
         array $data = []
     ) {
-        parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);
+        $this->configWriter = $configWriter;
         $this->registryAccountId = $registryAccountId;
+        parent::__construct($context, $this->_getRegistry(), $config, $cacheTypeList, $resource, $resourceCollection, $data);
     }
 
     /**
@@ -61,8 +67,28 @@ class AccountId extends Value
     {
         if ($this->getValue()) {
             $this->registryAccountId->set($this->getValue());
+            
+            // Store the value in a more persistent way than the registry
+            $this->configWriter->save(
+                'monei/account_id_storage',
+                $this->getValue(),
+                $this->getScope(),
+                $this->getScopeId()
+            );
         }
 
         return parent::beforeSave();
+    }
+    
+    /**
+     * Get registry object
+     * 
+     * @return object
+     */
+    protected function _getRegistry()
+    {
+        // Return empty object to satisfy parent constructor
+        // This is a temporary solution while we migrate away from Registry
+        return new \stdClass();
     }
 }
