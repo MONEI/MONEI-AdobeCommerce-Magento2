@@ -25,13 +25,13 @@ Accept payments through [MONEI](https://monei.com) in your Adobe Commerce (Magen
   - [MONEI PHP SDK](#monei-php-sdk)
   - [Demo](#demo)
   - [Development](#development)
+    - [Local Development Setup](#local-development-setup)
+    - [Available Commands](#available-commands-1)
     - [Docker Setup](#docker-setup)
     - [Code Quality Tools](#code-quality-tools)
       - [Prerequisites](#prerequisites)
       - [Setting up development environment](#setting-up-development-environment)
-      - [Available Commands](#available-commands-1)
-    - [Environment Variables](#environment-variables)
-    - [Prettier Setup](#prettier-setup)
+      - [Available Commands](#available-commands-2)
   - [Troubleshooting](#troubleshooting)
   - [Contributing](#contributing)
   - [License](#license)
@@ -75,19 +75,19 @@ composer require monei/module-monei-payment
 2. Enable the module:
 
 ```bash
-php magento/bin/magento module:enable Monei_MoneiPayment
+bin/magento module:enable Monei_MoneiPayment
 ```
 
 3. Run setup upgrade:
 
 ```bash
-php magento/bin/magento setup:upgrade
+bin/magento setup:upgrade
 ```
 
 4. Flush cache:
 
 ```bash
-php magento/bin/magento cache:flush
+bin/magento cache:flush
 ```
 
 ### Manual Installation
@@ -146,10 +146,10 @@ This module provides several Magento CLI commands to help you manage MONEI payme
 
 ```bash
 # Register a domain with Apple Pay through MONEI
-php bin/magento monei:verify-apple-pay-domain <domain>
+bin/magento monei:verify-apple-pay-domain <domain>
 
 # Update order status labels in the database
-php bin/magento monei:update-status-labels
+bin/magento monei:update-status-labels
 ```
 
 These commands are useful for testing, troubleshooting, and automating various MONEI payment operations from the command line.
@@ -173,9 +173,75 @@ Experience the module in action through our [live demo store](https://magento2-d
 
 ## Development
 
+### Local Development Setup
+
+For local development, we recommend using [markshust/docker-magento](https://github.com/markshust/docker-magento) which provides a robust Docker setup for Magento 2 development.
+
+1. First, set up docker-magento:
+
+```bash
+# Download the setup script
+curl -s https://raw.githubusercontent.com/markshust/docker-magento/master/lib/onelinesetup | bash -s -- magento.test 2.4.6-p3 community
+```
+
+2. Clone the MONEI Payment module into the correct directory:
+
+```bash
+# Navigate to the module directory
+cd src/app/code
+mkdir -p Monei/MoneiPayment
+git clone https://github.com/MONEI/MONEI-AdobeCommerce-Magento2.git MoneiPayment
+cd MoneiPayment
+```
+
+3. Install module dependencies and enable it:
+
+```bash
+# Install MONEI SDK
+bin/composer require monei/monei-php-sdk:^2.4.3
+
+# Enable module and run setup
+bin/magento module:enable Monei_MoneiPayment
+bin/magento setup:upgrade
+bin/magento setup:di:compile
+bin/magento cache:flush
+bin/magento cache:clean
+```
+
+4. The module should now be installed in your local Magento instance at https://magento.test
+
+### Available Commands
+
+For development, you can use the following commands:
+
+```bash
+# Code quality
+bin/composer cs:lint                   # Run PHPCS code sniffer
+bin/composer cs:fix                    # Fix coding standards with PHPCBF
+bin/composer analyze                   # Run PHPStan static analysis
+bin/composer format:check             # Check formatting with pretty-php
+bin/composer format:fix               # Fix formatting with pretty-php
+bin/composer fix:all                  # Run all fixers (cs:fix and format:fix)
+bin/composer check:all               # Run all code quality checks (cs:lint, analyze, format:check)
+
+# Frontend
+yarn format                        # Format frontend code with prettier
+
+# Magento commands (using helper script)
+bin/magento setup:di:compile      # Compile dependency injection
+bin/magento setup:upgrade         # Run module upgrades
+bin/magento cache:clean           # Clean caches
+bin/magento cache:flush           # Flush all caches
+bin/magento module:enable Monei_MoneiPayment  # Enable module
+
+# Module specific commands
+bin/magento monei:verify-apple-pay-domain <domain>  # Register domain with Apple Pay
+bin/magento monei:update-status-labels              # Update order status labels
+```
+
 ### Docker Setup
 
-This module includes a Docker setup for local development with PHP 8.3:
+This module includes a standalone Docker setup for isolated development with PHP 8.3:
 
 ```bash
 # Start the Docker containers
@@ -253,51 +319,6 @@ The code quality tools check for:
 - Critical issues and bugs
 - PHPDoc comments compliance
 
-### Environment Variables
-
-Customize the linting and fixing scripts with these environment variables:
-
-```bash
-# Skip PHP-CS-Fixer checks when running the lint script
-SKIP_CS_FIXER=1 composer lint
-
-# Run fix script with only CS Fixer (skips PHP_CodeSniffer)
-FIX_CS_ONLY=1 composer fix
-```
-
-### Prettier Setup
-
-This project uses Prettier for code formatting. To get started:
-
-1. Install dependencies:
-
-   ```bash
-   yarn install
-   ```
-
-2. Format all files:
-
-   ```bash
-   yarn format
-   ```
-
-3. Format only staged files:
-
-   ```bash
-   yarn format:staged
-   ```
-
-4. Check for formatting issues without making changes:
-
-   ```bash
-   yarn format:check
-   ```
-
-5. VS Code Integration:
-   Install the [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) extension for VS Code.
-
-The configuration supports formatting for JavaScript, TypeScript, JSON, HTML, XML, CSS, LESS, YAML, and Markdown files. PHP files are handled by Pretty PHP.
-
 ## Troubleshooting
 
 If you encounter issues with the module:
@@ -350,7 +371,5 @@ We use multiple tools to ensure code quality:
 
 ```bash
 # Fix coding standards and style issues automatically
-composer fix
+composer fix:all
 ```
-
-For detailed information about Magento Marketplace validation, please see [docs/MARKETPLACE_VALIDATION.md](docs/MARKETPLACE_VALIDATION.md).
