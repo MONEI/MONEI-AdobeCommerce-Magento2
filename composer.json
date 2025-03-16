@@ -56,12 +56,12 @@
     "test": "vendor/bin/phpunit -c Test/phpunit.xml",
     "test:unit": "vendor/bin/phpunit -c Test/phpunit.xml --testsuite='MONEI Payment Module Unit Tests'",
     "test:coverage": "vendor/bin/phpunit -c Test/phpunit.xml --coverage-html=Test/coverage-report",
-    "cs:lint": "./bin.sh phpcs",
-    "cs:fix": "./bin.sh phpcbf || true",
-    "analyze": "./bin.sh analyse",
-    "format:check": "./pretty-php.phar --check .",
-    "format:fix": "./pretty-php.phar . || true",
-    "i18n:collect": "./bin.sh i18n:collect-phrases",
+    "cs:lint": "./bin phpcs",
+    "cs:fix": "./bin phpcbf || true",
+    "analyze": "./bin analyse",
+    "format:check": "./bin pretty-php.phar --check .",
+    "format:fix": "./bin pretty-php.phar . || true",
+    "i18n:collect": "./bin magento i18n:collect-phrases",
     "fix:all": [
       "@cs:fix",
       "@format:fix"

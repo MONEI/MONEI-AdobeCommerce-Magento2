@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Get the absolute path of the current directory
 CURRENT_DIR=$(pwd)

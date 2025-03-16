@@ -3,6 +3,11 @@ description:
 globs: 
 alwaysApply: true
 ---
+---
+description: 
+globs: 
+alwaysApply: true
+---
 # MONEI Payment Module for bin 2
 
 ## Commands
@@ -21,11 +26,11 @@ composer test                      # Run tests
 yarn format                        # Format frontend code with prettier
 
 # bin commands (using helper script)
-./bin.sh magento setup:di:compile      # Compile dependency injection
-./bin.sh magento setup:upgrade         # Run module upgrades
-./bin.sh magento cache:clean           # Clean caches
-./bin.sh magento cache:flush           # Flush all caches
-./bin.sh magento module:enable Monei_MoneiPayment  # Enable module
+./bin magento setup:di:compile      # Compile dependency injection
+./bin magento setup:upgrade         # Run module upgrades
+./bin magento cache:clean           # Clean caches
+./bin magento cache:flush           # Flush all caches
+./bin magento module:enable Monei_MoneiPayment  # Enable module
 ```
 
 ## Code Style
