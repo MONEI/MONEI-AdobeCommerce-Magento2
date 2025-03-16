@@ -106,6 +106,7 @@ define([
           }
         },
         onError: function (error) {
+          console.error(error);
           self.isPlaceOrderActionAllowed(false);
         }
       });

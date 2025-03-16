@@ -25,8 +25,15 @@ define(['jquery', 'jquery/ui', 'Magento_Ui/js/modal/alert', 'mage/translate'], f
      * @private
      */
     _create: function () {
-      this._bindEvents();
-      this._updateTextarea();
+      if (this.options.debug) {
+        console.log('MONEI: Initializing JSON Formatter widget', this.element);
+      }
+
+      try {
+        this._bindFormatButton();
+      } catch (e) {
+        console.error('MONEI: Error initializing JSON Formatter widget', e);
+      }
     },
 
     /**

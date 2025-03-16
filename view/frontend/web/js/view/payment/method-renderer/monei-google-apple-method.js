@@ -172,11 +172,11 @@ define([
         },
         onSubmit: function (result) {
           if (result.error) {
-            // Handle error case
-            deferred.reject(result.error);
+            console.error(result.error);
+            self.isPlaceOrderActionAllowed(true);
           } else {
-            // Payment succeeded
-            deferred.resolve();
+            // Confirm payment using the token.
+            self.createOrderInMagento(result.token);
           }
         },
         onError: function (error) {

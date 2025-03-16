@@ -22,11 +22,14 @@ define(['jquery', 'loader', 'moneijs', 'mage/translate'], function ($, _, monei,
     $('#monei-payment-loading-container').trigger('processStart');
 
     function redirectToComplete() {
-      if (this.successUrl) {
-        window.location.href = this.successUrl;
-      } else {
-        window.location.reload();
+      console.log('redirectToComplete');
+      var redirectUrl = completeUrl + '?id=' + encodeURIComponent(paymentId);
+
+      if (orderId) {
+        redirectUrl += '&order_id=' + encodeURIComponent(orderId);
       }
+
+      window.location.href = redirectUrl;
     }
 
     function checkPaymentStatus() {
@@ -57,6 +60,7 @@ define(['jquery', 'loader', 'moneijs', 'mage/translate'], function ($, _, monei,
           }
         })
         .catch(function (error) {
+          console.error('Error checking payment status:', error);
           // Error getting status, try again
           attempts++;
           setTimeout(checkPaymentStatus, checkInterval);

@@ -118,14 +118,15 @@ define([
         },
         onSubmit: function (result) {
           if (result.error) {
-            // Handle error case
+            console.error(result.error);
             self.isPlaceOrderActionAllowed(true);
           } else {
-            // Payment succeeded
+            // Confirm payment using the token.
             self.createOrderInMagento(result.token);
           }
         },
         onError: function (error) {
+          console.error(error);
           self.isPlaceOrderActionAllowed(false);
         }
       });

@@ -80,12 +80,9 @@ define([
 
     return storage
       .post(serviceUrl, JSON.stringify(payload))
-      .done(function (response) {
-        // redirect to monei
-        if (response.redirectUrl) {
-          window.location.replace(response.redirectUrl);
-          return;
-        }
+      .done(function () {
+        let url = window.checkoutConfig.payment.monei.redirectUrl;
+        $.mage.redirect(url);
       })
       .fail(function (response) {
         errorProcessor.process(response, messageContainer);
