@@ -182,20 +182,6 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
 
                 return $this->sendErrorResponse();
             }
-        } catch (InvalidPaymentDataException $e) {
-            $this->logger->logApiError('callback_process', 'Error creating PaymentDTO: ' . $e->getMessage(), [
-                'received_data' => $this->getRequest()->getContent()
-            ]);
-            $this->errorMessage = $e->getMessage();
-
-            return $this->sendErrorResponse();
-        } catch (InvalidSignatureException $e) {
-            $this->logger->logApiError('callback_process', 'Invalid signature or payment data', [
-                'received_data' => $this->getRequest()->getContent()
-            ]);
-            $this->errorMessage = $e->getMessage();
-
-            return $this->sendErrorResponse();
         } catch (\Exception $e) {
             $this->logger->logApiError('callback_process', 'Error processing callback: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
