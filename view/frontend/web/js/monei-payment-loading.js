@@ -5,7 +5,7 @@ define(['jquery', 'loader', 'moneijs', 'mage/translate'], function ($, _, monei,
     var paymentId = config.paymentId;
     var orderId = config.orderId || '';
     var completeUrl = config.completeUrl;
-    var maxAttempts = 20;
+    var maxAttempts = 30;
     var attempts = 0;
     var checkInterval = 1000; // 1 second
 
@@ -22,13 +22,10 @@ define(['jquery', 'loader', 'moneijs', 'mage/translate'], function ($, _, monei,
     $('#monei-payment-loading-container').trigger('processStart');
 
     function redirectToComplete() {
-      console.log('redirectToComplete');
       var redirectUrl = completeUrl + '?id=' + encodeURIComponent(paymentId);
-
       if (orderId) {
         redirectUrl += '&order_id=' + encodeURIComponent(orderId);
       }
-
       window.location.replace(redirectUrl);
     }
 

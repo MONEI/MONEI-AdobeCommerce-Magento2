@@ -315,8 +315,8 @@ class Complete implements HttpGetActionInterface
             ]);
 
             // Special handling for MBWAY payments in PENDING status
-            if ($paymentDTO->isPending() && $paymentDTO->isMbway()) {
-                return $this->handlePendingMbwayPayment($paymentDTO);
+            if ($paymentDTO->isPending() && !$paymentDTO->isMultibanco()) {
+                return $this->handlePendingPayment($paymentDTO);
             }
 
             // Route based on payment status
@@ -370,9 +370,9 @@ class Complete implements HttpGetActionInterface
      * @param PaymentDTO $paymentDTO
      * @return Redirect
      */
-    private function handlePendingMbwayPayment(PaymentDTO $paymentDTO): Redirect
+    private function handlePendingPayment(PaymentDTO $paymentDTO): Redirect
     {
-        $this->logger->info('[Complete] MBWAY payment still in pending state, redirecting to loading page', [
+        $this->logger->info('[Complete] Payment still in pending state, redirecting to loading page', [
             'order_id' => $paymentDTO->getOrderId(),
             'payment_id' => $paymentDTO->getId()
         ]);
