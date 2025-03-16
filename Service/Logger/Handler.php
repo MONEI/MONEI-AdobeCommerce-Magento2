@@ -8,8 +8,12 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service\Logger;
 
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Logger\Handler\Base;
+use Magento\Store\Model\ScopeInterface;
+use Monei\MoneiPayment\Model\Config\Source\LogLevel;
 use Monei\MoneiPayment\Service\Logger;
+use Magento\Framework\Filesystem\Driver\File
 
 /**
  * Log handler for Monei payment operations
@@ -24,9 +28,43 @@ class Handler extends Base
     protected $fileName = Logger::LOG_FILE_PATH;
 
     /**
-     * Logging level for Monei payment operations.
-     *
-     * @var int
+     * Configuration path for log level setting
      */
-    protected $loggerType = MonologLogger::DEBUG;
+    private const XML_PATH_LOG_LEVEL = 'payment/monei/log_level';
+
+    /**
+     * @var ScopeConfigInterface
+     */
+    private ScopeConfigInterface $scopeConfig;
+
+    /**
+     * @param ScopeConfigInterface $scopeConfig
+     * @param File $filesystem
+     * @param string $filePath
+     */
+    public function __construct(
+        ScopeConfigInterface $scopeConfig,
+        File $filesystem,
+        $filePath = null
+    ) {
+        $this->scopeConfig = $scopeConfig;
+        parent::__construct($filesystem, $filePath);
+        $this->initLogLevel();
+    }
+
+    /**
+     * Initialize log level from system configuration
+     *
+     * @return void
+     */
+    private function initLogLevel(): void
+    {
+        $configuredLevel = (int) $this->scopeConfig->getValue(
+            self::XML_PATH_LOG_LEVEL,
+            ScopeInterface::SCOPE_STORE
+        );
+
+        // Default to ERROR level if not configured
+        $this->loggerType = $configuredLevel ?: LogLevel::LEVEL_ERROR;
+    }
 }
