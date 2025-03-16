@@ -9,11 +9,11 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Service\Logger;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Logger\Handler\Base;
 use Magento\Store\Model\ScopeInterface;
 use Monei\MoneiPayment\Model\Config\Source\LogLevel;
 use Monei\MoneiPayment\Service\Logger;
-use Magento\Framework\Filesystem\Driver\File
 
 /**
  * Log handler for Monei payment operations
