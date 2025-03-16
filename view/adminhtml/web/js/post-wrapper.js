@@ -51,7 +51,14 @@ define([
                     cancel_reason: $('#cancel_reason').val()
                   },
                   success: function (data) {
-                    window.location.href = data.redirectUrl;
+                    if (data.error) {
+                      alert(data.message);
+                    } else {
+                      $.mage.redirect(data.redirectUrl);
+                    }
+                  },
+                  complete: function () {
+                    this.closeModal();
                   }
                 });
               }

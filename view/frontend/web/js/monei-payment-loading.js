@@ -29,7 +29,7 @@ define(['jquery', 'loader', 'moneijs', 'mage/translate'], function ($, _, monei,
         redirectUrl += '&order_id=' + encodeURIComponent(orderId);
       }
 
-      window.location.href = redirectUrl;
+      window.location.replace(redirectUrl);
     }
 
     function checkPaymentStatus() {
