@@ -106,7 +106,7 @@ define([
           }
         },
         onError: function (error) {
-          console.error(error);
+          console.error('Bizum Error', error);
           self.isPlaceOrderActionAllowed(false);
         }
       });

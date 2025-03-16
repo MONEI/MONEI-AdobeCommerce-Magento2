@@ -126,7 +126,7 @@ define([
           }
         },
         onError: function (error) {
-          console.error(error);
+          console.error('Paypal Error', error);
           self.isPlaceOrderActionAllowed(false);
         }
       });
