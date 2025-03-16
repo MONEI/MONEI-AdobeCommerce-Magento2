@@ -172,7 +172,7 @@ define([
         },
         onSubmit: function (result) {
           if (result.error) {
-            console.error(result.error);
+            console.error('Google/Apple Pay Error', result.error);
             self.isPlaceOrderActionAllowed(true);
           } else {
             // Confirm payment using the token.

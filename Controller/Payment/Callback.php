@@ -128,99 +128,83 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
      */
     public function execute()
     {
-        $this->logger->info('Payment callback received');
-
         try {
-            // Verify CSRF protection signature
-            if (!$this->verifySignature()) {
-                return $this->sendErrorResponse();
-            }
+            $this->logger->debug('---------------------------------------------');
+            $this->logger->debug('[Callback] Payment callback received');
 
-            // Get payment data from request
-            $payment = $this->getPaymentFromRequest();
-            if (!$payment) {
-                return $this->sendErrorResponse();
-            }
+            // Process the verified payment from validateForCsrf
+            if ($this->verifiedPayment) {
+                // Convert Payment object to array
+                $paymentData = (array) $this->verifiedPayment;
 
-            $this->logger->logApiRequest('callback_process', [
-                'payment_id' => $payment->getId(),
-                'status' => $payment->getStatus(),
-                'order_id' => $payment->getOrderId() ?? null
-            ]);
-
-            // Verify payment has required fields
-            if (empty($payment->getId()) || empty($payment->getStatus())) {
-                $this->logger->logApiError('callback_process', 'Payment object missing required fields', [
-                    'payment_id' => $payment->getId() ?? 'null',
-                    'status' => $payment->getStatus() ?? 'null',
-                    'order_id' => $payment->getOrderId() ?? 'null'
+                $this->logger->debug('[Callback] Signature verified, processing payment', [
+                    'payment_id' => $paymentData['id'] ?? 'unknown',
+                    'order_id' => $paymentData['orderId'] ?? 'unknown',
+                    'status' => $paymentData['status'] ?? 'unknown'
                 ]);
 
-                return $this->sendErrorResponse();
+                // Validate the payment data has required fields
+                if (empty($paymentData['id']) || empty($paymentData['orderId'])) {
+                    $this->logger->error('[Callback] Payment object missing required fields', [
+                        'received_fields' => array_keys($paymentData)
+                    ]);
+
+                    $response = $this->resultJsonFactory->create();
+                    $response->setHttpResponseCode(400);
+
+                    return $response->setData(['error' => 'Missing required payment data fields']);
+                }
+
+                try {
+                    // Create a PaymentDTO object
+                    $paymentDTO = $this->paymentDtoFactory->createFromArray($paymentData);
+
+                    // Process the payment with the payment processor
+                    $result = $this->paymentProcessor->process(
+                        $paymentDTO->getOrderId(),
+                        $paymentDTO->getId(),
+                        $paymentDTO->getRawData()
+                    );
+
+                    $this->logger->debug('[Callback] Payment processing result', [
+                        'success' => $result->isSuccess(),
+                        'message' => $result->getMessage()
+                    ]);
+
+                    if (!$result->isSuccess()) {
+                        $this->logger->error('[Callback] Payment processing failed: ' . $result->getMessage());
+                        $response = $this->resultJsonFactory->create();
+                        $response->setHttpResponseCode(422);
+
+                        return $response->setData(['error' => $result->getMessage()]);
+                    }
+                } catch (\Exception $e) {
+                    $this->logger->error('[Callback] Error creating PaymentDTO: ' . $e->getMessage(), [
+                        'payment_id' => $paymentData['id'] ?? 'unknown'
+                    ]);
+                    $response = $this->resultJsonFactory->create();
+                    $response->setHttpResponseCode(500);
+
+                    return $response->setData(['error' => 'Error processing payment data: ' . $e->getMessage()]);
+                }
+            } else {
+                $this->logger->error('[Callback] Invalid signature or payment data');
+                $response = $this->resultJsonFactory->create();
+                $response->setHttpResponseCode(401);
+
+                return $response->setData(['error' => 'Invalid signature']);
             }
 
-            // Process payment
-            $result = $this->paymentProcessor->process(
-                $payment->getOrderId(),
-                $payment->getId(),
-                $payment->getRawData()
-            );
-
-            $this->logger->logApiResponse('callback_process', [
-                'success' => $result->isSuccess(),
-                'message' => $result->getMessage(),
-                'payment_id' => $payment->getId(),
-                'order_id' => $payment->getOrderId() ?? null
+            return $this->resultJsonFactory->create()->setData(['received' => true]);
+        } catch (Exception $e) {
+            $this->logger->error('[Callback] Error processing callback: ' . $e->getMessage(), [
+                'exception' => $e
             ]);
 
-            if (!$result->isSuccess()) {
-                $this->logger->logApiError('callback_process', 'Payment processing failed: ' . $result->getMessage(), [
-                    'payment_id' => $payment->getId(),
-                    'order_id' => $payment->getOrderId() ?? null
-                ]);
-                $this->errorMessage = $result->getMessage();
+            $response = $this->resultJsonFactory->create();
+            $response->setHttpResponseCode(500);
 
-                return $this->sendErrorResponse();
-            }
-        } catch (\Exception $e) {
-            $this->logger->logApiError('callback_process', 'Error processing callback: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
-            $this->errorMessage = $e->getMessage();
-
-            return $this->sendErrorResponse();
-        }
-
-        return $this->sendSuccessResponse();
-    }
-
-    /**
-     * Verify that the callback has a valid CSRF protection signature
-     */
-    private function verifySignature(): bool
-    {
-        if (!$this->getRequest()->getHeader('monei-signature')) {
-            $this->errorMessage = 'Missing signature header';
-            $this->logger->logApiError('callback_signature', 'Missing signature header', [
-                'headers' => $this->getRequest()->getHeaders()->toArray()
-            ]);
-
-            return false;
-        }
-
-        try {
-            return $this->apiClient->getMoneiSdk()->verifySignature(
-                $this->getRequest()->getContent(),
-                $this->getRequest()->getHeader('monei-signature')
-            );
-        } catch (\Exception $e) {
-            $this->errorMessage = $e->getMessage();
-            $this->logger->logApiError('callback_signature', $e->getMessage(), [
-                'headers' => $this->getRequest()->getHeaders()->toArray(),
-                'content_length' => strlen($this->getRequest()->getContent())
-            ]);
-
-            return false;
+            return $response->setData(['error' => 'Internal error processing callback: ' . $e->getMessage()]);
         }
     }
 
@@ -268,20 +252,5 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
 
             return false;
         }
-    }
-
-    private function getPaymentFromRequest()
-    {
-        // Implementation of getPaymentFromRequest method
-    }
-
-    private function sendErrorResponse()
-    {
-        // Implementation of sendErrorResponse method
-    }
-
-    private function sendSuccessResponse()
-    {
-        // Implementation of sendSuccessResponse method
     }
 }

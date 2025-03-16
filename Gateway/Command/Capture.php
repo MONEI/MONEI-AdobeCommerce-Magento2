@@ -55,15 +55,9 @@ class Capture implements CommandInterface
         $payment = $commandSubject['payment']->getPayment();
         $order = $payment->getOrder();
 
-        $incrementId = $payment->getOrder()->getIncrementId();
-
         // Log payment data for debugging
-        $this->logger->logPaymentEvent(
-            'capture_start',
-            $incrementId,
-            null,
-            $payment->getData()
-        );
+        $this->logger->debug('[Capture payment data]');
+        $this->logger->debug(json_encode($payment->getData(), JSON_PRETTY_PRINT));
 
         // Check if payment is already captured/succeeded
         $additionalInfo = $payment->getAdditionalInformation();
@@ -71,23 +65,21 @@ class Capture implements CommandInterface
         $isAlreadyCaptured = $additionalInfo['monei_is_captured'] ?? false;
 
         // Log the status values we're checking
-        $this->logger->logApiRequest('capture_status_check', [
-            'order_id' => $incrementId,
-            'monei_status' => $moneiStatus ?? 'null',
-            'is_captured' => $isAlreadyCaptured
-        ]);
+        $this->logger->debug(sprintf(
+            '[Capture status check] Order %s, monei_status: %s, is_captured: %s',
+            $order->getIncrementId(),
+            $moneiStatus ?? 'null',
+            $isAlreadyCaptured ? 'true' : 'false'
+        ));
 
         if ($moneiStatus === Status::SUCCEEDED || (is_string($moneiStatus) && $moneiStatus === 'SUCCEEDED') || $isAlreadyCaptured) {
             // Payment already succeeded or captured, no need to capture again
-            $this->logger->logPaymentEvent(
-                'payment_already_captured',
-                $incrementId,
-                null,
-                [
-                    'status' => $moneiStatus,
-                    'is_captured' => $isAlreadyCaptured
-                ]
-            );
+            $this->logger->info(sprintf(
+                '[Payment already captured] Order %s, status: %s, is_captured: %s',
+                $order->getIncrementId(),
+                $moneiStatus,
+                $isAlreadyCaptured ? 'true' : 'false'
+            ));
 
             return null;
         }
@@ -105,15 +97,11 @@ class Capture implements CommandInterface
             $paymentId = $payment->getLastTransId();
         }
 
-        // If no valid payment ID found, exit with error
+        // Ensure we have a valid payment ID
         if (empty($paymentId)) {
-            $this->logger->logApiError(
-                'capture',
-                'Cannot capture payment without a valid payment ID',
-                ['order_id' => $incrementId]
-            );
+            $this->logger->critical('[Missing payment ID] Cannot capture payment without a valid payment ID');
 
-            throw new LocalizedException(__('Missing payment ID. Cannot capture this payment.'));
+            throw new LocalizedException(__('Cannot capture payment: Missing payment ID'));
         }
 
         $data = [
@@ -121,23 +109,23 @@ class Capture implements CommandInterface
             'amount' => $commandSubject['amount']  // Amount will be converted to cents in the service
         ];
 
-        // Log the capture request
-        $this->logger->logApiRequest(
-            'capture',
-            [
-                'payment_id' => $paymentId,
-                'order_id' => $incrementId,
-                'amount' => $commandSubject['amount'],
-                'currency' => $order->getOrderCurrencyCode()
-            ]
-        );
+        $this->logger->debug('[Capture payment request]');
+        $this->logger->debug(sprintf(
+            'Request data: paymentId=%s, amount=%s',
+            $paymentId,
+            $commandSubject['amount']
+        ));
 
         try {
             // Execute the capture request
             $response = $this->capturePaymentService->execute($data);
 
-            // Log the capture response
-            $this->logger->logApiResponse('capture', $response);
+            // Log the response for debugging
+            $this->logger->debug('[Capture payment response]');
+            $this->logger->debug(sprintf(
+                'Response type: %s',
+                is_object($response) ? get_class($response) : gettype($response)
+            ));
 
             // Get the capture ID from the response
             $captureId = $response->getId();
@@ -159,37 +147,31 @@ class Capture implements CommandInterface
                     $invoice = $commandSubject['payment']->getCreatedInvoice();
                     if ($invoice) {
                         $invoice->setTransactionId($captureId);
-                        $this->logger->logPaymentEvent(
-                            'invoice_transaction_updated',
-                            $incrementId,
-                            $paymentId,
-                            [
-                                'invoice_id' => $invoice->getIncrementId(),
-                                'transaction_id' => $captureId
-                            ]
-                        );
+                        $this->logger->info(sprintf(
+                            '[Invoice transaction ID updated] Invoice %s, transaction ID: %s',
+                            $invoice->getIncrementId(),
+                            $captureId
+                        ));
                     }
                 }
 
-                $this->logger->logPaymentEvent(
-                    'capture_transaction_stored',
-                    $incrementId,
-                    $paymentId,
-                    ['transaction_id' => $captureId]
-                );
+                $this->logger->info(sprintf(
+                    '[Capture transaction ID stored] Order %s, transaction ID: %s',
+                    $order->getIncrementId(),
+                    $captureId
+                ));
             } else {
-                $this->logger->logApiError(
-                    'capture',
-                    'No capture ID found in response',
-                    ['order_id' => $incrementId]
-                );
+                $this->logger->warning(sprintf(
+                    '[No capture ID found in response] Order %s',
+                    $order->getIncrementId()
+                ));
             }
         } catch (\Exception $e) {
-            $this->logger->logApiError(
-                'capture',
-                'Capture payment error: ' . $e->getMessage(),
-                ['order_id' => $incrementId]
-            );
+            $this->logger->error(sprintf(
+                '[Capture payment error] Order %s: %s',
+                $order->getIncrementId(),
+                $e->getMessage()
+            ));
 
             throw new LocalizedException(__('Error capturing payment: %1', $e->getMessage()));
         }

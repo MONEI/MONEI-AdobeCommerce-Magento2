@@ -213,7 +213,7 @@ define([
             }
           })
           .catch(function (error) {
-            console.error(error);
+            console.error('Card Error', error);
             fullScreenLoader.stopLoader();
             //Enable the button of place order
             self.isPlaceOrderActionAllowed(true);
