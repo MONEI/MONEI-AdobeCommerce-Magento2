@@ -38,6 +38,18 @@ class GetPaymentMethods extends AbstractApiService implements GetPaymentMethodsI
     private RegistryAccountId $registryAccountId;
 
     /**
+     * Static cache of payment methods to avoid repeated API calls within a single request
+     *
+     * @var array<string, array{data: PaymentMethods, timestamp: int}>
+     */
+    private static array $paymentMethodsCache = [];
+
+    /**
+     * Cache lifetime in seconds (1 minute)
+     */
+    private const CACHE_LIFETIME = 60;
+
+    /**
      * Constructor.
      *
      * @param Logger $logger Logger for tracking operations
@@ -74,13 +86,26 @@ class GetPaymentMethods extends AbstractApiService implements GetPaymentMethodsI
             $accountId = $this->moduleConfig->getAccountId($storeId);
         }
 
+        // Create cache key based on account ID
+        $cacheKey = $accountId ?: 'default';
+        $currentTime = time();
+
+        // Return from static cache if already fetched and not expired
+        if (
+            isset(self::$paymentMethodsCache[$cacheKey]) &&
+            ($currentTime - self::$paymentMethodsCache[$cacheKey]['timestamp'] < self::CACHE_LIFETIME)
+        ) {
+            $this->logger->debug('Using cached payment methods', ['accountId' => $accountId]);
+            return self::$paymentMethodsCache[$cacheKey]['data'];
+        }
+
         // Store the account ID in registry for later use if not empty
         if (!empty($accountId)) {
             $this->registryAccountId->set($accountId);
         }
 
         // Use the standardized SDK call pattern
-        return $this->executeMoneiSdkCall(
+        $result = $this->executeMoneiSdkCall(
             'getPaymentMethods',
             function (MoneiClient $moneiSdk) use ($accountId) {
                 // When using Account ID, set it on the SDK
@@ -93,5 +118,13 @@ class GetPaymentMethods extends AbstractApiService implements GetPaymentMethodsI
             },
             ['accountId' => $accountId]
         );
+
+        // Store in static cache with timestamp
+        self::$paymentMethodsCache[$cacheKey] = [
+            'data' => $result,
+            'timestamp' => $currentTime
+        ];
+
+        return $result;
     }
 }
