@@ -270,8 +270,8 @@ class Complete implements HttpGetActionInterface
                 'message' => $result->getMessage()
             ]);
 
-            // Route based on payment processing result
-            if ($result->isSuccess()) {
+            // Route based on payment status only, not the processor result
+            if ($paymentDTO->isSucceeded() || $paymentDTO->isAuthorized()) {
                 return $this->handleSuccessfulPayment();
             } else {
                 return $this->handleFailedPayment($paymentDTO);
