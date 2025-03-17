@@ -58,11 +58,13 @@ class OrderCancel
                 return $result;
             }
 
-            $this->logger->debug(sprintf(
-                '[Checking canceled order history] Order %s, Status: %s',
-                $result->getIncrementId(),
-                $result->getStatus()
-            ));
+            $this->logger->debug(
+                '[OrderCancel] Processing order',
+                [
+                    'order_id' => $result->getIncrementId(),
+                    'status' => $result->getStatus()
+                ]
+            );
 
             // Get all status history entries
             $historyEntries = $result->getStatusHistories();
@@ -97,12 +99,14 @@ class OrderCancel
                     $history->setIsCustomerNotified(true);
                     $updated = true;
 
-                    $this->logger->debug(sprintf(
-                        '[Marked cancellation history as notified] Order %s, Status: %s, Comment: %s',
-                        $result->getIncrementId(),
-                        $history->getStatus(),
-                        (string) ($history->getComment() ?? 'No comment')
-                    ));
+                    $this->logger->debug(
+                        '[OrderCancel] Marked history as notified',
+                        [
+                            'order_id' => $result->getIncrementId(),
+                            'status' => $history->getStatus(),
+                            'comment' => (string) ($history->getComment() ?? 'No comment')
+                        ]
+                    );
                 }
             }
 
@@ -111,10 +115,13 @@ class OrderCancel
                 $this->orderRepository->save($result);
             }
         } catch (\Exception $e) {
-            $this->logger->error(sprintf(
-                '[Error marking history as notified after cancel] %s',
-                $e->getMessage()
-            ), ['exception' => $e]);
+            $this->logger->error(
+                '[OrderCancel] History notification failed',
+                [
+                    'message' => $e->getMessage(),
+                    'exception' => $e
+                ]
+            );
         }
 
         return $result;

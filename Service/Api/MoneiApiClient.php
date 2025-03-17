@@ -104,7 +104,7 @@ class MoneiApiClient
                 // Store the SDK instance in cache
                 $this->instances[$cacheKey] = $monei;
 
-                $this->logger->debug('SDK initialized', ['store_id' => $currentStoreId]);
+                $this->logger->debug('[ApiClient] SDK initialized', ['store_id' => $currentStoreId]);
             } catch (LocalizedException $e) {
                 $this->logger->logApiError('initSdk', $e->getMessage(), [
                     'store_id' => $currentStoreId
@@ -198,7 +198,7 @@ class MoneiApiClient
             // Store the SDK instance in cache
             $this->instances[$cacheKey] = $monei;
 
-            $this->logger->debug('SDK reinitialized with provided API key', [
+            $this->logger->debug('[ApiClient] SDK reinitialized with provided API key', [
                 'store_id' => $currentStoreId
             ]);
 
@@ -303,7 +303,7 @@ class MoneiApiClient
             : $this->moduleConfig->getProductionApiKey($storeId);
 
         // Log configuration details in debug mode only
-        $this->logger->debug('API configuration loaded', [
+        $this->logger->debug('[ApiClient] API configuration loaded', [
             'store_id' => $storeId,
             'mode' => $isTestMode ? 'Test' : 'Production',
             'api_key_configured' => !empty($apiKey)

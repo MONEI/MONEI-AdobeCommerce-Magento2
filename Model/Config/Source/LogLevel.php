@@ -1,7 +1,14 @@
 <?php
 
 /**
- * @copyright Copyright © Monei (https://monei.com)
+ * MONEI Payment Module Log Level Source Model
+ *
+ * @category  Payment
+ * @package   Monei_MoneiPayment
+ * @author    Monei Team <dev@monei.com>
+ * @copyright Copyright © 2023 Monei (https://monei.com)
+ * @license   https://opensource.org/licenses/OSL-3.0 Open Software License 3.0
+ * @link      https://monei.com
  */
 
 declare(strict_types=1);
@@ -13,6 +20,12 @@ use Monolog\Logger as MonologLogger;
 
 /**
  * Source model for log level configuration
+ *
+ * @category Payment
+ * @package  Monei_MoneiPayment
+ * @author   Monei Team <dev@monei.com>
+ * @license  https://opensource.org/licenses/OSL-3.0 Open Software License 3.0
+ * @link     https://monei.com
  */
 class LogLevel implements OptionSourceInterface
 {

@@ -181,7 +181,7 @@ class Complete implements HttpGetActionInterface
     private function logInitialRequestData(): void
     {
         $params = $this->request->getParams();
-        $this->logger->debug('---------------------------------------------');
+        $this->logger->debug('[Complete] =============================================');
         $this->logger->debug('[Complete] Payment redirect received', [
             'order_id' => $params['orderId'] ?? ($params['order_id'] ?? 'unknown'),
             'payment_id' => $params['id'] ?? ($params['payment_id'] ?? 'unknown')

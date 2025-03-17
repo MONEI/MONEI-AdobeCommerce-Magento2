@@ -49,17 +49,21 @@ class LockManager implements LockManagerInterface
         $locked = $this->lockManager->lock($lockName, $timeout);
 
         if ($locked) {
-            $this->logger->info(sprintf(
-                '[Order lock acquired] Order %s, timeout: %d seconds',
-                $incrementId,
-                $timeout
-            ));
+            $this->logger->info(
+                '[LockManager] Order lock acquired',
+                [
+                    'order_id' => $incrementId,
+                    'timeout' => $timeout
+                ]
+            );
         } else {
-            $this->logger->warning(sprintf(
-                '[Failed to acquire order lock] Order %s, timeout: %d seconds',
-                $incrementId,
-                $timeout
-            ));
+            $this->logger->warning(
+                '[LockManager] Failed to acquire order lock',
+                [
+                    'order_id' => $incrementId,
+                    'timeout' => $timeout
+                ]
+            );
         }
 
         return $locked;
@@ -80,15 +84,15 @@ class LockManager implements LockManagerInterface
         }
 
         if ($unlocked) {
-            $this->logger->info(sprintf(
-                '[Order lock released] Order %s',
-                $incrementId
-            ));
+            $this->logger->info(
+                '[LockManager] Order lock released',
+                ['order_id' => $incrementId]
+            );
         } else {
-            $this->logger->warning(sprintf(
-                '[Failed to release order lock] Order %s',
-                $incrementId
-            ));
+            $this->logger->warning(
+                '[LockManager] Failed to release order lock',
+                ['order_id' => $incrementId]
+            );
         }
 
         return $unlocked;
@@ -113,19 +117,23 @@ class LockManager implements LockManagerInterface
         $locked = $this->lockManager->lock($lockName, $timeout);
 
         if ($locked) {
-            $this->logger->info(sprintf(
-                '[Payment lock acquired] Order %s, payment %s, timeout: %d seconds',
-                $orderId,
-                $paymentId,
-                $timeout
-            ));
+            $this->logger->info(
+                '[LockManager] Payment lock acquired',
+                [
+                    'order_id' => $orderId,
+                    'payment_id' => $paymentId,
+                    'timeout' => $timeout
+                ]
+            );
         } else {
-            $this->logger->warning(sprintf(
-                '[Failed to acquire payment lock] Order %s, payment %s, timeout: %d seconds',
-                $orderId,
-                $paymentId,
-                $timeout
-            ));
+            $this->logger->warning(
+                '[LockManager] Failed to acquire payment lock',
+                [
+                    'order_id' => $orderId,
+                    'payment_id' => $paymentId,
+                    'timeout' => $timeout
+                ]
+            );
         }
 
         return $locked;
@@ -146,17 +154,21 @@ class LockManager implements LockManagerInterface
         }
 
         if ($unlocked) {
-            $this->logger->info(sprintf(
-                '[Payment lock released] Order %s, payment %s',
-                $orderId,
-                $paymentId
-            ));
+            $this->logger->info(
+                '[LockManager] Payment lock released',
+                [
+                    'order_id' => $orderId,
+                    'payment_id' => $paymentId
+                ]
+            );
         } else {
-            $this->logger->warning(sprintf(
-                '[Failed to release payment lock] Order %s, payment %s',
-                $orderId,
-                $paymentId
-            ));
+            $this->logger->warning(
+                '[LockManager] Failed to release payment lock',
+                [
+                    'order_id' => $orderId,
+                    'payment_id' => $paymentId
+                ]
+            );
         }
 
         return $unlocked;
@@ -184,22 +196,27 @@ class LockManager implements LockManagerInterface
         $startTime = microtime(true);
         $endTime = $startTime + $timeout;
 
-        $this->logger->info(sprintf(
-            '[Waiting for payment lock] Order %s, payment %s, timeout: %d seconds, interval: %d ms',
-            $orderId,
-            $paymentId,
-            $timeout,
-            $interval
-        ));
+        $this->logger->info(
+            '[LockManager] Waiting for payment lock release',
+            [
+                'order_id' => $orderId,
+                'payment_id' => $paymentId,
+                'timeout' => $timeout,
+                'interval' => $interval
+            ]
+        );
 
         while (microtime(true) < $endTime) {
             if (!$this->isPaymentLocked($orderId, $paymentId)) {
-                $this->logger->info(sprintf(
-                    '[Payment lock released] Order %s, payment %s, waited: %.2f seconds',
-                    $orderId,
-                    $paymentId,
-                    microtime(true) - $startTime
-                ));
+                $waited = number_format(microtime(true) - $startTime, 2);
+                $this->logger->info(
+                    '[LockManager] Payment lock released',
+                    [
+                        'order_id' => $orderId,
+                        'payment_id' => $paymentId,
+                        'waited' => $waited
+                    ]
+                );
 
                 return true;
             }
@@ -208,12 +225,14 @@ class LockManager implements LockManagerInterface
             usleep($interval * 1000);
         }
 
-        $this->logger->warning(sprintf(
-            '[Timeout waiting for payment lock] Order %s, payment %s, timeout: %d seconds',
-            $orderId,
-            $paymentId,
-            $timeout
-        ));
+        $this->logger->warning(
+            '[LockManager] Timeout waiting for payment lock release',
+            [
+                'order_id' => $orderId,
+                'payment_id' => $paymentId,
+                'timeout' => $timeout
+            ]
+        );
 
         return false;
     }

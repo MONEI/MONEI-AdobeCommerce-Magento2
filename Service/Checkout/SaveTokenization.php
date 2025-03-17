@@ -76,7 +76,7 @@ class SaveTokenization extends AbstractCheckoutService implements SaveTokenizati
 
             return [];
         } catch (\Exception $e) {
-            $this->logger->error('Error saving tokenization flag: ' . $e->getMessage(), [
+            $this->logger->error('[Tokenization] Error saving tokenization flag: ' . $e->getMessage(), [
                 'cartId' => $cartId,
                 'isVaultChecked' => $isVaultChecked
             ]);

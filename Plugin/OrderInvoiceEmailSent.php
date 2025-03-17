@@ -68,20 +68,26 @@ class OrderInvoiceEmailSent
 
             // Only proceed if the email was actually sent
             if (!$result) {
-                $this->logger->debug(sprintf(
-                    '[Invoice email not sent] Order %s, Invoice %s - Skipping history update',
-                    $order->getIncrementId(),
-                    $invoice->getIncrementId()
-                ));
+                $this->logger->debug(
+                    '[InvoiceEmail] Email not sent',
+                    [
+                        'order_id' => $order->getIncrementId(),
+                        'invoice_id' => $invoice->getIncrementId(),
+                        'email_sent' => $invoice->getEmailSent() ? 'Yes' : 'No',
+                        'order_state' => $order->getState()
+                    ]
+                );
 
                 return $result;
             }
 
-            $this->logger->debug(sprintf(
-                '[Invoice email sent] Order %s, Invoice %s - Updating history entries',
-                $order->getIncrementId(),
-                $invoice->getIncrementId()
-            ));
+            $this->logger->debug(
+                '[InvoiceEmail] Processing email sent',
+                [
+                    'order_id' => $order->getIncrementId(),
+                    'invoice_id' => $invoice->getIncrementId()
+                ]
+            );
 
             // Get all status history entries
             $historyEntries = $order->getStatusHistories();
@@ -114,24 +120,37 @@ class OrderInvoiceEmailSent
                     // Mark as notified
                     $history->setIsCustomerNotified(true);
                     $updated = true;
-                    $this->logger->debug(sprintf(
-                        '[Marked history as notified] Order %s, Status: %s, Comment: %s',
-                        $order->getIncrementId(),
-                        $history->getStatus(),
-                        (string) ($history->getComment() ?? 'No comment')
-                    ));
+                    $this->logger->debug(
+                        '[InvoiceEmail] History marked as notified',
+                        [
+                            'order_id' => $order->getIncrementId(),
+                            'status' => $history->getStatus(),
+                            'comment' => (string) ($history->getComment() ?? 'No comment')
+                        ]
+                    );
                 }
             }
 
             // Save the order to persist the changes only if we updated something
             if ($updated) {
                 $this->orderRepository->save($order);
+                $this->logger->debug(
+                    '[InvoiceEmail] Order status updated',
+                    [
+                        'order_id' => $order->getIncrementId(),
+                        'invoice_id' => $invoice->getIncrementId(),
+                        'updated' => $updated
+                    ]
             }
         } catch (\Exception $e) {
-            $this->logger->error(sprintf(
-                '[Error marking history as notified after email] %s',
-                $e->getMessage()
-            ), ['exception' => $e]);
+            $this->logger->error(
+                '[InvoiceEmail] Confirmation failed',
+                [
+                    'order_id' => $invoice->getOrder()->getIncrementId(),
+                    'message' => $e->getMessage(),
+                    'exception' => $e
+                ]
+            );
         }
 
         return $result;

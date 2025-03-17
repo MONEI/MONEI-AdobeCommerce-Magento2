@@ -95,7 +95,7 @@ class GetPaymentMethods extends AbstractApiService implements GetPaymentMethodsI
             isset(self::$paymentMethodsCache[$cacheKey]) &&
             ($currentTime - self::$paymentMethodsCache[$cacheKey]['timestamp'] < self::CACHE_LIFETIME)
         ) {
-            $this->logger->debug('Using cached payment methods', ['accountId' => $accountId]);
+            $this->logger->debug('[ApiPaymentMethods] Using cached payment methods', ['accountId' => $accountId]);
             return self::$paymentMethodsCache[$cacheKey]['data'];
         }
 

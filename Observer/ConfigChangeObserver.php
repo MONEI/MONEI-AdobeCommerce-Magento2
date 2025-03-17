@@ -124,7 +124,7 @@ class ConfigChangeObserver implements ObserverInterface
             $domain = parse_url($baseUrl, PHP_URL_HOST);
 
             if (empty($domain)) {
-                $this->logger->error('Failed to extract domain from store URL for Apple Pay verification');
+                $this->logger->error('[ApplePay] Failed to extract domain from store URL for verification');
 
                 return;
             }
@@ -148,13 +148,13 @@ class ConfigChangeObserver implements ObserverInterface
             $this->apiClient->reinitialize($freshApiKey);
 
             // Register the domain with Apple Pay
-            $this->logger->info('Automatically verifying Apple Pay domain: ' . $domain);
+            $this->logger->info('[ApplePay] Automatically verifying domain: ' . $domain);
             $result = $this->verifyApplePayDomain->execute($domain);
-            $this->logger->info('Apple Pay domain verification result: ' . json_encode($result));
+            $this->logger->info('[ApplePay] Domain verification result: ' . json_encode($result));
         } catch (LocalizedException $e) {
-            $this->logger->error('Error during automatic Apple Pay domain verification: ' . $e->getMessage());
+            $this->logger->error('[ApplePay] Error during automatic domain verification: ' . $e->getMessage());
         } catch (\Exception $e) {
-            $this->logger->error('Unexpected error during automatic Apple Pay domain verification: ' . $e->getMessage());
+            $this->logger->error('[ApplePay] Unexpected error during automatic domain verification: ' . $e->getMessage());
         }
     }
 }

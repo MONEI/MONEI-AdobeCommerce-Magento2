@@ -194,14 +194,14 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
 
             return [$quote, $paymentToken];
         } catch (NoSuchEntityException $e) {
-            $this->logger->error('Quote or token not found: ' . $e->getMessage(), [
+            $this->logger->error('[VaultCheckout] Quote or token not found: ' . $e->getMessage(), [
                 'cartId' => $cartId,
                 'publicHash' => $publicHash
             ]);
 
             throw new LocalizedException(__('Quote or payment card information not found'));
         } catch (\Exception $e) {
-            $this->logger->error('Error retrieving payment token', [
+            $this->logger->error('[VaultCheckout] Error retrieving payment token', [
                 'cartId' => $cartId,
                 'publicHash' => $publicHash,
                 'error' => $e->getMessage()

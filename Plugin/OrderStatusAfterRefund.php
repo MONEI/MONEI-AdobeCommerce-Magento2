@@ -111,17 +111,23 @@ class OrderStatusAfterRefund
                 // Save the order
                 $this->orderRepository->save($order);
 
-                $this->logger->debug(sprintf(
-                    'Order %s status updated to %s after full refund',
-                    $order->getIncrementId(),
-                    $refundedStatus
-                ));
+                $this->logger->debug(
+                    '[OrderRefund] Status updated',
+                    [
+                        'order_id' => $order->getIncrementId(),
+                        'status' => $refundedStatus
+                    ]
+                );
             }
         } catch (\Exception $e) {
-            $this->logger->error(sprintf(
-                '[Error setting order status after refund] %s',
-                $e->getMessage()
-            ), ['exception' => $e]);
+            $this->logger->error(
+                '[OrderRefund] Status update failed',
+                [
+                    'order_id' => $creditmemo->getOrder()->getIncrementId(),
+                    'message' => $e->getMessage(),
+                    'exception' => $e
+                ]
+            );
         }
 
         return $creditmemo;

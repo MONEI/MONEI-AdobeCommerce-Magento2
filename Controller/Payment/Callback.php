@@ -129,7 +129,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     public function execute()
     {
         try {
-            $this->logger->debug('---------------------------------------------');
+            $this->logger->debug('[Callback] =============================================');
             $this->logger->debug('[Callback] Payment callback received');
 
             // Process the verified payment from validateForCsrf
@@ -137,10 +137,11 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
                 // Convert Payment object to array
                 $paymentData = (array) $this->verifiedPayment;
 
-                $this->logger->debug('[Callback] Signature verified, processing payment', [
+                $this->logger->debug('[Callback] Processing payment', [
                     'payment_id' => $paymentData['id'] ?? 'unknown',
                     'order_id' => $paymentData['orderId'] ?? 'unknown',
-                    'status' => $paymentData['status'] ?? 'unknown'
+                    'status' => $paymentData['status'] ?? 'unknown',
+                    'signature_verified' => true
                 ]);
 
                 // Validate the payment data has required fields
@@ -172,7 +173,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
                     ]);
 
                     if (!$result->isSuccess()) {
-                        $this->logger->error('[Callback] Payment processing failed: ' . $result->getMessage());
+                        $this->logger->error('[Callback] Processing failed: ' . $result->getMessage());
                         $response = $this->resultJsonFactory->create();
                         $response->setHttpResponseCode(422);
 

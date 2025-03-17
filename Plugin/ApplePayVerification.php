@@ -111,13 +111,13 @@ class ApplePayVerification
                 $this->response->sendResponse();
                 exit;
             } else {
-                $this->logger->error('Failed to fetch Apple Pay verification file. Status code: ' . $statusCode);
+                $this->logger->error('[ApplePay] Failed to fetch verification file. Status code: ' . $statusCode);
                 $this->response->setHttpResponseCode($statusCode);
                 $this->response->sendResponse();
                 exit;
             }
         } catch (\Exception $e) {
-            $this->logger->error('Error serving Apple Pay verification file: ' . $e->getMessage());
+            $this->logger->error('[ApplePay] Error serving verification file: ' . $e->getMessage());
             $this->response->setHttpResponseCode(500);
             $this->response->sendResponse();
             exit;

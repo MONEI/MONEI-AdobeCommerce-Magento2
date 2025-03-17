@@ -167,7 +167,7 @@ class VaultRedirect implements HttpPostActionInterface, CsrfAwareActionInterface
             if (isset($result['success']) && $result['success'] && !empty($result['payment_id'])) {
                 $this->checkoutSession->setLastMoneiPaymentId($result['payment_id']);
 
-                $this->logger->info('Vault payment created successfully', [
+                $this->logger->info('[Vault] Payment created successfully', [
                     'order_id' => $order->getIncrementId(),
                     'payment_id' => $result['payment_id'],
                 ]);
@@ -184,7 +184,7 @@ class VaultRedirect implements HttpPostActionInterface, CsrfAwareActionInterface
             throw new LocalizedException(__('Unable to process payment. Please try again.'));
         } catch (LocalizedException $e) {
             $this->messageManager->addErrorMessage($e->getMessage());
-            $this->logger->critical('MONEI Vault Redirect Error: ' . $e->getMessage(), [
+            $this->logger->critical('[Vault] Redirect error: ' . $e->getMessage(), [
                 'exception' => $e,
                 'trace' => $e->getTraceAsString()
             ]);
@@ -193,7 +193,7 @@ class VaultRedirect implements HttpPostActionInterface, CsrfAwareActionInterface
             $this->restoreQuoteToCart();
         } catch (\Exception $e) {
             $this->messageManager->addErrorMessage(__('An error occurred while processing your payment. Please try again.'));
-            $this->logger->critical('MONEI Vault Redirect Error: ' . $e->getMessage(), [
+            $this->logger->critical('[Vault] Redirect error: ' . $e->getMessage(), [
                 'exception' => $e,
                 'trace' => $e->getTraceAsString()
             ]);
@@ -219,9 +219,9 @@ class VaultRedirect implements HttpPostActionInterface, CsrfAwareActionInterface
             $this->checkoutSession->restoreQuote();
             $order = $this->checkoutSession->getLastRealOrder();
             if ($order && $order->getIncrementId()) {
-                $this->logger->info('Restored quote for order: ' . $order->getIncrementId());
+                $this->logger->info('[Vault] Restored quote for order: ' . $order->getIncrementId());
             } else {
-                $this->logger->info('Restored quote');
+                $this->logger->info('[Vault] Restored quote');
             }
         } catch (\Exception $e) {
             $orderId = null;
@@ -231,9 +231,9 @@ class VaultRedirect implements HttpPostActionInterface, CsrfAwareActionInterface
             }
 
             if ($orderId) {
-                $this->logger->error('Failed to restore quote for order ' . $orderId . ': ' . $e->getMessage());
+                $this->logger->error('[Vault] Failed to restore quote for order ' . $orderId . ': ' . $e->getMessage());
             } else {
-                $this->logger->error('Failed to restore quote: ' . $e->getMessage());
+                $this->logger->error('[Vault] Failed to restore quote: ' . $e->getMessage());
             }
         }
     }

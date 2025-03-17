@@ -108,7 +108,7 @@ class InvoiceService
                     // If order already has an invoice, don't create a new one
                     if (!$order->canInvoice()) {
                         $this->logger->info(
-                            'Order already has an invoice, skipping invoice creation',
+                            sprintf('[Invoice] Order already has an invoice, skipping invoice creation'),
                             ['order_id' => $order->getIncrementId()]
                         );
 
@@ -120,7 +120,7 @@ class InvoiceService
 
                     if (!$invoice->getTotalQty()) {
                         $this->logger->warning(
-                            'Cannot create invoice with zero items',
+                            sprintf('[Invoice] Cannot create invoice with zero items'),
                             ['order_id' => $order->getIncrementId()]
                         );
 
@@ -141,6 +141,10 @@ class InvoiceService
                         $this->saveInvoice($invoice, $order);
                     }
 
+                    $this->logger->info(
+                        sprintf('[Invoice] Created invoice #%s for order #%s', $invoice->getIncrementId(), $order->getIncrementId())
+                    );
+
                     return $invoice;
                 } catch (\Exception $e) {
                     // Handle already captured payments gracefully
@@ -155,7 +159,7 @@ class InvoiceService
 
                     // Log the error with full details
                     $this->logger->error(
-                        'Error during invoice processing: ' . $e->getMessage(),
+                        sprintf('[Invoice] Error during invoice processing: %s', $e->getMessage()),
                         ['order_id' => $order->getIncrementId(), 'exception' => $e]
                     );
 
@@ -186,7 +190,7 @@ class InvoiceService
         try {
             // Check if invoice emails should be sent based on configuration
             if ($this->moduleConfig->shouldSendInvoiceEmail($order->getStoreId())) {
-                $this->logger->debug('[Sending invoice email]');
+                $this->logger->debug('[Invoice] Sending invoice email');
                 $this->invoiceSender->send($invoice);
             }
         } catch (\Exception $e) {
@@ -238,7 +242,7 @@ class InvoiceService
                 // If order already has an invoice, don't create a new one
                 if (!$order->canInvoice()) {
                     $this->logger->info(
-                        'Order already has an invoice, skipping pending invoice creation',
+                        sprintf('[Invoice] Order already has an invoice, skipping pending invoice creation'),
                         ['order_id' => $order->getIncrementId()]
                     );
 
@@ -261,8 +265,7 @@ class InvoiceService
                 }
 
                 $this->logger->info(
-                    'Created pending invoice for authorized payment',
-                    ['order_id' => $order->getIncrementId(), 'payment_id' => $paymentId]
+                    sprintf('[Invoice] Created pending invoice #%s for order #%s', $invoice->getIncrementId(), $order->getIncrementId())
                 );
 
                 return $invoice;
@@ -300,7 +303,7 @@ class InvoiceService
 
                     if (!$order->canInvoice()) {
                         $this->logger->info(
-                            'Cannot create partial invoice - order already fully invoiced',
+                            sprintf('[Invoice] Cannot create partial invoice - order already fully invoiced'),
                             ['order_id' => $order->getIncrementId()]
                         );
 
@@ -328,10 +331,14 @@ class InvoiceService
                         $this->saveInvoice($invoice, $order);
                     }
 
+                    $this->logger->info(
+                        sprintf('[Invoice] Created partial invoice #%s for order #%s', $invoice->getIncrementId(), $order->getIncrementId())
+                    );
+
                     return $invoice;
                 } catch (\Exception $e) {
                     $this->logger->error(
-                        'Error during partial invoice processing: ' . $e->getMessage(),
+                        sprintf('[Invoice] Failed to create partial invoice for order #%s: %s', $order->getIncrementId(), $e->getMessage()),
                         ['order_id' => $order->getIncrementId(), 'exception' => $e]
                     );
 

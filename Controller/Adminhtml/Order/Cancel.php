@@ -91,7 +91,7 @@ class Cancel extends Action
         $params = $this->getRequest()->getParams();
 
         // Debug logging for incoming parameters
-        $this->logger->debug('[Cancel Payment] Incoming parameters:', $params);
+        $this->logger->debug('[AdminCancel] Parameters', $params);
 
         /** @var Json $resultJson */
         $resultJson = $this->resultJsonFactory->create();
@@ -115,7 +115,13 @@ class Cancel extends Action
             );
 
             $this->messageManager->addErrorMessage(__($message));
-            $this->logger->error(sprintf('Cancel order error: %s. Params received: %s', $message, json_encode($params)));
+            $this->logger->error(
+                '[AdminCancel] Invalid parameters',
+                [
+                    'message' => $message,
+                    'params' => $params
+                ]
+            );
 
             $url = $this->getUrl('sales/*/');
             $response = [
@@ -134,10 +140,14 @@ class Cancel extends Action
             $response = $this->cancelPaymentService->execute($data);
 
             // Log the response from the cancel payment service
-            $this->logger->debug('[Cancel payment controller]');
-            $this->logger->debug(sprintf('[Order ID] %s', $params['order_id']));
-            $this->logger->debug('[Cancel payment response]');
-            $this->logger->debug(json_encode($response, JSON_PRETTY_PRINT));
+            $this->logger->debug(
+                '[AdminCancel] Processing payment cancellation',
+                [
+                    'order_id' => $params['order_id'],
+                    'payment_id' => $params['payment_id'],
+                    'response' => $response
+                ]
+            );
 
             if (isset($response['error']) && true === $response['error']) {
                 $errorMessage = isset($response['errorMessage'])
@@ -154,16 +164,17 @@ class Cancel extends Action
                 $this->messageManager->addSuccessMessage(__('The order has been successfully canceled.'));
             } catch (LocalizedException $e) {
                 $this->messageManager->addErrorMessage($e->getMessage());
+                $this->logger->critical('[AdminCancel] Order cancellation failed', ['error' => $e->getMessage()]);
             } catch (\Exception $e) {
                 $this->messageManager->addErrorMessage(__('Order cancellation failed: %1', $e->getMessage()));
-                $this->logger->critical('[Order Cancel Exception] ' . $e->getMessage());
+                $this->logger->critical('[AdminCancel] Order cancellation failed', ['error' => $e->getMessage()]);
             }
         } catch (LocalizedException $e) {
             $this->messageManager->addErrorMessage($e->getMessage());
-            $this->logger->critical('[LocalizedException] ' . $e->getMessage());
+            $this->logger->critical('[AdminCancel] ' . $e->getMessage());
         } catch (\Exception $e) {
             $this->messageManager->addErrorMessage(__('An unexpected error occurred during payment cancellation. Please check the logs for more details.'));
-            $this->logger->critical('[Exception] ' . $e->getMessage());
+            $this->logger->critical('[AdminCancel] Unexpected error', ['error' => $e->getMessage()]);
         }
 
         $url = $this->getUrl('sales/order/view', ['order_id' => $params['order_id']]);

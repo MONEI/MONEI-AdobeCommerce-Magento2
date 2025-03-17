@@ -122,10 +122,10 @@
   </type>
   <type name="Monei\MoneiPayment\Service\Logger">
     <arguments>
-      <argument name="name" xsi:type="string">moneiLogger</argument>
-      <argument name="handlers" xsi:type="array">
-        <item name="system" xsi:type="object">Monei\MoneiPayment\Service\Logger\Handler</item>
-      </argument>
+      <argument name="handler" xsi:type="object"
+        >Monei\MoneiPayment\Service\Logger\Handler</argument
+      >
+      <argument name="name" xsi:type="string">monei</argument>
     </arguments>
   </type>
   <type name="Magento\Framework\Console\CommandList">

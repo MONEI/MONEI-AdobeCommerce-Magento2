@@ -176,11 +176,11 @@ class CreateGuestMoneiPaymentInSite extends AbstractCheckoutService implements C
 
             return $quote;
         } catch (NoSuchEntityException $e) {
-            $this->logger->error('Quote not found: ' . $e->getMessage(), ['cartId' => $cartId]);
+            $this->logger->error('[GuestCheckout] Quote not found: ' . $e->getMessage(), ['cartId' => $cartId]);
 
             throw new LocalizedException(__('Quote not found for this cart ID'));
         } catch (\Exception $e) {
-            $this->logger->error('Error resolving quote: ' . $e->getMessage(), ['cartId' => $cartId]);
+            $this->logger->error('[GuestCheckout] Error resolving quote: ' . $e->getMessage(), ['cartId' => $cartId]);
 
             throw new LocalizedException(__('An error occurred while retrieving quote information'));
         }
@@ -196,7 +196,7 @@ class CreateGuestMoneiPaymentInSite extends AbstractCheckoutService implements C
     private function buildPaymentRequest(Quote $quote, string $email): array
     {
         // Log API settings for debugging
-        $this->logger->debug('MONEI API Configuration', [
+        $this->logger->debug('[GuestCheckout] MONEI API Configuration', [
             'monei_api_url' => $this->moduleConfig->getUrl(),
             'module_config' => [
                 'is_test_mode' => $this->moduleConfig->getMode() === 1 ? 'Yes' : 'No'

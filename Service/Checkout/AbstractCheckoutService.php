@@ -105,11 +105,11 @@ abstract class AbstractCheckoutService extends AbstractApiService
 
             return $quote;
         } catch (NoSuchEntityException $e) {
-            $this->logger->error('Quote not found: ' . $e->getMessage(), ['cartId' => $cartId]);
+            $this->logger->error('[Checkout] Quote not found: ' . $e->getMessage(), ['cartId' => $cartId]);
 
             throw new LocalizedException(__('Quote not found for this cart ID'));
         } catch (\Exception $e) {
-            $this->logger->error('Error resolving quote: ' . $e->getMessage(), ['cartId' => $cartId]);
+            $this->logger->error('[Checkout] Error resolving quote: ' . $e->getMessage(), ['cartId' => $cartId]);
 
             throw new LocalizedException(__('An error occurred while retrieving quote information'));
         }
@@ -143,7 +143,7 @@ abstract class AbstractCheckoutService extends AbstractApiService
 
             if ($isPending && $isUnconfirmed && $isSameAmount) {
                 // Log the reuse of existing payment ID
-                $this->logger->info('Using existing payment ID with pending status and matching amount', [
+                $this->logger->info('[Checkout] Using existing payment ID with pending status and matching amount', [
                     'payment_id' => $existingPaymentId,
                     'order_id' => $quote->getReservedOrderId(),
                     'amount' => $payment->getAmount(),
@@ -153,7 +153,7 @@ abstract class AbstractCheckoutService extends AbstractApiService
                 // Return an array with the payment ID as expected by the frontend
                 return [['id' => $existingPaymentId]];
             } else {
-                $this->logger->info('Existing payment cannot be reused - creating new payment', [
+                $this->logger->info('[Checkout] Existing payment cannot be reused - creating new payment', [
                     'payment_id' => $existingPaymentId,
                     'order_id' => $quote->getReservedOrderId(),
                     'pending' => $isPending ? 'yes' : 'no',
@@ -164,7 +164,7 @@ abstract class AbstractCheckoutService extends AbstractApiService
                 ]);
             }
         } catch (\Exception $e) {
-            $this->logger->error('Error checking existing payment: ' . $e->getMessage(), [
+            $this->logger->error('[Checkout] Error checking existing payment: ' . $e->getMessage(), [
                 'payment_id' => $existingPaymentId,
                 'order_id' => $quote->getReservedOrderId()
             ]);

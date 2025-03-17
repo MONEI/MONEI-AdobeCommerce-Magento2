@@ -181,7 +181,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             }
         } catch (Exception $e) {
             $this->logger->error(sprintf(
-                '[Payment processing failed] Order %s, payment %s: %s',
+                '[Payment] Processing failed for order %s, payment %s: %s',
                 $orderId,
                 $paymentId,
                 $e->getMessage()
@@ -215,7 +215,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             // Check if timeout has been reached
             if (time() - $startTime > $timeout) {
                 $this->logger->warning(sprintf(
-                    '[Timeout waiting for processing] Order %s, payment %s',
+                    '[Payment] Timeout waiting for processing for order %s, payment %s',
                     $orderId,
                     $paymentId
                 ));
@@ -241,7 +241,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             return (array) $payment;
         } catch (Exception $e) {
             $this->logger->error(sprintf(
-                '[Error getting payment status] Payment %s: %s',
+                '[Payment] Error getting payment status for payment %s: %s',
                 $paymentId,
                 $e->getMessage()
             ), ['exception' => $e]);
@@ -268,7 +268,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             $lockAcquired = $this->lockManager->lockOrder($incrementId);
             if (!$lockAcquired) {
                 $this->logger->warning(sprintf(
-                    '[Lock acquisition failed] Order %s, payment %s',
+                    '[Payment] Lock acquisition failed for order %s, payment %s',
                     $incrementId,
                     $paymentId
                 ));
@@ -284,7 +284,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             }
         } catch (LocalizedException $e) {
             $this->logger->error(sprintf(
-                '[Payment processing failed] Order %s, payment %s: %s',
+                '[Payment] Processing failed for order %s, payment %s: %s',
                 $incrementId,
                 $paymentId,
                 $e->getMessage()
@@ -319,7 +319,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             return $this->processPayment($order, $payment);
         } catch (LocalizedException $e) {
             $this->logger->error(sprintf(
-                '[Payment processing failed] Order %s, payment %s: %s',
+                '[Payment] Processing failed for order %s, payment %s: %s',
                 $order->getIncrementId(),
                 $paymentId,
                 $e->getMessage()
@@ -341,7 +341,7 @@ class PaymentProcessor implements PaymentProcessorInterface
     {
         $paymentId = $payment->getId();
         $this->logger->info(sprintf(
-            '[Processing payment] Order %s, payment %s, status: %s',
+            '[Payment] Processing order %s, payment %s, status: %s',
             $incrementId,
             $paymentId,
             $payment->getStatus()
@@ -369,7 +369,7 @@ class PaymentProcessor implements PaymentProcessorInterface
 
         // Payment is in a pending or unknown state
         $this->logger->info(sprintf(
-            '[Payment in pending state] Order %s, payment %s, status: %s',
+            '[Payment] Pending state for order %s, payment %s, status: %s',
             $incrementId,
             $paymentId,
             $payment->getStatus()
@@ -394,7 +394,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             // Check if order is already processed
             if ($order->getState() === Order::STATE_PROCESSING) {
                 $this->logger->info(sprintf(
-                    '[Order already processed] Order %s, payment %s',
+                    '[Payment] Order already processed for order %s, payment %s',
                     $incrementId,
                     $paymentId
                 ));
@@ -406,7 +406,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             $this->updatePaymentInformation($order, $payment);
 
             $this->logger->info(sprintf(
-                '[Payment information updated] Order %s, payment %s',
+                '[Payment] Payment information updated for order %s, payment %s',
                 $incrementId,
                 $paymentId
             ));
@@ -429,11 +429,11 @@ class PaymentProcessor implements PaymentProcessorInterface
             if (!$order->getEmailSent()) {
                 try {
                     if ($this->moduleConfig->shouldSendOrderEmail($order->getStoreId())) {
-                        $this->logger->debug('[Sending order email]');
+                        $this->logger->debug('[Payment] Sending order email');
                         $this->orderSender->send($order);
                     }
                 } catch (Exception $e) {
-                    $this->logger->critical('[Email sending error] ' . $e->getMessage());
+                    $this->logger->critical('[Payment] Email sending error: ' . $e->getMessage());
                 }
             }
 
@@ -442,7 +442,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             $this->markExistingCaptureHistoryAsNotified($order);
 
             $this->logger->info(sprintf(
-                '[Payment successful] Order %s, payment %s',
+                '[Payment] Payment successful for order %s, payment %s',
                 $incrementId,
                 $paymentId
             ));
@@ -450,7 +450,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             return true;
         } catch (Exception $e) {
             $this->logger->error(sprintf(
-                '[Error processing successful payment] Order %s, payment %s: %s',
+                '[Payment] Error processing successful payment for order %s, payment %s: %s',
                 $incrementId,
                 $paymentId,
                 $e->getMessage()
@@ -489,7 +489,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                     ) {
                         $history->setIsCustomerNotified(true);
                         $this->logger->debug(sprintf(
-                            '[Order history entry marked as notified] Order %s, Comment: %s',
+                            '[Payment] Order history entry marked as notified for order %s, Comment: %s',
                             $order->getIncrementId(),
                             $comment
                         ));
@@ -505,7 +505,7 @@ class PaymentProcessor implements PaymentProcessorInterface
         } catch (Exception $e) {
             $this->logger->error(
                 sprintf(
-                    '[Error marking history as notified] %s',
+                    '[Payment] Error marking history as notified: %s',
                     $e->getMessage()
                 ),
                 ['exception' => $e]
@@ -529,7 +529,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             // Check if order is already processed
             if ($order->getState() === Order::STATE_PROCESSING) {
                 $this->logger->info(sprintf(
-                    '[Order already processed] Order %s, payment %s',
+                    '[Payment] Order already processed for order %s, payment %s',
                     $incrementId,
                     $paymentId
                 ));
@@ -558,11 +558,11 @@ class PaymentProcessor implements PaymentProcessorInterface
             if (!$order->getEmailSent()) {
                 try {
                     if ($this->moduleConfig->shouldSendOrderEmail($order->getStoreId())) {
-                        $this->logger->debug('[Sending order email for authorized payment]');
+                        $this->logger->debug('[Payment] Sending order email for authorized payment');
                         $this->orderSender->send($order);
                     }
                 } catch (Exception $e) {
-                    $this->logger->critical('[Email sending error for authorized payment] ' . $e->getMessage());
+                    $this->logger->critical('[Payment] Email sending error for authorized payment: ' . $e->getMessage());
                 }
             }
 
@@ -571,7 +571,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             $this->markExistingCaptureHistoryAsNotified($order);
 
             $this->logger->info(sprintf(
-                '[Payment authorized] Order %s, payment %s',
+                '[Payment] Payment authorized for order %s, payment %s',
                 $incrementId,
                 $paymentId
             ));
@@ -579,7 +579,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             return true;
         } catch (Exception $e) {
             $this->logger->error(sprintf(
-                '[Error processing authorized payment] Order %s, payment %s: %s',
+                '[Payment] Error processing authorized payment for order %s, payment %s: %s',
                 $incrementId,
                 $paymentId,
                 $e->getMessage()
@@ -607,7 +607,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             // Check if order is already canceled
             if ($order->getState() === Order::STATE_CANCELED) {
                 $this->logger->info(sprintf(
-                    '[Order already canceled] Order %s, payment %s',
+                    '[Payment] Order already canceled for order %s, payment %s',
                     $incrementId,
                     $paymentId
                 ));
@@ -642,14 +642,14 @@ class PaymentProcessor implements PaymentProcessorInterface
                 $this->orderRepository->save($order);
 
                 $this->logger->info(sprintf(
-                    '[Order canceled] Order %s, payment %s, error_code: %s',
+                    '[Payment] Order canceled for order %s, payment %s, error_code: %s',
                     $incrementId,
                     $paymentId,
                     $errorCode ?? 'n/a'
                 ));
             } else {
                 $this->logger->warning(sprintf(
-                    '[Order could not be canceled] Order %s, payment %s, state: %s, error_code: %s',
+                    '[Payment] Order could not be canceled for order %s, payment %s, state: %s, error_code: %s',
                     $incrementId,
                     $paymentId,
                     $order->getState(),
@@ -660,7 +660,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             return true;
         } catch (Exception $e) {
             $this->logger->error(sprintf(
-                '[Error handling failed payment] Order %s, payment %s, error_code: %s, exception: %s',
+                '[Payment] Error handling failed payment for order %s, payment %s, error_code: %s, exception: %s',
                 $incrementId,
                 $paymentId,
                 $errorCode ?? 'n/a',
@@ -687,7 +687,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             // Check if order is already processed
             if ($order->getState() === Order::STATE_PROCESSING) {
                 $this->logger->info(sprintf(
-                    '[Order already processed] Order %s, payment %s',
+                    '[Payment] Order already processed for order %s, payment %s',
                     $incrementId,
                     $paymentId
                 ));
@@ -713,11 +713,11 @@ class PaymentProcessor implements PaymentProcessorInterface
             if (!$order->getEmailSent()) {
                 try {
                     if ($this->moduleConfig->shouldSendOrderEmail($order->getStoreId())) {
-                        $this->logger->debug('[Sending order email for pending payment]');
+                        $this->logger->debug('[Payment] Sending order email for pending payment');
                         $this->orderSender->send($order);
                     }
                 } catch (Exception $e) {
-                    $this->logger->critical('[Email sending error for pending payment] ' . $e->getMessage());
+                    $this->logger->critical('[Payment] Email sending error for pending payment: ' . $e->getMessage());
                 }
             }
 
@@ -726,7 +726,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             $this->markExistingCaptureHistoryAsNotified($order);
 
             $this->logger->info(sprintf(
-                '[Payment pending] Order %s, payment %s',
+                '[Payment] Payment pending for order %s, payment %s',
                 $incrementId,
                 $paymentId
             ));
@@ -734,7 +734,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             return true;
         } catch (Exception $e) {
             $this->logger->error(sprintf(
-                '[Error processing pending payment] Order %s, payment %s: %s',
+                '[Payment] Error processing pending payment for order %s, payment %s: %s',
                 $incrementId,
                 $paymentId,
                 $e->getMessage()
@@ -785,7 +785,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                     $orderPayment
                 );
                 $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, $vaultCreated);
-                $this->logger->debug('[Payment token] Token creation ' . ($vaultCreated ? 'successful' : 'failed'));
+                $this->logger->debug('[Payment] Payment token creation ' . ($vaultCreated ? 'successful' : 'failed'));
             }
 
             // Also set payment ID directly on the order to maintain compatibility with Block/Info/Monei.php
