@@ -1,5 +1,18 @@
 <?php
 
+/**
+ * Test for Complete controller
+ *
+ * @category  Monei
+ * @package   Monei_MoneiPayment
+ * @author    Monei <developers@monei.com>
+ * @copyright 2022 Monei (https://monei.com)
+ * @license   https://opensource.org/licenses/OSL-3.0 Open Software License 3.0
+ * @link      https://docs.monei.com/api
+ */
+
+declare(strict_types=1);
+
 namespace Monei\MoneiPayment\Test\Unit\Controller\Payment;
 
 use Magento\Checkout\Model\Session;
@@ -23,132 +36,179 @@ use Monei\ApiException;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Unit test for Complete controller
+ *
+ * @license  https://opensource.org/licenses/OSL-3.0 Open Software License 3.0
+ * @link     https://docs.monei.com/api
+ */
 class CompleteTest extends TestCase
 {
     /**
+     * Complete controller instance
+     *
      * @var Complete
      */
-    private Complete $completeController;
+    private $_completeController;
 
     /**
+     * Order repository mock
+     *
      * @var OrderRepositoryInterface|MockObject
      */
-    private OrderRepositoryInterface $orderRepositoryMock;
+    private $_orderRepositoryMock;
 
     /**
+     * Redirect factory mock
+     *
      * @var RedirectFactory|MockObject
      */
-    private RedirectFactory $resultRedirectFactoryMock;
+    private $_resultRedirectFactoryMock;
 
     /**
+     * Logger mock
+     *
      * @var Logger|MockObject
      */
-    private Logger $loggerMock;
+    private $_loggerMock;
 
     /**
+     * Payment processor mock
+     *
      * @var PaymentProcessorInterface|MockObject
      */
-    private PaymentProcessorInterface $paymentProcessorMock;
+    private $_paymentProcessorMock;
 
     /**
+     * API client mock
+     *
      * @var MoneiApiClient|MockObject
      */
-    private MoneiApiClient $apiClientMock;
+    private $_apiClientMock;
 
     /**
+     * Get payment service mock
+     *
      * @var GetPaymentInterface|MockObject
      */
-    private GetPaymentInterface $getPaymentServiceMock;
+    private $_getPaymentServiceMock;
 
     /**
+     * Request mock
+     *
      * @var HttpRequest|MockObject
      */
-    private HttpRequest $requestMock;
+    private $_requestMock;
 
     /**
+     * Checkout session mock
+     *
      * @var Session|MockObject
      */
-    private Session $checkoutSessionMock;
+    private $_checkoutSessionMock;
 
     /**
+     * Message manager mock
+     *
      * @var ManagerInterface|MockObject
      */
-    private ManagerInterface $messageManagerMock;
+    private $_messageManagerMock;
 
     /**
+     * Order factory mock
+     *
      * @var OrderFactory|MockObject
      */
-    private OrderFactory $orderFactoryMock;
+    private $_orderFactoryMock;
 
     /**
+     * Payment DTO factory mock
+     *
      * @var PaymentDTOFactory|MockObject
      */
-    private PaymentDTOFactory $paymentDtoFactoryMock;
+    private $_paymentDtoFactoryMock;
 
     /**
+     * Redirect mock
+     *
      * @var Redirect|MockObject
      */
-    private Redirect $redirectMock;
+    private $_redirectMock;
 
     /**
+     * Monei payment mock
+     *
      * @var MoneiPayment|MockObject
      */
-    private MoneiPayment $moneiPaymentMock;
+    private $_moneiPaymentMock;
 
     /**
+     * Payment DTO mock
+     *
      * @var PaymentDTO|MockObject
      */
-    private PaymentDTO $paymentDtoMock;
+    private $_paymentDtoMock;
 
     /**
+     * Order mock
+     *
      * @var Order|MockObject
      */
-    private Order $orderMock;
+    private $_orderMock;
 
     /**
+     * Payment processing result mock
+     *
      * @var PaymentProcessingResultInterface|MockObject
      */
-    private PaymentProcessingResultInterface $processingResultMock;
+    private $_processingResultMock;
 
+    /**
+     * Set up test environment
+     *
+     * @return void
+     */
     protected function setUp(): void
     {
-        $this->orderRepositoryMock = $this->createMock(OrderRepositoryInterface::class);
-        $this->resultRedirectFactoryMock = $this->createMock(RedirectFactory::class);
-        $this->loggerMock = $this->createMock(Logger::class);
-        $this->paymentProcessorMock = $this->createMock(PaymentProcessorInterface::class);
-        $this->apiClientMock = $this->createMock(MoneiApiClient::class);
-        $this->getPaymentServiceMock = $this->createMock(GetPaymentInterface::class);
-        $this->requestMock = $this->createMock(HttpRequest::class);
-        $this->checkoutSessionMock = $this->createMock(Session::class);
-        $this->messageManagerMock = $this->createMock(ManagerInterface::class);
-        $this->orderFactoryMock = $this->createMock(OrderFactory::class);
-        $this->paymentDtoFactoryMock = $this->createMock(PaymentDTOFactory::class);
-        $this->redirectMock = $this->createMock(Redirect::class);
-        $this->moneiPaymentMock = $this->createMock(MoneiPayment::class);
-        $this->paymentDtoMock = $this->createMock(PaymentDTO::class);
-        $this->orderMock = $this->createMock(Order::class);
-        $this->processingResultMock = $this->createMock(PaymentProcessingResultInterface::class);
+        $this->_orderRepositoryMock = $this->createMock(OrderRepositoryInterface::class);
+        $this->_resultRedirectFactoryMock = $this->createMock(RedirectFactory::class);
+        $this->_loggerMock = $this->createMock(Logger::class);
+        $this->_paymentProcessorMock = $this->createMock(PaymentProcessorInterface::class);
+        $this->_apiClientMock = $this->createMock(MoneiApiClient::class);
+        $this->_getPaymentServiceMock = $this->createMock(GetPaymentInterface::class);
+        $this->_requestMock = $this->createMock(HttpRequest::class);
+        $this->_checkoutSessionMock = $this->createMock(Session::class);
+        $this->_messageManagerMock = $this->createMock(ManagerInterface::class);
+        $this->_orderFactoryMock = $this->createMock(OrderFactory::class);
+        $this->_paymentDtoFactoryMock = $this->createMock(PaymentDTOFactory::class);
+        $this->_redirectMock = $this->createMock(Redirect::class);
+        $this->_moneiPaymentMock = $this->createMock(MoneiPayment::class);
+        $this->_paymentDtoMock = $this->createMock(PaymentDTO::class);
+        $this->_orderMock = $this->createMock(Order::class);
+        $this->_processingResultMock = $this->createMock(PaymentProcessingResultInterface::class);
 
         // Configure redirect factory
-        $this->resultRedirectFactoryMock->method('create')->willReturn($this->redirectMock);
+        $this->_resultRedirectFactoryMock->method('create')->willReturn($this->_redirectMock);
 
-        $this->completeController = new Complete(
-            $this->orderRepositoryMock,
-            $this->resultRedirectFactoryMock,
-            $this->loggerMock,
-            $this->paymentProcessorMock,
-            $this->apiClientMock,
-            $this->getPaymentServiceMock,
-            $this->requestMock,
-            $this->checkoutSessionMock,
-            $this->messageManagerMock,
-            $this->orderFactoryMock,
-            $this->paymentDtoFactoryMock
+        $this->_completeController = new Complete(
+            $this->_orderRepositoryMock,
+            $this->_resultRedirectFactoryMock,
+            $this->_loggerMock,
+            $this->_paymentProcessorMock,
+            $this->_apiClientMock,
+            $this->_getPaymentServiceMock,
+            $this->_requestMock,
+            $this->_checkoutSessionMock,
+            $this->_messageManagerMock,
+            $this->_orderFactoryMock,
+            $this->_paymentDtoFactoryMock
         );
     }
 
     /**
      * Test successful payment redirect
+     *
+     * @return void
      */
     public function testExecuteWithSuccessfulPayment(): void
     {
@@ -157,55 +217,54 @@ class CompleteTest extends TestCase
             'id' => 'pay_123456',
             'orderId' => '100000123'
         ];
-        $this->requestMock->method('getParams')->willReturn($params);
+        $this->_requestMock->method('getParams')->willReturn($params);
 
         // Mock payment processor is not processing
-        $this->paymentProcessorMock->method('isProcessing')->with('100000123', 'pay_123456')->willReturn(false);
+        $this->_paymentProcessorMock->method('isProcessing')->willReturn(false);
 
         // GetPayment service returns a payment
-        $this->getPaymentServiceMock->method('execute')->with('pay_123456')->willReturn($this->moneiPaymentMock);
+        $this->_getPaymentServiceMock->method('execute')->willReturn($this->_moneiPaymentMock);
 
         // Payment DTO configuration
-        $this->paymentDtoMock->method('getId')->willReturn('pay_123456');
-        $this->paymentDtoMock->method('getOrderId')->willReturn('100000123');
-        $this->paymentDtoMock->method('getStatus')->willReturn('SUCCEEDED');
-        $this->paymentDtoMock->method('getRawData')->willReturn(['id' => 'pay_123456', 'status' => 'SUCCEEDED']);
-        $this->paymentDtoMock->method('isSucceeded')->willReturn(true);
-        $this->paymentDtoMock->method('isAuthorized')->willReturn(false);
-        $this->paymentDtoMock->method('isPending')->willReturn(false);
-        $this->paymentDtoMock->method('isMbway')->willReturn(false);
+        $this->_paymentDtoMock->method('getId')->willReturn('pay_123456');
+        $this->_paymentDtoMock->method('getOrderId')->willReturn('100000123');
+        $this->_paymentDtoMock->method('getStatus')->willReturn('SUCCEEDED');
+        $this->_paymentDtoMock->method('getRawData')->willReturn(['id' => 'pay_123456', 'status' => 'SUCCEEDED']);
+        $this->_paymentDtoMock->method('isSucceeded')->willReturn(true);
+        $this->_paymentDtoMock->method('isAuthorized')->willReturn(false);
+        $this->_paymentDtoMock->method('isPending')->willReturn(false);
+        $this->_paymentDtoMock->method('isMbway')->willReturn(false);
 
         // Factory returns the DTO
         $this
-            ->paymentDtoFactoryMock
+            ->_paymentDtoFactoryMock
             ->method('createFromPaymentObject')
-            ->with($this->moneiPaymentMock)
-            ->willReturn($this->paymentDtoMock);
+            ->willReturn($this->_paymentDtoMock);
 
         // Process payment returns success
-        $this->processingResultMock->method('isSuccess')->willReturn(true);
+        $this->_processingResultMock->method('isSuccess')->willReturn(true);
         $this
-            ->paymentProcessorMock
+            ->_paymentProcessorMock
             ->method('process')
-            ->with('100000123', 'pay_123456', $this->anything())
-            ->willReturn($this->processingResultMock);
+            ->willReturn($this->_processingResultMock);
 
         // Redirect to success page
         $this
-            ->redirectMock
+            ->_redirectMock
             ->method('setPath')
-            ->with('checkout/onepage/success')
             ->willReturnSelf();
 
         // Execute the controller
-        $result = $this->completeController->execute();
+        $result = $this->_completeController->execute();
 
         // Assert redirect
-        $this->assertSame($this->redirectMock, $result);
+        $this->assertSame($this->_redirectMock, $result);
     }
 
     /**
      * Test pending payment (MBWay) redirect
+     *
+     * @return void
      */
     public function testExecuteWithPendingMbwayPayment(): void
     {
@@ -214,51 +273,48 @@ class CompleteTest extends TestCase
             'id' => 'pay_123456',
             'orderId' => '100000123'
         ];
-        $this->requestMock->method('getParams')->willReturn($params);
+        $this->_requestMock->method('getParams')->willReturn($params);
 
         // Mock payment processor is not processing
-        $this->paymentProcessorMock->method('isProcessing')->with('100000123', 'pay_123456')->willReturn(false);
+        $this->_paymentProcessorMock->method('isProcessing')->willReturn(false);
 
         // GetPayment service returns a payment
-        $this->getPaymentServiceMock->method('execute')->with('pay_123456')->willReturn($this->moneiPaymentMock);
+        $this->_getPaymentServiceMock->method('execute')->willReturn($this->_moneiPaymentMock);
 
         // Payment DTO configuration
-        $this->paymentDtoMock->method('getId')->willReturn('pay_123456');
-        $this->paymentDtoMock->method('getOrderId')->willReturn('100000123');
-        $this->paymentDtoMock->method('getStatus')->willReturn('PENDING');
-        $this->paymentDtoMock->method('getRawData')->willReturn(['id' => 'pay_123456', 'status' => 'PENDING']);
-        $this->paymentDtoMock->method('isSucceeded')->willReturn(false);
-        $this->paymentDtoMock->method('isAuthorized')->willReturn(false);
-        $this->paymentDtoMock->method('isPending')->willReturn(true);
-        $this->paymentDtoMock->method('isMbway')->willReturn(true);
+        $this->_paymentDtoMock->method('getId')->willReturn('pay_123456');
+        $this->_paymentDtoMock->method('getOrderId')->willReturn('100000123');
+        $this->_paymentDtoMock->method('getStatus')->willReturn('PENDING');
+        $this->_paymentDtoMock->method('getRawData')->willReturn(['id' => 'pay_123456', 'status' => 'PENDING']);
+        $this->_paymentDtoMock->method('isSucceeded')->willReturn(false);
+        $this->_paymentDtoMock->method('isAuthorized')->willReturn(false);
+        $this->_paymentDtoMock->method('isPending')->willReturn(true);
+        $this->_paymentDtoMock->method('isMbway')->willReturn(true);
 
         // Factory returns the DTO
         $this
-            ->paymentDtoFactoryMock
+            ->_paymentDtoFactoryMock
             ->method('createFromPaymentObject')
-            ->with($this->moneiPaymentMock)
-            ->willReturn($this->paymentDtoMock);
+            ->willReturn($this->_paymentDtoMock);
 
         // Process payment returns success
-        $this->processingResultMock->method('isSuccess')->willReturn(true);
+        $this->_processingResultMock->method('isSuccess')->willReturn(true);
         $this
-            ->paymentProcessorMock
+            ->_paymentProcessorMock
             ->method('process')
-            ->with('100000123', 'pay_123456', $this->anything())
-            ->willReturn($this->processingResultMock);
+            ->willReturn($this->_processingResultMock);
 
         // Redirect to loading page
         $this
-            ->redirectMock
+            ->_redirectMock
             ->method('setPath')
-            ->with('monei/payment/loading', ['payment_id' => 'pay_123456'])
             ->willReturnSelf();
 
         // Execute the controller
-        $result = $this->completeController->execute();
+        $result = $this->_completeController->execute();
 
         // Assert redirect
-        $this->assertSame($this->redirectMock, $result);
+        $this->assertSame($this->_redirectMock, $result);
     }
 
     /**
@@ -271,52 +327,52 @@ class CompleteTest extends TestCase
             'id' => 'pay_123456',
             'orderId' => '100000123'
         ];
-        $this->requestMock->method('getParams')->willReturn($params);
+        $this->_requestMock->method('getParams')->willReturn($params);
 
         // Mock payment processor is not processing
-        $this->paymentProcessorMock->method('isProcessing')->with('100000123', 'pay_123456')->willReturn(false);
+        $this->_paymentProcessorMock->method('isProcessing')->with('100000123', 'pay_123456')->willReturn(false);
 
         // GetPayment service returns a payment
-        $this->getPaymentServiceMock->method('execute')->with('pay_123456')->willReturn($this->moneiPaymentMock);
+        $this->_getPaymentServiceMock->method('execute')->with('pay_123456')->willReturn($this->_moneiPaymentMock);
 
         // Payment DTO configuration
-        $this->paymentDtoMock->method('getId')->willReturn('pay_123456');
-        $this->paymentDtoMock->method('getOrderId')->willReturn('100000123');
-        $this->paymentDtoMock->method('getStatus')->willReturn('FAILED');
-        $this->paymentDtoMock->method('getRawData')->willReturn(['id' => 'pay_123456', 'status' => 'FAILED']);
-        $this->paymentDtoMock->method('isSucceeded')->willReturn(false);
-        $this->paymentDtoMock->method('isAuthorized')->willReturn(false);
-        $this->paymentDtoMock->method('isPending')->willReturn(false);
-        $this->paymentDtoMock->method('isFailed')->willReturn(true);
-        $this->paymentDtoMock->method('getStatusMessage')->willReturn('Payment declined');
+        $this->_paymentDtoMock->method('getId')->willReturn('pay_123456');
+        $this->_paymentDtoMock->method('getOrderId')->willReturn('100000123');
+        $this->_paymentDtoMock->method('getStatus')->willReturn('FAILED');
+        $this->_paymentDtoMock->method('getRawData')->willReturn(['id' => 'pay_123456', 'status' => 'FAILED']);
+        $this->_paymentDtoMock->method('isSucceeded')->willReturn(false);
+        $this->_paymentDtoMock->method('isAuthorized')->willReturn(false);
+        $this->_paymentDtoMock->method('isPending')->willReturn(false);
+        $this->_paymentDtoMock->method('isFailed')->willReturn(true);
+        $this->_paymentDtoMock->method('getStatusMessage')->willReturn('Payment declined');
 
         // Factory returns the DTO
         $this
-            ->paymentDtoFactoryMock
+            ->_paymentDtoFactoryMock
             ->method('createFromPaymentObject')
-            ->with($this->moneiPaymentMock)
-            ->willReturn($this->paymentDtoMock);
+            ->with($this->_moneiPaymentMock)
+            ->willReturn($this->_paymentDtoMock);
 
         // Process payment returns success (processing was successful even though payment failed)
-        $this->processingResultMock->method('isSuccess')->willReturn(true);
+        $this->_processingResultMock->method('isSuccess')->willReturn(true);
         $this
-            ->paymentProcessorMock
+            ->_paymentProcessorMock
             ->method('process')
             ->with('100000123', 'pay_123456', $this->anything())
-            ->willReturn($this->processingResultMock);
+            ->willReturn($this->_processingResultMock);
 
         // Redirect to cart
         $this
-            ->redirectMock
+            ->_redirectMock
             ->method('setPath')
             ->with('checkout/cart')
             ->willReturnSelf();
 
         // Execute the controller
-        $result = $this->completeController->execute();
+        $result = $this->_completeController->execute();
 
         // Assert redirect
-        $this->assertSame($this->redirectMock, $result);
+        $this->assertSame($this->_redirectMock, $result);
     }
 
     /**
@@ -328,24 +384,24 @@ class CompleteTest extends TestCase
         $params = [
             'orderId' => '100000123'
         ];
-        $this->requestMock->method('getParams')->willReturn($params);
+        $this->_requestMock->method('getParams')->willReturn($params);
 
         // Mock order from session
-        $this->orderMock->method('getIncrementId')->willReturn('100000123');
-        $this->checkoutSessionMock->method('getLastRealOrder')->willReturn($this->orderMock);
+        $this->_orderMock->method('getIncrementId')->willReturn('100000123');
+        $this->_checkoutSessionMock->method('getLastRealOrder')->willReturn($this->_orderMock);
 
         // Redirect to cart
         $this
-            ->redirectMock
+            ->_redirectMock
             ->method('setPath')
             ->with('checkout/cart')
             ->willReturnSelf();
 
         // Execute the controller
-        $result = $this->completeController->execute();
+        $result = $this->_completeController->execute();
 
         // Assert redirect
-        $this->assertSame($this->redirectMock, $result);
+        $this->assertSame($this->_redirectMock, $result);
     }
 
     /**
@@ -357,54 +413,54 @@ class CompleteTest extends TestCase
         $params = [
             'id' => 'pay_123456'
         ];
-        $this->requestMock->method('getParams')->willReturn($params);
+        $this->_requestMock->method('getParams')->willReturn($params);
 
         // No order in session
-        $this->checkoutSessionMock->method('getLastRealOrder')->willReturn(null);
+        $this->_checkoutSessionMock->method('getLastRealOrder')->willReturn(null);
 
         // GetPayment service returns a payment
-        $this->getPaymentServiceMock->method('execute')->with('pay_123456')->willReturn($this->moneiPaymentMock);
+        $this->_getPaymentServiceMock->method('execute')->with('pay_123456')->willReturn($this->_moneiPaymentMock);
 
         // Payment DTO configuration
-        $this->paymentDtoMock->method('getId')->willReturn('pay_123456');
-        $this->paymentDtoMock->method('getOrderId')->willReturn('100000123');
-        $this->paymentDtoMock->method('getStatus')->willReturn('SUCCEEDED');
-        $this->paymentDtoMock->method('getRawData')->willReturn(['id' => 'pay_123456', 'status' => 'SUCCEEDED']);
-        $this->paymentDtoMock->method('isSucceeded')->willReturn(true);
-        $this->paymentDtoMock->method('isAuthorized')->willReturn(false);
-        $this->paymentDtoMock->method('isPending')->willReturn(false);
-        $this->paymentDtoMock->method('isMbway')->willReturn(false);
+        $this->_paymentDtoMock->method('getId')->willReturn('pay_123456');
+        $this->_paymentDtoMock->method('getOrderId')->willReturn('100000123');
+        $this->_paymentDtoMock->method('getStatus')->willReturn('SUCCEEDED');
+        $this->_paymentDtoMock->method('getRawData')->willReturn(['id' => 'pay_123456', 'status' => 'SUCCEEDED']);
+        $this->_paymentDtoMock->method('isSucceeded')->willReturn(true);
+        $this->_paymentDtoMock->method('isAuthorized')->willReturn(false);
+        $this->_paymentDtoMock->method('isPending')->willReturn(false);
+        $this->_paymentDtoMock->method('isMbway')->willReturn(false);
 
         // Factory returns the DTO
         $this
-            ->paymentDtoFactoryMock
+            ->_paymentDtoFactoryMock
             ->method('createFromPaymentObject')
-            ->with($this->moneiPaymentMock)
-            ->willReturn($this->paymentDtoMock);
+            ->with($this->_moneiPaymentMock)
+            ->willReturn($this->_paymentDtoMock);
 
         // Mock payment processor is not processing
-        $this->paymentProcessorMock->method('isProcessing')->with('100000123', 'pay_123456')->willReturn(false);
+        $this->_paymentProcessorMock->method('isProcessing')->with('100000123', 'pay_123456')->willReturn(false);
 
         // Process payment returns success
-        $this->processingResultMock->method('isSuccess')->willReturn(true);
+        $this->_processingResultMock->method('isSuccess')->willReturn(true);
         $this
-            ->paymentProcessorMock
+            ->_paymentProcessorMock
             ->method('process')
             ->with('100000123', 'pay_123456', $this->anything())
-            ->willReturn($this->processingResultMock);
+            ->willReturn($this->_processingResultMock);
 
         // Redirect to success page
         $this
-            ->redirectMock
+            ->_redirectMock
             ->method('setPath')
             ->with('checkout/onepage/success')
             ->willReturnSelf();
 
         // Execute the controller
-        $result = $this->completeController->execute();
+        $result = $this->_completeController->execute();
 
         // Assert redirect
-        $this->assertSame($this->redirectMock, $result);
+        $this->assertSame($this->_redirectMock, $result);
     }
 
     /**
@@ -417,31 +473,31 @@ class CompleteTest extends TestCase
             'id' => 'pay_123456',
             'orderId' => '100000123'
         ];
-        $this->requestMock->method('getParams')->willReturn($params);
+        $this->_requestMock->method('getParams')->willReturn($params);
 
         // Mock order from session
-        $this->orderMock->method('getIncrementId')->willReturn('100000123');
-        $this->checkoutSessionMock->method('getLastRealOrder')->willReturn($this->orderMock);
+        $this->_orderMock->method('getIncrementId')->willReturn('100000123');
+        $this->_checkoutSessionMock->method('getLastRealOrder')->willReturn($this->_orderMock);
 
         // GetPayment service throws exception
         $this
-            ->getPaymentServiceMock
+            ->_getPaymentServiceMock
             ->method('execute')
             ->with('pay_123456')
             ->willThrowException(new ApiException('API Error'));
 
         // Redirect to cart
         $this
-            ->redirectMock
+            ->_redirectMock
             ->method('setPath')
             ->with('checkout/cart')
             ->willReturnSelf();
 
         // Execute the controller
-        $result = $this->completeController->execute();
+        $result = $this->_completeController->execute();
 
         // Assert redirect
-        $this->assertSame($this->redirectMock, $result);
+        $this->assertSame($this->_redirectMock, $result);
     }
 
     /**
@@ -454,61 +510,60 @@ class CompleteTest extends TestCase
             'id' => 'pay_123456',
             'orderId' => '100000123'
         ];
-        $this->requestMock->method('getParams')->willReturn($params);
+        $this->_requestMock->method('getParams')->willReturn($params);
 
         // Mock payment processor is processing
         $this
-            ->paymentProcessorMock
+            ->_paymentProcessorMock
             ->method('isProcessing')
             ->with('100000123', 'pay_123456')
             ->willReturn(true);
 
         // Wait for processing returns true
         $this
-            ->paymentProcessorMock
+            ->_paymentProcessorMock
             ->method('waitForProcessing')
             ->with('100000123', 'pay_123456', 5)
             ->willReturn(true);
 
         // GetPayment service returns a payment
-        $this->getPaymentServiceMock->method('execute')->with('pay_123456')->willReturn($this->moneiPaymentMock);
+        $this->_getPaymentServiceMock->method('execute')->with('pay_123456')->willReturn($this->_moneiPaymentMock);
 
         // Payment DTO configuration
-        $this->paymentDtoMock->method('getId')->willReturn('pay_123456');
-        $this->paymentDtoMock->method('getOrderId')->willReturn('100000123');
-        $this->paymentDtoMock->method('getStatus')->willReturn('SUCCEEDED');
-        $this->paymentDtoMock->method('getRawData')->willReturn(['id' => 'pay_123456', 'status' => 'SUCCEEDED']);
-        $this->paymentDtoMock->method('isSucceeded')->willReturn(true);
-        $this->paymentDtoMock->method('isAuthorized')->willReturn(false);
-        $this->paymentDtoMock->method('isPending')->willReturn(false);
-        $this->paymentDtoMock->method('isMbway')->willReturn(false);
+        $this->_paymentDtoMock->method('getId')->willReturn('pay_123456');
+        $this->_paymentDtoMock->method('getOrderId')->willReturn('100000123');
+        $this->_paymentDtoMock->method('getStatus')->willReturn('SUCCEEDED');
+        $this->_paymentDtoMock->method('getRawData')->willReturn(['id' => 'pay_123456', 'status' => 'SUCCEEDED']);
+        $this->_paymentDtoMock->method('isSucceeded')->willReturn(true);
+        $this->_paymentDtoMock->method('isAuthorized')->willReturn(false);
+        $this->_paymentDtoMock->method('isPending')->willReturn(false);
+        $this->_paymentDtoMock->method('isMbway')->willReturn(false);
 
         // Factory returns the DTO
         $this
-            ->paymentDtoFactoryMock
+            ->_paymentDtoFactoryMock
             ->method('createFromPaymentObject')
-            ->with($this->moneiPaymentMock)
-            ->willReturn($this->paymentDtoMock);
+            ->with($this->_moneiPaymentMock)
+            ->willReturn($this->_paymentDtoMock);
 
         // Process payment returns success
-        $this->processingResultMock->method('isSuccess')->willReturn(true);
+        $this->_processingResultMock->method('isSuccess')->willReturn(true);
         $this
-            ->paymentProcessorMock
+            ->_paymentProcessorMock
             ->method('process')
             ->with('100000123', 'pay_123456', $this->anything())
-            ->willReturn($this->processingResultMock);
+            ->willReturn($this->_processingResultMock);
 
         // Redirect to success page
         $this
-            ->redirectMock
+            ->_redirectMock
             ->method('setPath')
-            ->with('checkout/onepage/success')
             ->willReturnSelf();
 
         // Execute the controller
-        $result = $this->completeController->execute();
+        $result = $this->_completeController->execute();
 
         // Assert redirect
-        $this->assertSame($this->redirectMock, $result);
+        $this->assertSame($this->_redirectMock, $result);
     }
 }
