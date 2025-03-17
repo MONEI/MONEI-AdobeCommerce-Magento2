@@ -37,7 +37,6 @@ class Logger extends MonologLogger
         if (empty($data)) {
             $this->debug("API Request: {$operation}", []);
 
-
             return;
         }
 

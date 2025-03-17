@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Plugin;
 
 use Magento\Sales\Api\CreditmemoRepositoryInterface;
+use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Api\OrderStatusHistoryRepositoryInterface;
 use Magento\Sales\Model\Order\Creditmemo;
 use Magento\Sales\Model\Order;
@@ -42,18 +43,26 @@ class OrderStatusAfterRefund
     private Logger $logger;
 
     /**
+     * @var OrderRepositoryInterface
+     */
+    private OrderRepositoryInterface $orderRepository;
+
+    /**
      * @param MoneiPaymentModuleConfigInterface $config
      * @param OrderStatusHistoryRepositoryInterface $historyRepository
      * @param Logger $logger
+     * @param OrderRepositoryInterface $orderRepository
      */
     public function __construct(
         MoneiPaymentModuleConfigInterface $config,
         OrderStatusHistoryRepositoryInterface $historyRepository,
-        Logger $logger
+        Logger $logger,
+        OrderRepositoryInterface $orderRepository
     ) {
         $this->config = $config;
         $this->historyRepository = $historyRepository;
         $this->logger = $logger;
+        $this->orderRepository = $orderRepository;
     }
 
     /**
@@ -100,7 +109,7 @@ class OrderStatusAfterRefund
                 $this->historyRepository->save($history);
 
                 // Save the order
-                $order->save();
+                $this->orderRepository->save($order);
 
                 $this->logger->debug(sprintf(
                     'Order %s status updated to %s after full refund',

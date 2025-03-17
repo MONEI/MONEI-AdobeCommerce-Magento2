@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Plugin;
 
+use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
 use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Service\Logger;
@@ -23,12 +24,20 @@ class OrderCancel
     private Logger $logger;
 
     /**
+     * @var OrderRepositoryInterface
+     */
+    private OrderRepositoryInterface $orderRepository;
+
+    /**
      * @param Logger $logger
+     * @param OrderRepositoryInterface $orderRepository
      */
     public function __construct(
-        Logger $logger
+        Logger $logger,
+        OrderRepositoryInterface $orderRepository
     ) {
         $this->logger = $logger;
+        $this->orderRepository = $orderRepository;
     }
 
     /**
@@ -99,7 +108,7 @@ class OrderCancel
 
             // Save the order to persist the changes only if we updated something
             if ($updated) {
-                $result->save();
+                $this->orderRepository->save($result);
             }
         } catch (\Exception $e) {
             $this->logger->error(sprintf(

@@ -125,7 +125,7 @@ class OrderInvoiceEmailSent
 
             // Save the order to persist the changes only if we updated something
             if ($updated) {
-                $order->save();
+                $this->orderRepository->save($order);
             }
         } catch (\Exception $e) {
             $this->logger->error(sprintf(

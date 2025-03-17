@@ -23,7 +23,6 @@ elseif (file_exists(dirname(dirname(dirname($baseDir))) . '/vendor/autoload.php'
 
 // Include stubs for testing
 require_once __DIR__ . '/Unit/Stubs/MoneiStubs.php';
-require_once __DIR__ . '/Unit/Stubs/MagentoStubs.php';
 
 /** Define application path constants */
 define('BP', $baseDir);  // Monei module base path

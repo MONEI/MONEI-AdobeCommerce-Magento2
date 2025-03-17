@@ -10,9 +10,11 @@ namespace Monei\MoneiPayment\Test\Unit\Plugin;
 
 use Magento\Framework\Phrase;
 use Magento\Sales\Api\CreditmemoRepositoryInterface;
+use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Api\OrderStatusHistoryRepositoryInterface;
 use Magento\Sales\Model\Order\Status\History;
 use Magento\Sales\Model\Order\Creditmemo;
+use Magento\Sales\Model\Order\Payment;
 use Magento\Sales\Model\Order;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
@@ -39,6 +41,11 @@ class OrderStatusAfterRefundTest extends TestCase
     private $loggerMock;
 
     /**
+     * @var OrderRepositoryInterface|MockObject
+     */
+    private $orderRepositoryMock;
+
+    /**
      * @var OrderStatusAfterRefund
      */
     private $plugin;
@@ -48,11 +55,13 @@ class OrderStatusAfterRefundTest extends TestCase
         $this->configMock = $this->createMock(MoneiPaymentModuleConfigInterface::class);
         $this->historyRepositoryMock = $this->createMock(OrderStatusHistoryRepositoryInterface::class);
         $this->loggerMock = $this->createMock(Logger::class);
+        $this->orderRepositoryMock = $this->createMock(OrderRepositoryInterface::class);
 
         $this->plugin = new OrderStatusAfterRefund(
             $this->configMock,
             $this->historyRepositoryMock,
-            $this->loggerMock
+            $this->loggerMock,
+            $this->orderRepositoryMock
         );
     }
 
@@ -68,7 +77,7 @@ class OrderStatusAfterRefundTest extends TestCase
         $orderMock = $this->createMock(Order::class);
 
         // Create payment mock
-        $paymentMock = $this->createPartialMock(\Magento\Sales\Model\Order\Payment::class, ['getMethod']);
+        $paymentMock = $this->createPartialMock(Payment::class, ['getMethod']);
         $paymentMock
             ->expects($this->once())
             ->method('getMethod')
@@ -116,7 +125,7 @@ class OrderStatusAfterRefundTest extends TestCase
         $orderMock = $this->createMock(Order::class);
 
         // Create payment mock
-        $paymentMock = $this->createPartialMock(\Magento\Sales\Model\Order\Payment::class, ['getMethod']);
+        $paymentMock = $this->createPartialMock(Payment::class, ['getMethod']);
         $paymentMock
             ->expects($this->once())
             ->method('getMethod')
@@ -168,7 +177,7 @@ class OrderStatusAfterRefundTest extends TestCase
         $orderMock = $this->createMock(Order::class);
 
         // Create payment mock
-        $paymentMock = $this->createPartialMock(\Magento\Sales\Model\Order\Payment::class, ['getMethod']);
+        $paymentMock = $this->createPartialMock(Payment::class, ['getMethod']);
         $paymentMock
             ->expects($this->once())
             ->method('getMethod')
@@ -234,7 +243,7 @@ class OrderStatusAfterRefundTest extends TestCase
             ->getMock();
 
         // Create payment mock
-        $paymentMock = $this->createPartialMock(\Magento\Sales\Model\Order\Payment::class, ['getMethod']);
+        $paymentMock = $this->createPartialMock(Payment::class, ['getMethod']);
         $paymentMock
             ->expects($this->once())
             ->method('getMethod')

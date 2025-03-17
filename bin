@@ -4,46 +4,121 @@
 CURRENT_DIR=$(pwd)
 ROOT_DIR=$(cd ../../../../../ && pwd)
 
-# Function to run commands that need path argument
-run_with_path() {
-    local command=$1
-    shift
+# Hardcode module path
+MODULE_PATH="app/code/Monei/MoneiPayment"
+
+# Function to execute command and return to original directory
+run_in_root() {
     cd $ROOT_DIR
-    case "$command" in
-    "phpcs" | "phpcbf")
-        bin/$command --standard=Magento2 app/code/Monei/MoneiPayment "$@"
-        ;;
-    "phpstan")
-        bin/analyse app/code/Monei/MoneiPayment "$@"
-        ;;
-    "i18n:collect-phrases")
-        bin/magento i18n:collect-phrases -o app/code/Monei/MoneiPayment/i18n/en_US.csv app/code/Monei/MoneiPayment
-        ;;
-    *)
-        bin/$command app/code/Monei/MoneiPayment "$@"
-        ;;
-    esac
-    local status=$?
+    "$@"
+    status=$?
     cd "$CURRENT_DIR"
     return $status
 }
 
-# Function to run commands without path argument
-run_command() {
-    local command=$1
-    shift
-    cd $ROOT_DIR && bin/$command "$@"
-    local status=$?
-    cd "$CURRENT_DIR"
-    return $status
+# Display script usage information
+show_help() {
+    echo "MONEI Payment Module CLI Helper"
+    echo "--------------------------------"
+    echo "Usage: ./bin [command] [options]"
+    echo ""
+    echo "Available commands:"
+    echo "  magento [command]              Run any Magento CLI command"
+    echo "  phpcs                          Run PHP CodeSniffer with Magento2 standard"
+    echo "  phpcbf                         Auto-fix PHP CodeSniffer errors"
+    echo "  analyse                        Run PHPStan static analysis"
+    echo "  phpstan                        Alias for analyse command"
+    echo "  i18n:collect-phrases           Collect translation phrases to CSV"
+    echo "  test/unit [path]               Run unit tests for module or specific path"
+    echo "  test/unit-coverage [path]      Generate unit test coverage reports"
+    echo "  test/unit-xdebug [path]        Run unit tests with Xdebug enabled"
+    echo "  help                           Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  ./bin magento cache:clean      Clean Magento cache"
+    echo "  ./bin phpcs                    Check coding standards"
+    echo "  ./bin test/unit Model/Service  Run unit tests for the Service directory"
+    echo ""
+    echo "Module path: $MODULE_PATH"
 }
 
-# Handle different commands
+# Main command handling
+if [ $# -eq 0 ] || [ "$1" = "help" ]; then
+    show_help
+    exit 0
+fi
+
+# Handle different commands directly in case statements
 case "$1" in
-"analyse" | "phpcs" | "phpcbf" | "i18n:collect-phrases")
-    run_with_path "$@"
+"phpcs")
+    shift # Remove the first argument (command name)
+    run_in_root bin/phpcs --standard=Magento2 $MODULE_PATH "$@"
     ;;
+
+"phpcbf")
+    shift # Remove the first argument (command name)
+    run_in_root bin/phpcbf --standard=Magento2 $MODULE_PATH "$@"
+    ;;
+
+"analyse" | "phpstan")
+    shift # Remove the first argument (command name)
+    run_in_root bin/analyse $MODULE_PATH "$@"
+    ;;
+
+"i18n:collect-phrases")
+    run_in_root bin/magento i18n:collect-phrases -o $MODULE_PATH/i18n/en_US.csv $MODULE_PATH
+    ;;
+
+"test/unit")
+    shift         # Remove the first argument (command name)
+    path="${1:-}" # Default to empty if no path specified
+
+    # Set target path - if path is provided, append it to module path
+    target_path="$MODULE_PATH"
+    if [ -n "$path" ]; then
+        target_path="$target_path/$path"
+    fi
+
+    run_in_root bin/test/unit $target_path
+    ;;
+
+"test/unit-coverage")
+    shift         # Remove the first argument (command name)
+    path="${1:-}" # Default to empty if no path specified
+
+    # Set target path - if path is provided, append it to module path
+    target_path="$MODULE_PATH"
+    if [ -n "$path" ]; then
+        target_path="$target_path/$path"
+    fi
+
+    run_in_root bin/test/unit-coverage $target_path
+    ;;
+
+"test/unit-xdebug")
+    shift         # Remove the first argument (command name)
+    path="${1:-}" # Default to empty if no path specified
+
+    # Set target path - if path is provided, append it to module path
+    target_path="$MODULE_PATH"
+    if [ -n "$path" ]; then
+        target_path="$target_path/$path"
+    fi
+
+    run_in_root bin/test/unit-xdebug $target_path
+    ;;
+
+"magento")
+    shift # Remove the first argument (command name)
+    run_in_root bin/magento "$@"
+    ;;
+
 *)
-    run_command "$@"
+    command=$1
+    shift # Remove the first argument (command name)
+    run_in_root bin/$command "$@"
     ;;
 esac
+
+# Exit with the status from the last command
+exit $status

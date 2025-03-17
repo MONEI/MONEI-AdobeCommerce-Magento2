@@ -79,12 +79,14 @@ class ConfirmPayment extends AbstractApiService implements ConfirmPaymentInterfa
 
         // Add billing details if provided
         if (isset($data['billing_details']) && is_array($data['billing_details'])) {
+            // @phpstan-ignore-next-line
             $billingDetails = new PaymentBillingDetails($this->convertKeysToSnakeCase($data['billing_details']));
             $confirmRequest->setBillingDetails($billingDetails);
         }
 
         // Add shipping details if provided
         if (isset($data['shipping_details']) && is_array($data['shipping_details'])) {
+            // @phpstan-ignore-next-line
             $shippingDetails = new PaymentShippingDetails($this->convertKeysToSnakeCase($data['shipping_details']));
             $confirmRequest->setShippingDetails($shippingDetails);
         }

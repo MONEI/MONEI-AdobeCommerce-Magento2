@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Test\Unit\Plugin;
 
 use Magento\Payment\Model\InfoInterface;
+use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order\Status\History;
 use Magento\Sales\Model\Order;
 use Monei\MoneiPayment\Model\Payment\Monei;
@@ -25,6 +26,11 @@ class OrderCancelTest extends TestCase
     private $loggerMock;
 
     /**
+     * @var OrderRepositoryInterface|MockObject
+     */
+    private $orderRepositoryMock;
+
+    /**
      * @var OrderCancel
      */
     private $plugin;
@@ -32,7 +38,8 @@ class OrderCancelTest extends TestCase
     protected function setUp(): void
     {
         $this->loggerMock = $this->createMock(Logger::class);
-        $this->plugin = new OrderCancel($this->loggerMock);
+        $this->orderRepositoryMock = $this->createMock(OrderRepositoryInterface::class);
+        $this->plugin = new OrderCancel($this->loggerMock, $this->orderRepositoryMock);
     }
 
     /**
