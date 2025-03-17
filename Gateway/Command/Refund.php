@@ -15,6 +15,7 @@ use Monei\Model\PaymentRefundReason;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
 use Monei\MoneiPayment\Api\Data\PaymentInfoInterface;
 use Monei\MoneiPayment\Api\Service\RefundPaymentInterface;
+use Monei\MoneiPayment\Model\Payment\Status;
 use Monei\MoneiPayment\Service\Logger;
 
 /**
