@@ -7,6 +7,12 @@ ROOT_DIR=$(cd ../../../../../ && pwd)
 # Hardcode module path
 MODULE_PATH="app/code/Monei/MoneiPayment"
 
+# Function to determine the PHPUnit config path
+get_phpunit_config() {
+    # Default config location
+    echo "dev/tests/unit/phpunit.xml.dist"
+}
+
 # Function to execute command and return to original directory
 run_in_root() {
     cd $ROOT_DIR
@@ -29,15 +35,19 @@ show_help() {
     echo "  analyse                        Run PHPStan static analysis"
     echo "  phpstan                        Alias for analyse command"
     echo "  i18n:collect-phrases           Collect translation phrases to CSV"
-    echo "  test/unit [path]               Run unit tests for module or specific path"
-    echo "  test/unit-coverage [path]      Generate unit test coverage reports"
-    echo "  test/unit-xdebug [path]        Run unit tests with Xdebug enabled"
+    echo "  test                           Run all unit tests with additional args"
+    echo "  test/unit [path] [args]        Run unit tests for module or specific path"
+    echo "  test/unit-coverage [path] [args] Generate unit test coverage reports"
+    echo "  test/unit-xdebug [path] [args] Run unit tests with Xdebug enabled"
     echo "  help                           Show this help message"
     echo ""
     echo "Examples:"
     echo "  ./bin magento cache:clean      Clean Magento cache"
     echo "  ./bin phpcs                    Check coding standards"
+    echo "  ./bin test --debug             Run tests with debug flag"
     echo "  ./bin test/unit Model/Service  Run unit tests for the Service directory"
+    echo "  ./bin test/unit Model/Service --filter testMethod  Run specific test method"
+    echo "  ./bin test/unit --debug        Run unit tests with debug output"
     echo ""
     echo "Module path: $MODULE_PATH"
 }
@@ -69,43 +79,77 @@ case "$1" in
     run_in_root bin/magento i18n:collect-phrases -o $MODULE_PATH/i18n/en_US.csv $MODULE_PATH
     ;;
 
-"test/unit")
-    shift         # Remove the first argument (command name)
-    path="${1:-}" # Default to empty if no path specified
+"test")
+    shift # Remove the first argument (command name)
+    # Call phpunit directly with the module path and all args
+    config=$(get_phpunit_config)
+    run_in_root bin/cli vendor/bin/phpunit -c $config /var/www/html/$MODULE_PATH "$@"
+    ;;
 
-    # Set target path - if path is provided, append it to module path
-    target_path="$MODULE_PATH"
-    if [ -n "$path" ]; then
-        target_path="$target_path/$path"
+"test/unit")
+    shift # Remove the first argument (command name)
+
+    # If we have arguments and the first one doesn't start with -
+    if [ $# -gt 0 ] && [[ ! "$1" == -* ]]; then
+        # it's a path
+        path="$1"
+        shift # Remove the path argument
+        # Set target path - if path is provided, append it to module path
+        target_path="$MODULE_PATH/$path"
+    else
+        # No path or first arg is a flag, use module path
+        target_path="$MODULE_PATH"
     fi
 
-    run_in_root bin/test/unit $target_path
+    # Get the proper config file
+    config=$(get_phpunit_config)
+
+    # Call phpunit directly with all remaining args
+    run_in_root bin/cli vendor/bin/phpunit -c $config /var/www/html/$target_path "$@"
     ;;
 
 "test/unit-coverage")
-    shift         # Remove the first argument (command name)
-    path="${1:-}" # Default to empty if no path specified
+    shift # Remove the first argument (command name)
 
-    # Set target path - if path is provided, append it to module path
-    target_path="$MODULE_PATH"
-    if [ -n "$path" ]; then
-        target_path="$target_path/$path"
+    # If we have arguments and the first one doesn't start with -
+    if [ $# -gt 0 ] && [[ ! "$1" == -* ]]; then
+        # it's a path
+        path="$1"
+        shift # Remove the path argument
+        # Set target path - if path is provided, append it to module path
+        target_path="$MODULE_PATH/$path"
+    else
+        # No path or first arg is a flag, use module path
+        target_path="$MODULE_PATH"
     fi
 
-    run_in_root bin/test/unit-coverage $target_path
+    # Get the proper config file
+    config=$(get_phpunit_config)
+
+    # Call phpunit directly with coverage options and all remaining args
+    run_in_root bin/cli php -d xdebug.mode=coverage vendor/bin/phpunit -c $config --coverage-html=dev/tests/unit/tmp/coverage/html --coverage-xml=dev/tests/unit/tmp/coverage/xml --coverage-clover=dev/tests/unit/tmp/coverage/clover.xml /var/www/html/$target_path "$@"
     ;;
 
 "test/unit-xdebug")
-    shift         # Remove the first argument (command name)
-    path="${1:-}" # Default to empty if no path specified
+    shift # Remove the first argument (command name)
 
-    # Set target path - if path is provided, append it to module path
-    target_path="$MODULE_PATH"
-    if [ -n "$path" ]; then
-        target_path="$target_path/$path"
+    # If we have arguments and the first one doesn't start with -
+    if [ $# -gt 0 ] && [[ ! "$1" == -* ]]; then
+        # it's a path
+        path="$1"
+        shift # Remove the path argument
+        # Set target path - if path is provided, append it to module path
+        target_path="$MODULE_PATH/$path"
+    else
+        # No path or first arg is a flag, use module path
+        target_path="$MODULE_PATH"
     fi
 
-    run_in_root bin/test/unit-xdebug $target_path
+    # Get the proper config file
+    config=$(get_phpunit_config)
+
+    # Call phpunit directly with all remaining args
+    run_in_root bin/cli php -d xdebug.mode=debug vendor/bin/phpunit -c $config /var/www/html/$target_path "$@"
     ;;
 
 "magento")
