@@ -136,35 +136,33 @@ class Complete implements HttpGetActionInterface
         try {
             $this->logInitialRequestData();
 
-            // Extract payment and order IDs from the request
+            // Extract payment ID from the request
             $params = $this->request->getParams();
             $paymentId = $params['id'] ?? $params['payment_id'] ?? null;
-            $orderId = $params['orderId'] ?? $params['order_id'] ?? null;
-
-            // Try to resolve missing order ID from session
-            if (!$orderId) {
-                $orderId = $this->getOrderIdFromSession();
-            }
 
             // Handle missing payment ID case
             if (!$paymentId) {
-                return $this->handleMissingPaymentId($orderId);
+                return $this->handleMissingPaymentId();
             }
 
-            // Try to get order ID from payment if not available
-            if (!$orderId) {
-                $result = $this->tryToGetOrderIdFromPayment($paymentId, $params);
-                if ($result instanceof Redirect) {
-                    return $result;
-                }
-                $orderId = $result;  // If not a redirect, it's the order ID
+            // Get payment data from the API as first step
+            try {
+                $paymentObject = $this->getPaymentService->execute($paymentId);
+                $paymentDTO = $this->paymentDtoFactory->createFromPaymentObject($paymentObject);
+                $this->logPaymentData($paymentDTO);
+            } catch (\Exception $e) {
+                $this->logger->error('[Complete] Error retrieving payment data', [
+                    'payment_id' => $paymentId,
+                    'error' => $e->getMessage()
+                ]);
+                return $this->handleGenericError();
             }
 
             // Wait for any ongoing payment processing
-            $this->waitForOngoingProcessing($orderId, $paymentId);
+            $this->waitForOngoingProcessing($paymentDTO);
 
             // Main payment processing logic
-            return $this->processPayment($paymentId, $orderId, $params);
+            return $this->processPayment($paymentDTO);
         } catch (\Exception $e) {
             $this->logger->error('[Complete] Unhandled exception', [
                 'error' => $e->getMessage(),
@@ -193,68 +191,32 @@ class Complete implements HttpGetActionInterface
     /**
      * Handle the case when payment ID is missing
      *
-     * @param string|null $orderId
      * @return Redirect
      */
-    private function handleMissingPaymentId(?string $orderId): Redirect
+    private function handleMissingPaymentId(): Redirect
     {
         $this->logger->error('[Complete] Missing payment ID');
         $this->messageManager->addErrorMessage(
             __('There was a problem processing your payment. Please try again.')
         );
 
-        // If we have an order ID but no payment ID, we still attempt to restore the quote
-        if ($orderId) {
-            $this->safelyRestoreQuote($orderId);
-        }
+        // Just restore any possible quote
+        $this->safelyRestoreQuote();
 
         return $this->redirectToCart();
     }
 
     /**
-     * Try to get order ID from payment data
-     *
-     * @param string $paymentId
-     * @param array $params
-     * @return string|Redirect Order ID or redirect to cart if handling failed payment
-     */
-    private function tryToGetOrderIdFromPayment(string $paymentId, array $params)
-    {
-        try {
-            // Try to get payment from API first
-            $paymentObject = $this->getPaymentService->execute($paymentId);
-            $paymentData = $this->paymentDtoFactory->createFromPaymentObject($paymentObject);
-            $orderId = $paymentData->getOrderId();
-
-            if ($orderId) {
-                $this->logger->info('[Complete] Retrieved order ID from payment: ' . $orderId);
-
-                return $orderId;
-            }
-        } catch (\Exception $e) {
-            $this->logger->error('[Complete] Failed to get order ID from payment: ' . $e->getMessage());
-
-            // Create a basic failed payment if we can't get details
-            $orderId = $this->getOrderIdFromSession();
-            if ($orderId) {
-                $this->handleFailedPaymentWithSessionOrder($paymentId, $orderId, $params);
-
-                return $this->redirectToCart();
-            }
-        }
-
-        return '';
-    }
-
-    /**
      * Wait for any ongoing payment processing
      *
-     * @param string|null $orderId
-     * @param string $paymentId
+     * @param PaymentDTO $paymentDTO
      * @return void
      */
-    private function waitForOngoingProcessing(?string $orderId, string $paymentId): void
+    private function waitForOngoingProcessing(PaymentDTO $paymentDTO): void
     {
+        $orderId = $paymentDTO->getOrderId();
+        $paymentId = $paymentDTO->getId();
+
         if (!$orderId) {
             return;
         }
@@ -285,22 +247,16 @@ class Complete implements HttpGetActionInterface
     /**
      * Process the payment using Monei API
      *
-     * @param string $paymentId
-     * @param string|null $orderId
-     * @param array $params
+     * @param PaymentDTO $paymentDTO
      * @return Redirect
      */
-    private function processPayment(string $paymentId, ?string $orderId, array $params): Redirect
+    private function processPayment(PaymentDTO $paymentDTO): Redirect
     {
         try {
-            // Get payment data from the API
-            $paymentObject = $this->getPaymentService->execute($paymentId);
-            $paymentDTO = $this->paymentDtoFactory->createFromPaymentObject($paymentObject);
-
-            // Update order ID if we got a valid one from the payment
-            $orderId = $paymentDTO->getOrderId();
-
-            $this->logPaymentData($paymentDTO);
+            // Special handling for MBWAY payments in PENDING status
+            if ($paymentDTO->isPending() && !$paymentDTO->isMultibanco()) {
+                return $this->handlePendingPayment($paymentDTO);
+            }
 
             // Process the payment through the unified processor
             $result = $this->paymentProcessor->process(
@@ -314,31 +270,22 @@ class Complete implements HttpGetActionInterface
                 'message' => $result->getMessage()
             ]);
 
-            // Special handling for MBWAY payments in PENDING status
-            if ($paymentDTO->isPending() && !$paymentDTO->isMultibanco()) {
-                return $this->handlePendingPayment($paymentDTO);
-            }
-
-            // Route based on payment status
-            if ($paymentDTO->isSucceeded() || $paymentDTO->isAuthorized() || $paymentDTO->isPending()) {
+            // Route based on payment processing result
+            if ($result->isSuccess()) {
                 return $this->handleSuccessfulPayment();
             } else {
                 return $this->handleFailedPayment($paymentDTO);
             }
         } catch (\Exception $e) {
-            $this->logger->error('[Complete] Error retrieving or processing payment', [
-                'payment_id' => $paymentId,
+            $this->logger->error('[Complete] Error processing payment', [
+                'payment_id' => $paymentDTO->getId(),
+                'order_id' => $paymentDTO->getOrderId(),
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
 
-            // If we have order ID, try to process a failed payment
-            if ($orderId) {
-                $this->handleFailedPaymentWithSessionOrder($paymentId, $orderId, $params);
-            } else {
-                // No order ID available at all, just restore any possible quote
-                $this->safelyRestoreQuote();
-            }
+            // Process the failed payment
+            $this->handleFailedPayment($paymentDTO);
 
             $this->messageManager->addErrorMessage(
                 __('An error occurred while processing your payment. Please try again.')
@@ -381,7 +328,8 @@ class Complete implements HttpGetActionInterface
         return $this->resultRedirectFactory->create()->setPath(
             'monei/payment/loading',
             [
-                'payment_id' => $paymentDTO->getId()
+                'payment_id' => $paymentDTO->getId(),
+                'order_id' => $paymentDTO->getOrderId()
             ]
         );
     }
@@ -411,8 +359,28 @@ class Complete implements HttpGetActionInterface
             'error_message' => $paymentDTO->getStatusMessage()
         ]);
 
+        try {
+            // Process the failed payment
+            $result = $this->paymentProcessor->process(
+                $paymentDTO->getOrderId(),
+                $paymentDTO->getId(),
+                $paymentDTO->getRawData()
+            );
+
+            $this->logger->debug('[Complete] Failed payment processing result', [
+                'success' => $result->isSuccess(),
+                'message' => $result->getMessage()
+            ]);
+        } catch (\Exception $e) {
+            $this->logger->error('[Complete] Error processing failed payment', [
+                'order_id' => $paymentDTO->getOrderId(),
+                'payment_id' => $paymentDTO->getId(),
+                'error' => $e->getMessage()
+            ]);
+        }
+
         // Restore the checkout session quote for failed payments
-        $this->safelyRestoreQuote();
+        $this->safelyRestoreQuote($paymentDTO->getOrderId());
 
         // Get error code and error message if available
         $errorMessage = $paymentDTO->getStatusMessage();
@@ -454,96 +422,6 @@ class Complete implements HttpGetActionInterface
         $this->safelyRestoreQuote();
 
         return $this->redirectToCart();
-    }
-
-    /**
-     * Get order ID from the last order in the checkout session
-     *
-     * @return string|null
-     */
-    private function getOrderIdFromSession(): ?string
-    {
-        try {
-            $order = $this->checkoutSession->getLastRealOrder();
-            if ($order && $order->getIncrementId()) {
-                $this->logger->info('[Complete] Found order ID in session: ' . $order->getIncrementId());
-
-                return $order->getIncrementId();
-            }
-
-            $this->logger->error('[Complete] No valid order found in session');
-        } catch (\Exception $e) {
-            $this->logger->error('[Complete] Error getting order from session: ' . $e->getMessage());
-        }
-
-        return null;
-    }
-
-    /**
-     * Handle a failed payment with order ID from session
-     *
-     * @param string $paymentId
-     * @param string $orderId
-     * @param array $params
-     * @return void
-     */
-    private function handleFailedPaymentWithSessionOrder(string $paymentId, string $orderId, array $params): void
-    {
-        try {
-            // Create basic payment data for failure processing
-            $paymentData = [
-                'id' => $paymentId,
-                'orderId' => $orderId,
-                'status' => $params['status'] ?? Status::FAILED,
-                'amount' => $params['amount'] ?? 0,
-                'currency' => $params['currency'] ?? 'EUR'
-            ];
-
-            // Add error code if available in params
-            if (isset($params['errorCode'])) {
-                $paymentData['statusCode'] = $params['errorCode'];
-            } elseif (isset($params['error_code'])) {
-                $paymentData['statusCode'] = $params['error_code'];
-            }
-
-            // Create PaymentDTO and process
-            $paymentDTO = $this->paymentDtoFactory->createFromArray($paymentData);
-            $result = $this->paymentProcessor->process(
-                $paymentDTO->getOrderId(),
-                $paymentDTO->getId(),
-                $paymentDTO->getRawData()
-            );
-
-            $this->logger->debug('[Complete] Failed payment processing result', [
-                'success' => $result->isSuccess(),
-                'message' => $result->getMessage(),
-                'error_code' => $paymentDTO->getStatusCode()
-            ]);
-
-            // Show error message to customer if we have error code details
-            $errorMessage = $paymentDTO->getStatusMessage();
-            if ($errorMessage) {
-                $this->messageManager->addErrorMessage(
-                    __('Payment error: %1', $errorMessage)
-                );
-            } else {
-                $this->messageManager->addErrorMessage(
-                    __('There was a problem processing your payment. Your cart has been restored so you can try again.')
-                );
-            }
-
-            // Restore the quote for the customer to try again
-            $this->safelyRestoreQuote();
-        } catch (\Exception $e) {
-            $this->logger->error('[Complete] Error processing failed payment', [
-                'order_id' => $orderId,
-                'payment_id' => $paymentId,
-                'error' => $e->getMessage()
-            ]);
-
-            // Still try to restore the quote
-            $this->safelyRestoreQuote();
-        }
     }
 
     /**

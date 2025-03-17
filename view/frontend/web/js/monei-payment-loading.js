@@ -3,7 +3,6 @@ define(['jquery', 'loader', 'moneijs', 'mage/translate'], function ($, _, monei,
 
   return function (config) {
     var paymentId = config.paymentId;
-    var orderId = config.orderId || '';
     var completeUrl = config.completeUrl;
     var maxAttempts = 30;
     var attempts = 0;
@@ -22,10 +21,8 @@ define(['jquery', 'loader', 'moneijs', 'mage/translate'], function ($, _, monei,
     $('#monei-payment-loading-container').trigger('processStart');
 
     function redirectToComplete() {
+      // Only pass the payment ID - the API will provide all other data
       var redirectUrl = completeUrl + '?id=' + encodeURIComponent(paymentId);
-      if (orderId) {
-        redirectUrl += '&order_id=' + encodeURIComponent(orderId);
-      }
       window.location.replace(redirectUrl);
     }
 

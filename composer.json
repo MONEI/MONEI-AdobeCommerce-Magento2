@@ -54,8 +54,6 @@
   },
   "scripts": {
     "test": "./bin test/unit",
-    "test:unit": "./bin test/unit",
-    "test:unit:path": "./bin test/unit",
     "test:coverage": "./bin test/unit-coverage",
     "test:xdebug": "./bin test/unit-xdebug",
     "cs:lint": "./bin phpcs",
