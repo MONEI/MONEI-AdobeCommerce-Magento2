@@ -18,6 +18,7 @@ Accept payments through [MONEI](https://monei.com) in your Adobe Commerce (Magen
     - [Via Composer (Recommended)](#via-composer-recommended)
     - [Manual Installation](#manual-installation)
       - [Option 1: Via GitHub Releases](#option-1-via-github-releases)
+      - [Option 2: Via Main Branch](#option-2-via-main-branch)
     - [Bitnami Installation](#bitnami-installation)
     - [Before You Begin](#before-you-begin)
   - [Configuration](#configuration)
@@ -103,9 +104,16 @@ composer require monei/monei-php-sdk:^2.4.3
 
 5. Go to your Adobe Commerce (Magento 2) root directory and run:
 
-````bash
+```bash
 bin/magento module:enable Monei_MoneiPayment
 bin/magento setup:upgrade
+bin/magento setup:di:compile
+bin/magento setup:static-content:deploy
+bin/magento cache:clean
+```
+
+#### Option 2: Via Main Branch
+
 1. Download the [latest version](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/archive/refs/heads/main.zip) from the main branch
 2. Create a directory called `app/code/Monei/MoneiPayment` inside your Magento 2 project
 3. Unzip the downloaded archive in this directory
@@ -113,13 +121,14 @@ bin/magento setup:upgrade
 
 ```bash
 composer require monei/monei-php-sdk:^2.4.3
-````
+```
 
 5. Go to your Adobe Commerce (Magento 2) root directory and run:
 
 ```bash
 bin/magento module:enable Monei_MoneiPayment
 bin/magento setup:upgrade
+bin/magento setup:di:compile
 bin/magento setup:static-content:deploy
 bin/magento cache:clean
 ```
@@ -132,7 +141,7 @@ If you're running Magento on a Bitnami server, you'll need to use the `magento-c
 2. Navigate to your Magento installation directory:
 
 ```bash
-cd /opt/bitnami/magento
+cd ~/stack/magento
 ```
 
 3. Run the required commands using `magento-cli`:
@@ -140,6 +149,7 @@ cd /opt/bitnami/magento
 ```bash
 sudo bin/magento-cli module:enable Monei_MoneiPayment
 sudo bin/magento-cli setup:upgrade
+sudo bin/magento-cli setup:di:compile
 sudo bin/magento-cli setup:static-content:deploy
 sudo bin/magento-cli cache:clean
 ```
