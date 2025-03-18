@@ -112,6 +112,15 @@ bin/magento setup:static-content:deploy
 bin/magento cache:clean
 ```
 
+Alternatively, you can use this one-line command to download and extract the latest release:
+
+```bash
+curl -L https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/archive/refs/heads/main.zip -o monei.zip && \
+mkdir -p app/code/Monei/MoneiPayment && \
+unzip -j monei.zip "*/app/code/Monei/MoneiPayment/*" -d app/code/Monei/MoneiPayment && \
+rm monei.zip
+```
+
 #### Option 2: Via Main Branch
 
 1. Download the [latest version](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/archive/refs/heads/main.zip) from the main branch
