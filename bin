@@ -128,6 +128,24 @@ case "$1" in
 
     # Call phpunit directly with coverage options and all remaining args
     run_in_root bin/cli php -d xdebug.mode=coverage vendor/bin/phpunit -c $config --coverage-html=dev/tests/unit/tmp/coverage/html --coverage-xml=dev/tests/unit/tmp/coverage/xml --coverage-clover=dev/tests/unit/tmp/coverage/clover.xml /var/www/html/$target_path "$@"
+
+    # Display coverage report information
+    echo ""
+    echo ""
+    echo "Coverage Reports Generated:"
+    echo "-------------------------"
+    echo "HTML Report:  $ROOT_DIR/dev/tests/unit/tmp/coverage/html/index.html"
+    echo "XML Report:   $ROOT_DIR/dev/tests/unit/tmp/coverage/xml"
+    echo "Clover Report: $ROOT_DIR/dev/tests/unit/tmp/coverage/clover.xml"
+
+    # Check if HTML report exists and offer to open it
+    if [ -f "$ROOT_DIR/dev/tests/unit/tmp/coverage/html/index.html" ]; then
+        echo ""
+        read -p "Open HTML coverage report? (y/n): " answer
+        if [[ "$answer" == "y" || "$answer" == "Y" ]]; then
+            open "$ROOT_DIR/dev/tests/unit/tmp/coverage/html/index.html"
+        fi
+    fi
     ;;
 
 "test/unit-xdebug")
