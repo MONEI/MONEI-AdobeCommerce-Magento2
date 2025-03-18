@@ -19,6 +19,7 @@
     }
   },
   "hooks": {
+    "before:bump": "composer check:all && composer test",
     "after:bump": "git add -A"
   }
 }
