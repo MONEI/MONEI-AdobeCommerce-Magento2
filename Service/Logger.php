@@ -24,9 +24,6 @@ use Monolog\Logger as MonologLogger;
  * Provides standardized logging with consistent formatting for payment operations,
  * API calls, and error handling throughout the module.
  *
- * @category Payment
- * @package  Monei_MoneiPayment
- * @author   Monei Team <dev@monei.com>
  * @license  https://opensource.org/licenses/OSL-3.0 Open Software License 3.0
  * @link     https://monei.com
  */

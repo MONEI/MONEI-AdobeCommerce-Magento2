@@ -22,9 +22,6 @@ use PHPUnit\Framework\TestCase;
 /**
  * Unit test for CancelReason source model
  *
- * @category  Monei
- * @package   Monei_MoneiPayment
- * @author    MONEI <developers@monei.com>
  * @copyright 2024 MONEI Financial Services
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://monei.com/

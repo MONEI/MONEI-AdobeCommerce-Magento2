@@ -32,9 +32,6 @@ use PHPUnit\Framework\TestCase;
 /**
  * Unit test for AbstractService
  *
- * @category  Payment
- * @package   Monei\MoneiPayment
- * @author    Monei <support@monei.com>
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License 3.0
  * @link      https://monei.com
  */

@@ -35,9 +35,6 @@ use PHPUnit\Framework\TestCase;
 /**
  * Test case for Refund Gateway Command.
  *
- * @category Monei
- * @package  Monei\MoneiPayment
- * @author   Monei <info@monei.com>
  * @license  https://opensource.org/license/mit/ MIT License
  * @link     https://monei.com/
  */
