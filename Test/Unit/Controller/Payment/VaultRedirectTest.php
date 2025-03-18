@@ -141,6 +141,7 @@ class VaultRedirectTest extends TestCase
         $entityId = 456;
         $paymentId = 'pay_abc123';
         $redirectUrl = 'https://monei.com/payment/12345';
+        $orderId = '000000123';
 
         // Setup request params
         $this
@@ -179,9 +180,9 @@ class VaultRedirectTest extends TestCase
 
         $this
             ->_orderMock
-            ->expects($this->any())
+            ->expects($this->once())
             ->method('getIncrementId')
-            ->willReturn('000000123');
+            ->willReturn($orderId);
 
         // Setup payment processor expectations
         $this
@@ -195,23 +196,22 @@ class VaultRedirectTest extends TestCase
                 'redirect_url' => $redirectUrl
             ]);
 
-        // Setup session to store payment ID
+        // Setup session to store payment ID using magic method
         $this
             ->_checkoutSessionMock
+            ->expects($this->once())
             ->method('__call')
-            ->with(
-                $this->callback(function ($name) {
-                    return $name === 'setLastMoneiPaymentId';
-                }),
-                [$paymentId]
-            );
+            ->with('setLastMoneiPaymentId', [$paymentId]);
 
         // Setup logger for info
         $this
             ->_loggerMock
             ->expects($this->once())
             ->method('info')
-            ->with('Vault payment created successfully', $this->anything());
+            ->with('[Vault] Payment created successfully', [
+                'order_id' => $orderId,
+                'payment_id' => $paymentId,
+            ]);
 
         // Setup redirect expectations
         $this
@@ -233,8 +233,6 @@ class VaultRedirectTest extends TestCase
      */
     public function testExecuteWithError(): void
     {
-        $errorMessage = 'No order found. Please return to checkout and try again.';
-
         // Setup request params
         $this
             ->_requestMock
@@ -251,51 +249,49 @@ class VaultRedirectTest extends TestCase
             ->with($this->_requestMock)
             ->willReturn(true);
 
-        // Setup last real order to trigger error - allow any number of calls
+        // Setup last real order to return null
         $this
             ->_checkoutSessionMock
             ->expects($this->atLeastOnce())
             ->method('getLastRealOrder')
-            ->willReturn($this->_orderMock);
-
-        $this
-            ->_orderMock
-            ->expects($this->once())
-            ->method('getEntityId')
             ->willReturn(null);
 
-        // Setup restoreQuote to be called after error
+        // Setup message manager for error
+        $this
+            ->_messageManagerMock
+            ->expects($this->once())
+            ->method('addErrorMessage')
+            ->with('No order found. Please return to checkout and try again.');
+
+        // Setup logger for critical error
+        $this
+            ->_loggerMock
+            ->expects($this->once())
+            ->method('critical')
+            ->with(
+                '[Vault] Redirect error: No order found. Please return to checkout and try again.',
+                $this->anything()
+            );
+
+        // Setup logger for info about quote restoration
+        $this
+            ->_loggerMock
+            ->expects($this->once())
+            ->method('info')
+            ->with('[Vault] Restored quote');
+
+        // Setup session restore quote
         $this
             ->_checkoutSessionMock
             ->expects($this->once())
             ->method('restoreQuote');
 
-        // Setup logger expectations
-        $this
-            ->_loggerMock
-            ->expects($this->once())
-            ->method('critical')
-            ->with($this->stringContains('MONEI Vault Redirect Error'), $this->anything());
-
-        $this
-            ->_loggerMock
-            ->expects($this->once())
-            ->method('info')
-            ->with('Restored quote');
-
-        // Setup message manager expectations
-        $this
-            ->_messageManagerMock
-            ->expects($this->once())
-            ->method('addErrorMessage')
-            ->with($errorMessage);
-
-        // Setup redirect expectations for cart return
+        // Setup redirect expectations
         $this
             ->_redirectMock
             ->expects($this->once())
             ->method('setPath')
-            ->with('checkout/cart')
+            ->with('checkout/cart', [])
             ->willReturnSelf();
 
         $result = $this->_vaultRedirectController->execute();
