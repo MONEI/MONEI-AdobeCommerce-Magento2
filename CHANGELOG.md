@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.1.0 (2025-03-18)
+
+* feat: Enhance Apple Pay domain verification with store ID support ([f507cac](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/f507cac))
+* chore: Enhance README.md with one-line installation command ([4faa048](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/4faa048))
+* chore: Revise Adobe Listing documentation for clarity and detail ([30fe67b](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/30fe67b))
+* chore: Revise Adobe Listing documentation for enhanced clarity and detail ([a4659b9](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/a4659b9))
+* chore: Revise Adobe Listing documentation for improved clarity and detail ([eb8aa25](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/eb8aa25))
+* chore: Update Adobe Listing documentation to enhance feature descriptions ([d7bf8cf](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/d7bf8cf))
+* chore: Update README.md with additional installation instructions ([593340f](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/593340f))
+
 ## <small>2.0.1 (2025-03-18)</small>
 
 * chore: Add area parameter to PaymentMethod for asset handling ([6f752a0](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/6f752a0))
