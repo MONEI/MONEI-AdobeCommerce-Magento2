@@ -22,4 +22,5 @@
 /prettyphp.json export-ignore
 /pretty-php.phar* export-ignore
 /commitlint.config.js export-ignore
+/release-it.json export-ignore
 /bin export-ignore

@@ -34,6 +34,7 @@ jobs:
             prettyphp.json
             pretty-php.phar*
             .cursorignore
+            release-it.json
             commitlint.config.js
             README.md
             CHANGELOG.md
