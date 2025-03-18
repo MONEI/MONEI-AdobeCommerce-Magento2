@@ -3,56 +3,36 @@ description:
 globs: 
 alwaysApply: true
 ---
----
-description: 
-globs: 
-alwaysApply: true
----
-# MONEI Payment Module for bin 2
+# MONEI Payment Module Commands
 
-## Commands
+## Build/Test Commands
 ```bash
-# Code quality
-composer cs:lint                   # Run PHPCS code sniffer
-composer cs:fix                    # Fix coding standards with PHPCBF
-composer analyze                   # Run PHPStan static analysis
-composer format:check              # Check formatting with pretty-php
-composer format:fix                # Fix formatting with pretty-php
-composer fix:all                   # Run all fixers (cs:fix and format:fix)
-composer check:all                 # Run all code quality checks (cs:lint, analyze, format:check)
-composer test                      # Run tests
-
-# Frontend
-yarn format                        # Format frontend code with prettier
-
-# bin commands (using helper script)
-./bin magento setup:di:compile      # Compile dependency injection
-./bin magento setup:upgrade         # Run module upgrades
-./bin magento cache:clean           # Clean caches
-./bin magento cache:flush           # Flush all caches
-./bin magento module:enable Monei_MoneiPayment  # Enable module
+./bin magento setup:di:compile      # Compile DI
+./bin magento setup:upgrade         # Run upgrades
+./bin magento cache:clean           # Clean cache
+./bin test/unit <dir>               # Run unit tests for specific directory
+./bin test/unit-coverage <dir>      # Generate unit test coverage
+./bin test/unit-xdebug <dir>        # Run unit tests with Xdebug
+./bin test/unit --testdox           # Run utit tests with arguments
 ```
 
-## Code Style
-- Follow PSR-12 and bin 2 coding standards (bin2 ruleset)
-- Use strict typing with PHP 8.1+ parameter and return type declarations
-- Classes: StudlyCaps (e.g., `MoneiApiClient`)
-- Methods: camelCase (e.g., `processPayment`)
-- Interfaces: StudlyCaps with Interface suffix
-- Constants: UPPER_SNAKE_CASE
-- Comprehensive PHPDoc for all classes, methods, and properties
-- Use dependency injection, avoid direct object instantiation
-- Error handling: Use specialized exception classes and detailed logging
+## Code Quality
+```bash
+composer cs:lint                    # Run PHP CodeSniffer
+composer cs:fix                     # Fix coding standards
+composer analyze                    # Run PHPStan analysis
+composer format:check               # Check formatting
+composer format:fix                 # Fix formatting
+composer fix:all                    # Run all fixers
+composer check:all                  # Run all checks
+yarn format                         # Format frontend code
+```
 
-## Project Structure
-- `Api`: Service contracts (interfaces)
-- `Model`: Business logic and data models
-- `Service`: Payment processing and API integration
-- `Controller`: HTTP request handlers
-- `Block`: View/template data providers
-- `view`: Frontend templates and JS components
-
-## Commit Style
-- Use conventional commits format: type(scope): message
-- Types: feat, fix, refactor, docs, style, test, chore
-- Keep commit messages concise but descriptive
+## Code Style Guidelines
+- **Naming**: Classes use StudlyCaps, methods use camelCase, interfaces have Interface suffix
+- **Types**: Use strict typing with PHP 8.1+ parameter and return types
+- **Format**: Follow PSR-12 standard and Magento 2 coding guidelines
+- **Errors**: Use specialized exception classes and detailed logging
+- **Commits**: Use conventional format - type(scope): message
+- **Organization**: Follow Magento module structure (DI, interfaces in Api/, logic in Service/)
+- **Testing**: All new code should have unit test coverage
