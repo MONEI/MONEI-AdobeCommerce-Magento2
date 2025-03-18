@@ -83,8 +83,7 @@ class OrderStatusAfterRefund
             $order = $creditmemo->getOrder();
 
             // Skip processing non-Monei payments
-            if (
-                !$order->getPayment() ||
+            if (!$order->getPayment() ||
                 !in_array($order->getPayment()->getMethod(), Monei::PAYMENT_METHODS_MONEI)
             ) {
                 return $creditmemo;

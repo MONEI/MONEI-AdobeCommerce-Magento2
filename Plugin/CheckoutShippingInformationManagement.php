@@ -126,8 +126,7 @@ class CheckoutShippingInformationManagement
             $moneiPaymentCodes = $this->paymentMethodMap->execute(
                 $paymentMethod->getCode()
             );
-            if (
-                !$moneiPaymentCodes ||
+            if (!$moneiPaymentCodes ||
                 $this->isPaymentMethodAllowed($moneiPaymentCodes, $availableMoneiPaymentMethodsByCountry)
             ) {
                 $filteredPaymentMethods[] = $paymentMethod;

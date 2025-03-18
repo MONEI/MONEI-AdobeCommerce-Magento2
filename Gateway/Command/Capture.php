@@ -139,8 +139,7 @@ class Capture implements CommandInterface
                 $payment->setAdditionalInformation(PaymentInfoInterface::PAYMENT_STATUS, Status::SUCCEEDED);
 
                 // Set transaction ID on the invoice if available
-                if (
-                    isset($commandSubject['payment']) &&
+                if (isset($commandSubject['payment']) &&
                     method_exists($commandSubject['payment'], 'getCreatedInvoice')
                 ) {
                     $invoice = $commandSubject['payment']->getCreatedInvoice();

@@ -479,8 +479,7 @@ class PaymentDTO
      */
     public function getPaymentMethodType(): ?string
     {
-        if (
-            isset($this->rawData['original_payment']) &&
+        if (isset($this->rawData['original_payment']) &&
             method_exists($this->rawData['original_payment'], 'getPaymentMethod')
         ) {
             $paymentMethod = $this->rawData['original_payment']->getPaymentMethod();
