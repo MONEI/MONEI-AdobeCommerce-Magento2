@@ -22,7 +22,6 @@ jobs:
             .yarn/*
             .vscode/*
             .cursor/*
-            docs/*
             vendor/*
             composer.lock
             package.json
@@ -36,9 +35,6 @@ jobs:
             .cursorignore
             release-it.json
             commitlint.config.js
-            README.md
-            CHANGELOG.md
-            LICENSE.md
             bin
 
       - name: Upload Release
