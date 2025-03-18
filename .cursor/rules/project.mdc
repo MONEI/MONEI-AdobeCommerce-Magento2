@@ -21,6 +21,9 @@ alwaysApply: true
 composer cs:lint                      # Run PHP CodeSniffer
 composer cs:fix                       # Fix coding standards
 composer analyze                      # Run PHPStan analysis 
+composer format:check                 # Check formatting with pretty-php
+composer format:fix                   # Fix formatting with pretty-php
+composer fix:all                      # Run all fixers
 composer check:all                    # Run all checks
 yarn format                           # Format frontend code
 ```

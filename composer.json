@@ -62,15 +62,22 @@
     "cs:fix": "./bin phpcbf || true",
     "analyze": "./bin analyse",
     "phpstan": "./bin phpstan",
+    "format:check": "./pretty-php.phar --check .",
+    "format:fix": "./pretty-php.phar .",
     "i18n:collect": "./bin i18n:collect-phrases",
     "magento": "./bin magento",
     "cache:clean": "./bin magento cache:clean",
     "cache:flush": "./bin magento cache:flush",
     "setup:upgrade": "./bin magento setup:upgrade",
     "setup:di:compile": "./bin magento setup:di:compile",
+    "fix:all": [
+      "@cs:fix",
+      "@format:fix"
+    ],
     "check:all": [
       "@cs:lint",
-      "@analyze"
+      "@analyze",
+      "@format:check"
     ]
   },
   "repositories": {

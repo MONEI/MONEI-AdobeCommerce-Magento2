@@ -357,7 +357,8 @@ class InvoiceService
     private function hasPartialCapture(Order $order): bool
     {
         foreach ($order->getInvoiceCollection() as $invoice) {
-            if ($invoice->getState() == Invoice::STATE_PAID &&
+            if (
+                $invoice->getState() == Invoice::STATE_PAID &&
                 $invoice->getBaseGrandTotal() < $order->getBaseGrandTotal()
             ) {
                 return true;

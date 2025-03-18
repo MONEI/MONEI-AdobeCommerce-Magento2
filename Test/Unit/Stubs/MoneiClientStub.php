@@ -7,12 +7,8 @@ namespace Monei\MoneiPayment\Test\Unit\Stubs;
  */
 class MoneiClientStub
 {
-    public function __construct(string $apiKey = '')
-    {
-    }
-    public function setUserAgent(string $agent)
-    {
-    }
+    public function __construct(string $apiKey = '') {}
+    public function setUserAgent(string $agent) {}
 }
 
 // Define the Monei namespace if it doesn't exist
@@ -20,17 +16,13 @@ namespace Monei;
 
 // Stub classes
 if (!class_exists('\Monei\MoneiClient')) {
-    class MoneiClient extends \Monei\MoneiPayment\Test\Unit\Stubs\MoneiClientStub
-    {
-    }
+    class MoneiClient extends \Monei\MoneiPayment\Test\Unit\Stubs\MoneiClientStub {}
 }
 
 if (!class_exists('\Monei\PaymentsApi')) {
     class PaymentsApi
     {
-        public function create($request)
-        {
-        }
+        public function create($request) {}
     }
 }
 

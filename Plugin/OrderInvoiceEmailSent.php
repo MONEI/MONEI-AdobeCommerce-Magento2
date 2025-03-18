@@ -107,7 +107,8 @@ class OrderInvoiceEmailSent
 
             // Find and update status entries specifically related to the invoice capture
             foreach ($historyEntries as $history) {
-                if (!$history->getIsCustomerNotified() && (
+                if (
+                    !$history->getIsCustomerNotified() && (
                         // Check for capture-related comments
                         ($history->getComment() && strpos((string) $history->getComment(), 'Captured amount') !== false) ||
                         // Check for status-related entries

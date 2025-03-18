@@ -91,7 +91,8 @@ class GetPaymentMethods extends AbstractApiService implements GetPaymentMethodsI
         $currentTime = time();
 
         // Return from static cache if already fetched and not expired
-        if (isset(self::$paymentMethodsCache[$cacheKey]) &&
+        if (
+            isset(self::$paymentMethodsCache[$cacheKey]) &&
             ($currentTime - self::$paymentMethodsCache[$cacheKey]['timestamp'] < self::CACHE_LIFETIME)
         ) {
             $this->logger->debug('[ApiPaymentMethods] Using cached payment methods', ['accountId' => $accountId]);

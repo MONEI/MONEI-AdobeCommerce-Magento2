@@ -225,7 +225,8 @@ class StatusCodeHandler
             }
         }
 
-        if (isset($data['original_payment']) &&
+        if (
+            isset($data['original_payment']) &&
             method_exists($data['original_payment'], 'getStatusCode')
         ) {
             return $data['original_payment']->getStatusCode();
@@ -263,7 +264,8 @@ class StatusCodeHandler
             }
         }
 
-        if (isset($data['original_payment']) &&
+        if (
+            isset($data['original_payment']) &&
             method_exists($data['original_payment'], 'getStatusMessage')
         ) {
             return $data['original_payment']->getStatusMessage();
