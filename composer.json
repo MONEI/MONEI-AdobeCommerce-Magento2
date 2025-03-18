@@ -53,9 +53,11 @@
     }
   },
   "scripts": {
-    "test": "./bin test/unit --testdox",
-    "test:coverage": "./bin test/unit-coverage",
-    "test:xdebug": "./bin test/unit-xdebug",
+    "test": "./bin test",
+    "test:testdox": "./bin test --testdox",
+    "test:unit": "./bin test/unit",
+    "test:unit-coverage": "./bin test/unit-coverage",
+    "test:unit-xdebug": "./bin test/unit-xdebug",
     "cs:lint": "./bin phpcs",
     "cs:fix": "./bin phpcbf || true",
     "analyze": "./bin analyse",
