@@ -1,4 +1,4 @@
-# MONEI Payment Gateway for Adobe Commerce
+**[MONEI](https://monei.com)** is a financial technology company offering a unified payment platform for businesses of all sizes. Founded in 2019, MONEI provides advanced payment processing capabilities with a focus on European markets, helping merchants accept payments across all sales channels through a single integration.
 
 MONEI brings an all-in-one payment solution to Adobe Commerce that offers a truly unified payment experience across all sales channels. With a single integration, merchants can accept dozens of payment methods including major card networks, digital wallets, and local payment methods. The extension supports both embedded checkout experiences for seamless on-site payments and hosted payment pages for broader payment method support. Featuring advanced security, multi-language capabilities, and powerful business tools, MONEI helps maximize conversions and grow your cross-border e-commerce business while simplifying payment management.
 
@@ -17,18 +17,24 @@ MONEI brings an all-in-one payment solution to Adobe Commerce that offers a trul
 
 ## Account & Pricing
 
-An additional **[MONEI](https://monei.com)** account is required to process payments, and additional fees apply. The account is not created during extension installation. To create an account, please visit the [MONEI Dashboard Signup page](https://dashboard.monei.com/?action=signUp). Transaction fees vary based on payment volume with a dynamic pricing model - as your sales volume increases, transaction fees automatically decrease in real-time. For more details, please visit the [MONEI Pricing Page](https://monei.com/pricing/).
+**An additional [MONEI](https://monei.com) account is required, and additional fees apply. The account is not created during extension installation. To create an account please visit the [signup page](https://dashboard.monei.com/?action=signUp). For more details please visit the [MONEI pricing page](https://monei.com/pricing/).**
+
+Transaction fees vary based on payment volume with a dynamic pricing model - as your sales volume increases, transaction fees automatically decrease in real-time, allowing you to reinvest more in your business.
 
 ## Security & PCI Compliance
 
-MONEI employs industry-leading security practices and is PCI DSS Level 1 and GDPR compliant. For embedded payment methods (cards, Apple Pay, Google Pay, Bizum), the module uses secure iFrames that ensure sensitive payment data is entered directly into MONEI's secure environment without touching your server. For additional payment methods, customers are redirected to MONEI's secure hosted payment page and returned to your store after completing payment.
+We employ the industry's best security practices and tools to maintain bank-level security for merchants and end customers. **MONEI** is PCI DSS Level 1 and GDPR compliant.
 
-Tokenization is used to securely store customer payment information for future purchases without sensitive card data ever being stored on your Adobe Commerce server. The extension meets European PSD2 Strong Customer Authentication (SCA) requirements, and all data handling follows strict privacy standards detailed in the [MONEI Privacy Policy](https://monei.com/privacy-policy/).
+For embedded payment methods (cards, Apple Pay, Google Pay, Bizum), our secure checkout runs as an iFrame modal over your website. The customer enters payment information directly into our secure environment so that your store never comes into contact with the customer's payment data.
+
+For additional payment methods, customers are redirected to the **MONEI** secure hosted payment page. Once the payment process is complete, customers are redirected back to your store.
+
+Tokenization is used to run transactions with stored payment information for returning customers. No confidential card data is ever stored on your Adobe Commerce server. The extension meets European PSD2 Strong Customer Authentication (SCA) requirements.
 
 ## Demo & Documentation
 
-- View our extension in action: [Demo Store](https://magento2-demo.monei.com/)
-- Technical documentation: [Adobe Commerce Integration Guide](https://docs.monei.com/docs/e-commerce/adobe-commerce/)
-- Support center: [MONEI Support Portal](https://support.monei.com/)
-- Developer resources: [MONEI Developer Documentation](https://docs.monei.com/)
-- Customization guide: [Checkout Customization Guide](https://support.monei.com/hc/articles/360017814717)
+- **View our extension in action**: [Demo Store](https://magento2-demo.monei.com/) (username: demo@monei.com / password: moneidemo)
+- **Technical documentation**: [Adobe Commerce Integration Guide](https://docs.monei.com/docs/e-commerce/adobe-commerce/)
+- **Support center**: [MONEI Support Portal](https://support.monei.com/)
+- **Developer resources**: [MONEI Developer Documentation](https://docs.monei.com/)
+- **Customization guide**: [Checkout Customization Guide](https://support.monei.com/hc/articles/360017814717)
