@@ -69,6 +69,18 @@ if (!class_exists('\Monei\ApiException')) {
     }
 }
 
+// ApplePayDomainApi class
+if (!class_exists('\Monei\ApplePayDomainApi')) {
+    class ApplePayDomainApi
+    {
+        public function register($request)
+        {
+            $response = new \Monei\Model\ApplePayDomainRegister200Response();
+            return $response;
+        }
+    }
+}
+
 // Define Model classes in separate namespace
 namespace Monei\Model;
 
@@ -463,18 +475,6 @@ if (!class_exists('\Monei\MoneiPayment\Model\Config\Source\TypeOfPayment')) {
                 ['label' => 'Authorize', 'value' => self::TYPE_PRE_AUTHORIZED],
                 ['label' => 'Authorize and Capture', 'value' => self::TYPE_AUTHORIZED],
             ];
-        }
-    }
-}
-
-// Add the ApplePayDomainApi class
-if (!class_exists('\Monei\ApplePayDomainApi')) {
-    class ApplePayDomainApi
-    {
-        public function register($request)
-        {
-            $response = new Model\ApplePayDomainRegister200Response();
-            return $response;
         }
     }
 }
