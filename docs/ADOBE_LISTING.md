@@ -1,6 +1,6 @@
 **[MONEI](https://monei.com)** is a financial technology company offering a unified payment platform for businesses of all sizes. Founded in 2019, MONEI provides advanced payment processing capabilities with a focus on European markets, helping merchants accept payments across all sales channels through a single integration.
 
-MONEI brings an all-in-one payment solution to Adobe Commerce that offers a truly unified payment experience across all sales channels. With a single integration, merchants can accept dozens of payment methods including major card networks, digital wallets, and local payment methods. The extension supports both embedded checkout experiences for seamless on-site payments and hosted payment pages for broader payment method support. Featuring advanced security, multi-language capabilities, and powerful business tools, MONEI helps maximize conversions and grow your cross-border e-commerce business while simplifying payment management.
+MONEI Payment Module for Adobe Commerce transforms your store's checkout experience by enabling seamless payment processing through a unified platform. This extension eliminates the complexity of managing multiple payment providers by offering multiple payment methods through a single integration, including major cards, digital wallets, PayPal, and local European payment methods. The module works in two flexible modes: an embedded checkout that keeps customers on your site for higher conversion rates when using cards, Apple Pay or Google Pay; or a hosted payment page for expanded payment method support. Merchants can tailor the checkout flow to specific markets with support for 14 languages, branded payment pages, and configurable email notifications. During checkout, customers select their preferred payment method, complete their purchase either directly on your store or through a quick redirect, and receive immediate confirmation while you benefit from automatic order status updates, fraud protection, and real-time payment analytics. The module significantly reduces cart abandonment, increases international sales through localized payment options, and simplifies reconciliation with unified reporting across all payment channels.
 
 ## Features
 
@@ -33,7 +33,7 @@ Tokenization is used to run transactions with stored payment information for ret
 
 ## Demo & Documentation
 
-- **View our extension in action**: [Demo Store](https://magento2-demo.monei.com/) (username: demo@monei.com / password: moneidemo)
+- **View our extension in action**: [Demo Store](https://magento2-demo.monei.com/)
 - **Technical documentation**: [Adobe Commerce Integration Guide](https://docs.monei.com/docs/e-commerce/adobe-commerce/)
 - **Support center**: [MONEI Support Portal](https://support.monei.com/)
 - **Developer resources**: [MONEI Developer Documentation](https://docs.monei.com/)
