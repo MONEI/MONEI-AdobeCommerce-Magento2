@@ -141,6 +141,7 @@ class OrderInvoiceEmailSent
                         'invoice_id' => $invoice->getIncrementId(),
                         'updated' => $updated
                     ]
+                );
             }
         } catch (\Exception $e) {
             $this->logger->error(
