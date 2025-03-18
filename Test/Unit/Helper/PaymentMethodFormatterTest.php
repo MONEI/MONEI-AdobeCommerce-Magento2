@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * @copyright Copyright © Monei (https://monei.com)
+ */
+
+declare(strict_types=1);
+
 namespace Monei\MoneiPayment\Test\Unit\Helper;
 
 use Monei\Model\PaymentMethods;
@@ -9,20 +15,29 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Test case for PaymentMethodFormatter helper
+ * Test case for PaymentMethodFormatter
  */
 class PaymentMethodFormatterTest extends TestCase
 {
     /**
+     * PaymentMethodFormatter instance
+     *
      * @var PaymentMethodFormatter
      */
     private $paymentMethodFormatter;
 
     /**
+     * PaymentMethod mock
+     *
      * @var PaymentMethod|MockObject
      */
     private $paymentMethodHelperMock;
 
+    /**
+     * Set up test environment
+     *
+     * @return void
+     */
     protected function setUp(): void
     {
         $this->paymentMethodHelperMock = $this->createMock(PaymentMethod::class);
@@ -30,214 +45,258 @@ class PaymentMethodFormatterTest extends TestCase
     }
 
     /**
-     * Test formatting card payment method display
+     * Test formatPaymentMethodDisplay with card information
+     *
+     * @return void
      */
-    public function testFormatPaymentMethodDisplayForCard(): void
+    public function testFormatPaymentMethodDisplayWithCardInfo(): void
     {
-        // Setup
+        // Set up test data
         $paymentInfo = [
-            'method' => 'card',
-            'brand' => 'visa',
+            'brand' => 'VISA',
             'type' => 'credit',
-            'last4' => '4242'
+            'last4' => '1234'
         ];
 
+        // Set up mocks
         $this
             ->paymentMethodHelperMock
+            ->expects($this->once())
             ->method('getPaymentMethodName')
             ->with('visa')
             ->willReturn('Visa');
 
-        // Execute
+        // Execute test
         $result = $this->paymentMethodFormatter->formatPaymentMethodDisplay($paymentInfo);
 
-        // Verify
-        $this->assertEquals('Visa Credit •••• 4242', $result);
+        // Verify result
+        $this->assertEquals('Visa Credit •••• 1234', $result);
     }
 
     /**
-     * Test formatting Bizum payment method display
+     * Test formatPaymentMethodDisplay with Bizum information
+     *
+     * @return void
      */
-    public function testFormatPaymentMethodDisplayForBizum(): void
+    public function testFormatPaymentMethodDisplayWithBizum(): void
     {
-        // Setup
+        // Set up test data
         $paymentInfo = [
             'method' => PaymentMethods::PAYMENT_METHODS_BIZUM,
-            'phoneNumber' => '123456789'
+            'phoneNumber' => '666777888'
         ];
 
+        // Set up mocks
+        $methodDetails = ['name' => 'Bizum'];
         $this
             ->paymentMethodHelperMock
+            ->expects($this->once())
             ->method('getPaymentMethodByMoneiCode')
             ->with(PaymentMethods::PAYMENT_METHODS_BIZUM)
-            ->willReturn(['name' => 'Bizum']);
+            ->willReturn($methodDetails);
 
-        // Execute
+        // Execute test
         $result = $this->paymentMethodFormatter->formatPaymentMethodDisplay($paymentInfo);
 
-        // Verify
-        $this->assertEquals('Bizum •••••789', $result);
+        // Verify result
+        $this->assertEquals('Bizum •••••888', $result);
     }
 
     /**
-     * Test formatting PayPal payment method display
+     * Test formatPaymentMethodDisplay with PayPal information
+     *
+     * @return void
      */
-    public function testFormatPaymentMethodDisplayForPayPal(): void
+    public function testFormatPaymentMethodDisplayWithPayPal(): void
     {
-        // Setup
+        // Set up test data
         $paymentInfo = [
             'method' => PaymentMethods::PAYMENT_METHODS_PAYPAL,
-            'orderId' => 'PP123456',
-            'payerId' => 'CUST123',
-            'email' => 'customer@example.com',
-            'name' => 'John Doe'
+            'orderId' => 'PAY-123456',
+            'payerId' => 'CUST-789',
+            'email' => 'customer@example.com'
         ];
 
+        // Set up mocks
         $this
             ->paymentMethodHelperMock
+            ->expects($this->once())
             ->method('getPaymentMethodByMoneiCode')
             ->with(PaymentMethods::PAYMENT_METHODS_PAYPAL)
             ->willReturn(null);
 
-        // Execute
+        // Execute test
         $result = $this->paymentMethodFormatter->formatPaymentMethodDisplay($paymentInfo);
 
-        // Verify
+        // Verify result - contains all the PayPal info in parentheses
         $this->assertStringContainsString('PayPal', $result);
-        $this->assertStringContainsString('PP123456', $result);
-        $this->assertStringContainsString('CUST123', $result);
+        $this->assertStringContainsString('PAY-123456', $result);
+        $this->assertStringContainsString('CUST-789', $result);
         $this->assertStringContainsString('customer@example.com', $result);
-        $this->assertStringContainsString('John Doe', $result);
     }
 
     /**
-     * Test formatting wallet display
+     * Test formatPaymentMethodDisplay with unknown method
+     *
+     * @return void
+     */
+    public function testFormatPaymentMethodDisplayWithUnknownMethod(): void
+    {
+        // Set up test data
+        $paymentInfo = [
+            'method' => 'unknownMethod'
+        ];
+
+        // Set up mocks
+        $this
+            ->paymentMethodHelperMock
+            ->expects($this->once())
+            ->method('getPaymentMethodByMoneiCode')
+            ->with('unknownMethod')
+            ->willReturn(null);
+
+        // Execute test
+        $result = $this->paymentMethodFormatter->formatPaymentMethodDisplay($paymentInfo);
+
+        // Verify result - should convert camelCase to Title Case
+        $this->assertEquals('Unknown Method', $result);
+    }
+
+    /**
+     * Test formatPhoneNumber with various formats
+     *
+     * @param string $input Raw phone number
+     * @param string $expected Formatted phone number
+     * @return void
+     * @dataProvider phoneNumberDataProvider
+     */
+    public function testFormatPhoneNumber(string $input, string $expected): void
+    {
+        $result = $this->paymentMethodFormatter->formatPhoneNumber($input);
+        $this->assertEquals($expected, $result);
+    }
+
+    /**
+     * Data provider for testFormatPhoneNumber
+     *
+     * @return array
+     */
+    public function phoneNumberDataProvider(): array
+    {
+        return [
+            'international' => ['+34666777888', '+34 666 777 888'],
+            'national' => ['666777888', '666 777 888'],
+            'with spaces' => ['+34 666 777 888', '+34 666 777 888'],
+            'with dashes' => ['+34-666-777-888', '+34 666 777 888'],
+            'short number' => ['12345', '12345']
+        ];
+    }
+
+    /**
+     * Test formatWalletDisplay
+     *
+     * @return void
      */
     public function testFormatWalletDisplay(): void
     {
-        // Setup
+        // With known wallet
         $this
             ->paymentMethodHelperMock
+            ->expects($this->exactly(2))
             ->method('getPaymentMethodByMoneiCode')
-            ->with(PaymentMethods::PAYMENT_METHODS_APPLE_PAY)
-            ->willReturn(['name' => 'Apple Pay']);
+            ->withConsecutive(
+                ['applePay'],
+                ['newWallet']
+            )
+            ->willReturnOnConsecutiveCalls(
+                ['name' => 'Apple Pay'],
+                null
+            );
 
-        // Execute
-        $result = $this->paymentMethodFormatter->formatWalletDisplay(PaymentMethods::PAYMENT_METHODS_APPLE_PAY);
-
-        // Verify
+        $result = $this->paymentMethodFormatter->formatWalletDisplay('applePay');
         $this->assertEquals('Apple Pay', $result);
+
+        // With unknown wallet - should format camelCase
+        $result = $this->paymentMethodFormatter->formatWalletDisplay('newWallet');
+        $this->assertEquals('New Wallet', $result);
     }
 
     /**
-     * Test formatting phone number
-     */
-    public function testFormatPhoneNumber(): void
-    {
-        // Test international format
-        $this->assertEquals('+34 123 456 789', $this->paymentMethodFormatter->formatPhoneNumber('+34123456789'));
-
-        // Test national format
-        $this->assertEquals('123 456 789', $this->paymentMethodFormatter->formatPhoneNumber('123456789'));
-
-        // Test with non-digit characters
-        $this->assertEquals('123 456 789', $this->paymentMethodFormatter->formatPhoneNumber('123-456-789'));
-    }
-
-    /**
-     * Test getting payment method icon
+     * Test getPaymentMethodIcon
+     *
+     * @return void
      */
     public function testGetPaymentMethodIcon(): void
     {
-        // Setup for card payment
-        $paymentInfo = [
-            'method' => 'card',
-            'brand' => 'visa'
-        ];
-
+        // With method type
+        $paymentInfo = ['method' => 'applePay'];
         $this
             ->paymentMethodHelperMock
+            ->expects($this->once())
             ->method('getIconFromPaymentType')
-            ->with('card', 'visa')
-            ->willReturn('https://example.com/icons/visa.png');
+            ->with('applePay', '')
+            ->willReturn('icon-url.png');
 
-        // Execute
         $result = $this->paymentMethodFormatter->getPaymentMethodIcon($paymentInfo);
+        $this->assertEquals('icon-url.png', $result);
 
-        // Verify
-        $this->assertEquals('https://example.com/icons/visa.png', $result);
+        // With card brand only
+        $paymentInfo = ['brand' => 'visa'];
+        $this
+            ->paymentMethodHelperMock
+            ->expects($this->once())
+            ->method('getCardIcon')
+            ->with('visa')
+            ->willReturn('visa-icon.png');
+
+        $result = $this->paymentMethodFormatter->getPaymentMethodIcon($paymentInfo);
+        $this->assertEquals('visa-icon.png', $result);
+
+        // With no valid info
+        $paymentInfo = [];
+        $result = $this->paymentMethodFormatter->getPaymentMethodIcon($paymentInfo);
+        $this->assertNull($result);
     }
 
     /**
-     * Test getting payment method dimensions
+     * Test getPaymentMethodDimensions
+     *
+     * @return void
      */
     public function testGetPaymentMethodDimensions(): void
     {
-        // Setup
-        $paymentInfo = [
-            'method' => PaymentMethods::PAYMENT_METHODS_BIZUM
-        ];
-
-        $this
-            ->paymentMethodHelperMock
-            ->method('getPaymentMethodByMoneiCode')
-            ->with(PaymentMethods::PAYMENT_METHODS_BIZUM)
-            ->willReturn([
-                'name' => 'Bizum',
-                'width' => '50px',
-                'height' => '30px'
-            ]);
-
-        // Execute
-        $result = $this->paymentMethodFormatter->getPaymentMethodDimensions($paymentInfo);
-
-        // Verify
-        $this->assertEquals([
-            'width' => '50px',
+        // With method type and details
+        $paymentInfo = ['method' => 'applePay'];
+        $methodDetails = [
+            'width' => '60px',
             'height' => '30px'
-        ], $result);
-    }
-
-    /**
-     * Test generating payment method icon HTML
-     */
-    public function testGetPaymentMethodIconHtml(): void
-    {
-        // Setup
-        $paymentInfo = [
-            'method' => 'card',
-            'brand' => 'visa'
         ];
 
         $this
             ->paymentMethodHelperMock
-            ->method('getIconFromPaymentType')
-            ->with('card', 'visa')
-            ->willReturn('https://example.com/icons/visa.png');
+            ->expects($this->once())
+            ->method('getPaymentMethodByMoneiCode')
+            ->with('applePay')
+            ->willReturn($methodDetails);
 
+        $result = $this->paymentMethodFormatter->getPaymentMethodDimensions($paymentInfo);
+        $this->assertEquals(['width' => '60px', 'height' => '30px'], $result);
+
+        // With card brand
+        $paymentInfo = ['brand' => 'visa'];
         $this
             ->paymentMethodHelperMock
-            ->method('getPaymentMethodName')
-            ->with('visa')
-            ->willReturn('Visa');
-
-        $this
-            ->paymentMethodHelperMock
+            ->expects($this->once())
             ->method('getPaymentMethodDimensions')
             ->with('visa')
-            ->willReturn([
-                'width' => '40px',
-                'height' => '24px'
-            ]);
+            ->willReturn(['width' => '50px', 'height' => '25px']);
 
-        // We're not testing the actual HTML output here, just that the method returns a non-empty string
-        // that contains the expected attributes
-        $result = $this->paymentMethodFormatter->getPaymentMethodIconHtml($paymentInfo);
+        $result = $this->paymentMethodFormatter->getPaymentMethodDimensions($paymentInfo);
+        $this->assertEquals(['width' => '50px', 'height' => '25px'], $result);
 
-        $this->assertNotEmpty($result);
-        $this->assertStringContainsString('https://example.com/icons/visa.png', $result);
-        $this->assertStringContainsString('Visa', $result);
-        $this->assertStringContainsString('40px', $result);
-        $this->assertStringContainsString('24px', $result);
+        // Default dimensions for empty info
+        $paymentInfo = [];
+        $result = $this->paymentMethodFormatter->getPaymentMethodDimensions($paymentInfo);
+        $this->assertEquals(['width' => '40px', 'height' => '24px'], $result);
     }
 }

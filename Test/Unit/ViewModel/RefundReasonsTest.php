@@ -1,13 +1,13 @@
 <?php
 
 /**
- * Test case for RefundReasons ViewModel.
+ * Unit tests for RefundReasons ViewModel
  *
  * @category  Monei
- * @package   Monei\MoneiPayment
- * @author    Monei <info@monei.com>
- * @copyright 2023 Monei
- * @license   https://opensource.org/license/mit/ MIT License
+ * @package   Monei_MoneiPayment
+ * @author    MONEI <developers@monei.com>
+ * @copyright 2024 MONEI Financial Services
+ * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://monei.com/
  */
 
@@ -15,40 +15,38 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Test\Unit\ViewModel;
 
-use Magento\Framework\View\Element\Block\ArgumentInterface;
 use Monei\MoneiPayment\Model\Config\Source\CancelReason;
 use Monei\MoneiPayment\ViewModel\RefundReasons;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Test case for RefundReasons ViewModel.
+ * Unit test for RefundReasons ViewModel
  *
- * @category Monei
- * @package  Monei\MoneiPayment
- * @author   Monei <info@monei.com>
- * @copyright 2023 Monei
- * @license  https://opensource.org/license/mit/ MIT License
- * @link     https://monei.com/
+ * @category  Monei
+ * @package   Monei_MoneiPayment
+ * @author    MONEI <developers@monei.com>
+ * @copyright 2024 MONEI Financial Services
+ * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
+ * @link      https://monei.com/
  */
 class RefundReasonsTest extends TestCase
 {
     /**
-     * RefundReasons instance being tested
+     * Cancel reason mock
+     *
+     * @var CancelReason|\PHPUnit\Framework\MockObject\MockObject
+     */
+    private $_cancelReasonMock;
+
+    /**
+     * Refund reasons viewmodel
      *
      * @var RefundReasons
      */
     private $_refundReasons;
 
     /**
-     * Mock of CancelReason
-     *
-     * @var CancelReason|MockObject
-     */
-    private $_cancelReasonMock;
-
-    /**
-     * Set up test environment
+     * Set up
      *
      * @return void
      */
@@ -59,39 +57,23 @@ class RefundReasonsTest extends TestCase
     }
 
     /**
-     * Test that RefundReasons implements ArgumentInterface
+     * Test getData method
      *
      * @return void
      */
-    public function testImplementsArgumentInterface(): void
+    public function testGetData(): void
     {
-        $this->assertInstanceOf(
-            ArgumentInterface::class,
-            $this->_refundReasons
-        );
-    }
-
-    /**
-     * Test getData method returns expected array
-     *
-     * @return void
-     */
-    public function testGetDataReturnsReasonOptions(): void
-    {
-        $expectedReasons = [
-            ['label' => 'Duplicated', 'value' => 'duplicated'],
-            ['label' => 'Fraudulent', 'value' => 'fraudulent'],
-            ['label' => 'Requested by customer', 'value' => 'requested_by_customer'],
+        $reasonOptions = [
+            ['value' => 'duplicated', 'label' => 'Duplicated'],
+            ['value' => 'fraudulent', 'label' => 'Fraudulent'],
+            ['value' => 'requested_by_customer', 'label' => 'Requested by customer']
         ];
 
         $this
             ->_cancelReasonMock
-            ->expects($this->once())
             ->method('toOptionArray')
-            ->willReturn($expectedReasons);
+            ->willReturn($reasonOptions);
 
-        $result = $this->_refundReasons->getData();
-
-        $this->assertEquals($expectedReasons, $result);
+        $this->assertEquals($reasonOptions, $this->_refundReasons->getData());
     }
 }

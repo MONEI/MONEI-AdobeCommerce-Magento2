@@ -3,36 +3,36 @@ description:
 globs: 
 alwaysApply: true
 ---
-# MONEI Payment Module Commands
+# MONEI Payment Module - Development Guide
 
 ## Build/Test Commands
 ```bash
-./bin magento setup:di:compile      # Compile DI
-./bin magento setup:upgrade         # Run upgrades
-./bin magento cache:clean           # Clean cache
-./bin test/unit <dir>               # Run unit tests for specific directory
-./bin test/unit-coverage <dir>      # Generate unit test coverage
-./bin test/unit-xdebug <dir>        # Run unit tests with Xdebug
-./bin test/unit --testdox           # Run utit tests with arguments
+./bin test --testdox                  # Run all tests with verbose output
+./bin test/unit [path] [args]         # Run specific unit tests
+./bin test/unit Model/Service --filter testMethod  # Run specific test method
+./bin magento setup:di:compile        # Compile dependency injection
+./bin magento setup:upgrade           # Run upgrades
+./bin magento cache:clean             # Clean cache
+./bin magento cache:flush             # Flush all caches
 ```
 
-## Code Quality
+## Code Quality Commands
 ```bash
-composer cs:lint                    # Run PHP CodeSniffer
-composer cs:fix                     # Fix coding standards
-composer analyze                    # Run PHPStan analysis
-composer format:check               # Check formatting
-composer format:fix                 # Fix formatting
-composer fix:all                    # Run all fixers
-composer check:all                  # Run all checks
-yarn format                         # Format frontend code
+composer cs:lint                      # Run PHP CodeSniffer
+composer cs:fix                       # Fix coding standards
+composer analyze                      # Run PHPStan analysis 
+composer format:check                 # Check formatting with pretty-php
+composer format:fix                   # Fix formatting with pretty-php
+composer fix:all                      # Run all fixers
+composer check:all                    # Run all checks
+yarn format                           # Format frontend code
 ```
 
 ## Code Style Guidelines
 - **Naming**: Classes use StudlyCaps, methods use camelCase, interfaces have Interface suffix
+- **Imports**: Organize alphabetically, use fully qualified class names, avoid aliases
 - **Types**: Use strict typing with PHP 8.1+ parameter and return types
 - **Format**: Follow PSR-12 standard and Magento 2 coding guidelines
 - **Errors**: Use specialized exception classes and detailed logging
-- **Commits**: Use conventional format - type(scope): message
-- **Organization**: Follow Magento module structure (DI, interfaces in Api/, logic in Service/)
+- **Structure**: Follow Magento module structure (interfaces in Api/, implementation in Service/)
 - **Testing**: All new code should have unit test coverage
