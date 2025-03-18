@@ -1,5 +1,12 @@
 # Changelog
 
+## <small>2.0.1 (2025-03-18)</small>
+
+* chore: Add area parameter to PaymentMethod for asset handling ([6f752a0](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/6f752a0))
+* chore: Enhance README.md with installation instructions and Bitnami support ([25961e1](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/25961e1))
+* chore: Update GitHub workflow exclusions ([3c17e49](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/3c17e49))
+* chore: Update README.md for command clarity ([ede6f1e](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/ede6f1e))
+
 ## 2.0.0 (2025-03-18)
 
 * chore: Clean up configuration and remove Magento stubs ([c118ff6](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/c118ff6))
