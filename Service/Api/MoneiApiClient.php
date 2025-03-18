@@ -317,4 +317,17 @@ class MoneiApiClient
 
         return $apiKey;
     }
+
+    /**
+     * Get the current mode (test or production) for a store
+     *
+     * @param int|null $storeId Store ID to get mode for, defaults to current store
+     * @return bool True if in test mode, false if in production mode
+     * @throws NoSuchEntityException If the store doesn't exist
+     */
+    public function getCurrentMode(?int $storeId = null): bool
+    {
+        $currentStoreId = $storeId !== null ? $storeId : (int) $this->storeManager->getStore()->getId();
+        return $this->moduleConfig->getMode($currentStoreId) === 1;  // 1 = Test, 0 = Production
+    }
 }

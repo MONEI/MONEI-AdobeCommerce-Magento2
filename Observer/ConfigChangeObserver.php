@@ -135,21 +135,15 @@ class ConfigChangeObserver implements ObserverInterface
                 ScopeInterface::SCOPE_STORE
             );
 
-            $configPath = $isTestMode
-                ? MoneiPaymentModuleConfigInterface::TEST_API_KEY
-                : MoneiPaymentModuleConfigInterface::PRODUCTION_API_KEY;
+            // Get current store ID
+            $storeId = (int) $this->storeManager->getStore()->getId();
 
-            $freshApiKey = $this->scopeConfig->getValue(
-                $configPath,
-                ScopeInterface::SCOPE_STORE
-            );
-
-            // Force reinitialize the API client with the fresh API key
-            $this->apiClient->reinitialize($freshApiKey);
+            // Reset any cached SDK instances to ensure fresh configuration is used
+            $this->apiClient->resetSdkInstance($storeId);
 
             // Register the domain with Apple Pay
             $this->logger->info('[ApplePay] Automatically verifying domain: ' . $domain);
-            $result = $this->verifyApplePayDomain->execute($domain);
+            $result = $this->verifyApplePayDomain->execute($domain, $storeId);
             $this->logger->info('[ApplePay] Domain verification result: ' . json_encode($result));
         } catch (LocalizedException $e) {
             $this->logger->error('[ApplePay] Error during automatic domain verification: ' . $e->getMessage());

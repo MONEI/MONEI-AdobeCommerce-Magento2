@@ -73,6 +73,13 @@ class VerifyApplePayDomainCommand extends Command
                 self::DOMAIN_ARGUMENT,
                 InputArgument::REQUIRED,
                 'Domain to verify with Apple Pay'
+            )
+            ->addOption(
+                'store',
+                's',
+                InputArgument::OPTIONAL,
+                'Store ID to use for API configuration',
+                null
             );
 
         parent::configure();
@@ -94,11 +101,15 @@ class VerifyApplePayDomainCommand extends Command
         }
 
         $domain = $input->getArgument(self::DOMAIN_ARGUMENT);
+        $storeId = $input->getOption('store') ? (int) $input->getOption('store') : null;
 
         $output->writeln('<info>Attempting to register domain ' . $domain . ' with Apple Pay...</info>');
+        if ($storeId !== null) {
+            $output->writeln('<info>Using Store ID: ' . $storeId . '</info>');
+        }
 
         try {
-            $result = $this->verifyApplePayDomain->execute($domain);
+            $result = $this->verifyApplePayDomain->execute($domain, $storeId);
             $output->writeln('<info>Domain successfully registered with Apple Pay!</info>');
             $output->writeln('<info>Response: ' . json_encode($result) . '</info>');
 

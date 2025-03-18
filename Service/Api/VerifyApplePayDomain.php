@@ -38,10 +38,11 @@ class VerifyApplePayDomain extends AbstractApiService implements VerifyApplePayD
      * Register a domain with Apple Pay via the Monei API
      *
      * @param string $domain Domain to register with Apple Pay
+     * @param int|null $storeId The store ID to use for configurations
      * @return ApplePayDomainRegister200Response
      * @throws LocalizedException If registration fails
      */
-    public function execute(string $domain): ApplePayDomainRegister200Response
+    public function execute(string $domain, ?int $storeId = null): ApplePayDomainRegister200Response
     {
         // Validate the request parameters
         if (empty($domain)) {
@@ -57,7 +58,8 @@ class VerifyApplePayDomain extends AbstractApiService implements VerifyApplePayD
             function (MoneiClient $moneiSdk) use ($request) {
                 return $moneiSdk->applePayDomain->register($request);
             },
-            ['domain' => $domain]
+            ['domain' => $domain],
+            $storeId
         );
     }
 }

@@ -126,6 +126,9 @@ abstract class AbstractApiService
             );
         }
 
+        // Add store ID to log context
+        $logContext['store_id'] = $storeId ?? 'default';
+
         // Log request with standardized format
         $this->logger->logApiRequest($operation, $logContext);
 

@@ -7,10 +7,12 @@ if (!class_exists('\Monei\MoneiClient')) {
     class MoneiClient
     {
         public $payments;
+        public $applePayDomain;
 
         public function __construct(string $apiKey = '')
         {
             $this->payments = new PaymentsApi();
+            $this->applePayDomain = new ApplePayDomainApi();
         }
 
         public function setUserAgent(string $agent)
@@ -461,6 +463,73 @@ if (!class_exists('\Monei\MoneiPayment\Model\Config\Source\TypeOfPayment')) {
                 ['label' => 'Authorize', 'value' => self::TYPE_PRE_AUTHORIZED],
                 ['label' => 'Authorize and Capture', 'value' => self::TYPE_AUTHORIZED],
             ];
+        }
+    }
+}
+
+// Add the ApplePayDomainApi class
+if (!class_exists('\Monei\ApplePayDomainApi')) {
+    class ApplePayDomainApi
+    {
+        public function register($request)
+        {
+            $response = new Model\ApplePayDomainRegister200Response();
+            return $response;
+        }
+    }
+}
+
+// RegisterApplePayDomainRequest class
+if (!class_exists('\Monei\Model\RegisterApplePayDomainRequest')) {
+    class RegisterApplePayDomainRequest
+    {
+        private $domainName;
+
+        public function __construct(array $params = [])
+        {
+            $this->domainName = $params['domain_name'] ?? '';
+        }
+
+        public function getDomainName()
+        {
+            return $this->domainName;
+        }
+
+        public function setDomainName($domainName)
+        {
+            $this->domainName = $domainName;
+            return $this;
+        }
+    }
+}
+
+// ApplePayDomainRegister200Response class
+if (!class_exists('\Monei\Model\ApplePayDomainRegister200Response')) {
+    class ApplePayDomainRegister200Response
+    {
+        private $domainName;
+        private $status = 'verified';
+
+        public function getDomainName()
+        {
+            return $this->domainName;
+        }
+
+        public function getStatus()
+        {
+            return $this->status;
+        }
+
+        public function setDomainName($domainName)
+        {
+            $this->domainName = $domainName;
+            return $this;
+        }
+
+        public function setStatus($status)
+        {
+            $this->status = $status;
+            return $this;
         }
     }
 }
