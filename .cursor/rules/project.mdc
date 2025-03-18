@@ -1,0 +1,38 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# MONEI Payment Module - Development Guide
+
+## Build/Test Commands
+```bash
+./bin test --testdox                  # Run all tests with verbose output
+./bin test/unit [path] [args]         # Run specific unit tests
+./bin test/unit Model/Service --filter testMethod  # Run specific test method
+./bin magento setup:di:compile        # Compile dependency injection
+./bin magento setup:upgrade           # Run upgrades
+./bin magento cache:clean             # Clean cache
+./bin magento cache:flush             # Flush all caches
+```
+
+## Code Quality Commands
+```bash
+composer cs:lint                      # Run PHP CodeSniffer
+composer cs:fix                       # Fix coding standards
+composer analyze                      # Run PHPStan analysis 
+composer format:check                 # Check formatting with pretty-php
+composer format:fix                   # Fix formatting with pretty-php
+composer fix:all                      # Run all fixers
+composer check:all                    # Run all checks
+yarn format                           # Format frontend code
+```
+
+## Code Style Guidelines
+- **Naming**: Classes use StudlyCaps, methods use camelCase, interfaces have Interface suffix
+- **Imports**: Organize alphabetically, use fully qualified class names, avoid aliases
+- **Types**: Use strict typing with PHP 8.1+ parameter and return types
+- **Format**: Follow PSR-12 standard and Magento 2 coding guidelines
+- **Errors**: Use specialized exception classes and detailed logging
+- **Structure**: Follow Magento module structure (interfaces in Api/, implementation in Service/)
+- **Testing**: All new code should have unit test coverage

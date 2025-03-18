@@ -1,0 +1,36 @@
+<?php
+
+/**
+ * @copyright Copyright © Monei (https://monei.com)
+ * @var $block \Monei\MoneiPayment\Block\Payment\Loading
+ */
+?>
+<div id="monei-payment-loading-container"
+    data-mage-init='{"Monei_MoneiPayment/js/monei-payment-loading": {
+        "paymentId": "<?= $escaper->escapeJs($block->getPaymentId()) ?>",
+        "orderId": "<?= $escaper->escapeJs($block->getOrderId()) ?>",
+        "completeUrl": "<?= $escaper->escapeUrl($block->getCompleteUrl()) ?>"
+    }}'>
+</div>
+
+<style>
+    .page-title-wrapper {
+        display: none;
+    }
+
+    .loading-mask .loader {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        margin-top: 80px;
+    }
+
+    .loading-mask .loader p {
+        display: block;
+    }
+
+    #monei-payment-loading-container {
+        min-height: 600px;
+    }
+</style>

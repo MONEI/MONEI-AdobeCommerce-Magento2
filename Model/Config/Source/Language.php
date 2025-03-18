@@ -33,7 +33,7 @@ class Language implements OptionSourceInterface
     ];
 
     /**
-     * Get options for language dropdown
+     * Get options for language dropdown.
      *
      * @return array
      */

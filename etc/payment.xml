@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!--
+  ~ @author Monei Team
+  ~ @copyright Copyright © Monei (https://monei.com)
+  -->
+<payment
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Payment:etc/payment.xsd"
+>
+  <methods>
+    <method name="monei">
+      <allow_multiple_address>1</allow_multiple_address>
+    </method>
+    <method name="monei_card">
+      <allow_multiple_address>1</allow_multiple_address>
+    </method>
+    <method name="monei_cc_vault">
+      <allow_multiple_address>1</allow_multiple_address>
+    </method>
+    <method name="monei_bizum">
+      <allow_multiple_address>1</allow_multiple_address>
+    </method>
+    <method name="monei_google_apple">
+      <allow_multiple_address>1</allow_multiple_address>
+    </method>
+    <method name="monei_multibanco_redirect">
+      <allow_multiple_address>1</allow_multiple_address>
+    </method>
+    <method name="monei_mbway_redirect">
+      <allow_multiple_address>1</allow_multiple_address>
+    </method>
+    <method name="monei_paypal">
+      <allow_multiple_address>1</allow_multiple_address>
+    </method>
+  </methods>
+</payment>

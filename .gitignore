@@ -11,13 +11,13 @@ auth.json
 node_modules
 
 # Yarn
-/build/.pnp.*
-/build/.yarn/*
-!/build/.yarn/patches
-!/build/.yarn/plugins
-!/build/.yarn/releases
-!/build/.yarn/sdks
-!/build/.yarn/versions
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
 
 # Cache files
 .php-cs-fixer.cache
@@ -26,3 +26,16 @@ node_modules
 .phpunit.result.cache
 /var/cache/*
 /generated/*
+/examples/*
+
+pretty-php.phar
+pretty-php.phar.asc
+
+# Development symlinks
+/dev/vendor_symlink
+/dev/magento_symlink
+
+# Temporary files
+/tmp/*
+Test/.phpunit.cache/test-results
+var

@@ -20,14 +20,18 @@ use Monei\MoneiPayment\Model\Payment\Monei;
  */
 class SetOrderStatusAfterInvoice implements ObserverInterface
 {
-    /** @var OrderRepositoryInterface */
+    /**
+     * @var OrderRepositoryInterface
+     */
     private $orderRepository;
 
-    /** @var MoneiPaymentModuleConfigInterface */
+    /**
+     * @var MoneiPaymentModuleConfigInterface
+     */
     private $moduleConfig;
 
     /**
-     * Constructor
+     * Constructor.
      *
      * @param OrderRepositoryInterface $orderRepository
      * @param MoneiPaymentModuleConfigInterface $moduleConfig
@@ -41,21 +45,29 @@ class SetOrderStatusAfterInvoice implements ObserverInterface
     }
 
     /**
-     * Execute observer to set order status after invoice generation
+     * Execute observer to set order status after invoice generation.
      *
      * @param Observer $observer
+     *
      * @return void
      */
     public function execute(Observer $observer): void
     {
         $order = $observer->getOrder();
         $invoice = $observer->getInvoice();
+
+        // Only proceed if this is a Monei payment and the invoice is paid
         if (null !== $order->getData('monei_payment_id') && true === $invoice->getIsPaid()) {
-            $orderStatus = $this->moduleConfig->getConfirmedStatus($order->getStoreId())
-                ?? Monei::STATUS_MONEI_SUCCEDED;
-            $orderState = Order::STATE_PROCESSING;
-            $order->setStatus($orderStatus)->setState($orderState);
-            $this->orderRepository->save($order);
+            $confirmedStatus = $this->moduleConfig->getConfirmedStatus($order->getStoreId())
+                ?? Monei::STATUS_MONEI_SUCCEEDED;
+
+            // Only update if the order is not already in the confirmed status
+            // This prevents redundancy with the refactored payment processing logic
+            if ($order->getStatus() !== $confirmedStatus) {
+                $orderState = Order::STATE_PROCESSING;
+                $order->setStatus($confirmedStatus)->setState($orderState);
+                $this->orderRepository->save($order);
+            }
         }
     }
 }

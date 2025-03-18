@@ -2,118 +2,122 @@
  * @author Monei Team
  * @copyright Copyright © Monei (https://monei.com)
  */
-define(
-    [
-        'jquery',
-        'Monei_MoneiPayment/js/view/payment/method-renderer/monei-insite',
-        'Magento_Checkout/js/model/payment/additional-validators',
-        'moneijs',
-        'Magento_Checkout/js/action/redirect-on-success',
-        'Magento_Ui/js/model/messageList',
-        'Magento_Checkout/js/model/full-screen-loader'
-    ],
-    function ($, Component, additionalValidators, monei, redirectOnSuccessAction, globalMessageList, fullScreenLoader) {
-        'use strict';
+define([
+  'ko',
+  'jquery',
+  'Monei_MoneiPayment/js/view/payment/method-renderer/monei-insite',
+  'Magento_Checkout/js/model/payment/additional-validators',
+  'moneijs',
+  'Magento_Checkout/js/action/redirect-on-success',
+  'Magento_Ui/js/model/messageList',
+  'Magento_Checkout/js/model/full-screen-loader',
+  'Monei_MoneiPayment/js/utils/error-handler',
+  'Monei_MoneiPayment/js/utils/payment-handler'
+], function (
+  ko,
+  $,
+  MoneiInsiteComponent,
+  additionalValidators,
+  monei,
+  redirectOnSuccessAction,
+  globalMessageList,
+  fullScreenLoader,
+  errorHandler,
+  paymentHandler
+) {
+  'use strict';
 
-        return Component.extend({
-            defaults: {
-                template: 'Monei_MoneiPayment/payment/monei-bizum-insite',
-            },
-            redirectAfterPlaceOrder: true,
-            bizumContainer: null,
-            idBizumContainer: 'monei_bizum_insite_container',
-            failOrderStatus: '',
-            language: 'en',
-            accountId: '',
-            jsonStyle: JSON.parse('{"base":{"height":"45px"}}'),
+  return MoneiInsiteComponent.extend({
+    defaults: {
+      template: 'Monei_MoneiPayment/payment/monei-bizum-insite'
+    },
+    redirectAfterPlaceOrder: true,
+    bizumContainer: null,
+    idBizumContainer: 'monei_bizum_insite_container',
+    failOrderStatus: '',
+    language: 'en',
+    accountId: '',
+    jsonStyle: JSON.parse('{"height":"45px"}'),
+    isPlaceOrderActionAllowed: ko.observable(true),
 
-            initialize: function () {
-                this._super();
+    initialize: function () {
+      this._super();
 
-                this.initMoneiPaymentVariables();
+      this.initMoneiPaymentVariables();
 
-                return this;
-            },
+      return this;
+    },
 
-            initMoneiPaymentVariables: function(){
-                this.language = window.checkoutConfig.moneiLanguage ?? this.language;
-                this.failOrderStatus = window.checkoutConfig.payment[this.getCode()].failOrderStatus;
-                this.accountId = window.checkoutConfig.payment[this.getCode()].accountId;
-                this.jsonStyle = window.checkoutConfig.payment[this.getCode()].jsonStyle ?? this.jsonStyle;
-            },
+    initMoneiPaymentVariables: function () {
+      this.language = window.checkoutConfig.moneiLanguage ?? this.language;
+      this.failOrderStatus = window.checkoutConfig.payment[this.getCode()].failOrderStatus;
+      this.accountId = window.checkoutConfig.payment[this.getCode()].accountId;
+      this.jsonStyle = window.checkoutConfig.payment[this.getCode()].jsonStyle ?? this.jsonStyle;
+    },
 
-            createMoneiPayment: function(){
-                if ($.trim($('#' + this.idBizumContainer).html()) === '') {
-                    fullScreenLoader.startLoader();
-                    this.isPlaceOrderActionAllowed(false);
-                    this.renderBizum();
-                    fullScreenLoader.stopLoader();
-                }
-            },
+    /**
+     * Get payment icon configuration
+     * @returns {Object|null}
+     */
+    getIcon: function () {
+      if (window.checkoutConfig.payment[this.getCode()].icon) {
+        var iconDimensions = window.checkoutConfig.payment[this.getCode()].iconDimensions || {};
+        return {
+          url: window.checkoutConfig.payment[this.getCode()].icon,
+          width: iconDimensions.width || 70,
+          height: iconDimensions.height || 45
+        };
+      }
+      return null;
+    },
 
-            /** Render the bizum */
-            renderBizum: function(){
-                var self = this;
-                this.container = document.getElementById(this.idBizumContainer);
+    createMoneiPayment: function () {
+      if ($.trim($('#' + this.idBizumContainer).html()) === '') {
+        fullScreenLoader.startLoader();
+        this.isPlaceOrderActionAllowed(false);
+        this.renderBizum();
+        fullScreenLoader.stopLoader();
+      }
+    },
 
-                // Create an instance of the Bizum using payment_id.
-                this.bizumContainer = monei.Bizum({
-                    accountId: this.accountId,
-                    language: this.language,
-                    style: this.jsonStyle,
-                    onLoad: function () {
-                        self.isPlaceOrderActionAllowed(true);
-                    },
-                    onBeforeOpen: function () {
-                        return additionalValidators.validate();
+    /** Render the bizum */
+    renderBizum: function () {
+      var self = this;
+      this.container = document.getElementById(this.idBizumContainer);
 
-                    },
-                    onSubmit(result) {
-                        if (result.error) {
-                            console.log(result.error);
-                            self.isPlaceOrderActionAllowed(true);
-                        } else {
-                            // Confirm payment using the token.
-                            self.createOrderInMagento(result.token);
-                        }
-                    },
-                    onError(error) {
-                        console.log(error);
-                        self.isPlaceOrderActionAllowed(false);
-                    }
-                });
+      // Create an instance of the Bizum using payment_id.
+      this.bizumContainer = monei.Bizum({
+        accountId: this.accountId,
+        language: this.language,
+        style: this.jsonStyle,
+        onLoad: function () {
+          self.isPlaceOrderActionAllowed(true);
+        },
+        onBeforeOpen: function () {
+          return additionalValidators.validate();
+        },
+        onSubmit: function (result) {
+          if (result.error) {
+            // Handle error case
+            self.isPlaceOrderActionAllowed(true);
+          } else {
+            // Payment succeeded
+            self.createOrderInMagento(result.token);
+          }
+        },
+        onError: function (error) {
+          console.error('Bizum Error', error);
+          self.isPlaceOrderActionAllowed(false);
+        }
+      });
 
-                this.bizumContainer.render(this.container);
-            },
+      this.bizumContainer.render(this.container);
+    },
 
-            /** Confirm the payment in monei */
-            moneiTokenHandler: function (paymentId, token) {
-                var self = this;
-                fullScreenLoader.startLoader();
-                return monei.confirmPayment({
-                    paymentId: paymentId,
-                    paymentToken: token,
-                })
-                    .then(function (result) {
-                        if (self.failOrderStatus.includes(result.status)) {
-                            globalMessageList.addErrorMessage({
-                                message: result.statusMessage
-                            });
-                            self.redirectToFailOrder(result.status);
-                        }else if (result.nextAction && (result.nextAction.mustRedirect ||  result.nextAction.type === 'COMPLETE')) {
-                            setTimeout(function(){
-                                window.location.assign(result.nextAction.redirectUrl);
-                            } , 4000);
-                        }else if(self.redirectAfterPlaceOrder) {
-                            redirectOnSuccessAction.execute();
-                        }
-                    })
-                    .catch(function (error) {
-                        globalMessageList.addErrorMessage({
-                            message: error.message
-                        });
-                        self.redirectToCancelOrder();
-                    });
-            }
-        });
-    });
+    /** Confirm the payment in monei */
+    moneiTokenHandler: function (paymentId, token) {
+      // Use the common payment handler utility
+      return paymentHandler.moneiTokenHandler(this, paymentId, token);
+    }
+  });
+});

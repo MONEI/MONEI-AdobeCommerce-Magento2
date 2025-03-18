@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!--
+  ~ @author Monei Team
+  ~ @copyright Copyright © Monei (https://monei.com)
+  -->
+<config
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd"
+>
+  <type name="Monei\MoneiPayment\Block\System\Config\Form\Field\ApplePayNotice">
+    <arguments>
+      <argument name="escaper" xsi:type="object">Magento\Framework\Escaper</argument>
+    </arguments>
+  </type>
+</config>

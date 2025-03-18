@@ -10,6 +10,7 @@
 /* @var \Magento\Sales\Block\Adminhtml\Order\Creditmemo\Create\Form $block */
 $refundReasonsViewModel = $block->getData('refundReasonsViewModel');
 $refundReasons = $refundReasonsViewModel->getData();
+$taxHelper = \Magento\Framework\App\ObjectManager::getInstance()->get(\Magento\Tax\Helper\Data::class);
 ?>
 <form id="edit_form" method="post" action="<?= $escaper->escapeUrl($block->getSaveUrl()) ?>">
     <?= $block->getBlockHtml('formkey') ?>
@@ -34,11 +35,6 @@ $refundReasons = $refundReasonsViewModel->getData();
                     </div>
                     <div class="admin__page-section-item-content">
                         <div class="order-payment-method-title"><?= $block->getChildHtml('order_payment') ?></div>
-                        <div class="order-payment-currency">
-                            <?= $escaper->escapeHtml(
-                                __('The order was placed using %1.', $_order->getOrderCurrencyCode())
-                            ) ?>
-                        </div>
                         <div class="order-payment-additional">
                             <?= $block->getChildHtml('order_payment_additional') ?>
                         </div>
@@ -58,9 +54,7 @@ $refundReasons = $refundReasonsViewModel->getData();
                                 <div class="shipping-description-content">
                                     <?= $escaper->escapeHtml(__('Total Shipping Charges')) ?>:
 
-                                    <?php if ($block->helper(\Magento\Tax\Helper\Data::class)
-                                        ->displaySalesPriceInclTax($block->getSource()->getStoreId())
-                                    ): ?>
+                                    <?php if ($taxHelper->displaySalesPriceInclTax($block->getSource()->getStoreId())): ?>
                                         <?php $_excl = $block->displayShippingPriceInclTax($_order); ?>
                                     <?php else: ?>
                                         <?php $_excl = $block->displayPriceAttribute('shipping_amount', false, ' '); ?>
@@ -68,10 +62,7 @@ $refundReasons = $refundReasonsViewModel->getData();
                                     <?php $_incl = $block->displayShippingPriceInclTax($_order); ?>
 
                                     <?= /* @noEscape */ $_excl ?>
-                                    <?php if ($block->helper(\Magento\Tax\Helper\Data::class)
-                                        ->displaySalesBothPrices($block->getSource()->getStoreId())
-                                        && $_incl != $_excl
-                                    ): ?>
+                                    <?php if ($taxHelper->displaySalesBothPrices($block->getSource()->getStoreId()) && $_incl != $_excl): ?>
                                         (<?= $escaper->escapeHtml(__('Incl. Tax')) ?> <?= /* @noEscape */ $_incl ?>)
                                     <?php endif; ?>
                                 </div>
@@ -79,23 +70,35 @@ $refundReasons = $refundReasonsViewModel->getData();
                         </div>
                     <?php endif; ?>
                 </div>
-                <?php if ($_order->getData('monei_payment_id') !== null): ?>
-                    <div>
-                        <label for="refund_reason" class="admin__field-label">
-                            <?= $escaper->escapeHtml(__('Refund reason')) ?>
-                        </label>
+    </section>
+
+    <?php if ($_order->getData('monei_payment_id') !== null): ?>
+    <section class="admin__page-section">
+        <div class="admin__page-section-title">
+            <span class="title"><?= $escaper->escapeHtml(__('Refund Information')) ?></span>
+        </div>
+        <div class="admin__page-section-content">
+            <div class="admin__page-section-item">
+                <div class="admin__page-section-item-content">
+                    <div class="admin__field">
+                        <label for="refund_reason" class="admin__field-label"><?= $escaper->escapeHtml(__('Refund reason')) ?></label>
                         <div class="admin__field-control">
                             <select name="creditmemo[refund_reason]" id="refund_reason" class="admin__control-select">
                                 <?php foreach ($refundReasons as $reason): ?>
-                                    <option value="<?= $escaper->escapeHtmlAttr($reason['value']) ?>">
+                                    <option value="<?= $escaper->escapeHtmlAttr($reason['value']) ?>"
+                                        <?= $reason['value'] === 'requested_by_customer' ? 'selected="selected"' : '' ?>>
                                         <?= $escaper->escapeHtml($reason['label']) ?>
                                     </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
-                <?php endif; ?>
+                </div>
+            </div>
+        </div>
     </section>
+    <?php endif; ?>
+
     <div id="creditmemo_item_container">
         <?= $block->getChildHtml('order_items') ?>
     </div>

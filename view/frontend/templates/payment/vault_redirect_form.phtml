@@ -1,0 +1,12 @@
+<?php
+/** @copyright Copyright © Monei (https://monei.com) */
+
+/** @var \Monei\MoneiPayment\Block\Payment\VaultRedirectForm $block */
+?>
+<form id="monei-vault-redirect-form"
+      method="post"
+      action="<?= $escaper->escapeUrl($block->getUrl('monei/payment/vaultredirect')) ?>"
+      style="display: none;">
+    <input type="hidden" name="form_key" value="<?= $escaper->escapeHtmlAttr($block->getFormKey()) ?>">
+    <input type="hidden" name="public_hash" id="monei-vault-public-hash" value="">
+</form>

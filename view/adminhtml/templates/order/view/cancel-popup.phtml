@@ -4,29 +4,106 @@
 ?>
 <?php if ($block->isOrderPlacedWithMonei()): ?>
     <div id="cancel-monei-order" style="display: none">
-        <div>
-            <?= $escaper->escapeHtml(__('Are you sure you want to cancel this order?')) ?>
+        <div class="message message-warning">
+            <?= $escaper->escapeHtml(__('Are you certain you want to cancel this order? This action will automatically cancel the authorized (uncaptured) payment and release the customer\'s funds.')) ?>
         </div>
+
         <input type="hidden"
             id="cancel_url_monei"
             value="<?= $escaper->escapeUrl($block->getCancelUrl()) ?>">
         <input type="hidden"
             id="payment_id"
-            value="<?= $escaper->escapeHtmlAttr($block->getMoneiPaymentId()) ?>"
+            value="<?= $escaper->escapeHtmlAttr($block->getOrder()->getData('monei_payment_id')) ?>"
             name="payment_id" />
         <input type="hidden"
             id="order_id"
-            value="<?= $escaper->escapeHtmlAttr($block->getOrderId()) ?>"
+            value="<?= $escaper->escapeHtmlAttr($block->getOrder()->getId()) ?>"
             name="order_id" />
-        <div>
-            <label for="cancel_reason"><?= $escaper->escapeHtml(__('Cancel reason')) ?></label>
-            <select name="cancel_reason" id="cancel_reason" class="admin__control-select">
-                <?php foreach ($block->getCancelReasons() as $option): ?>
-                    <option value="<?= $escaper->escapeHtmlAttr($option['value']) ?>">
-                        <?= $escaper->escapeHtml($option['label']) ?>
-                    </option>
-                <?php endforeach ?>
-            </select>
+
+        <div class="admin__field field">
+            <label class="admin__field-label" for="cancellation_reason">
+                <span><?= $escaper->escapeHtml(__('Cancellation reason')) ?></span>
+            </label>
+            <div class="admin__field-control">
+                <select name="cancellation_reason"
+                    id="cancellation_reason"
+                    class="admin__control-select"
+                    data-validate="{required:true}">
+                    <?php foreach ($block->getCancelReasons() as $option): ?>
+                        <option value="<?= $escaper->escapeHtmlAttr($option['value']) ?>"
+                            <?= $option['value'] === 'requested_by_customer' ? 'selected="selected"' : '' ?>>
+                            <?= $escaper->escapeHtml($option['label']) ?>
+                        </option>
+                    <?php endforeach ?>
+                </select>
+            </div>
         </div>
     </div>
+
+    <style>
+        /* Use classes that match the modal widget structure */
+        .modal-popup .modal-inner-wrap {
+            width: 450px;
+        }
+    </style>
+
+    <script>
+        require([
+            'jquery',
+            'Magento_Ui/js/modal/modal'
+        ], function($, modal) {
+            var options = {
+                type: 'popup',
+                modalClass: 'cancel-monei-order-popup',
+                responsive: false,
+                innerScroll: true,
+                title: "<?= $escaper->escapeHtml(__('Cancel the order')) ?>",
+                buttons: [{
+                    text: "<?= $escaper->escapeHtml(__('Never mind')) ?>",
+                    class: 'action-secondary',
+                    click: function() {
+                        this.closeModal();
+                    }
+                }, {
+                    text: "<?= $escaper->escapeHtml(__('Cancel')) ?>",
+                    class: 'action-primary',
+                    click: function() {
+                        var url = $('#cancel_url_monei').val();
+                        var paymentId = $('#payment_id').val();
+                        var orderId = $('#order_id').val();
+                        var reason = $('#cancellation_reason').val();
+
+                        $.ajax({
+                            url: url,
+                            data: {
+                                payment_id: paymentId,
+                                order_id: orderId,
+                                cancellation_reason: reason
+                            },
+                            type: 'post',
+                            dataType: 'json',
+                            showLoader: true,
+                            success: function(response) {
+                                if (response.redirectUrl) {
+                                    window.location.href = response.redirectUrl;
+                                } else {
+                                    alert(response.message);
+                                }
+                            }
+                        });
+                    }
+                }]
+            };
+
+            // Initialize the modal but don't automatically open it
+            var popup = modal(options, $('#cancel-monei-order'));
+
+            // Open modal only when the cancel button is clicked
+            // You'll need to add a class or ID to your cancel button
+            // For example: <button id="open-cancel-modal">Cancel Order</button>
+            $('#open-cancel-modal').on('click', function() {
+                popup.openModal();
+            });
+        });
+    </script>
 <?php endif; ?>

@@ -1,5 +1,4 @@
-MONEI Magento2 Module License Agreement
-===========================================
+# MONEI Magento2 Module License Agreement
 
 In order to obtain and use the MONEI Magento2 Module (“the MONEI Magento2 Module”), you must first agree to the
 terms of this License. If you agree to the terms of this License, you may use the MONEI Magento2 Module. If you do not

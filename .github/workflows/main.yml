@@ -8,19 +8,44 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@master
-    - name: Archive Release
-      uses: thedoctor0/zip-release@0.7.5
-      with:
-        type: 'zip'
-        filename: 'monei-module-monei-payment-${{github.event.release.tag_name}}.zip'
-        exclusions: '*.git* /build/*
+      - uses: actions/checkout@master
+      - name: Archive Release
+        uses: thedoctor0/zip-release@0.7.5
+        with:
+          type: "zip"
+          filename: "monei-module-monei-payment-${{github.event.release.tag_name}}.zip"
+          exclusions: |
+            *.git*
+            *.github*
+            *Test*
+            *tests*
+            .husky/*
+            .yarn/*
+            .vscode/*
+            .cursor/*
+            docs/*
+            vendor/*
+            composer.lock
+            package.json
+            yarn.lock
+            .yarnrc.yml
+            .nvmrc
+            .prettierrc
+            .prettierignore
+            prettyphp.json
+            pretty-php.phar*
+            .cursorignore
+            commitlint.config.js
+            README.md
+            CHANGELOG.md
+            LICENSE.md
+            bin
 
-    - name: Upload Release
-      uses: ncipollo/release-action@v1.12.0
-      with:
-        allowUpdates: true
-        omitBodyDuringUpdate: true
-        artifacts: 'monei-module-monei-payment-${{github.event.release.tag_name}}.zip'
-        artifactContentType: 'application/zip'
-        token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload Release
+        uses: ncipollo/release-action@v1.12.0
+        with:
+          allowUpdates: true
+          omitBodyDuringUpdate: true
+          artifacts: "monei-module-monei-payment-${{github.event.release.tag_name}}.zip"
+          artifactContentType: "application/zip"
+          token: ${{ secrets.GITHUB_TOKEN }}

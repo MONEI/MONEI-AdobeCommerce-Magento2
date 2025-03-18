@@ -45,6 +45,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      * Check if the Monei payment method is enabled.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return bool True if the payment method is enabled, false otherwise
      */
     public function isEnabled($storeId = null): bool
@@ -60,6 +61,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      * Get the mode (test or production) for the Monei payment method.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return int The mode value (1 for test, 2 for production)
      */
     public function getMode($storeId = null): int
@@ -75,6 +77,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      * Get the appropriate URL based on the current mode.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return string The URL for the current mode
      */
     public function getUrl($storeId = null): string
@@ -88,6 +91,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      * Get the test environment URL.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return string The test URL
      */
     public function getTestUrl($storeId = null): string
@@ -103,6 +107,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      * Get the production environment URL.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return string The production URL
      */
     public function getProductionUrl($storeId = null): string
@@ -118,6 +123,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      * Get the appropriate account ID based on the current mode.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return string The account ID for the current mode
      */
     public function getAccountId(?int $storeId = null): string
@@ -131,6 +137,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      * Get the test environment account ID.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return string The test account ID
      */
     public function getTestAccountId(?int $storeId = null): string
@@ -146,6 +153,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      * Get the production environment account ID.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return string The production account ID
      */
     public function getProductionAccountId(?int $storeId = null): string
@@ -161,6 +169,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      * Get the appropriate API key based on the current mode.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return string The API key for the current mode
      */
     public function getApiKey($storeId = null): string
@@ -174,6 +183,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      * Get the test environment API key.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return string The test API key
      */
     public function getTestApiKey($storeId = null): string
@@ -189,6 +199,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      * Get the production environment API key.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return string The production API key
      */
     public function getProductionApiKey($storeId = null): string
@@ -203,15 +214,16 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
     /**
      * Get the language for the Monei payment interface.
      *
-     * First tries to use the store's locale language if supported by Monei,
-     * otherwise falls back to the configured language.
+     * Uses the store's locale language if supported by Monei,
+     * otherwise defaults to English.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return string The language code
      */
     public function getLanguage(?int $storeId = null): string
     {
-        // First, try to get the store's locale code
+        // Get the store's locale code
         $locale = $this->scopeConfig->getValue(
             'general/locale/code',
             ScopeInterface::SCOPE_STORE,
@@ -229,18 +241,15 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
             return strtolower($localeLanguage);
         }
 
-        // Otherwise, fall back to the configured value
-        return (string) $this->scopeConfig->getValue(
-            self::LANGUAGE,
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
+        // Default to English if the language is not supported
+        return 'en';
     }
 
     /**
      * Get the title of the Monei payment method.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return string The payment method title
      */
     public function getTitle($storeId = null): string
@@ -256,6 +265,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      * Get the description of the Monei payment method.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return string The payment method description
      */
     public function getDescription($storeId = null): string
@@ -271,6 +281,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      * Get the type of payment for the Monei payment method.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return int The payment type value
      */
     public function getTypeOfPayment($storeId = null): int
@@ -286,21 +297,30 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      * Get the order status to be set when a payment is confirmed.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return string The confirmed status code
      */
     public function getConfirmedStatus($storeId = null): string
     {
-        return (string) $this->scopeConfig->getValue(
+        $configuredStatus = $this->scopeConfig->getValue(
             self::CONFIRMED_STATUS,
             ScopeInterface::SCOPE_STORE,
             $storeId
         );
+
+        // If no status is configured or it's empty, return the Monei-specific status
+        if (empty($configuredStatus)) {
+            return 'monei_succeeded';
+        }
+
+        return (string) $configuredStatus;
     }
 
     /**
      * Get the order status to be set when a payment is pre-authorized.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return string The pre-authorized status code
      */
     public function getPreAuthorizedStatus($storeId = null): string
@@ -316,6 +336,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      * Check if the payment method is restricted to specific countries.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return bool True if the payment method is restricted to specific countries
      */
     public function isAllowSpecific($storeId = null): bool
@@ -331,6 +352,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      * Get the list of specific countries where the payment method is available.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return string Comma-separated list of country codes
      */
     public function getSpecificCountries($storeId = null): string
@@ -346,6 +368,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      * Get the sort order for the Monei payment method.
      *
      * @param int|null $storeId The store ID to check the configuration for
+     *
      * @return int The sort order value
      */
     public function getSortOrder($storeId = null): int
@@ -355,5 +378,59 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
             ScopeInterface::SCOPE_STORE,
             $storeId
         );
+    }
+
+    /**
+     * Check if invoice emails should be sent.
+     *
+     * @param int|null $storeId The store ID to check the configuration for
+     *
+     * @return bool True if invoice emails should be sent, false otherwise
+     */
+    public function shouldSendInvoiceEmail($storeId = null): bool
+    {
+        // Check if invoice emails are enabled in Magento's global settings
+        $sendInvoiceEmail = $this->scopeConfig->getValue(
+            'sales_email/invoice/enabled',
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+
+        // Check if module-specific setting is enabled
+        $moduleSpecificSetting = $this->scopeConfig->getValue(
+            self::SEND_INVOICE_EMAIL,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+
+        // Both global and module-specific settings must be enabled
+        return (bool) $sendInvoiceEmail && (bool) $moduleSpecificSetting;
+    }
+
+    /**
+     * Check if order emails should be sent after payment confirmation.
+     *
+     * @param int|null $storeId The store ID to check the configuration for
+     *
+     * @return bool True if order emails should be sent, false otherwise
+     */
+    public function shouldSendOrderEmail($storeId = null): bool
+    {
+        // Check if order emails are enabled in Magento's global settings
+        $sendOrderEmail = $this->scopeConfig->getValue(
+            'sales_email/order/enabled',
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+
+        // Check if module-specific setting is enabled
+        $moduleSpecificSetting = $this->scopeConfig->getValue(
+            self::SEND_ORDER_EMAIL,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+
+        // Both global and module-specific settings must be enabled
+        return (bool) $sendOrderEmail && (bool) $moduleSpecificSetting;
     }
 }

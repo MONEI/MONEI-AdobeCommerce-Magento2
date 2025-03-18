@@ -21,21 +21,16 @@ Accept payments through [MONEI](https://monei.com) in your Adobe Commerce (Magen
       - [Option 2: Direct Download from Main Branch](#option-2-direct-download-from-main-branch)
     - [Before You Begin](#before-you-begin)
   - [Configuration](#configuration)
+  - [Configuring Cloudflare Tunnel for Payment Callbacks](#configuring-cloudflare-tunnel-for-payment-callbacks)
+  - [Available Commands](#available-commands)
+  - [MONEI PHP SDK](#monei-php-sdk)
   - [Demo](#demo)
   - [Development](#development)
-    - [Docker Setup](#docker-setup)
-    - [Code Quality Tools](#code-quality-tools)
-      - [Prerequisites](#prerequisites)
-      - [Setting up development environment](#setting-up-development-environment)
-      - [Available Commands](#available-commands)
-    - [Environment Variables](#environment-variables)
   - [Troubleshooting](#troubleshooting)
   - [Contributing](#contributing)
   - [License](#license)
   - [Support](#support)
   - [Code Validation](#code-validation)
-    - [Validation](#validation)
-    - [Fixing Code Issues](#fixing-code-issues)
 
 ## Overview
 
@@ -49,12 +44,15 @@ MONEI Payments for Adobe Commerce (Magento 2) allows you to seamlessly integrate
 - Real-time payment notifications and order status updates
 - Detailed transaction reporting in your MONEI dashboard
 - Customizable payment experience to match your store's design
+- Integration with the official MONEI PHP SDK for reliable API communication
+- Automatic Apple Pay domain verification when configuration is saved
 
 ## Requirements
 
 - PHP: ^8.1.0
 - Magento: >=2.4.5
 - MONEI Account ([Sign up here](https://monei.com/signup))
+- MONEI PHP SDK: ^2.4.3 (automatically installed with Composer)
 
 ## Installation
 
@@ -69,19 +67,19 @@ composer require monei/module-monei-payment
 2. Enable the module:
 
 ```bash
-php magento/bin/magento module:enable Monei_MoneiPayment
+bin/magento module:enable Monei_MoneiPayment
 ```
 
 3. Run setup upgrade:
 
 ```bash
-php magento/bin/magento setup:upgrade
+bin/magento setup:upgrade
 ```
 
 4. Flush cache:
 
 ```bash
-php magento/bin/magento cache:flush
+bin/magento cache:flush
 ```
 
 ### Manual Installation
@@ -91,13 +89,24 @@ php magento/bin/magento cache:flush
 1. Download the latest release from the [GitHub repository](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/releases)
 2. Extract the contents to your `app/code/Monei/MoneiPayment` directory
 3. Follow steps 2-4 from the Composer installation instructions
+4. Install the MONEI PHP SDK:
+
+```bash
+composer require monei/monei-php-sdk:^2.4.3
+```
 
 #### Option 2: Direct Download from Main Branch
 
 1. Download the [latest version](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/archive/refs/heads/main.zip) from the main branch
 2. Create a directory called `app/code/Monei/MoneiPayment` inside your Magento 2 project
 3. Unzip the downloaded archive in this directory
-4. Go to your Adobe Commerce (Magento 2) root directory and run:
+4. Install the MONEI PHP SDK:
+
+```bash
+composer require monei/monei-php-sdk:^2.4.3
+```
+
+5. Go to your Adobe Commerce (Magento 2) root directory and run:
 
 ```bash
 php bin/magento module:enable Monei_MoneiPayment
@@ -109,6 +118,7 @@ php bin/magento cache:clean
 ### Before You Begin
 
 When testing your integration:
+
 - Use your [test mode](https://docs.monei.com/docs/testing) API Key from [MONEI Dashboard → Settings → API Access](https://dashboard.monei.com/settings/api)
 - Check the status of test payments in your [MONEI Dashboard → Payments](https://dashboard.monei.com/payments) (in test mode)
 
@@ -122,90 +132,50 @@ When testing your integration:
 
 For detailed configuration instructions, please refer to our [official documentation](https://docs.monei.com/docs/e-commerce/adobe-commerce/).
 
+## Configuring Cloudflare Tunnel for Payment Callbacks
+
+MONEI sends payment callbacks to your store to update order statuses and process payments. During local development or when your server isn't publicly accessible, you can use Cloudflare Tunnel to securely expose your local development environment.
+
+For detailed setup instructions, see our [Cloudflare Tunnel Configuration Guide](docs/CLOUDFLARE_TUNNEL.md).
+
+## Available Commands
+
+This module provides several Magento CLI commands to help you manage MONEI payments and configurations. All commands are located in the `@Command` folder:
+
+```bash
+# Register a domain with Apple Pay through MONEI
+bin/magento monei:verify-apple-pay-domain <domain>
+
+# Update order status labels in the database
+bin/magento monei:update-status-labels
+```
+
+These commands are useful for testing, troubleshooting, and automating various MONEI payment operations from the command line.
+
+## MONEI PHP SDK
+
+This module integrates with the official [MONEI PHP SDK](https://github.com/MONEI/monei-php-sdk) version 2.4.3 or higher. The SDK provides a reliable and well-maintained interface to the MONEI API, handling:
+
+- Payment creation, retrieval, and management
+- Webhook signature verification
+- Error handling and exceptions
+- Proper API authentication
+
+The SDK is automatically installed when you install the module via Composer. If you installed the module manually, make sure to install the SDK separately as shown in the installation instructions.
+
+For detailed information on how to use the MONEI PHP SDK in your custom code, see the [official MONEI PHP SDK documentation](https://github.com/MONEI/monei-php-sdk).
+
 ## Demo
 
 Experience the module in action through our [live demo store](https://magento2-demo.monei.com/).
 
 ## Development
 
-### Docker Setup
+For comprehensive development information, please refer to our [Development Guide](docs/DEVELOPMENT.md). This includes instructions for setup, commands, Docker configuration, and troubleshooting.
 
-This module includes a Docker setup for local development with PHP 8.3:
+If you're interested in contributing to this project, please see our [Contribution Guidelines](docs/CONTRIBUTING.md).
 
-```bash
-# Start the Docker containers
-docker-compose up -d
-
-# Execute commands in the PHP container
-docker-compose exec php bash
-```
-
-For detailed Docker setup instructions, see the [Docker README](docker/README.md).
-
-### Code Quality Tools
-
-This module includes several code quality tools to maintain high standards:
-
-#### Prerequisites
-
-- PHP 8.1 or higher
-- Composer 2
-
-#### Setting up development environment
-
-```bash
-# Clone the repository
-git clone https://github.com/MONEI/MONEI-AdobeCommerce-Magento2.git
-cd MONEI-AdobeCommerce-Magento2
-
-# Install dependencies
-composer install
-```
-
-#### Available Commands
-
-```bash
-# Run all code quality checks (errors-only mode by default)
-composer lint
-
-# Fix coding standards automatically
-composer fix
-
-# Run PHP-CS-Fixer check
-composer cs-check
-
-# Run PHP-CS-Fixer auto-fix
-composer cs-fix
-
-# Run PHP_CodeSniffer check
-composer phpcs
-
-# Run PHP_CodeSniffer auto-fix
-composer phpcbf
-
-# Check for critical security issues
-./scripts/check-critical.sh
-```
-
-The code quality tools check for:
-- PHP syntax errors
-- PSR-12 and Magento 2 coding standards
-- Code style and formatting
-- Potential security vulnerabilities
-- Critical issues and bugs
-- PHPDoc comments compliance
-
-### Environment Variables
-
-Customize the linting and fixing scripts with these environment variables:
-
-```bash
-# Skip PHP-CS-Fixer checks when running the lint script
-SKIP_CS_FIXER=1 composer lint
-
-# Run fix script with only CS Fixer (skips PHP_CodeSniffer)
-FIX_CS_ONLY=1 composer fix
-```
+For code quality standards and tools, check our [Code Quality Guide](docs/CODE_QUALITY.md) and [pretty-php documentation](docs/PRETTY-PHP.md).
 
 ## Troubleshooting
 
@@ -217,19 +187,11 @@ If you encounter issues with the module:
 4. Clear your Magento cache and run setup:upgrade again
 5. Check the Magento logs for any error messages
 
-For more detailed troubleshooting, visit our [developer documentation](docs/DEVELOPMENT.md).
+For more detailed troubleshooting, visit our [Development Guide](docs/DEVELOPMENT.md#troubleshooting).
 
 ## Contributing
 
-We welcome contributions to improve this module! Please:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes and commit (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-Please ensure your code follows our coding standards and passes all tests.
+We welcome contributions to improve this module! Please see our [Contribution Guidelines](docs/CONTRIBUTING.md) for details.
 
 ## License
 
@@ -245,33 +207,9 @@ For questions or issues:
 
 ## Code Validation
 
-The MONEI Payment Module for Adobe Commerce (Magento 2) adheres to Magento Marketplace standards. We provide simple commands to validate and fix code:
-
-### Validation
-
-```bash
-# Run complete validation with all severity levels
-composer lint
-
-# Check only Marketplace critical issues (severity 10)
-composer lint:marketplace
-
-# Run PHP style validation
-composer lint:style
-
-# Run both marketplace and style validations
-composer validate
-
-# Generate detailed reports in reports/ directory
-composer report
-```
-
-### Fixing Code Issues
+The MONEI Payment Module for Adobe Commerce (Magento 2) adheres to Magento Marketplace standards. For detailed information about our code validation tools and processes, see our [Code Quality Guide](docs/CODE_QUALITY.md).
 
 ```bash
 # Fix coding standards and style issues automatically
-composer fix
+composer fix:all
 ```
-
-For detailed information about Magento Marketplace validation, please see [docs/MARKETPLACE_VALIDATION.md](docs/MARKETPLACE_VALIDATION.md).
-

@@ -1,4 +1,4 @@
-.payment-method#method_monei_mbway_redirect .payment-method-title label span.monei-payment-icon{
-    background: url(../img/mbway.svg) no-repeat;
-    width: 45px;
+/* MB WAY styling */
+.monei-mbway-placeholder {
+  display: block;
 }
