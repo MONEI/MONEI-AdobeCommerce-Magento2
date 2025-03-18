@@ -11,7 +11,7 @@
   },
   "plugins": {
     "@release-it/bumper": {
-      "out": ["composer.json", "etc/module.xml"]
+      "out": ["composer.json", {"file": "etc/module.xml", "path": "config > module.setup_version"}]
     },
     "@release-it/conventional-changelog": {
       "preset": "angular",
