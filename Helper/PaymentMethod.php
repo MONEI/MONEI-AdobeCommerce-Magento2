@@ -360,7 +360,8 @@ class PaymentMethod
     {
         try {
             $params = [
-                '_secure' => $this->request->isSecure()
+                '_secure' => $this->request->isSecure(),
+                'area' => 'frontend'  // Force using frontend area for assets
             ];
 
             // Start store emulation to ensure proper area context
