@@ -11,40 +11,21 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky install",
-    "pre-commit": "lint-staged"
-  },
-  "release-it": {
-    "git": {
-      "tagName": "${version}",
-      "commitMessage": "chore: release v${version}"
-    },
-    "github": {
-      "release": true
-    },
-    "npm": {
-      "publish": false
-    },
-    "plugins": {
-      "@release-it/bumper": {
-        "out": [
-          "composer.json",
-          "etc/module.xml"
-        ]
-      }
-    },
-    "hooks": {
-      "after:bump": "git add -A"
-    }
+    "pre-commit": "lint-staged",
+    "commitlint": "commitlint --edit"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.8.0",
+    "@commitlint/config-conventional": "^19.8.0",
     "@prettier/plugin-php": "^0.21.0",
-    "@prettier/plugin-xml": "^3.1.1",
-    "@release-it/bumper": "^3.0.1",
-    "husky": "^8.0.3",
-    "lint-staged": "^15.2.2",
+    "@prettier/plugin-xml": "^3.4.1",
+    "@release-it/bumper": "^7.0.2",
+    "@release-it/conventional-changelog": "^10.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.0",
     "prettier": "^3.5.3",
-    "prettier-plugin-organize-imports": "^3.2.4",
-    "release-it": "^14.12.4"
+    "prettier-plugin-organize-imports": "^4.1.0",
+    "release-it": "^18.1.2"
   },
   "packageManager": "yarn@4.7.0",
   "lint-staged": {

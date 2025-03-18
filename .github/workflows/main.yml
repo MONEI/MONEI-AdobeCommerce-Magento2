@@ -14,7 +14,32 @@ jobs:
         with:
           type: "zip"
           filename: "monei-module-monei-payment-${{github.event.release.tag_name}}.zip"
-          exclusions: "*.git*"
+          exclusions: |
+            *.git*
+            *.github*
+            *Test*
+            *tests*
+            .husky/*
+            .yarn/*
+            .vscode/*
+            .cursor/*
+            docs/*
+            vendor/*
+            composer.lock
+            package.json
+            yarn.lock
+            .yarnrc.yml
+            .nvmrc
+            .prettierrc
+            .prettierignore
+            prettyphp.json
+            pretty-php.phar*
+            .cursorignore
+            commitlint.config.js
+            README.md
+            CHANGELOG.md
+            LICENSE.md
+            bin
 
       - name: Upload Release
         uses: ncipollo/release-action@v1.12.0
