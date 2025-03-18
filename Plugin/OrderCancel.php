@@ -51,8 +51,7 @@ class OrderCancel
     {
         try {
             // Skip non-Monei payments
-            if (
-                !$result->getPayment() ||
+            if (!$result->getPayment() ||
                 !in_array($result->getPayment()->getMethod(), Monei::PAYMENT_METHODS_MONEI)
             ) {
                 return $result;
@@ -85,8 +84,7 @@ class OrderCancel
             // Find and update the most recent cancellation status entries
             foreach ($historyEntries as $history) {
                 // Check for any entries that match the current status or have cancellation keywords
-                if (
-                    !$history->getIsCustomerNotified() && (
+                if (!$history->getIsCustomerNotified() && (
                         $history->getStatus() === $result->getStatus() ||
                         ($history->getComment() && (
                             stripos((string) $history->getComment(), 'cancel') !== false ||

@@ -15,8 +15,7 @@ Run these scripts from the module directory:
 - `composer analyze`: Run PHPStan static analysis
 - `composer format:check`: Check PHP code formatting
 - `composer format:fix`: Fix PHP code formatting
-- `composer fix:all`: Run all code fixers (cs:fix and format:fix)
-- `composer check:all`: Run all code checks (cs:lint, analyze, and format:check)
+- `composer check:all`: Run all code checks (cs:lint, analyze)
 
 ## Custom CLI Commands
 

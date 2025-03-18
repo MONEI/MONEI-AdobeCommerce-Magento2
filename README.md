@@ -226,7 +226,7 @@ For comprehensive development information, please refer to our [Development Guid
 
 If you're interested in contributing to this project, please see our [Contribution Guidelines](docs/CONTRIBUTING.md).
 
-For code quality standards and tools, check our [Code Quality Guide](docs/CODE_QUALITY.md) and [pretty-php documentation](docs/PRETTY-PHP.md).
+For code quality standards and tools, check our [Code Quality Guide](docs/CODE_QUALITY.md).
 
 ## Troubleshooting
 
@@ -262,5 +262,5 @@ The MONEI Payment Module for Adobe Commerce (Magento 2) adheres to Magento Marke
 
 ```bash
 # Fix coding standards and style issues automatically
-composer fix:all
+composer cs:fix
 ```

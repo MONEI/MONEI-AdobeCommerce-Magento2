@@ -482,8 +482,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                 if (!$history->getIsCustomerNotified() && $history->getComment()) {
                     $comment = $history->getComment();
                     // Check for various capture-related texts
-                    if (
-                        stripos($comment, 'Captured amount') !== false ||
+                    if (stripos($comment, 'Captured amount') !== false ||
                         stripos($comment, 'Invoice') !== false ||
                         stripos($comment, 'Capture') !== false
                     ) {

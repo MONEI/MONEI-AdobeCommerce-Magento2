@@ -88,7 +88,7 @@ class ApplePayVerification
         // Check if this is a request for the Apple Pay verification file
         if ($pathInfo === '/.well-known/apple-developer-merchantid-domain-association') {
             $this->serveApplePayVerificationFile();
-
+            // Return null to stop further execution
             return null;
         }
     }
@@ -109,18 +109,18 @@ class ApplePayVerification
                 $this->response->setHeader('Content-Type', 'text/plain');
                 $this->response->setBody($fileContent);
                 $this->response->sendResponse();
-                exit;
+                return;
             } else {
                 $this->logger->error('[ApplePay] Failed to fetch verification file. Status code: ' . $statusCode);
                 $this->response->setHttpResponseCode($statusCode);
                 $this->response->sendResponse();
-                exit;
+                return;
             }
         } catch (\Exception $e) {
             $this->logger->error('[ApplePay] Error serving verification file: ' . $e->getMessage());
             $this->response->setHttpResponseCode(500);
             $this->response->sendResponse();
-            exit;
+            return;
         }
     }
 }
