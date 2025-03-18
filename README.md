@@ -258,9 +258,9 @@ For questions or issues:
 
 ## Code Validation
 
-The MONEI Payment Module for Adobe Commerce (Magento 2) adheres to Magento Marketplace standards. For detailed information about our code validation tools and processes, see our [Code Quality Guide](docs/CODE_QUALITY.md).
+The MONEI Payment Module for Adobe Commerce (Magento 2) adheres to Magento Marketplace standards.
 
 ```bash
 # Fix coding standards and style issues automatically
-composer fix:all
+composer cs:fix
 ```

@@ -5,6 +5,9 @@ namespace Monei\MoneiPayment\Test\Unit\Plugin;
 use Magento\Framework\App\Request\Http as RequestHttp;
 use Magento\Framework\App\Response\Http as ResponseHttp;
 use Magento\Framework\App\FrontControllerInterface;
+use Magento\Framework\Controller\Result\Raw;
+use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\HTTP\Client\Curl;
 use Magento\Framework\Module\Dir\Reader;
@@ -62,6 +65,21 @@ class ApplePayVerificationTest extends TestCase
     private $curlMock;
 
     /**
+     * @var ResultFactory|MockObject
+     */
+    private $resultFactoryMock;
+
+    /**
+     * @var Raw|MockObject
+     */
+    private $resultRawMock;
+
+    /**
+     * @var ManagerInterface|MockObject
+     */
+    private $eventManagerMock;
+
+    /**
      * Set up test environment
      */
     protected function setUp(): void
@@ -73,13 +91,39 @@ class ApplePayVerificationTest extends TestCase
         $this->frontControllerMock = $this->createMock(FrontControllerInterface::class);
         $this->requestMock = $this->createMock(RequestHttp::class);
         $this->curlMock = $this->createMock(Curl::class);
+        $this->resultFactoryMock = $this->createMock(ResultFactory::class);
+        $this->resultRawMock = $this->createMock(Raw::class);
+        $this->eventManagerMock = $this->createMock(ManagerInterface::class);
+
+        // Configure ResultFactory mock to return Raw result
+        $this
+            ->resultFactoryMock
+            ->method('create')
+            ->with(ResultFactory::TYPE_RAW)
+            ->willReturn($this->resultRawMock);
+
+        // Configure ResultRaw mock to be chainable
+        $this
+            ->resultRawMock
+            ->method('setHttpResponseCode')
+            ->willReturnSelf();
+        $this
+            ->resultRawMock
+            ->method('setHeader')
+            ->willReturnSelf();
+        $this
+            ->resultRawMock
+            ->method('setContents')
+            ->willReturnSelf();
 
         $this->plugin = new ApplePayVerification(
             $this->fileMock,
             $this->moduleReaderMock,
             $this->loggerMock,
             $this->responseMock,
-            $this->curlMock
+            $this->curlMock,
+            $this->resultFactoryMock,
+            $this->eventManagerMock
         );
     }
 
@@ -92,14 +136,8 @@ class ApplePayVerificationTest extends TestCase
         $this
             ->requestMock
             ->expects($this->once())
-            ->method('getPathInfo')
+            ->method('getRequestUri')
             ->willReturn('/catalog/product/view');
-
-        // The file system should not be accessed
-        $this
-            ->fileMock
-            ->expects($this->never())
-            ->method('isExists');
 
         // Execute the plugin
         $result = $this->plugin->beforeDispatch($this->frontControllerMock, $this->requestMock);
@@ -117,7 +155,7 @@ class ApplePayVerificationTest extends TestCase
         $this
             ->requestMock
             ->expects($this->once())
-            ->method('getPathInfo')
+            ->method('getRequestUri')
             ->willReturn('/.well-known/apple-developer-merchantid-domain-association');
 
         // Setup curl mock for successful response
@@ -139,30 +177,40 @@ class ApplePayVerificationTest extends TestCase
             ->method('getBody')
             ->willReturn('Apple Pay verification file content');
 
-        // Expect specific headers to be set
+        // Expect the event manager to be called
         $this
-            ->responseMock
+            ->eventManagerMock
+            ->expects($this->once())
+            ->method('dispatch')
+            ->with('controller_action_predispatch');
+
+        // Expect the result to be prepared
+        $this
+            ->resultRawMock
+            ->expects($this->once())
+            ->method('setHttpResponseCode')
+            ->with(200)
+            ->willReturnSelf();
+
+        $this
+            ->resultRawMock
             ->expects($this->once())
             ->method('setHeader')
-            ->with('Content-Type', 'text/plain');
+            ->with('Content-Type', 'text/plain')
+            ->willReturnSelf();
 
-        // Expect the response body to be set
         $this
-            ->responseMock
+            ->resultRawMock
             ->expects($this->once())
-            ->method('setBody')
-            ->with('Apple Pay verification file content');
+            ->method('setContents')
+            ->with('Apple Pay verification file content')
+            ->willReturnSelf();
 
-        // We can't fully test the method because it calls exit()
-        try {
-            $this->plugin->beforeDispatch($this->frontControllerMock, $this->requestMock);
-        } catch (\Exception $e) {
-            $this->fail('An exception was thrown: ' . $e->getMessage());
-        }
+        // Execute the plugin
+        $result = $this->plugin->beforeDispatch($this->frontControllerMock, $this->requestMock);
 
-        $this->markTestIncomplete(
-            'This test cannot fully verify the method due to the exit() call.'
-        );
+        // The plugin should return a ResultInterface
+        $this->assertSame($this->resultRawMock, $result);
     }
 
     /**
@@ -174,7 +222,7 @@ class ApplePayVerificationTest extends TestCase
         $this
             ->requestMock
             ->expects($this->once())
-            ->method('getPathInfo')
+            ->method('getRequestUri')
             ->willReturn('/.well-known/apple-developer-merchantid-domain-association');
 
         // Setup curl mock for failed response
@@ -195,19 +243,21 @@ class ApplePayVerificationTest extends TestCase
             ->loggerMock
             ->expects($this->once())
             ->method('error')
-            ->with($this->stringContains('Failed to fetch Apple Pay verification file'));
+            ->with($this->stringContains('[ApplePay] Failed to fetch verification file'));
 
-        // Expect error status code to be set
+        // Expect error status code to be set on result
         $this
-            ->responseMock
+            ->resultRawMock
             ->expects($this->once())
             ->method('setHttpResponseCode')
-            ->with(404);
+            ->with(404)
+            ->willReturnSelf();
 
-        // We can't fully test the method because it calls exit()
-        $this->markTestIncomplete(
-            'This test cannot fully verify the method due to the exit() call.'
-        );
+        // Execute the plugin
+        $result = $this->plugin->beforeDispatch($this->frontControllerMock, $this->requestMock);
+
+        // The plugin should return a ResultInterface
+        $this->assertSame($this->resultRawMock, $result);
     }
 
     /**
@@ -219,7 +269,7 @@ class ApplePayVerificationTest extends TestCase
         $this
             ->requestMock
             ->expects($this->once())
-            ->method('getPathInfo')
+            ->method('getRequestUri')
             ->willReturn('/.well-known/apple-developer-merchantid-domain-association');
 
         // Setup curl mock to throw exception
@@ -235,18 +285,20 @@ class ApplePayVerificationTest extends TestCase
             ->loggerMock
             ->expects($this->once())
             ->method('error')
-            ->with($this->stringContains('Error serving Apple Pay verification file'));
+            ->with($this->stringContains('[ApplePay] Error serving verification file'));
 
-        // Expect 500 status code to be set
+        // Expect 500 status code to be set on result
         $this
-            ->responseMock
+            ->resultRawMock
             ->expects($this->once())
             ->method('setHttpResponseCode')
-            ->with(500);
+            ->with(500)
+            ->willReturnSelf();
 
-        // We can't fully test the method because it calls exit()
-        $this->markTestIncomplete(
-            'This test cannot fully verify the method due to the exit() call.'
-        );
+        // Execute the plugin
+        $result = $this->plugin->beforeDispatch($this->frontControllerMock, $this->requestMock);
+
+        // The plugin should return a ResultInterface
+        $this->assertSame($this->resultRawMock, $result);
     }
 }

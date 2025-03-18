@@ -940,6 +940,17 @@
     />
   </type>
 
+  <type name="Monei\MoneiPayment\Plugin\ApplePayVerification">
+    <arguments>
+      <argument name="resultFactory" xsi:type="object"
+        >Magento\Framework\Controller\ResultFactory</argument
+      >
+      <argument name="eventManager" xsi:type="object"
+        >Magento\Framework\Event\ManagerInterface</argument
+      >
+    </arguments>
+  </type>
+
   <preference
     for="Monei\MoneiPayment\Api\Service\VerifyApplePayDomainInterface"
     type="Monei\MoneiPayment\Service\Api\VerifyApplePayDomain"
