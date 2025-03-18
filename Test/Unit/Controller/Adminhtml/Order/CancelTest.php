@@ -52,6 +52,7 @@ class MockPayment extends Payment implements \ArrayAccess
         return isset($this->data[$offset]);
     }
 
+    #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         return $this->data[$offset] ?? null;
