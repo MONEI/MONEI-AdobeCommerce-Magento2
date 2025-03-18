@@ -53,7 +53,7 @@
     }
   },
   "scripts": {
-    "test": "./bin test/unit",
+    "test": "./bin test/unit --testdox",
     "test:coverage": "./bin test/unit-coverage",
     "test:xdebug": "./bin test/unit-xdebug",
     "cs:lint": "./bin phpcs",

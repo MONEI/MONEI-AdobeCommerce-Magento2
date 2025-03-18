@@ -16,12 +16,14 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Test\Unit\Service;
 
 use GuzzleHttp\ClientFactory;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Model\Config\Source\Mode;
 use Monei\MoneiPayment\Model\Config\Source\ModuleVersion;
+use Monei\MoneiPayment\Model\MoneiApiClient;
 use Monei\MoneiPayment\Service\AbstractService;
 use Monei\MoneiPayment\Service\Logger;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -78,6 +80,11 @@ class AbstractServiceTest extends TestCase
      */
     private $_moduleVersionMock;
 
+    /**
+     * @var MoneiApiClient|MockObject
+     */
+    private $_apiClientMock;
+
     protected function setUp(): void
     {
         $this->_clientFactoryMock = $this->createMock(ClientFactory::class);
@@ -87,6 +94,7 @@ class AbstractServiceTest extends TestCase
         $this->_serializerMock = $this->createMock(SerializerInterface::class);
         $this->_loggerMock = $this->createMock(Logger::class);
         $this->_moduleVersionMock = $this->createMock(ModuleVersion::class);
+        $this->_apiClientMock = $this->createMock(MoneiApiClient::class);
 
         $this->_abstractServiceMock = $this->getMockForAbstractClass(
             AbstractService::class,
@@ -180,5 +188,132 @@ class AbstractServiceTest extends TestCase
         $reflectionMethod->setAccessible(true);
 
         return $reflectionMethod->invokeArgs($object, $params);
+    }
+
+    /**
+     * Test behavior when API call is successful
+     *
+     * @return void
+     */
+    public function testExecuteCallsApiWithCorrectParameters(): void
+    {
+        $testData = ['id' => 'test123', 'amount' => 100.0];
+        $operationName = 'testOperation';
+        $expectedResult = ['id' => 'test123', 'status' => 'SUCCEEDED'];
+
+        // Set up the _apiCall method to respond with our expected result
+        $this
+            ->_abstractServiceMock
+            ->expects($this->once())
+            ->method('apiCall')
+            ->with($operationName, $testData)
+            ->willReturn($expectedResult);
+
+        // Use reflection to access the executeApiCall method
+        $reflectionMethod = new \ReflectionMethod(AbstractService::class, 'executeApiCall');
+        $reflectionMethod->setAccessible(true);
+
+        $result = $reflectionMethod->invoke($this->_abstractServiceMock, $operationName, $testData);
+
+        $this->assertEquals($expectedResult, $result);
+    }
+
+    /**
+     * Test behavior when API call fails
+     *
+     * @return void
+     */
+    public function testExecuteApiCallRethrowsExceptionWithContext(): void
+    {
+        $testData = ['id' => 'test123', 'amount' => 100.0];
+        $operationName = 'testOperation';
+        $errorMessage = 'API Error';
+
+        // Set up the _apiCall method to throw an exception
+        $this
+            ->_abstractServiceMock
+            ->expects($this->once())
+            ->method('apiCall')
+            ->with($operationName, $testData)
+            ->willThrowException(new \Exception($errorMessage));
+
+        // The logger should be called with the error
+        $this
+            ->_loggerMock
+            ->expects($this->once())
+            ->method('logApiError')
+            ->with($operationName, $errorMessage, $testData);
+
+        // Use reflection to access the executeApiCall method
+        $reflectionMethod = new \ReflectionMethod(AbstractService::class, 'executeApiCall');
+        $reflectionMethod->setAccessible(true);
+
+        $this->expectException(LocalizedException::class);
+        $this->expectExceptionMessage('An error occurred during API call: ' . $errorMessage);
+
+        $reflectionMethod->invoke($this->_abstractServiceMock, $operationName, $testData);
+    }
+
+    /**
+     * Test that API key configuration is properly applied
+     *
+     * @return void
+     */
+    public function testApiClientCreatedWithCorrectApiKey(): void
+    {
+        $apiKey = 'test_api_key_123';
+        $storeId = 1;
+
+        // Set up the config mock to return our test API key
+        $this
+            ->_moduleConfigMock
+            ->expects($this->once())
+            ->method('getApiKey')
+            ->with($storeId)
+            ->willReturn($apiKey);
+
+        // The API client should be initialized with the correct key
+        $this
+            ->_apiClientMock
+            ->expects($this->once())
+            ->method('setApiKey')
+            ->with($apiKey);
+
+        // Use reflection to access the getApiClient method
+        $reflectionMethod = new \ReflectionMethod(AbstractService::class, 'getApiClient');
+        $reflectionMethod->setAccessible(true);
+
+        $reflectionMethod->invoke($this->_abstractServiceMock, $storeId);
+    }
+
+    /**
+     * Test that sandbox mode configuration is properly applied
+     *
+     * @return void
+     */
+    public function testApiClientSandboxModeIsConfigured(): void
+    {
+        $storeId = 1;
+
+        // Set up the config mock to return sandbox mode as enabled
+        $this
+            ->_moduleConfigMock
+            ->expects($this->once())
+            ->method('isSandboxMode')
+            ->with($storeId)
+            ->willReturn(true);
+
+        // The API client should be configured for sandbox mode
+        $this
+            ->_apiClientMock
+            ->expects($this->once())
+            ->method('setSandboxMode')
+            ->with(true);
+
+        // Use reflection to access the getApiClient method
+        $reflectionMethod = new \ReflectionMethod(AbstractService::class, 'getApiClient');
+        $reflectionMethod->setAccessible(true);
+
+        $reflectionMethod->invoke($this->_abstractServiceMock, $storeId);
     }
 }
