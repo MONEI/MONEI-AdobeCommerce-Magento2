@@ -109,10 +109,10 @@ composer require monei/monei-php-sdk:^2.4.3
 5. Go to your Adobe Commerce (Magento 2) root directory and run:
 
 ```bash
-php bin/magento module:enable Monei_MoneiPayment
-php bin/magento setup:upgrade
-php bin/magento setup:static-content:deploy
-php bin/magento cache:clean
+bin/magento module:enable Monei_MoneiPayment
+bin/magento setup:upgrade
+bin/magento setup:static-content:deploy
+bin/magento cache:clean
 ```
 
 ### Before You Begin
