@@ -108,32 +108,6 @@
   margin-right: 5px;
 }
 
-/* Fix for small screens */
-@media only screen and (max-width: 767px) {
-  .monei-icon-container {
-    flex-direction: column;
-    align-items: flex-start;
-    padding-top: 5px;
-  }
-
-  .monei-icon-container .card-details {
-    margin-top: 8px;
-  }
-
-  .payment-method.monei-payments .payment-method-title label {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .monei-icon-container img.monei-icon {
-    margin-bottom: 5px;
-  }
-
-  .payment-method .payment-method-title label img.payment-icon {
-    margin-top: 5px;
-  }
-}
-
 .payment-method-title .monei-payment-icon {
   display: inline-block;
   background-position: center;
@@ -157,14 +131,6 @@
   margin-right: 4px;
   margin-bottom: 4px;
   object-fit: contain;
-}
-
-@media only screen and (max-width: 767px) {
-  .payment-method.monei-payment-methods .monei-card-brands {
-    display: flex;
-    margin-top: 8px;
-    margin-left: 0;
-  }
 }
 
 .monei-available-cards {
