@@ -1,0 +1,25 @@
+# Directories
+/.git export-ignore
+/.github export-ignore
+/.husky export-ignore
+/.yarn export-ignore
+/.vscode export-ignore
+/.cursor export-ignore
+/build export-ignore
+/vendor export-ignore
+/Test export-ignore
+
+# Files
+/.gitignore export-ignore
+/.yarnrc.yml export-ignore
+/.nvmrc export-ignore
+/.prettierrc export-ignore
+/.prettierignore export-ignore
+/.cursorignore export-ignore
+/composer.lock export-ignore
+/package.json export-ignore
+/yarn.lock export-ignore
+/prettyphp.json export-ignore
+/pretty-php.phar* export-ignore
+/commitlint.config.js export-ignore
+/bin export-ignore

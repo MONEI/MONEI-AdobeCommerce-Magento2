@@ -18,7 +18,6 @@ jobs:
             *.git*
             *.github*
             *Test*
-            *tests*
             .husky/*
             .yarn/*
             .vscode/*
