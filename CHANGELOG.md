@@ -1,5 +1,10 @@
 # Changelog
 
+## <small>2.1.2 (2025-03-18)</small>
+
+* chore: Update code quality tools and documentation ([0d74922](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/0d74922))
+* chore: Update README.md installation instructions for clarity ([62ba8c0](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/62ba8c0))
+
 ## <small>2.1.1 (2025-03-18)</small>
 
 * refactor: Remove outdated media queries from monei-payment.css ([f016b91](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/f016b91))

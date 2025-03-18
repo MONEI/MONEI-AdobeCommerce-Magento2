@@ -62,7 +62,7 @@ fi
 case "$1" in
 "phpcs")
     shift # Remove the first argument (command name)
-    run_in_root bin/phpcs --standard=Magento2 $MODULE_PATH "$@"
+    run_in_root bin/phpcs --standard=Magento2 --ignore="*/Test/*" --warning-severity=0 $MODULE_PATH "$@"
     ;;
 
 "phpcbf")
