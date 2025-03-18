@@ -1,5 +1,10 @@
 # Changelog
 
+## <small>2.1.1 (2025-03-18)</small>
+
+* refactor: Remove outdated media queries from monei-payment.css ([f016b91](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/f016b91))
+* chore: Update Adobe Listing documentation to include simplified Apple Pay integration ([30b292b](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/30b292b))
+
 ## 2.1.0 (2025-03-18)
 
 * feat: Enhance Apple Pay domain verification with store ID support ([f507cac](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/f507cac))
