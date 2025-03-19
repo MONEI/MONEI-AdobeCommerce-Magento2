@@ -115,16 +115,15 @@ bin/magento cache:clean
 Alternatively, you can use this one-line command to download and extract the latest release:
 
 ```bash
-curl -L https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/archive/refs/heads/main.zip -o monei.zip && \
+curl -L https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/releases/latest/download/monei-module-monei-payment.zip -o monei.zip && \
 mkdir -p app/code/Monei/MoneiPayment && \
-unzip monei.zip && \
-cp -r MONEI-AdobeCommerce-Magento2-main/* app/code/Monei/MoneiPayment/ && \
-rm -rf monei.zip MONEI-AdobeCommerce-Magento2-main
+unzip monei.zip -d app/code/Monei/MoneiPayment && \
+rm monei.zip
 ```
 
 #### Option 2: Via Main Branch
 
-1. Download the [latest version](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/archive/refs/heads/main.zip) from the main branch
+1. Download the [latest version](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/releases/latest/download/monei-module-monei-payment.zip) from the main branch
 2. Create a directory called `app/code/Monei/MoneiPayment` inside your Magento 2 project
 3. Unzip the downloaded archive in this directory
 4. Install the MONEI PHP SDK:
