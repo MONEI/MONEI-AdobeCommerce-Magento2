@@ -33,6 +33,7 @@ show_help() {
     echo "  phpcs                          Run PHP CodeSniffer with Magento2 standard"
     echo "  phpcbf                         Auto-fix PHP CodeSniffer errors"
     echo "  analyse                        Run PHPStan static analysis"
+    echo "  analyse [file]                 Run PHPStan static analysis on specific file"
     echo "  phpstan                        Alias for analyse command"
     echo "  i18n:collect-phrases           Collect translation phrases to CSV"
     echo "  test                           Run all unit tests with additional args"
@@ -48,6 +49,7 @@ show_help() {
     echo "  ./bin test/unit Model/Service  Run unit tests for the Service directory"
     echo "  ./bin test/unit Model/Service --filter testMethod  Run specific test method"
     echo "  ./bin test/unit --debug        Run unit tests with debug output"
+    echo "  ./bin analyse Model/Service/PaymentService.php  Analyze a specific file"
     echo ""
     echo "Module path: $MODULE_PATH"
 }
@@ -62,7 +64,7 @@ fi
 case "$1" in
 "phpcs")
     shift # Remove the first argument (command name)
-    run_in_root bin/phpcs --standard=Magento2 --ignore="*/Test/*" --warning-severity=0 $MODULE_PATH "$@"
+    run_in_root bin/phpcs --standard=Magento2 --warning-severity=0 $MODULE_PATH "$@"
     ;;
 
 "phpcbf")
@@ -72,7 +74,25 @@ case "$1" in
 
 "analyse" | "phpstan")
     shift # Remove the first argument (command name)
-    run_in_root bin/analyse $MODULE_PATH "$@"
+
+    # Check if a file path is provided
+    if [ $# -gt 0 ] && [[ ! "$1" == -* ]]; then
+        # It's a file path
+        file_path="$1"
+        shift # Remove the file path argument
+
+        # Check if it's an absolute path or relative to module
+        if [[ "$file_path" == /* ]]; then
+            # Absolute path
+            run_in_root bin/analyse "$file_path" "$@"
+        else
+            # Relative to module
+            run_in_root bin/analyse "$MODULE_PATH/$file_path" "$@"
+        fi
+    else
+        # No file specified, analyze entire module
+        run_in_root bin/analyse $MODULE_PATH "$@"
+    fi
     ;;
 
 "i18n:collect-phrases")

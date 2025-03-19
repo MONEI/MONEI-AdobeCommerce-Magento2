@@ -35,40 +35,6 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 /**
- * Mock Payment class that behaves both as an object and an array for testing purposes
- */
-class MockPayment extends Payment implements \ArrayAccess
-{
-    private $data = [];
-
-    public function __construct(array $data = [])
-    {
-        $this->data = $data;
-    }
-
-    // ArrayAccess implementation
-    public function offsetExists($offset): bool
-    {
-        return isset($this->data[$offset]);
-    }
-
-    public function offsetGet($offset)
-    {
-        return $this->data[$offset] ?? null;
-    }
-
-    public function offsetSet($offset, $value): void
-    {
-        $this->data[$offset] = $value;
-    }
-
-    public function offsetUnset($offset): void
-    {
-        unset($this->data[$offset]);
-    }
-}
-
-/**
  * Test case for Admin Cancel Controller.
  */
 class CancelTest extends TestCase

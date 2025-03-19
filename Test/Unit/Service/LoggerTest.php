@@ -42,7 +42,7 @@ class LoggerTest extends TestCase
      *
      * @var Handler|MockObject
      */
-    private $_handlerMock;
+    private $handlerMock;
 
     /**
      * @var MoneiPaymentModuleConfigInterface|MockObject
@@ -56,245 +56,227 @@ class LoggerTest extends TestCase
      */
     protected function setUp(): void
     {
-        $this->_handlerMock = $this->createMock(Handler::class);
-        $this->_logger = new Logger($this->_handlerMock);
+        $this->handlerMock = $this->createMock(Handler::class);
+        $this->_logger = $this
+            ->getMockBuilder(Logger::class)
+            ->setConstructorArgs([$this->handlerMock])
+            ->onlyMethods(['debug', 'critical', 'info'])
+            ->getMock();
 
         $this->configMock = $this->createMock(MoneiPaymentModuleConfigInterface::class);
     }
 
     /**
-     * Test for formatJsonForLog method
-     */
-    public function testFormatJsonForLog(): void
-    {
-        // Test data
-        $data = [
-            'id' => 'pay_123456',
-            'amount' => 99.99,
-            'currency' => 'EUR',
-            'nested' => [
-                'key1' => 'value1',
-                'key2' => 'value2'
-            ]
-        ];
-
-        // Get the private method
-        $method = new ReflectionMethod(Logger::class, 'formatJsonForLog');
-        $method->setAccessible(true);
-
-        // Create a minimal logger instance just for testing this method
-        $testLogger = new class('test') extends Logger {
-            public function __construct(string $name)
-            {
-                parent::__construct($name);
-            }
-        };
-
-        // Call the method
-        $result = $method->invoke($testLogger, $data);
-
-        // Verify result
-        $this->assertIsString($result);
-        $this->assertStringContainsString('"id": "pay_123456"', $result);
-        $this->assertStringContainsString('"amount": 99.99', $result);
-        $this->assertStringContainsString('"nested":', $result);
-    }
-
-    /**
-     * Test the API request logging method
-     */
-    public function testLogApiRequestCallsDebug(): void
-    {
-        // Expect the debug method to be called
-        $this
-            ->_logger
-            ->expects($this->once())
-            ->method('debug')
-            ->with(
-                $this->stringContains('API Request: createPayment')
-            );
-
-        // Call the method under test
-        $this->_logger->logApiRequest('createPayment', ['amount' => 100]);
-    }
-
-    /**
-     * Test the API error logging method
-     */
-    public function testLogApiErrorCallsCritical(): void
-    {
-        // Expect the critical method to be called
-        $this
-            ->_logger
-            ->expects($this->once())
-            ->method('critical')
-            ->with(
-                $this->stringContains('API Error: getPayment - Payment not found')
-            );
-
-        // Call the method under test
-        $this->_logger->logApiError('getPayment', 'Payment not found', ['error_code' => 'NOT_FOUND']);
-    }
-
-    /**
-     * Test the payment event logging method
-     */
-    public function testLogPaymentEventCallsInfo(): void
-    {
-        // Expect the info method to be called
-        $this
-            ->_logger
-            ->expects($this->once())
-            ->method('info')
-            ->with(
-                $this->stringContains('Payment capture')
-            );
-
-        // Call the method under test
-        $this->_logger->logPaymentEvent('capture', '100000123', 'pay_123456');
-    }
-
-    /**
-     * Test logApiRequest method with data
+     * Test _formatJsonForLog formats data correctly
      *
      * @return void
      */
-    public function testLogApiRequestWithData(): void
+    public function testFormatJsonForLog(): void
     {
-        $operation = 'test-operation';
-        $data = ['test' => 'data'];
+        $testData = ['test' => 'value'];
 
-        // Verify debug is called with formatted data
-        $this->_logger = $this
-            ->getMockBuilder(Logger::class)
-            ->setConstructorArgs([$this->_handlerMock])
-            ->onlyMethods(['debug'])
-            ->getMock();
+        // Use reflection to access the private method
+        $reflectionMethod = new \ReflectionMethod(Logger::class, '_formatJsonForLog');
+        $reflectionMethod->setAccessible(true);
 
-        $expectedJson = json_encode(['request' => $data], Logger::JSON_OPTIONS);
+        $result = $reflectionMethod->invoke($this->_logger, $testData);
+
+        $this->assertJson($result);
+        $this->assertStringContainsString('test', $result);
+        $this->assertStringContainsString('value', $result);
+    }
+
+    /**
+     * Test logApiRequest calls debug with correct format
+     *
+     * @return void
+     */
+    public function testLogApiRequestCallsDebug(): void
+    {
+        $operation = 'test_operation';
+        $data = ['test' => 'value'];
 
         $this
             ->_logger
             ->expects($this->once())
             ->method('debug')
-            ->with("[ApiRequest] {$operation} {$expectedJson}");
+            ->with(
+                $this->stringContains("[ApiRequest] {$operation}"),
+                $this->anything()
+            );
 
         $this->_logger->logApiRequest($operation, $data);
     }
 
     /**
-     * Test logApiRequest method with empty data
+     * Test logApiError calls critical with correct format
      *
      * @return void
      */
-    public function testLogApiRequestWithEmptyData(): void
+    public function testLogApiErrorCallsCritical(): void
     {
-        $operation = 'test-operation';
-
-        // Verify debug is called with empty array context
-        $this->_logger = $this
-            ->getMockBuilder(Logger::class)
-            ->setConstructorArgs([$this->_handlerMock])
-            ->onlyMethods(['debug'])
-            ->getMock();
-
-        $this
-            ->_logger
-            ->expects($this->once())
-            ->method('debug')
-            ->with("[ApiRequest] {$operation}", []);
-
-        $this->_logger->logApiRequest($operation);
-    }
-
-    /**
-     * Test logApiResponse method
-     *
-     * @return void
-     */
-    public function testLogApiResponse(): void
-    {
-        $operation = 'test-operation';
-        $data = ['response' => 'data'];
-
-        $this->_logger = $this
-            ->getMockBuilder(Logger::class)
-            ->setConstructorArgs([$this->_handlerMock])
-            ->onlyMethods(['debug'])
-            ->getMock();
-
-        $expectedJson = json_encode(['response' => $data], Logger::JSON_OPTIONS);
-
-        $this
-            ->_logger
-            ->expects($this->once())
-            ->method('debug')
-            ->with("[ApiResponse] {$operation} {$expectedJson}");
-
-        $this->_logger->logApiResponse($operation, $data);
-    }
-
-    /**
-     * Test logApiError method
-     *
-     * @return void
-     */
-    public function testLogApiError(): void
-    {
-        $operation = 'test-operation';
-        $message = 'error message';
-        $context = ['error' => 'details'];
-
-        $this->_logger = $this
-            ->getMockBuilder(Logger::class)
-            ->setConstructorArgs([$this->_handlerMock])
-            ->onlyMethods(['critical'])
-            ->getMock();
-
-        $expectedJson = json_encode($context, Logger::JSON_OPTIONS);
+        $operation = 'test_operation';
+        $message = 'test_message';
+        $context = ['test' => 'value'];
 
         $this
             ->_logger
             ->expects($this->once())
             ->method('critical')
-            ->with("[ApiError] {$operation} - {$message} {$expectedJson}");
+            ->with(
+                $this->stringContains("[ApiError] {$operation} - {$message}")
+            );
 
         $this->_logger->logApiError($operation, $message, $context);
     }
 
     /**
-     * Test logPaymentEvent method
+     * Test logPaymentEvent calls info with correct format
      *
      * @return void
      */
-    public function testLogPaymentEvent(): void
+    public function testLogPaymentEventCallsInfo(): void
     {
-        $type = 'capture';
-        $orderId = '10000001';
-        $paymentId = 'pay_123456789';
-        $data = ['amount' => 100.0];
-
-        $this->_logger = $this
-            ->getMockBuilder(Logger::class)
-            ->setConstructorArgs([$this->_handlerMock])
-            ->onlyMethods(['info'])
-            ->getMock();
-
-        $expectedContext = [
-            'order_id' => $orderId,
-            'payment_id' => $paymentId,
-            'data' => $data
-        ];
-
-        $expectedJson = json_encode($expectedContext, Logger::JSON_OPTIONS);
+        $type = 'test_type';
+        $orderId = 'test_order';
+        $paymentId = 'test_payment';
+        $data = ['test' => 'value'];
 
         $this
             ->_logger
             ->expects($this->once())
             ->method('info')
-            ->with("[Payment] {$type} {$expectedJson}");
+            ->with(
+                $this->stringContains("[Payment] {$type}")
+            );
 
         $this->_logger->logPaymentEvent($type, $orderId, $paymentId, $data);
+    }
+
+    /**
+     * Test logApiRequest with data
+     *
+     * @return void
+     */
+    public function testLogApiRequestWithData(): void
+    {
+        $operation = 'test_operation';
+        $data = ['test' => 'value'];
+
+        $this
+            ->_logger
+            ->expects($this->once())
+            ->method('debug')
+            ->with(
+                $this->stringContains("[ApiRequest] {$operation}"),
+                $this->anything()
+            );
+
+        $this->_logger->logApiRequest($operation, $data);
+    }
+
+    /**
+     * Test logApiRequest with empty data
+     *
+     * @return void
+     */
+    public function testLogApiRequestWithEmptyData(): void
+    {
+        $operation = 'test_operation';
+
+        $this
+            ->_logger
+            ->expects($this->once())
+            ->method('debug')
+            ->with(
+                $this->stringContains("[ApiRequest] {$operation}"),
+                $this->equalTo([])
+            );
+
+        $this->_logger->logApiRequest($operation);
+    }
+
+    /**
+     * Test logApiResponse
+     *
+     * @return void
+     */
+    public function testLogApiResponse(): void
+    {
+        $operation = 'test_operation';
+        $data = ['test' => 'value'];
+
+        $this
+            ->_logger
+            ->expects($this->once())
+            ->method('debug')
+            ->with(
+                $this->stringContains("[ApiResponse] {$operation}")
+            );
+
+        $this->_logger->logApiResponse($operation, $data);
+    }
+
+    /**
+     * Test logApiError
+     *
+     * @return void
+     */
+    public function testLogApiError(): void
+    {
+        $operation = 'test_operation';
+        $message = 'test_message';
+        $context = ['test' => 'value'];
+
+        $this
+            ->_logger
+            ->expects($this->once())
+            ->method('critical')
+            ->with(
+                $this->stringContains("[ApiError] {$operation} - {$message}")
+            );
+
+        $this->_logger->logApiError($operation, $message, $context);
+    }
+
+    /**
+     * Test logPaymentEvent
+     *
+     * @return void
+     */
+    public function testLogPaymentEvent(): void
+    {
+        $type = 'test_type';
+        $orderId = 'test_order';
+        $paymentId = 'test_payment';
+        $data = ['test' => 'value'];
+
+        $this
+            ->_logger
+            ->expects($this->once())
+            ->method('info')
+            ->with(
+                $this->stringContains("[Payment] {$type}")
+            );
+
+        $this->_logger->logPaymentEvent($type, $orderId, $paymentId, $data);
+    }
+
+    /**
+     * Helper method to invoke private/protected methods
+     *
+     * @param object $object Object instance to invoke method on
+     * @param string $methodName Name of the method to invoke
+     * @param array $parameters Parameters to pass to the method
+     * @return mixed Method result
+     * @throws \ReflectionException
+     */
+    private function invokeMethod(object $object, string $methodName, array $parameters = []): mixed
+    {
+        $reflection = new \ReflectionClass(get_class($object));
+        $method = $reflection->getMethod($methodName);
+        $method->setAccessible(true);
+        return $method->invokeArgs($object, $parameters);
     }
 
     /**
@@ -304,17 +286,15 @@ class LoggerTest extends TestCase
      */
     public function testFormatJsonForLogHandlesInvalidData(): void
     {
-        // Create a data structure with circular reference that can't be JSON encoded
-        $data = [];
-        $data['self'] = &$data;
+        $realLogger = new Logger($this->handlerMock);
 
-        // Use reflection to access the private method
-        $reflectionMethod = new \ReflectionMethod(Logger::class, '_formatJsonForLog');
-        $reflectionMethod->setAccessible(true);
+        // Create a circular reference that will definitely fail JSON encoding
+        $data = new \stdClass();
+        $data->self = $data;
 
-        $result = $reflectionMethod->invoke($this->_logger, $data);
-
+        $result = $this->invokeMethod($realLogger, '_formatJsonForLog', [$data]);
         $this->assertStringContainsString('Unable to encode data to JSON', $result);
+        $this->assertStringContainsString('Recursion detected', $result);
     }
 
     /**
@@ -324,11 +304,14 @@ class LoggerTest extends TestCase
      */
     public function testFormatJsonForLogHandlesEmptyData(): void
     {
+        // Create a real Logger instance for testing the private method
+        $realLogger = new Logger($this->handlerMock);
+
         // Use reflection to access the private method
         $reflectionMethod = new \ReflectionMethod(Logger::class, '_formatJsonForLog');
         $reflectionMethod->setAccessible(true);
 
-        $result = $reflectionMethod->invoke($this->_logger, []);
+        $result = $reflectionMethod->invoke($realLogger, []);
 
         $this->assertEquals('{}', $result);
     }

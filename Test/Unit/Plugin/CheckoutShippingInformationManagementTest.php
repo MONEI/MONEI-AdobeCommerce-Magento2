@@ -91,19 +91,34 @@ class CheckoutShippingInformationManagementTest extends TestCase
         };
 
         // Set up payment methods
-        $nonMoneiPaymentMethod = $this->createMock(PaymentMethodInterface::class);
+        $nonMoneiPaymentMethod = $this
+            ->getMockBuilder(\Magento\Payment\Model\MethodInterface::class)
+            ->disableOriginalConstructor()
+            ->getMockForAbstractClass();
         $nonMoneiPaymentMethod
             ->expects($this->any())
             ->method('getCode')
             ->willReturn('checkmo');
 
-        $moneiPaymentMethod = $this->createMock(PaymentMethodInterface::class);
+        $moneiPaymentMethod = $this
+            ->getMockBuilder(\Magento\Payment\Model\MethodInterface::class)
+            ->disableOriginalConstructor()
+            ->getMockForAbstractClass();
         $moneiPaymentMethod
             ->expects($this->any())
             ->method('getCode')
             ->willReturn(Monei::CARD_CODE);
 
-        $paymentMethods = [$nonMoneiPaymentMethod, $moneiPaymentMethod];
+        $moneiBizumPaymentMethod = $this
+            ->getMockBuilder(\Magento\Payment\Model\MethodInterface::class)
+            ->disableOriginalConstructor()
+            ->getMockForAbstractClass();
+        $moneiBizumPaymentMethod
+            ->expects($this->any())
+            ->method('getCode')
+            ->willReturn(Monei::BIZUM_CODE);
+
+        $paymentMethods = [$nonMoneiPaymentMethod, $moneiPaymentMethod, $moneiBizumPaymentMethod];
 
         $paymentDetailsMock
             ->expects($this->once())
@@ -177,19 +192,28 @@ class CheckoutShippingInformationManagementTest extends TestCase
         };
 
         // Set up payment methods
-        $nonMoneiPaymentMethod = $this->createMock(PaymentMethodInterface::class);
+        $nonMoneiPaymentMethod = $this
+            ->getMockBuilder(\Magento\Payment\Model\MethodInterface::class)
+            ->disableOriginalConstructor()
+            ->getMockForAbstractClass();
         $nonMoneiPaymentMethod
             ->expects($this->any())
             ->method('getCode')
             ->willReturn('checkmo');
 
-        $moneiCardPaymentMethod = $this->createMock(PaymentMethodInterface::class);
+        $moneiCardPaymentMethod = $this
+            ->getMockBuilder(\Magento\Payment\Model\MethodInterface::class)
+            ->disableOriginalConstructor()
+            ->getMockForAbstractClass();
         $moneiCardPaymentMethod
             ->expects($this->any())
             ->method('getCode')
             ->willReturn(Monei::CARD_CODE);
 
-        $moneiBizumPaymentMethod = $this->createMock(PaymentMethodInterface::class);
+        $moneiBizumPaymentMethod = $this
+            ->getMockBuilder(\Magento\Payment\Model\MethodInterface::class)
+            ->disableOriginalConstructor()
+            ->getMockForAbstractClass();
         $moneiBizumPaymentMethod
             ->expects($this->any())
             ->method('getCode')
@@ -290,13 +314,19 @@ class CheckoutShippingInformationManagementTest extends TestCase
         };
 
         // Set up payment methods
-        $nonMoneiPaymentMethod = $this->createMock(PaymentMethodInterface::class);
+        $nonMoneiPaymentMethod = $this
+            ->getMockBuilder(\Magento\Payment\Model\MethodInterface::class)
+            ->disableOriginalConstructor()
+            ->getMockForAbstractClass();
         $nonMoneiPaymentMethod
             ->expects($this->any())
             ->method('getCode')
             ->willReturn('checkmo');
 
-        $moneiBizumPaymentMethod = $this->createMock(PaymentMethodInterface::class);
+        $moneiBizumPaymentMethod = $this
+            ->getMockBuilder(\Magento\Payment\Model\MethodInterface::class)
+            ->disableOriginalConstructor()
+            ->getMockForAbstractClass();
         $moneiBizumPaymentMethod
             ->expects($this->any())
             ->method('getCode')
