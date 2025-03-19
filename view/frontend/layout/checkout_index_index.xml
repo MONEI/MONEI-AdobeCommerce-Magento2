@@ -45,9 +45,7 @@
                                   </item>
                                   <item name="methods" xsi:type="array">
                                     <item name="monei" xsi:type="array">
-                                      <item name="isBillingAddressRequired" xsi:type="boolean">
-                                        true
-                                      </item>
+                                      <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
                                     </item>
                                   </item>
                                 </item>
@@ -57,9 +55,7 @@
                                   </item>
                                   <item name="methods" xsi:type="array">
                                     <item name="monei_card" xsi:type="array">
-                                      <item name="isBillingAddressRequired" xsi:type="boolean">
-                                        true
-                                      </item>
+                                      <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
                                     </item>
                                   </item>
                                 </item>
@@ -69,9 +65,7 @@
                                   </item>
                                   <item name="methods" xsi:type="array">
                                     <item name="monei_bizum" xsi:type="array">
-                                      <item name="isBillingAddressRequired" xsi:type="boolean">
-                                        true
-                                      </item>
+                                      <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
                                     </item>
                                   </item>
                                 </item>
@@ -81,9 +75,7 @@
                                   </item>
                                   <item name="methods" xsi:type="array">
                                     <item name="monei_google_apple" xsi:type="array">
-                                      <item name="isBillingAddressRequired" xsi:type="boolean">
-                                        true
-                                      </item>
+                                      <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
                                     </item>
                                   </item>
                                 </item>
@@ -93,9 +85,7 @@
                                   </item>
                                   <item name="methods" xsi:type="array">
                                     <item name="monei_multibanco_redirect" xsi:type="array">
-                                      <item name="isBillingAddressRequired" xsi:type="boolean">
-                                        true
-                                      </item>
+                                      <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
                                     </item>
                                   </item>
                                 </item>
@@ -105,9 +95,7 @@
                                   </item>
                                   <item name="methods" xsi:type="array">
                                     <item name="monei_mbway_redirect" xsi:type="array">
-                                      <item name="isBillingAddressRequired" xsi:type="boolean">
-                                        true
-                                      </item>
+                                      <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
                                     </item>
                                   </item>
                                 </item>
@@ -117,9 +105,7 @@
                                   </item>
                                   <item name="methods" xsi:type="array">
                                     <item name="monei_paypal" xsi:type="array">
-                                      <item name="isBillingAddressRequired" xsi:type="boolean">
-                                        true
-                                      </item>
+                                      <item name="isBillingAddressRequired" xsi:type="boolean">true</item>
                                     </item>
                                   </item>
                                 </item>

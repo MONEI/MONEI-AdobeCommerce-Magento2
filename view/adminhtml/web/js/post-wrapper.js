@@ -4,12 +4,11 @@
  * @copyright 2023 Monei
  * @link      https://monei.com/
  */
-define([
-  'jquery',
-  'Magento_Ui/js/modal/confirm',
-  'mage/translate',
-  'Magento_Ui/js/modal/modal'
-], function ($, confirm, modal) {
+define(['jquery', 'Magento_Ui/js/modal/confirm', 'mage/translate', 'Magento_Ui/js/modal/modal'], function (
+  $,
+  confirm,
+  modal
+) {
   'use strict';
 
   /**

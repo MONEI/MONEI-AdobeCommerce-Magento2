@@ -1,11 +1,4 @@
-<svg
-  width="38"
-  height="24"
-  role="img"
-  aria-labelledby="pi-jcb"
-  viewBox="0 0 38 24"
-  xmlns="http://www.w3.org/2000/svg"
->
+<svg width="38" height="24" role="img" aria-labelledby="pi-jcb" viewBox="0 0 38 24" xmlns="http://www.w3.org/2000/svg">
   <title id="pi-jcb">JCB</title>
   <g fill="none" fill-rule="evenodd">
     <g fill-rule="nonzero">
@@ -14,10 +7,7 @@
         fill="#000"
         opacity=".07"
       />
-      <path
-        d="M35 1c1.1 0 2 .9 2 2v18c0 1.1-.9 2-2 2H3c-1.1 0-2-.9-2-2V3c0-1.1.9-2 2-2h32"
-        fill="#FFF"
-      />
+      <path d="M35 1c1.1 0 2 .9 2 2v18c0 1.1-.9 2-2 2H3c-1.1 0-2-.9-2-2V3c0-1.1.9-2 2-2h32" fill="#FFF" />
     </g>
     <path d="M11.5 5H15v11.5a2.5 2.5 0 0 1-2.5 2.5H9V7.5A2.5 2.5 0 0 1 11.5 5z" fill="#006EBC" />
     <path d="M18.5 5H22v11.5a2.5 2.5 0 0 1-2.5 2.5H16V7.5A2.5 2.5 0 0 1 18.5 5z" fill="#F00036" />

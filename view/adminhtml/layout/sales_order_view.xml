@@ -30,9 +30,7 @@
         after="-"
       >
         <arguments>
-          <argument name="view_model" xsi:type="object">
-            Monei\MoneiPayment\ViewModel\Order\PaymentInfo
-          </argument>
+          <argument name="view_model" xsi:type="object">Monei\MoneiPayment\ViewModel\Order\PaymentInfo</argument>
         </arguments>
       </block>
     </referenceBlock>

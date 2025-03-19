@@ -42,8 +42,7 @@ define([
       this._super();
 
       this.cancelOrderUrl = window.checkoutConfig.payment[this.getCode()].cancelOrderUrl;
-      this.completeUrl =
-        window.checkoutConfig.payment[this.getCode()].completeUrl || 'monei/payment/complete';
+      this.completeUrl = window.checkoutConfig.payment[this.getCode()].completeUrl || 'monei/payment/complete';
 
       return this;
     },
@@ -122,10 +121,7 @@ define([
      * @returns {Object|null}
      */
     getIcon: function () {
-      if (
-        window.checkoutConfig.payment[this.getCode()] &&
-        window.checkoutConfig.payment[this.getCode()].icon
-      ) {
+      if (window.checkoutConfig.payment[this.getCode()] && window.checkoutConfig.payment[this.getCode()].icon) {
         var iconDimensions = window.checkoutConfig.payment[this.getCode()].iconDimensions || {};
         return {
           url: window.checkoutConfig.payment[this.getCode()].icon,

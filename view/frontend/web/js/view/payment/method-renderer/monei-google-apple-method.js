@@ -101,8 +101,7 @@ define([
     },
 
     checkPaymentMethods: function () {
-      var availableMethods =
-        window.checkoutConfig.payment[this.getCode()].availablePaymentMethods || [];
+      var availableMethods = window.checkoutConfig.payment[this.getCode()].availablePaymentMethods || [];
       this.setTitle({paymentMethods: availableMethods});
     },
 

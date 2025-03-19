@@ -13,21 +13,8 @@
     engine="innodb"
     comment="MONEI B2bCatalogByCustomerGroup Rule Table"
   >
-    <column
-      xsi:type="int"
-      name="entity_id"
-      unsigned="true"
-      nullable="false"
-      identity="true"
-      comment="ID"
-    />
-    <column
-      xsi:type="varchar"
-      name="order_increment_id"
-      nullable="true"
-      length="50"
-      comment="Order Increment ID"
-    />
+    <column xsi:type="int" name="entity_id" unsigned="true" nullable="false" identity="true" comment="ID" />
+    <column xsi:type="varchar" name="order_increment_id" nullable="true" length="50" comment="Order Increment ID" />
     <column
       xsi:type="smallint"
       name="save_monei_tokenization"
@@ -42,13 +29,7 @@
     </constraint>
   </table>
   <table name="quote">
-    <column
-      xsi:type="varchar"
-      name="monei_payment_id"
-      nullable="true"
-      length="255"
-      comment="MONEI Payment Id"
-    />
+    <column xsi:type="varchar" name="monei_payment_id" nullable="true" length="255" comment="MONEI Payment Id" />
     <column
       xsi:type="smallint"
       name="save_monei_tokenization"

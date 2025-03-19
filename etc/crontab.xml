@@ -8,11 +8,7 @@
   xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd"
 >
   <group id="default">
-    <job
-      name="monei_process_pending_orders"
-      instance="Monei\MoneiPayment\Cron\ProcessPendingOrders"
-      method="execute"
-    >
+    <job name="monei_process_pending_orders" instance="Monei\MoneiPayment\Cron\ProcessPendingOrders" method="execute">
       <schedule>0 * * * *</schedule>
     </job>
   </group>

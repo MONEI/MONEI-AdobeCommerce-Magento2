@@ -26,9 +26,7 @@ define(['jquery', 'mage/translate'], function ($, $t) {
           return false;
         }
       },
-      $.mage.__(
-        'Please enter valid JSON. Examples: {"height":"45px"} or {"base":{"height":"30px"}}'
-      )
+      $.mage.__('Please enter valid JSON. Examples: {"height":"45px"} or {"base":{"height":"30px"}}')
     );
 
     // Return the original validator with our additions

@@ -43,10 +43,7 @@ define([
      * @returns {Object|null}
      */
     getIcon: function () {
-      if (
-        window.checkoutConfig.payment[this.getCode()] &&
-        window.checkoutConfig.payment[this.getCode()].icon
-      ) {
+      if (window.checkoutConfig.payment[this.getCode()] && window.checkoutConfig.payment[this.getCode()].icon) {
         var config = window.checkoutConfig.payment[this.getCode()];
         var iconDimensions = config.iconDimensions || {};
         return {

@@ -10,14 +10,10 @@
   <body>
     <referenceBlock name="form">
       <action method="setTemplate">
-        <argument name="template" xsi:type="string">
-          Monei_MoneiPayment::order/creditmemo/create/form.phtml
-        </argument>
+        <argument name="template" xsi:type="string">Monei_MoneiPayment::order/creditmemo/create/form.phtml</argument>
       </action>
       <arguments>
-        <argument name="refundReasonsViewModel" xsi:type="object">
-          Monei\MoneiPayment\ViewModel\RefundReasons
-        </argument>
+        <argument name="refundReasonsViewModel" xsi:type="object">Monei\MoneiPayment\ViewModel\RefundReasons</argument>
       </arguments>
     </referenceBlock>
   </body>

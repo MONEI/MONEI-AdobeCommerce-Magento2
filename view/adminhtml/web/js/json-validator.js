@@ -53,9 +53,7 @@ define(['jquery', 'mage/translate', 'jquery/validate'], function ($, $t) {
                   field.addClass('validation-failed');
                   var advice = $(
                     '<div class="validation-advice">' +
-                      $t(
-                        'Please enter valid JSON. Examples: {"height":"45px"} or {"base":{"height":"30px"}}'
-                      ) +
+                      $t('Please enter valid JSON. Examples: {"height":"45px"} or {"base":{"height":"30px"}}') +
                       '</div>'
                   );
                   field.after(advice);

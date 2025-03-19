@@ -9,20 +9,14 @@
 >
   <!-- Guest User -->
   <route url="/V1/guest-checkout/:cartId/createmoneipaymentinsite" method="POST">
-    <service
-      class="Monei\MoneiPayment\Api\Service\Checkout\CreateGuestMoneiPaymentInSiteInterface"
-      method="execute"
-    />
+    <service class="Monei\MoneiPayment\Api\Service\Checkout\CreateGuestMoneiPaymentInSiteInterface" method="execute" />
     <resources>
       <resource ref="anonymous" />
     </resources>
   </route>
   <!-- Logged User -->
   <route url="/V1/checkout/createmoneipaymentinsite" method="POST">
-    <service
-      class="Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentInSiteInterface"
-      method="execute"
-    />
+    <service class="Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentInSiteInterface" method="execute" />
     <resources>
       <resource ref="self" />
     </resources>
@@ -32,10 +26,7 @@
   </route>
   <!-- Logged User -->
   <route url="/V1/checkout/createmoneipaymentvault" method="POST">
-    <service
-      class="Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentVaultInterface"
-      method="execute"
-    />
+    <service class="Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentVaultInterface" method="execute" />
     <resources>
       <resource ref="self" />
     </resources>
@@ -45,10 +36,7 @@
   </route>
   <!-- Logged User -->
   <route url="/V1/checkout/savemoneitokenization" method="POST">
-    <service
-      class="Monei\MoneiPayment\Api\Service\Checkout\SaveTokenizationInterface"
-      method="execute"
-    />
+    <service class="Monei\MoneiPayment\Api\Service\Checkout\SaveTokenizationInterface" method="execute" />
     <resources>
       <resource ref="self" />
     </resources>

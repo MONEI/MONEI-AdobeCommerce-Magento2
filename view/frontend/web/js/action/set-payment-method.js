@@ -14,16 +14,7 @@ define([
   'Magento_Customer/js/model/customer',
   'Magento_Checkout/js/model/full-screen-loader',
   'Magento_CheckoutAgreements/js/model/agreements-assigner'
-], function (
-  $,
-  quote,
-  urlBuilder,
-  storage,
-  errorProcessor,
-  customer,
-  fullScreenLoader,
-  agreementsAssigner
-) {
+], function ($, quote, urlBuilder, storage, errorProcessor, customer, fullScreenLoader, agreementsAssigner) {
   'use strict';
 
   /**

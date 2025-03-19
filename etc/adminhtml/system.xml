@@ -32,14 +32,7 @@
           <label>Current Version</label>
           <backend_model>Monei\MoneiPayment\Model\Config\Source\ModuleVersion</backend_model>
         </field>
-        <field
-          id="heading1"
-          translate="label"
-          sortOrder="20"
-          showInDefault="1"
-          showInWebsite="1"
-          showInStore="1"
-        >
+        <field id="heading1" translate="label" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Webservice Settings:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
         </field>
@@ -69,9 +62,7 @@
           showInStore="1"
         >
           <label>Mode</label>
-          <comment>
-            To define if we are going to connect with production or testing WS environment
-          </comment>
+          <comment>To define if we are going to connect with production or testing WS environment</comment>
           <source_model>Monei\MoneiPayment\Model\Config\Source\Mode</source_model>
         </field>
         <field
@@ -136,14 +127,7 @@
             <field id="mode">2</field>
           </depends>
         </field>
-        <field
-          id="heading2"
-          translate="label"
-          sortOrder="60"
-          showInDefault="1"
-          showInWebsite="1"
-          showInStore="1"
-        >
+        <field id="heading2" translate="label" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Basic settings:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
         </field>
@@ -190,14 +174,7 @@
           <source_model>Monei\MoneiPayment\Model\Config\Source\PendingStatus</source_model>
           <comment>Selectable with all the pending order statuses</comment>
         </field>
-        <field
-          id="heading_emails"
-          translate="label"
-          sortOrder="95"
-          showInDefault="1"
-          showInWebsite="1"
-          showInStore="1"
-        >
+        <field id="heading_emails" translate="label" sortOrder="95" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Email Settings:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
         </field>
@@ -211,9 +188,7 @@
           showInStore="1"
         >
           <label>Send Order Email</label>
-          <comment>
-            Controls whether to send order confirmation emails after payment is confirmed
-          </comment>
+          <comment>Controls whether to send order confirmation emails after payment is confirmed</comment>
           <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
           <config_path>payment/monei/send_order_email</config_path>
         </field>
@@ -235,14 +210,7 @@
           <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
           <config_path>payment/monei/send_invoice_email</config_path>
         </field>
-        <field
-          id="heading3"
-          translate="label"
-          sortOrder="100"
-          showInDefault="1"
-          showInWebsite="1"
-          showInStore="1"
-        >
+        <field id="heading3" translate="label" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>MONEI Redirect:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
         </field>
@@ -337,14 +305,7 @@
           </depends>
         </field>
         <!-- CARD INSITE -->
-        <field
-          id="heading4"
-          translate="label"
-          sortOrder="190"
-          showInDefault="1"
-          showInWebsite="1"
-          showInStore="1"
-        >
+        <field id="heading4" translate="label" sortOrder="190" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>MONEI Card Insite:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
         </field>
@@ -468,14 +429,7 @@
         </field>
         <!-- -->
         <!-- BIZUM INSITE -->
-        <field
-          id="heading5"
-          translate="label"
-          sortOrder="260"
-          showInDefault="1"
-          showInWebsite="1"
-          showInStore="1"
-        >
+        <field id="heading5" translate="label" sortOrder="260" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>MONEI Bizum Insite:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
         </field>
@@ -583,14 +537,7 @@
         </field>
         <!-- -->
         <!-- GOOGLE APPLE INSITE -->
-        <field
-          id="heading6"
-          translate="label"
-          sortOrder="320"
-          showInDefault="1"
-          showInWebsite="1"
-          showInStore="1"
-        >
+        <field id="heading6" translate="label" sortOrder="320" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>MONEI Google and Apple Pay Insite:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
         </field>
@@ -607,9 +554,7 @@
           <comment>Select 'Yes' if you want to enable this payment method. Otherwise 'No'.</comment>
           <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
           <config_path>payment/monei_google_apple/active</config_path>
-          <backend_model>
-            Monei\MoneiPayment\Model\Config\Backend\EnableGoogleApplePay
-          </backend_model>
+          <backend_model>Monei\MoneiPayment\Model\Config\Backend\EnableGoogleApplePay</backend_model>
         </field>
         <field
           id="title_google_insite"
@@ -717,14 +662,7 @@
         </field>
         <!-- -->
         <!-- MULTIBANCO REDIRECT -->
-        <field
-          id="heading7"
-          translate="label"
-          sortOrder="380"
-          showInDefault="1"
-          showInWebsite="1"
-          showInStore="1"
-        >
+        <field id="heading7" translate="label" sortOrder="380" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>Multibanco Redirect:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
         </field>
@@ -811,14 +749,7 @@
         </field>
         <!-- -->
         <!-- MBWAY REDIRECT -->
-        <field
-          id="heading8"
-          translate="label"
-          sortOrder="430"
-          showInDefault="1"
-          showInWebsite="1"
-          showInStore="1"
-        >
+        <field id="heading8" translate="label" sortOrder="430" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>MBWay Redirect:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
         </field>
@@ -906,14 +837,7 @@
         <!-- -->
 
         <!-- PAYPAL INSITE -->
-        <field
-          id="heading9"
-          translate="label"
-          sortOrder="480"
-          showInDefault="1"
-          showInWebsite="1"
-          showInStore="1"
-        >
+        <field id="heading9" translate="label" sortOrder="480" showInDefault="1" showInWebsite="1" showInStore="1">
           <label>MONEI PayPal Insite:</label>
           <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
         </field>

@@ -63,9 +63,7 @@ define([
     failOrderStatus: '',
     language: 'en',
     accountId: '',
-    jsonStyle: JSON.parse(
-      '{"base":{"height":"30px","padding":"0","font-size":"14px"},"input":{"height":"30px"}}'
-    ),
+    jsonStyle: JSON.parse('{"base":{"height":"30px","padding":"0","font-size":"14px"},"input":{"height":"30px"}}'),
     cardHolderNameValid: ko.observable(true),
     errorMessageCardHolderName: ko.observable(''),
     checkedVault: ko.observable(false),
@@ -88,8 +86,7 @@ define([
 
     initMoneiPaymentVariables: function () {
       this.language = window.checkoutConfig.moneiLanguage ?? this.language;
-      this.isEnabledTokenization =
-        window.checkoutConfig.payment[this.getCode()].isEnabledTokenization;
+      this.isEnabledTokenization = window.checkoutConfig.payment[this.getCode()].isEnabledTokenization;
       this.failOrderStatus = window.checkoutConfig.payment[this.getCode()].failOrderStatus;
       this.accountId = window.checkoutConfig.payment[this.getCode()].accountId;
       this.jsonStyle = window.checkoutConfig.payment[this.getCode()].jsonStyle ?? this.jsonStyle;
@@ -246,9 +243,7 @@ define([
       var regExp = /^[A-Za-zÀ-ú- ]{5,50}$/;
       if (!regExp.test(cardHolderName)) {
         // Mostrar un mensaje de error si no cumple
-        this.errorMessageCardHolderName(
-          $.mage.__('Please enter the name exactly as it appears on the card.')
-        );
+        this.errorMessageCardHolderName($.mage.__('Please enter the name exactly as it appears on the card.'));
         this.cardHolderNameValid(false);
         return false;
       }
@@ -291,10 +286,7 @@ define([
      * Initialize available card brands from the config
      */
     initCardBrands: function () {
-      if (
-        window.checkoutConfig.payment[this.getCode()] &&
-        window.checkoutConfig.payment[this.getCode()].icons
-      ) {
+      if (window.checkoutConfig.payment[this.getCode()] && window.checkoutConfig.payment[this.getCode()].icons) {
         var icons = window.checkoutConfig.payment[this.getCode()].icons;
         var brands = [];
         var cardImages = [];
@@ -362,10 +354,7 @@ define([
      * @returns {Object|null}
      */
     getIcon: function () {
-      if (
-        window.checkoutConfig.payment[this.getCode()] &&
-        window.checkoutConfig.payment[this.getCode()].icon
-      ) {
+      if (window.checkoutConfig.payment[this.getCode()] && window.checkoutConfig.payment[this.getCode()].icon) {
         var iconDimensions = window.checkoutConfig.payment[this.getCode()].iconDimensions || {};
         return {
           url: window.checkoutConfig.payment[this.getCode()].icon,

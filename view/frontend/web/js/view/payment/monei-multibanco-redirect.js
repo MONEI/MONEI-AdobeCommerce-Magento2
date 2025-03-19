@@ -4,10 +4,7 @@
  * @copyright 2023 Monei
  * @link      https://monei.com/
  */
-define(['uiComponent', 'Magento_Checkout/js/model/payment/renderer-list'], function (
-  Component,
-  rendererList
-) {
+define(['uiComponent', 'Magento_Checkout/js/model/payment/renderer-list'], function (Component, rendererList) {
   'use strict';
   rendererList.push({
     type: 'monei_multibanco_redirect',

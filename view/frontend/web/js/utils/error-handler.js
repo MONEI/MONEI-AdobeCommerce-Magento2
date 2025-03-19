@@ -4,11 +4,7 @@
  * @copyright 2023 Monei
  * @link      https://monei.com/
  */
-define(['jquery', 'Magento_Ui/js/model/messageList', 'mage/translate'], function (
-  $,
-  globalMessageList,
-  $t
-) {
+define(['jquery', 'Magento_Ui/js/model/messageList', 'mage/translate'], function ($, globalMessageList, $t) {
   'use strict';
 
   return {

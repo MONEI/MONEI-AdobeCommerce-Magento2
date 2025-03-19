@@ -50,15 +50,11 @@ define([
 
       this.redirectUrl = window.checkoutConfig.vault[this.getCode()].redirectUrl;
       this.cancelOrderUrl = window.checkoutConfig.vault[this.getCode()].cancelOrderUrl;
-      this.completeUrl =
-        window.checkoutConfig.vault[this.getCode()].completeUrl || 'monei/payment/complete';
+      this.completeUrl = window.checkoutConfig.vault[this.getCode()].completeUrl || 'monei/payment/complete';
       this.failOrderStatus = window.checkoutConfig.vault[this.getCode()].failOrderStatus;
       this.methodCardCode = window.checkoutConfig.vault[this.getCode()].methodCardCode;
 
-      if (
-        !checkoutData.getSelectedPaymentMethod() ||
-        this.getId() === checkoutData.getSelectedPaymentMethod()
-      ) {
+      if (!checkoutData.getSelectedPaymentMethod() || this.getId() === checkoutData.getSelectedPaymentMethod()) {
         this.selectPaymentMethod();
       }
 
@@ -159,18 +155,12 @@ define([
         return window.checkoutConfig.payment.ccform.icons[mappedType];
       }
 
-      if (
-        window.checkoutConfig.payment.ccform.icons &&
-        window.checkoutConfig.payment.ccform.icons[normalizedType]
-      ) {
+      if (window.checkoutConfig.payment.ccform.icons && window.checkoutConfig.payment.ccform.icons[normalizedType]) {
         return window.checkoutConfig.payment.ccform.icons[normalizedType];
       }
 
       // Fallback 3: Return default icon from vault config
-      if (
-        window.checkoutConfig.vault[this.code].icons &&
-        window.checkoutConfig.vault[this.code].icons.default
-      ) {
+      if (window.checkoutConfig.vault[this.code].icons && window.checkoutConfig.vault[this.code].icons.default) {
         return window.checkoutConfig.vault[this.code].icons.default;
       }
 

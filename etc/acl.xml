@@ -13,11 +13,7 @@
         <resource id="Magento_Backend::stores">
           <resource id="Magento_Backend::stores_settings">
             <resource id="Magento_Config::config">
-              <resource
-                id="Monei_MoneiPayment::config"
-                title="MONEI payment method"
-                sortOrder="99900"
-              />
+              <resource id="Monei_MoneiPayment::config" title="MONEI payment method" sortOrder="99900" />
             </resource>
           </resource>
         </resource>

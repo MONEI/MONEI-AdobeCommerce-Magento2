@@ -13,9 +13,6 @@
   xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd"
 >
   <event name="admin_system_config_changed_section_payment">
-    <observer
-      name="monei_config_change_observer"
-      instance="Monei\MoneiPayment\Observer\ConfigChangeObserver"
-    />
+    <observer name="monei_config_change_observer" instance="Monei\MoneiPayment\Observer\ConfigChangeObserver" />
   </event>
 </config>

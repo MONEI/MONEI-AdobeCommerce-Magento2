@@ -46,10 +46,7 @@
   height: 30px;
 }
 
-.payment-method#method_monei_multibanco_redirect
-  .payment-method-title
-  label
-  span.monei-payment-icon {
+.payment-method#method_monei_multibanco_redirect .payment-method-title label span.monei-payment-icon {
   background-image: url(../img/multibanco.svg);
   width: 105px;
   height: 30px;

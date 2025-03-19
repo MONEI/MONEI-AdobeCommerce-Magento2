@@ -8,11 +8,7 @@
   xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd"
 >
   <type name="Magento\Framework\App\FrontController">
-    <plugin
-      name="monei_apple_pay_verification"
-      type="Monei\MoneiPayment\Plugin\ApplePayVerification"
-      sortOrder="10"
-    />
+    <plugin name="monei_apple_pay_verification" type="Monei\MoneiPayment\Plugin\ApplePayVerification" sortOrder="10" />
   </type>
 
   <type name="Magento\Payment\Model\Method\Factory">
@@ -25,18 +21,14 @@
   <type name="Magento\Checkout\Model\CompositeConfigProvider">
     <arguments>
       <argument name="configProviders" xsi:type="array">
-        <item name="monei_config_provider" xsi:type="object">
-          Monei\MoneiPayment\Model\CheckoutConfigProvider
-        </item>
+        <item name="monei_config_provider" xsi:type="object">Monei\MoneiPayment\Model\CheckoutConfigProvider</item>
       </argument>
     </arguments>
   </type>
   <type name="Magento\Vault\Model\Ui\TokensConfigProvider">
     <arguments>
       <argument name="tokenUiComponentProviders" xsi:type="array">
-        <item name="monei_card" xsi:type="object">
-          Monei\MoneiPayment\Model\Ui\Card\TokenUiComponentProvider
-        </item>
+        <item name="monei_card" xsi:type="object">Monei\MoneiPayment\Model\Ui\Card\TokenUiComponentProvider</item>
       </argument>
     </arguments>
   </type>

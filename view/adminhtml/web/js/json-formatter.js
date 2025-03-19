@@ -7,12 +7,7 @@
  * @link      https://monei.com/
  */
 
-define(['jquery', 'jquery/ui', 'Magento_Ui/js/modal/alert', 'mage/translate'], function (
-  $,
-  ui,
-  alert,
-  $t
-) {
+define(['jquery', 'jquery/ui', 'Magento_Ui/js/modal/alert', 'mage/translate'], function ($, ui, alert, $t) {
   'use strict';
 
   // Create monei namespace if it doesn't exist

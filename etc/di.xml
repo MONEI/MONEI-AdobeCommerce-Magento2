@@ -95,45 +95,31 @@
   <!-- Define PaymentMethodFormatter with explicit dependencies -->
   <type name="Monei\MoneiPayment\Helper\PaymentMethodFormatter">
     <arguments>
-      <argument name="paymentMethodHelper" xsi:type="object">
-        Monei\MoneiPayment\Helper\PaymentMethod
-      </argument>
+      <argument name="paymentMethodHelper" xsi:type="object">Monei\MoneiPayment\Helper\PaymentMethod</argument>
     </arguments>
   </type>
 
   <!-- Plugin to mark customer as notified after order cancellation for Monei payments -->
   <type name="Magento\Sales\Model\Order">
-    <plugin
-      name="monei_order_cancel_notification"
-      type="Monei\MoneiPayment\Plugin\OrderCancel"
-      sortOrder="10"
-    />
+    <plugin name="monei_order_cancel_notification" type="Monei\MoneiPayment\Plugin\OrderCancel" sortOrder="10" />
   </type>
 
   <type name="Monei\MoneiPayment\Service\Logger\Handler">
     <arguments>
-      <argument name="scopeConfig" xsi:type="object">
-        Magento\Framework\App\Config\ScopeConfigInterface
-      </argument>
-      <argument name="filesystem" xsi:type="object">
-        Magento\Framework\Filesystem\Driver\File
-      </argument>
+      <argument name="scopeConfig" xsi:type="object">Magento\Framework\App\Config\ScopeConfigInterface</argument>
+      <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
     </arguments>
   </type>
   <type name="Monei\MoneiPayment\Service\Logger">
     <arguments>
-      <argument name="handler" xsi:type="object">
-        Monei\MoneiPayment\Service\Logger\Handler
-      </argument>
+      <argument name="handler" xsi:type="object">Monei\MoneiPayment\Service\Logger\Handler</argument>
       <argument name="name" xsi:type="string">monei</argument>
     </arguments>
   </type>
   <type name="Magento\Framework\Console\CommandList">
     <arguments>
       <argument name="commands" xsi:type="array">
-        <item name="moneiUpdateStatusLabels" xsi:type="object">
-          Monei\MoneiPayment\Command\UpdateStatusLabels
-        </item>
+        <item name="moneiUpdateStatusLabels" xsi:type="object">Monei\MoneiPayment\Command\UpdateStatusLabels</item>
         <item name="moneiVerifyApplePayDomain" xsi:type="object">
           Monei\MoneiPayment\Command\VerifyApplePayDomainCommand
         </item>
@@ -141,10 +127,7 @@
     </arguments>
   </type>
   <type name="Magento\Sales\Model\Service\CreditmemoService">
-    <plugin
-      name="set_order_status_after_refund"
-      type="Monei\MoneiPayment\Plugin\OrderStatusAfterRefund"
-    />
+    <plugin name="set_order_status_after_refund" type="Monei\MoneiPayment\Plugin\OrderStatusAfterRefund" />
   </type>
   <type name="Magento\Checkout\Model\ShippingInformationManagement">
     <plugin
@@ -153,50 +136,35 @@
     />
   </type>
   <type name="Magento\Sales\Model\Order\StatusLabel">
-    <plugin
-      name="monei_order_status_label"
-      type="Monei\MoneiPayment\Plugin\SalesOrderStatusLabel"
-    />
+    <plugin name="monei_order_status_label" type="Monei\MoneiPayment\Plugin\SalesOrderStatusLabel" />
   </type>
   <type name="Magento\Sales\Model\Order\Config">
     <plugin name="monei_order_config" type="Monei\MoneiPayment\Plugin\SalesOrderConfig" />
   </type>
   <virtualType name="MoneiPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
     <arguments>
-      <argument name="code" xsi:type="const">
-        Monei\MoneiPayment\Model\Payment\Monei::REDIRECT_CODE
-      </argument>
+      <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::REDIRECT_CODE</argument>
       <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
-      <argument name="infoBlockType" xsi:type="string">
-        Monei\MoneiPayment\Block\Info\Monei
-      </argument>
-      <argument name="valueHandlerPool" xsi:type="object">
-        Magento\Payment\Gateway\Config\ValueHandlerPool
-      </argument>
+      <argument name="infoBlockType" xsi:type="string">Monei\MoneiPayment\Block\Info\Monei</argument>
+      <argument name="valueHandlerPool" xsi:type="object">Magento\Payment\Gateway\Config\ValueHandlerPool</argument>
       <argument name="commandPool" xsi:type="object">MoneiCommandPool</argument>
     </arguments>
   </virtualType>
   <type name="Magento\Payment\Gateway\Config\ValueHandlerPool">
     <arguments>
       <argument name="handlers" xsi:type="array">
-        <item name="default" xsi:type="string">
-          Magento\Payment\Gateway\Config\ConfigValueHandler
-        </item>
+        <item name="default" xsi:type="string">Magento\Payment\Gateway\Config\ConfigValueHandler</item>
       </argument>
     </arguments>
   </type>
   <type name="Magento\Payment\Gateway\Config\ConfigValueHandler">
     <arguments>
-      <argument name="configInterface" xsi:type="object">
-        Magento\Payment\Gateway\Config\Config
-      </argument>
+      <argument name="configInterface" xsi:type="object">Magento\Payment\Gateway\Config\Config</argument>
     </arguments>
   </type>
   <type name="Magento\Payment\Gateway\Config\Config">
     <arguments>
-      <argument name="methodCode" xsi:type="const">
-        Monei\MoneiPayment\Model\Payment\Monei::REDIRECT_CODE
-      </argument>
+      <argument name="methodCode" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::REDIRECT_CODE</argument>
     </arguments>
   </type>
   <virtualType name="MoneiCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
@@ -211,43 +179,29 @@
   <!-- End monei payment configuration  -->
 
   <!-- Configuration for Monei Card payment -->
-  <virtualType
-    name="MoneiCardPaymentValueHandlerPool"
-    type="Magento\Payment\Gateway\Config\ValueHandlerPool"
-  >
+  <virtualType name="MoneiCardPaymentValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
     <arguments>
       <argument name="handlers" xsi:type="array">
         <item name="default" xsi:type="string">MoneiCardPaymentValueHandler</item>
       </argument>
     </arguments>
   </virtualType>
-  <virtualType
-    name="MoneiCardPaymentValueHandler"
-    type="Magento\Payment\Gateway\Config\ConfigValueHandler"
-  >
+  <virtualType name="MoneiCardPaymentValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
     <arguments>
       <argument name="configInterface" xsi:type="object">MoneiCardPaymentConfig</argument>
     </arguments>
   </virtualType>
   <virtualType name="MoneiCardPaymentConfig" type="Magento\Payment\Gateway\Config\Config">
     <arguments>
-      <argument name="methodCode" xsi:type="const">
-        Monei\MoneiPayment\Model\Payment\Monei::CARD_CODE
-      </argument>
+      <argument name="methodCode" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::CARD_CODE</argument>
     </arguments>
   </virtualType>
   <virtualType name="MoneiCardPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
     <arguments>
-      <argument name="code" xsi:type="const">
-        Monei\MoneiPayment\Model\Payment\Monei::CARD_CODE
-      </argument>
+      <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::CARD_CODE</argument>
       <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
-      <argument name="infoBlockType" xsi:type="string">
-        Monei\MoneiPayment\Block\Info\Monei
-      </argument>
-      <argument name="valueHandlerPool" xsi:type="object">
-        MoneiCardPaymentValueHandlerPool
-      </argument>
+      <argument name="infoBlockType" xsi:type="string">Monei\MoneiPayment\Block\Info\Monei</argument>
+      <argument name="valueHandlerPool" xsi:type="object">MoneiCardPaymentValueHandlerPool</argument>
       <argument name="commandPool" xsi:type="object">MoneiCommandPool</argument>
     </arguments>
   </virtualType>
@@ -256,9 +210,7 @@
   <!-- Configuration for Monei Vault payment -->
   <virtualType name="MoneiVaultPaymentConfig" type="Magento\Payment\Gateway\Config\Config">
     <arguments>
-      <argument name="methodCode" xsi:type="const">
-        Monei\MoneiPayment\Model\Payment\Monei::CC_VAULT_CODE
-      </argument>
+      <argument name="methodCode" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::CC_VAULT_CODE</argument>
     </arguments>
   </virtualType>
   <virtualType name="MoneiVaultPaymentValueHandler" type="VaultPaymentDefaultValueHandler">
@@ -276,98 +228,66 @@
   <virtualType name="MoneiCardVaultFacade" type="Magento\Vault\Model\Method\Vault">
     <arguments>
       <argument name="config" xsi:type="object">MoneiVaultPaymentConfig</argument>
-      <argument name="valueHandlerPool" xsi:type="object">
-        MoneiVaultPaymentValueHandlerPool
-      </argument>
+      <argument name="valueHandlerPool" xsi:type="object">MoneiVaultPaymentValueHandlerPool</argument>
       <argument name="vaultProvider" xsi:type="object">MoneiCardPaymentFacade</argument>
-      <argument name="code" xsi:type="const">
-        Monei\MoneiPayment\Model\Payment\Monei::CC_VAULT_CODE
-      </argument>
+      <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::CC_VAULT_CODE</argument>
     </arguments>
   </virtualType>
   <!-- End vault payment configuration  -->
 
   <!-- Configuration for Monei Bizum payment -->
-  <virtualType
-    name="MoneiBizumPaymentValueHandlerPool"
-    type="Magento\Payment\Gateway\Config\ValueHandlerPool"
-  >
+  <virtualType name="MoneiBizumPaymentValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
     <arguments>
       <argument name="handlers" xsi:type="array">
         <item name="default" xsi:type="string">MoneiBizumPaymentValueHandler</item>
       </argument>
     </arguments>
   </virtualType>
-  <virtualType
-    name="MoneiBizumPaymentValueHandler"
-    type="Magento\Payment\Gateway\Config\ConfigValueHandler"
-  >
+  <virtualType name="MoneiBizumPaymentValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
     <arguments>
       <argument name="configInterface" xsi:type="object">MoneiBizumPaymentConfig</argument>
     </arguments>
   </virtualType>
   <virtualType name="MoneiBizumPaymentConfig" type="Magento\Payment\Gateway\Config\Config">
     <arguments>
-      <argument name="methodCode" xsi:type="const">
-        Monei\MoneiPayment\Model\Payment\Monei::BIZUM_CODE
-      </argument>
+      <argument name="methodCode" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::BIZUM_CODE</argument>
     </arguments>
   </virtualType>
   <virtualType name="MoneiBizumPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
     <arguments>
-      <argument name="code" xsi:type="const">
-        Monei\MoneiPayment\Model\Payment\Monei::BIZUM_CODE
-      </argument>
+      <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::BIZUM_CODE</argument>
       <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
-      <argument name="infoBlockType" xsi:type="string">
-        Monei\MoneiPayment\Block\Info\Monei
-      </argument>
-      <argument name="valueHandlerPool" xsi:type="object">
-        MoneiBizumPaymentValueHandlerPool
-      </argument>
+      <argument name="infoBlockType" xsi:type="string">Monei\MoneiPayment\Block\Info\Monei</argument>
+      <argument name="valueHandlerPool" xsi:type="object">MoneiBizumPaymentValueHandlerPool</argument>
       <argument name="commandPool" xsi:type="object">MoneiCommandPool</argument>
     </arguments>
   </virtualType>
   <!-- End monei bizum payment configuration  -->
 
   <!-- Configuration for Monei Google and Apple payment -->
-  <virtualType
-    name="MoneiGoogleApplePaymentValueHandlerPool"
-    type="Magento\Payment\Gateway\Config\ValueHandlerPool"
-  >
+  <virtualType name="MoneiGoogleApplePaymentValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
     <arguments>
       <argument name="handlers" xsi:type="array">
         <item name="default" xsi:type="string">MoneiGoogleApplePaymentValueHandler</item>
       </argument>
     </arguments>
   </virtualType>
-  <virtualType
-    name="MoneiGoogleApplePaymentValueHandler"
-    type="Magento\Payment\Gateway\Config\ConfigValueHandler"
-  >
+  <virtualType name="MoneiGoogleApplePaymentValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
     <arguments>
       <argument name="configInterface" xsi:type="object">MoneiGoogleApplePaymentConfig</argument>
     </arguments>
   </virtualType>
   <virtualType name="MoneiGoogleApplePaymentConfig" type="Magento\Payment\Gateway\Config\Config">
     <arguments>
-      <argument name="methodCode" xsi:type="const">
-        Monei\MoneiPayment\Model\Payment\Monei::GOOGLE_APPLE_CODE
-      </argument>
+      <argument name="methodCode" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::GOOGLE_APPLE_CODE</argument>
     </arguments>
   </virtualType>
   <virtualType name="MoneiGoogleApplePaymentFacade" type="Magento\Payment\Model\Method\Adapter">
     <arguments>
-      <argument name="code" xsi:type="const">
-        Monei\MoneiPayment\Model\Payment\Monei::GOOGLE_APPLE_CODE
-      </argument>
+      <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::GOOGLE_APPLE_CODE</argument>
       <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
-      <argument name="infoBlockType" xsi:type="string">
-        Monei\MoneiPayment\Block\Info\Monei
-      </argument>
-      <argument name="valueHandlerPool" xsi:type="object">
-        MoneiGoogleApplePaymentValueHandlerPool
-      </argument>
+      <argument name="infoBlockType" xsi:type="string">Monei\MoneiPayment\Block\Info\Monei</argument>
+      <argument name="valueHandlerPool" xsi:type="object">MoneiGoogleApplePaymentValueHandlerPool</argument>
       <argument name="commandPool" xsi:type="object">MoneiCommandPool</argument>
     </arguments>
   </virtualType>
@@ -389,15 +309,10 @@
     type="Magento\Payment\Gateway\Config\ConfigValueHandler"
   >
     <arguments>
-      <argument name="configInterface" xsi:type="object">
-        MoneiMultibancoRedirectPaymentConfig
-      </argument>
+      <argument name="configInterface" xsi:type="object">MoneiMultibancoRedirectPaymentConfig</argument>
     </arguments>
   </virtualType>
-  <virtualType
-    name="MoneiMultibancoRedirectPaymentConfig"
-    type="Magento\Payment\Gateway\Config\Config"
-  >
+  <virtualType name="MoneiMultibancoRedirectPaymentConfig" type="Magento\Payment\Gateway\Config\Config">
     <arguments>
       <argument name="methodCode" xsi:type="const">
         Monei\MoneiPayment\Model\Payment\Monei::MULTIBANCO_REDIRECT_CODE
@@ -406,50 +321,33 @@
   </virtualType>
   <type name="Monei\MoneiPayment\Model\Config\MoneiMultibancoRedirectPaymentModuleConfig">
     <arguments>
-      <argument name="scopeConfig" xsi:type="object">
-        Magento\Framework\App\Config\ScopeConfigInterface
-      </argument>
+      <argument name="scopeConfig" xsi:type="object">Magento\Framework\App\Config\ScopeConfigInterface</argument>
     </arguments>
   </type>
   <preference
     for="Monei\MoneiPayment\Api\Config\MoneiMultibancoRedirectPaymentModuleConfigInterface"
     type="Monei\MoneiPayment\Model\Config\MoneiMultibancoRedirectPaymentModuleConfig"
   />
-  <virtualType
-    name="MoneiMultibancoRedirectPaymentFacade"
-    type="Magento\Payment\Model\Method\Adapter"
-  >
+  <virtualType name="MoneiMultibancoRedirectPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
     <arguments>
-      <argument name="code" xsi:type="const">
-        Monei\MoneiPayment\Model\Payment\Monei::MULTIBANCO_REDIRECT_CODE
-      </argument>
+      <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::MULTIBANCO_REDIRECT_CODE</argument>
       <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
-      <argument name="infoBlockType" xsi:type="string">
-        Monei\MoneiPayment\Block\Info\Monei
-      </argument>
-      <argument name="valueHandlerPool" xsi:type="object">
-        MoneiMultibancoRedirectPaymentValueHandlerPool
-      </argument>
+      <argument name="infoBlockType" xsi:type="string">Monei\MoneiPayment\Block\Info\Monei</argument>
+      <argument name="valueHandlerPool" xsi:type="object">MoneiMultibancoRedirectPaymentValueHandlerPool</argument>
       <argument name="commandPool" xsi:type="object">MoneiCommandPool</argument>
     </arguments>
   </virtualType>
   <!-- End Monei Multibanco redirect payment configuration  -->
 
   <!-- Configuration for Monei MBWay redirect payment -->
-  <virtualType
-    name="MoneiMBWayRedirectPaymentValueHandlerPool"
-    type="Magento\Payment\Gateway\Config\ValueHandlerPool"
-  >
+  <virtualType name="MoneiMBWayRedirectPaymentValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
     <arguments>
       <argument name="handlers" xsi:type="array">
         <item name="default" xsi:type="string">MoneiMBWayRedirectPaymentValueHandler</item>
       </argument>
     </arguments>
   </virtualType>
-  <virtualType
-    name="MoneiMBWayRedirectPaymentValueHandler"
-    type="Magento\Payment\Gateway\Config\ConfigValueHandler"
-  >
+  <virtualType name="MoneiMBWayRedirectPaymentValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
     <arguments>
       <argument name="configInterface" xsi:type="object">MoneiMBWayRedirectPaymentConfig</argument>
     </arguments>
@@ -463,9 +361,7 @@
   </virtualType>
   <type name="Monei\MoneiPayment\Model\Config\MoneiMBWayRedirectPaymentModuleConfig">
     <arguments>
-      <argument name="scopeConfig" xsi:type="object">
-        Magento\Framework\App\Config\ScopeConfigInterface
-      </argument>
+      <argument name="scopeConfig" xsi:type="object">Magento\Framework\App\Config\ScopeConfigInterface</argument>
     </arguments>
   </type>
   <preference
@@ -474,59 +370,39 @@
   />
   <virtualType name="MoneiMBWayRedirectPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
     <arguments>
-      <argument name="code" xsi:type="const">
-        Monei\MoneiPayment\Model\Payment\Monei::MBWAY_REDIRECT_CODE
-      </argument>
+      <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::MBWAY_REDIRECT_CODE</argument>
       <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
-      <argument name="infoBlockType" xsi:type="string">
-        Monei\MoneiPayment\Block\Info\Monei
-      </argument>
-      <argument name="valueHandlerPool" xsi:type="object">
-        MoneiMBWayRedirectPaymentValueHandlerPool
-      </argument>
+      <argument name="infoBlockType" xsi:type="string">Monei\MoneiPayment\Block\Info\Monei</argument>
+      <argument name="valueHandlerPool" xsi:type="object">MoneiMBWayRedirectPaymentValueHandlerPool</argument>
       <argument name="commandPool" xsi:type="object">MoneiCommandPool</argument>
     </arguments>
   </virtualType>
   <!-- End Monei MBWay redirect payment configuration  -->
 
   <!-- Configuration for Monei PayPal payment -->
-  <virtualType
-    name="MoneiPaypalPaymentValueHandlerPool"
-    type="Magento\Payment\Gateway\Config\ValueHandlerPool"
-  >
+  <virtualType name="MoneiPaypalPaymentValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
     <arguments>
       <argument name="handlers" xsi:type="array">
         <item name="default" xsi:type="string">MoneiPaypalPaymentValueHandler</item>
       </argument>
     </arguments>
   </virtualType>
-  <virtualType
-    name="MoneiPaypalPaymentValueHandler"
-    type="Magento\Payment\Gateway\Config\ConfigValueHandler"
-  >
+  <virtualType name="MoneiPaypalPaymentValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
     <arguments>
       <argument name="configInterface" xsi:type="object">MoneiPaypalPaymentConfig</argument>
     </arguments>
   </virtualType>
   <virtualType name="MoneiPaypalPaymentConfig" type="Magento\Payment\Gateway\Config\Config">
     <arguments>
-      <argument name="methodCode" xsi:type="const">
-        Monei\MoneiPayment\Model\Payment\Monei::PAYPAL_CODE
-      </argument>
+      <argument name="methodCode" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::PAYPAL_CODE</argument>
     </arguments>
   </virtualType>
   <virtualType name="MoneiPaypalPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
     <arguments>
-      <argument name="code" xsi:type="const">
-        Monei\MoneiPayment\Model\Payment\Monei::PAYPAL_CODE
-      </argument>
+      <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::PAYPAL_CODE</argument>
       <argument name="formBlockType" xsi:type="string">Magento\Payment\Block\Form</argument>
-      <argument name="infoBlockType" xsi:type="string">
-        Monei\MoneiPayment\Block\Info\Monei
-      </argument>
-      <argument name="valueHandlerPool" xsi:type="object">
-        MoneiPaypalPaymentValueHandlerPool
-      </argument>
+      <argument name="infoBlockType" xsi:type="string">Monei\MoneiPayment\Block\Info\Monei</argument>
+      <argument name="valueHandlerPool" xsi:type="object">MoneiPaypalPaymentValueHandlerPool</argument>
       <argument name="commandPool" xsi:type="object">MoneiCommandPool</argument>
     </arguments>
   </virtualType>
@@ -542,9 +418,7 @@
   <!-- ProcessingLock service configuration -->
   <type name="Monei\MoneiPayment\Model\Service\ProcessingLock">
     <arguments>
-      <argument name="lockManager" xsi:type="object">
-        Magento\Framework\Lock\LockManagerInterface
-      </argument>
+      <argument name="lockManager" xsi:type="object">Magento\Framework\Lock\LockManagerInterface</argument>
       <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
     </arguments>
   </type>
@@ -560,10 +434,7 @@
   </type>
 
   <!-- Lock Management -->
-  <preference
-    for="Monei\MoneiPayment\Api\LockManagerInterface"
-    type="Monei\MoneiPayment\Model\LockManager"
-  />
+  <preference for="Monei\MoneiPayment\Api\LockManagerInterface" type="Monei\MoneiPayment\Model\LockManager" />
   <preference
     for="Monei\MoneiPayment\Model\Service\ProcessingLockInterface"
     type="Monei\MoneiPayment\Model\Service\ProcessingLock"
@@ -579,16 +450,12 @@
   <!-- Type configuration for MoneiApiClient -->
   <type name="Monei\MoneiPayment\Service\Api\MoneiApiClient">
     <arguments>
-      <argument name="storeManager" xsi:type="object">
-        Magento\Store\Model\StoreManagerInterface
-      </argument>
+      <argument name="storeManager" xsi:type="object">Magento\Store\Model\StoreManagerInterface</argument>
       <argument name="moduleConfig" xsi:type="object">
         Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface
       </argument>
       <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
-      <argument name="moduleVersion" xsi:type="object">
-        Monei\MoneiPayment\Model\Config\Source\ModuleVersion
-      </argument>
+      <argument name="moduleVersion" xsi:type="object">Monei\MoneiPayment\Model\Config\Source\ModuleVersion</argument>
     </arguments>
   </type>
 
@@ -606,12 +473,8 @@
   <type name="Monei\MoneiPayment\Service\Api\CreatePayment">
     <arguments>
       <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
-      <argument name="exceptionHandler" xsi:type="object">
-        Monei\MoneiPayment\Service\Api\ApiExceptionHandler
-      </argument>
-      <argument name="apiClient" xsi:type="object">
-        Monei\MoneiPayment\Service\Api\MoneiApiClient
-      </argument>
+      <argument name="exceptionHandler" xsi:type="object">Monei\MoneiPayment\Service\Api\ApiExceptionHandler</argument>
+      <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Service\Api\MoneiApiClient</argument>
       <argument name="moduleConfig" xsi:type="object">
         Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface
       </argument>
@@ -622,30 +485,20 @@
   <type name="Monei\MoneiPayment\Service\GetPayment">
     <arguments>
       <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
-      <argument name="exceptionHandler" xsi:type="object">
-        Monei\MoneiPayment\Service\Api\ApiExceptionHandler
-      </argument>
-      <argument name="apiClient" xsi:type="object">
-        Monei\MoneiPayment\Service\Api\MoneiApiClient
-      </argument>
+      <argument name="exceptionHandler" xsi:type="object">Monei\MoneiPayment\Service\Api\ApiExceptionHandler</argument>
+      <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Service\Api\MoneiApiClient</argument>
     </arguments>
   </type>
 
   <type name="Monei\MoneiPayment\Service\GetPaymentMethods">
     <arguments>
       <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
-      <argument name="exceptionHandler" xsi:type="object">
-        Monei\MoneiPayment\Service\Api\ApiExceptionHandler
-      </argument>
-      <argument name="apiClient" xsi:type="object">
-        Monei\MoneiPayment\Service\Api\MoneiApiClient
-      </argument>
+      <argument name="exceptionHandler" xsi:type="object">Monei\MoneiPayment\Service\Api\ApiExceptionHandler</argument>
+      <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Service\Api\MoneiApiClient</argument>
       <argument name="moduleConfig" xsi:type="object">
         Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface
       </argument>
-      <argument name="registryAccountId" xsi:type="object">
-        Monei\MoneiPayment\Registry\AccountId
-      </argument>
+      <argument name="registryAccountId" xsi:type="object">Monei\MoneiPayment\Registry\AccountId</argument>
     </arguments>
   </type>
 
@@ -653,15 +506,9 @@
   <type name="Monei\MoneiPayment\Service\Checkout\CreateGuestMoneiPaymentInSite">
     <arguments>
       <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
-      <argument name="exceptionHandler" xsi:type="object">
-        Monei\MoneiPayment\Service\Api\ApiExceptionHandler
-      </argument>
-      <argument name="apiClient" xsi:type="object">
-        Monei\MoneiPayment\Service\Api\MoneiApiClient
-      </argument>
-      <argument name="quoteRepository" xsi:type="object">
-        Magento\Quote\Api\CartRepositoryInterface
-      </argument>
+      <argument name="exceptionHandler" xsi:type="object">Monei\MoneiPayment\Service\Api\ApiExceptionHandler</argument>
+      <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Service\Api\MoneiApiClient</argument>
+      <argument name="quoteRepository" xsi:type="object">Magento\Quote\Api\CartRepositoryInterface</argument>
       <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session</argument>
       <argument name="maskedQuoteIdToQuoteId" xsi:type="object">
         Magento\Quote\Model\MaskedQuoteIdToQuoteIdInterface
@@ -675,27 +522,17 @@
       <argument name="moduleConfig" xsi:type="object">
         Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface
       </argument>
-      <argument name="createPayment" xsi:type="object">
-        Monei\MoneiPayment\Api\Service\CreatePaymentInterface
-      </argument>
-      <argument name="getPaymentService" xsi:type="object">
-        Monei\MoneiPayment\Api\Service\GetPaymentInterface
-      </argument>
+      <argument name="createPayment" xsi:type="object">Monei\MoneiPayment\Api\Service\CreatePaymentInterface</argument>
+      <argument name="getPaymentService" xsi:type="object">Monei\MoneiPayment\Api\Service\GetPaymentInterface</argument>
     </arguments>
   </type>
 
   <type name="Monei\MoneiPayment\Service\Checkout\CreateLoggedMoneiPaymentInSite">
     <arguments>
       <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
-      <argument name="exceptionHandler" xsi:type="object">
-        Monei\MoneiPayment\Service\Api\ApiExceptionHandler
-      </argument>
-      <argument name="apiClient" xsi:type="object">
-        Monei\MoneiPayment\Service\Api\MoneiApiClient
-      </argument>
-      <argument name="quoteRepository" xsi:type="object">
-        Magento\Quote\Api\CartRepositoryInterface
-      </argument>
+      <argument name="exceptionHandler" xsi:type="object">Monei\MoneiPayment\Service\Api\ApiExceptionHandler</argument>
+      <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Service\Api\MoneiApiClient</argument>
+      <argument name="quoteRepository" xsi:type="object">Magento\Quote\Api\CartRepositoryInterface</argument>
       <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session</argument>
       <argument name="customerSession" xsi:type="object">
         Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface
@@ -706,27 +543,17 @@
       <argument name="moduleConfig" xsi:type="object">
         Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface
       </argument>
-      <argument name="createPayment" xsi:type="object">
-        Monei\MoneiPayment\Api\Service\CreatePaymentInterface
-      </argument>
-      <argument name="getPaymentService" xsi:type="object">
-        Monei\MoneiPayment\Api\Service\GetPaymentInterface
-      </argument>
+      <argument name="createPayment" xsi:type="object">Monei\MoneiPayment\Api\Service\CreatePaymentInterface</argument>
+      <argument name="getPaymentService" xsi:type="object">Monei\MoneiPayment\Api\Service\GetPaymentInterface</argument>
     </arguments>
   </type>
 
   <type name="Monei\MoneiPayment\Service\Checkout\CreateLoggedMoneiPaymentVault">
     <arguments>
       <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
-      <argument name="exceptionHandler" xsi:type="object">
-        Monei\MoneiPayment\Service\Api\ApiExceptionHandler
-      </argument>
-      <argument name="apiClient" xsi:type="object">
-        Monei\MoneiPayment\Service\Api\MoneiApiClient
-      </argument>
-      <argument name="quoteRepository" xsi:type="object">
-        Magento\Quote\Api\CartRepositoryInterface
-      </argument>
+      <argument name="exceptionHandler" xsi:type="object">Monei\MoneiPayment\Service\Api\ApiExceptionHandler</argument>
+      <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Service\Api\MoneiApiClient</argument>
+      <argument name="quoteRepository" xsi:type="object">Magento\Quote\Api\CartRepositoryInterface</argument>
       <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session</argument>
       <argument name="getCustomerDetailsByQuote" xsi:type="object">
         Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface
@@ -734,43 +561,27 @@
       <argument name="getAddressDetailsByQuoteAddress" xsi:type="object">
         Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface
       </argument>
-      <argument name="tokenManagement" xsi:type="object">
-        Magento\Vault\Api\PaymentTokenManagementInterface
-      </argument>
-      <argument name="createPayment" xsi:type="object">
-        Monei\MoneiPayment\Api\Service\CreatePaymentInterface
-      </argument>
-      <argument name="getPaymentService" xsi:type="object">
-        Monei\MoneiPayment\Api\Service\GetPaymentInterface
-      </argument>
+      <argument name="tokenManagement" xsi:type="object">Magento\Vault\Api\PaymentTokenManagementInterface</argument>
+      <argument name="createPayment" xsi:type="object">Monei\MoneiPayment\Api\Service\CreatePaymentInterface</argument>
+      <argument name="getPaymentService" xsi:type="object">Monei\MoneiPayment\Api\Service\GetPaymentInterface</argument>
     </arguments>
   </type>
 
   <type name="Monei\MoneiPayment\Service\Checkout\SaveTokenization">
     <arguments>
       <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
-      <argument name="exceptionHandler" xsi:type="object">
-        Monei\MoneiPayment\Service\Api\ApiExceptionHandler
-      </argument>
-      <argument name="apiClient" xsi:type="object">
-        Monei\MoneiPayment\Service\Api\MoneiApiClient
-      </argument>
-      <argument name="quoteRepository" xsi:type="object">
-        Magento\Quote\Api\CartRepositoryInterface
-      </argument>
+      <argument name="exceptionHandler" xsi:type="object">Monei\MoneiPayment\Service\Api\ApiExceptionHandler</argument>
+      <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Service\Api\MoneiApiClient</argument>
+      <argument name="quoteRepository" xsi:type="object">Magento\Quote\Api\CartRepositoryInterface</argument>
       <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session</argument>
-      <argument name="getPaymentService" xsi:type="object">
-        Monei\MoneiPayment\Api\Service\GetPaymentInterface
-      </argument>
+      <argument name="getPaymentService" xsi:type="object">Monei\MoneiPayment\Api\Service\GetPaymentInterface</argument>
     </arguments>
   </type>
 
   <!-- Type configuration for LockManager -->
   <type name="Monei\MoneiPayment\Model\LockManager">
     <arguments>
-      <argument name="lockManager" xsi:type="object">
-        Magento\Framework\Lock\Backend\Database
-      </argument>
+      <argument name="lockManager" xsi:type="object">Magento\Framework\Lock\Backend\Database</argument>
       <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
     </arguments>
   </type>
@@ -778,9 +589,7 @@
   <!-- Type configuration for ProcessingLock -->
   <type name="Monei\MoneiPayment\Model\Service\ProcessingLock">
     <arguments>
-      <argument name="lockManager" xsi:type="object">
-        Monei\MoneiPayment\Api\LockManagerInterface
-      </argument>
+      <argument name="lockManager" xsi:type="object">Monei\MoneiPayment\Api\LockManagerInterface</argument>
       <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
     </arguments>
   </type>
@@ -788,28 +597,16 @@
   <!-- Type configuration for PaymentProcessor -->
   <type name="Monei\MoneiPayment\Model\PaymentProcessor">
     <arguments>
-      <argument name="orderRepository" xsi:type="object">
-        Magento\Sales\Api\OrderRepositoryInterface
-      </argument>
-      <argument name="invoiceService" xsi:type="object">
-        Monei\MoneiPayment\Service\InvoiceService
-      </argument>
-      <argument name="lockManager" xsi:type="object">
-        Monei\MoneiPayment\Api\LockManagerInterface
-      </argument>
+      <argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
+      <argument name="invoiceService" xsi:type="object">Monei\MoneiPayment\Service\InvoiceService</argument>
+      <argument name="lockManager" xsi:type="object">Monei\MoneiPayment\Api\LockManagerInterface</argument>
       <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
-      <argument name="moneiApiClient" xsi:type="object">
-        Monei\MoneiPayment\Model\Api\MoneiApiClient
-      </argument>
+      <argument name="moneiApiClient" xsi:type="object">Monei\MoneiPayment\Model\Api\MoneiApiClient</argument>
       <argument name="moduleConfig" xsi:type="object">
         Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface
       </argument>
-      <argument name="orderSender" xsi:type="object">
-        Magento\Sales\Model\Order\Email\Sender\OrderSender
-      </argument>
-      <argument name="searchCriteriaBuilder" xsi:type="object">
-        Magento\Framework\Api\SearchCriteriaBuilder
-      </argument>
+      <argument name="orderSender" xsi:type="object">Magento\Sales\Model\Order\Email\Sender\OrderSender</argument>
+      <argument name="searchCriteriaBuilder" xsi:type="object">Magento\Framework\Api\SearchCriteriaBuilder</argument>
       <argument name="getPaymentInterface" xsi:type="object">
         Monei\MoneiPayment\Api\Service\GetPaymentInterface
       </argument>
@@ -824,49 +621,30 @@
   <type name="Monei\MoneiPayment\Controller\Payment\Callback">
     <arguments>
       <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
-      <argument name="resultJsonFactory" xsi:type="object">
-        Magento\Framework\Controller\Result\JsonFactory
-      </argument>
-      <argument name="paymentProcessor" xsi:type="object">
-        Monei\MoneiPayment\Api\PaymentProcessorInterface
-      </argument>
-      <argument name="apiClient" xsi:type="object">
-        Monei\MoneiPayment\Model\Api\MoneiApiClient
-      </argument>
-      <argument name="orderRepository" xsi:type="object">
-        Magento\Sales\Api\OrderRepositoryInterface
-      </argument>
+      <argument name="resultJsonFactory" xsi:type="object">Magento\Framework\Controller\Result\JsonFactory</argument>
+      <argument name="paymentProcessor" xsi:type="object">Monei\MoneiPayment\Api\PaymentProcessorInterface</argument>
+      <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Model\Api\MoneiApiClient</argument>
+      <argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
     </arguments>
   </type>
 
   <!-- Type configuration for Complete controller -->
   <type name="Monei\MoneiPayment\Controller\Payment\Complete">
     <arguments>
-      <argument name="orderRepository" xsi:type="object">
-        Magento\Sales\Api\OrderRepositoryInterface
-      </argument>
+      <argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
       <argument name="orderFactory" xsi:type="object">Magento\Sales\Model\OrderFactory</argument>
       <argument name="resultRedirectFactory" xsi:type="object">
         Magento\Framework\Controller\Result\RedirectFactory
       </argument>
       <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
-      <argument name="paymentProcessor" xsi:type="object">
-        Monei\MoneiPayment\Api\PaymentProcessorInterface
-      </argument>
-      <argument name="apiClient" xsi:type="object">
-        Monei\MoneiPayment\Model\Api\MoneiApiClient
-      </argument>
-      <argument name="getPaymentService" xsi:type="object">
-        Monei\MoneiPayment\Api\Service\GetPaymentInterface
-      </argument>
+      <argument name="paymentProcessor" xsi:type="object">Monei\MoneiPayment\Api\PaymentProcessorInterface</argument>
+      <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Model\Api\MoneiApiClient</argument>
+      <argument name="getPaymentService" xsi:type="object">Monei\MoneiPayment\Api\Service\GetPaymentInterface</argument>
     </arguments>
   </type>
 
   <!-- Payment Processing Services -->
-  <preference
-    for="Monei\MoneiPayment\Api\PaymentProcessorInterface"
-    type="Monei\MoneiPayment\Model\PaymentProcessor"
-  />
+  <preference for="Monei\MoneiPayment\Api\PaymentProcessorInterface" type="Monei\MoneiPayment\Model\PaymentProcessor" />
   <preference
     for="Monei\MoneiPayment\Api\Service\ValidateWebhookSignatureInterface"
     type="Monei\MoneiPayment\Service\ValidateWebhookSignature"
@@ -882,21 +660,11 @@
   <!-- Type configuration for InvoiceService -->
   <type name="Monei\MoneiPayment\Service\InvoiceService">
     <arguments>
-      <argument name="magentoInvoiceService" xsi:type="object">
-        Magento\Sales\Model\Service\InvoiceService
-      </argument>
-      <argument name="invoiceRepository" xsi:type="object">
-        Magento\Sales\Api\InvoiceRepositoryInterface
-      </argument>
-      <argument name="transactionFactory" xsi:type="object">
-        Magento\Framework\DB\TransactionFactory
-      </argument>
-      <argument name="invoiceSender" xsi:type="object">
-        Magento\Sales\Model\Order\Email\Sender\InvoiceSender
-      </argument>
-      <argument name="lockManager" xsi:type="object">
-        Monei\MoneiPayment\Api\LockManagerInterface
-      </argument>
+      <argument name="magentoInvoiceService" xsi:type="object">Magento\Sales\Model\Service\InvoiceService</argument>
+      <argument name="invoiceRepository" xsi:type="object">Magento\Sales\Api\InvoiceRepositoryInterface</argument>
+      <argument name="transactionFactory" xsi:type="object">Magento\Framework\DB\TransactionFactory</argument>
+      <argument name="invoiceSender" xsi:type="object">Magento\Sales\Model\Order\Email\Sender\InvoiceSender</argument>
+      <argument name="lockManager" xsi:type="object">Monei\MoneiPayment\Api\LockManagerInterface</argument>
       <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
       <argument name="moduleConfig" xsi:type="object">
         Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface
@@ -926,9 +694,7 @@
   <type name="Monei\MoneiPayment\Plugin\OrderInvoiceEmailSent">
     <arguments>
       <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
-      <argument name="orderRepository" xsi:type="object">
-        Magento\Sales\Api\OrderRepositoryInterface
-      </argument>
+      <argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
     </arguments>
   </type>
 
@@ -948,9 +714,7 @@
   <!-- Configuration for JSON validators -->
   <type name="Monei\MoneiPayment\Model\Config\Backend\JsonValidator">
     <arguments>
-      <argument name="policyInterface" xsi:type="object">
-        Magento\Framework\Authorization\Policy\DefaultPolicy
-      </argument>
+      <argument name="policyInterface" xsi:type="object">Magento\Framework\Authorization\Policy\DefaultPolicy</argument>
     </arguments>
   </type>
 
@@ -978,18 +742,10 @@
     <arguments>
       <argument name="context" xsi:type="object">Magento\Framework\Model\Context</argument>
       <argument name="registry" xsi:type="object">Magento\Framework\Registry</argument>
-      <argument name="config" xsi:type="object">
-        Magento\Framework\App\Config\ScopeConfigInterface
-      </argument>
-      <argument name="cacheTypeList" xsi:type="object">
-        Magento\Framework\App\Cache\TypeListInterface
-      </argument>
-      <argument name="registryAccountId" xsi:type="object">
-        Monei\MoneiPayment\Registry\AccountId
-      </argument>
-      <argument name="configWriter" xsi:type="object">
-        Magento\Framework\App\Config\Storage\WriterInterface
-      </argument>
+      <argument name="config" xsi:type="object">Magento\Framework\App\Config\ScopeConfigInterface</argument>
+      <argument name="cacheTypeList" xsi:type="object">Magento\Framework\App\Cache\TypeListInterface</argument>
+      <argument name="registryAccountId" xsi:type="object">Monei\MoneiPayment\Registry\AccountId</argument>
+      <argument name="configWriter" xsi:type="object">Magento\Framework\App\Config\Storage\WriterInterface</argument>
     </arguments>
   </type>
 </config>
