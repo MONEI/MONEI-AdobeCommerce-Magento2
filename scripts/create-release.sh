@@ -17,6 +17,7 @@ cat >"$TMP_EXCLUDE" <<EOL
 .cursor/*
 vendor/*
 node_modules/*
+reports/*
 composer.lock
 package.json
 yarn.lock

@@ -24,6 +24,7 @@ jobs:
             .cursor/*
             vendor/*
             scripts/*
+            reports/*
             node_modules/*
             composer.lock
             package.json
