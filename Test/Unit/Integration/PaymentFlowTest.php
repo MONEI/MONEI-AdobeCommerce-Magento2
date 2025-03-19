@@ -117,7 +117,7 @@ class PaymentFlowTest extends TestCase
         $this
             ->createPaymentService
             ->method('execute')
-            ->with($this->callback(function ($data) use ($paymentRequestData) {
+            ->with($this->callback(function ($data) {
                 // Verify essential parameters
                 return isset($data['amount']) &&
                     isset($data['currency']) &&
