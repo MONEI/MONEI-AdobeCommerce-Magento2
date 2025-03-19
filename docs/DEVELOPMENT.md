@@ -62,25 +62,66 @@ bin/magento setup:upgrade         # Run module upgrades
 bin/magento cache:clean           # Clean caches
 bin/magento cache:flush           # Flush all caches
 bin/magento module:enable Monei_MoneiPayment  # Enable module
-
-# Module specific commands
-bin/magento monei:verify-apple-pay-domain <domain>  # Register domain with Apple Pay
-bin/magento monei:update-status-labels              # Update order status labels
 ```
 
-## Docker Setup
+## Setting Up Cloudflare Tunnel for Payment Callbacks
 
-This module includes a standalone Docker setup for isolated development with PHP 8.3:
+MONEI sends payment callbacks to your store to update order statuses and process payments. During local development, your server isn't publicly accessible. Cloudflare Tunnel creates a secure tunnel to expose your local environment to the internet, allowing MONEI to send callbacks to your development environment.
+
+### Step 1: Create a Cloudflare Tunnel
+
+1. Log in to the [Cloudflare Zero Trust Dashboard](https://one.dash.cloudflare.com/)
+2. Navigate to **Access > Tunnels**
+3. Click **Create a tunnel**
+4. Name your tunnel (e.g., `monei-magento`) and click **Save tunnel**
+5. Copy the tunnel token that is displayed
+
+### Step 2: Configure docker-magento
+
+1. Create a `cloudflare.env` file in the `env` directory of your docker-magento installation:
 
 ```bash
-# Start the Docker containers
-docker-compose up -d
-
-# Execute commands in the PHP container
-docker-compose exec php bash
+# From your docker-magento root directory
+mkdir -p env
+echo "TUNNEL_TOKEN=your-tunnel-token-here" > env/cloudflare.env
 ```
 
-For detailed Docker setup instructions, see the [Docker README](DOCKER.md).
+2. Add the Cloudflare Tunnel section to your `compose.yaml` file:
+
+```yaml
+# Cloudflare tunnel
+tunnel:
+  container_name: cloudflared-tunnel
+  image: cloudflare/cloudflared:latest
+  command: tunnel run
+  env_file: env/cloudflare.env
+```
+
+3. Restart the containers:
+
+```bash
+bin/restart
+```
+
+### Step 3: Configure Cloudflare Tunnel Service
+
+1. Back in the Cloudflare Zero Trust Dashboard, configure the tunnel:
+
+   - For Service Type, select **HTTPS** from the dropdown
+   - For URL, enter your `app.container_name` and port: `monei-magento2-dev:8443`
+   - Enable the **No TLS Verify** option (since local certificates are self-signed)
+
+2. Set up a public hostname:
+   - Enter a subdomain (e.g., `magento`)
+   - Select your domain (e.g., `monei-dev-tunnel.com`)
+   - Leave Path empty (optional)
+   - Save the configuration
+
+Your local environment will now be accessible at `https://magento.monei-dev-tunnel.com`
+
+### Security Considerations
+
+- **Important**: Do not leave instances with Cloudflare Tunnel enabled running long-term, as your instance is publicly available to the world. Turn off the tunnel container once testing is finished.
 
 ## Troubleshooting
 

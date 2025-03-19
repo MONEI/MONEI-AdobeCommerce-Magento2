@@ -21,7 +21,6 @@ Accept payments through [MONEI](https://monei.com) in your Adobe Commerce (Magen
       - [Option 2: Via Main Branch](#option-2-via-main-branch)
     - [Bitnami Installation](#bitnami-installation)
     - [Before You Begin](#before-you-begin)
-    - [Varnish Configuration](#varnish-configuration)
 
 ## Overview
 
@@ -36,7 +35,7 @@ MONEI Payments for Adobe Commerce (Magento 2) allows you to seamlessly integrate
 - Detailed transaction reporting in your MONEI dashboard
 - Customizable payment experience to match your store's design
 - Integration with the official MONEI PHP SDK for reliable API communication
-- Automatic Apple Pay domain verification when configuration is saved
+- Automatic Apple Pay domain verification through configuration settings
 
 ## Requirements
 
@@ -167,17 +166,3 @@ When testing your integration:
 
 - Use your [test mode](https://docs.monei.com/docs/testing) API Key from [MONEI Dashboard → Settings → API Access](https://dashboard.monei.com/settings/api)
 - Check the status of test payments in your [MONEI Dashboard → Payments](https://dashboard.monei.com/payments) (in test mode)
-
-### Varnish Configuration
-
-If you're using Varnish with Magento, you'll need to properly configure it to work with the MONEI Payment module. Follow these steps:
-
-1. Copy the provided Varnish configuration from `etc/varnish-config.vcl` to your Varnish server.
-2. Include this configuration in your main Varnish VCL file:
-   ```vcl
-   include "path/to/monei/varnish-config.vcl";
-   ```
-3. Restart Varnish to apply the changes:
-   ```bash
-   systemctl restart varnish
-   ```
