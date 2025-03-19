@@ -153,11 +153,11 @@ class PaymentProcessor implements PaymentProcessorInterface
             $order = $this->getOrderByIncrementId($orderId);
             if (!$order) {
                 return PaymentProcessingResult::createError(
+                    'UNKNOWN',
                     $orderId,
                     $paymentId,
                     'Order not found',
-                    PaymentErrorCodeInterface::ERROR_NOT_FOUND,
-                    null
+                    PaymentErrorCodeInterface::ERROR_NOT_FOUND
                 );
             }
 
@@ -175,11 +175,11 @@ class PaymentProcessor implements PaymentProcessorInterface
                 );
             } else {
                 return PaymentProcessingResult::createError(
+                    $payment->getStatus(),
                     $orderId,
                     $paymentId,
                     'Payment processing failed',
-                    PaymentErrorCodeInterface::ERROR_PROCESSING_FAILED,
-                    null
+                    PaymentErrorCodeInterface::ERROR_PROCESSING_FAILED
                 );
             }
         } catch (Exception $e) {
@@ -191,11 +191,11 @@ class PaymentProcessor implements PaymentProcessorInterface
             ), ['exception' => $e]);
 
             return PaymentProcessingResult::createError(
+                'UNKNOWN',
                 $orderId,
                 $paymentId,
                 $e->getMessage(),
-                PaymentErrorCodeInterface::ERROR_EXCEPTION,
-                null
+                PaymentErrorCodeInterface::ERROR_EXCEPTION
             );
         }
     }
@@ -240,8 +240,11 @@ class PaymentProcessor implements PaymentProcessorInterface
     {
         try {
             $payment = $this->getPaymentInterface->execute($paymentId);
-
-            return (array) $payment;
+            return [
+                'id' => $payment->getId(),
+                'status' => $payment->getStatus(),
+                'amount' => $payment->getAmount()
+            ];
         } catch (Exception $e) {
             $this->logger->error(sprintf(
                 '[Payment] Error getting payment status for payment %s: %s',
@@ -249,7 +252,7 @@ class PaymentProcessor implements PaymentProcessorInterface
                 $e->getMessage()
             ), ['exception' => $e]);
 
-            return ['status' => 'ERROR', 'error' => $e->getMessage()];
+            throw $e;
         }
     }
 

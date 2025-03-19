@@ -9,7 +9,7 @@ alwaysApply: true
 ```bash
 ./bin test --testdox                  # Run all tests with verbose output
 ./bin test/unit [path] [args]         # Run specific unit tests
-./bin test/unit Model/Service --filter testMethod  # Run specific test method
+./bin test/unit-coverage              # Run tests with coverage
 ./bin magento setup:di:compile        # Compile dependency injection
 ./bin magento setup:upgrade           # Run upgrades
 ./bin magento cache:clean             # Clean cache

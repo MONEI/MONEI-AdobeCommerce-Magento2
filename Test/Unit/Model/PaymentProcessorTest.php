@@ -196,7 +196,7 @@ class PaymentProcessorTest extends TestCase
         $result = $this->paymentProcessor->process($orderId, $paymentId, $paymentData);
 
         $this->assertFalse($result->isSuccessful());
-        $this->assertEquals('not_found', $result->getErrorMessage());
+        $this->assertEquals(PaymentErrorCodeInterface::ERROR_NOT_FOUND, $result->getStatusCode());
     }
 
     public function testProcessSuccessfulPayment(): void
@@ -398,9 +398,15 @@ class PaymentProcessorTest extends TestCase
 
     public function testProcessWithLockFailure(): void
     {
-        $orderId = '000000001';
-        $paymentId = 'pay_123';
-        $paymentData = ['status' => 'paid'];
+        $orderId = '123';
+        $paymentId = '456';
+        $paymentData = ['id' => $paymentId];
+
+        $this
+            ->orderFactory
+            ->expects($this->once())
+            ->method('create')
+            ->willReturn($this->order);
 
         $this
             ->order
@@ -431,16 +437,34 @@ class PaymentProcessorTest extends TestCase
         $result = $this->paymentProcessor->process($orderId, $paymentId, $paymentData);
 
         $this->assertFalse($result->isSuccessful());
-        $this->assertEquals('processing_failed', $result->getErrorMessage());
+        $this->assertEquals(PaymentErrorCodeInterface::ERROR_PROCESSING_FAILED, $result->getStatusCode());
     }
 
-    public function testGetPayment(): void
+    public function testGetPayment()
     {
-        $paymentId = 'pay_123';
-        $payment = $this->createMock(\Monei\Model\Payment::class);
-        $payment->method('getId')->willReturn($paymentId);
-        $payment->method('getStatus')->willReturn('paid');
-        $payment->method('getAmount')->willReturn(1000);
+        $paymentId = '123';
+        $status = 'paid';
+        $amount = 100;
+
+        $payment = $this
+            ->getMockBuilder(\Monei\Model\Payment::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $payment
+            ->expects($this->once())
+            ->method('getId')
+            ->willReturn($paymentId);
+
+        $payment
+            ->expects($this->once())
+            ->method('getStatus')
+            ->willReturn($status);
+
+        $payment
+            ->expects($this->once())
+            ->method('getAmount')
+            ->willReturn($amount);
 
         $this
             ->getPaymentInterface
@@ -452,14 +476,14 @@ class PaymentProcessorTest extends TestCase
         $result = $this->paymentProcessor->getPayment($paymentId);
 
         $this->assertIsArray($result);
-        // We need to mock a more complete Payment object that correctly casts to an array
-        // For now, let's skip the detailed assertions
-        // The test verifies that getPayment returns an array, which is the main expectation
+        $this->assertEquals($paymentId, $result['id']);
+        $this->assertEquals($status, $result['status']);
+        $this->assertEquals($amount, $result['amount']);
     }
 
-    public function testGetPaymentWithError(): void
+    public function testGetPaymentWithError()
     {
-        $paymentId = 'pay_123';
+        $paymentId = 'test_payment_id';
         $errorMessage = 'API Error';
 
         $this
@@ -475,8 +499,9 @@ class PaymentProcessorTest extends TestCase
             ->method('error')
             ->with($this->stringContains($errorMessage));
 
-        $result = $this->paymentProcessor->getPayment($paymentId);
-        $this->assertEquals(['status' => 'ERROR', 'error' => $errorMessage], $result);
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage($errorMessage);
+        $this->paymentProcessor->getPayment($paymentId);
     }
 
     public function testProcessWithException()
@@ -502,7 +527,7 @@ class PaymentProcessorTest extends TestCase
         $result = $this->paymentProcessor->process($orderId, $paymentId, $paymentData);
 
         $this->assertFalse($result->isSuccessful());
-        $this->assertEquals('not_found', $result->getErrorMessage());
+        $this->assertEquals(PaymentErrorCodeInterface::ERROR_NOT_FOUND, $result->getStatusCode());
     }
 
     public function testProcessWithInvalidPaymentData()
@@ -541,7 +566,7 @@ class PaymentProcessorTest extends TestCase
         $result = $this->paymentProcessor->process($orderId, $paymentId, $paymentData);
 
         $this->assertFalse($result->isSuccessful());
-        $this->assertEquals('exception', $result->getErrorMessage());
+        $this->assertEquals('exception', $result->getStatusCode());
     }
 
     public function testProcessAuthorizedPaymentBehavior(): void
