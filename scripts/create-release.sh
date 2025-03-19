@@ -16,8 +16,6 @@ cat >"$TMP_EXCLUDE" <<EOL
 .vscode/*
 .cursor/*
 vendor/*
-scripts/*
-node_modules/*
 composer.lock
 package.json
 yarn.lock
@@ -31,6 +29,8 @@ pretty-php.phar*
 release-it.json
 commitlint.config.js
 bin
+create-release.sh
+.DS_Store
 EOL
 
 # Remove old zip if it exists
