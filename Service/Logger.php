@@ -138,9 +138,13 @@ class Logger extends MonologLogger
         }
 
         try {
-            return json_encode($data, self::JSON_OPTIONS) ?: '{}';
+            $result = json_encode($data, self::JSON_OPTIONS);
+            if ($result === false) {
+                return 'Unable to encode data to JSON: ' . json_last_error_msg();
+            }
+            return $result;
         } catch (\Throwable $e) {
-            return json_encode(['error' => 'Unable to encode data to JSON', 'message' => $e->getMessage()]);
+            return 'Unable to encode data to JSON: ' . $e->getMessage();
         }
     }
 }

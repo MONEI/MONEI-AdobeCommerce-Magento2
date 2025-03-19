@@ -293,13 +293,10 @@ class OrderStatusAfterRefundTest extends TestCase
                 Monei::STATUS_MONEI_REFUNDED
             )
             ->willReturn($historyMock);
-        $orderMock
-            ->expects($this->atLeastOnce())
-            ->method('save');
 
         // Set up creditmemo mock to return order mock
         $creditmemoMock
-            ->expects($this->once())
+            ->expects($this->any())
             ->method('getOrder')
             ->willReturn($orderMock);
 
@@ -313,16 +310,25 @@ class OrderStatusAfterRefundTest extends TestCase
             ->method('save')
             ->with($historyMock);
 
+        // Order repository should save the order
+        $this
+            ->orderRepositoryMock
+            ->expects($this->once())
+            ->method('save')
+            ->with($orderMock);
+
         // Logger should log debug message
         $this
             ->loggerMock
             ->expects($this->once())
             ->method('debug')
-            ->with(sprintf(
-                'Order %s status updated to %s after full refund',
-                $orderIncrementId,
-                Monei::STATUS_MONEI_REFUNDED
-            ));
+            ->with(
+                '[OrderRefund] Status updated',
+                [
+                    'order_id' => $orderIncrementId,
+                    'status' => Monei::STATUS_MONEI_REFUNDED
+                ]
+            );
 
         // Execute the plugin method
         $result = $this->plugin->afterSave($subjectMock, $creditmemoMock);
@@ -337,6 +343,7 @@ class OrderStatusAfterRefundTest extends TestCase
     public function testAfterSaveWithException()
     {
         $exception = new \Exception('Test exception');
+        $orderIncrementId = '100000001';
 
         // Create creditmemo mock
         $creditmemoMock = $this->createMock(Creditmemo::class);
@@ -348,9 +355,14 @@ class OrderStatusAfterRefundTest extends TestCase
             ->method('getPayment')
             ->willThrowException($exception);
 
+        $orderMock
+            ->expects($this->any())
+            ->method('getIncrementId')
+            ->willReturn($orderIncrementId);
+
         // Set up creditmemo mock to return order mock
         $creditmemoMock
-            ->expects($this->once())
+            ->expects($this->any())
             ->method('getOrder')
             ->willReturn($orderMock);
 
@@ -362,10 +374,14 @@ class OrderStatusAfterRefundTest extends TestCase
             ->loggerMock
             ->expects($this->once())
             ->method('error')
-            ->with(sprintf(
-                '[Error setting order status after refund] %s',
-                $exception->getMessage()
-            ), ['exception' => $exception]);
+            ->with(
+                '[OrderRefund] Status update failed',
+                [
+                    'order_id' => $orderIncrementId,
+                    'message' => 'Test exception',
+                    'exception' => $exception
+                ]
+            );
 
         // Execute the plugin method
         $result = $this->plugin->afterSave($subjectMock, $creditmemoMock);

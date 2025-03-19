@@ -1,125 +1,183 @@
 <?php
 
+/**
+ * @copyright Copyright © Monei (https://monei.com)
+ */
+
+declare(strict_types=1);
+
 namespace Monei\MoneiPayment\Test\Unit\Service\Api;
 
 use Magento\Framework\Exception\LocalizedException;
-use Monei\Model\Payment;
+use Monei\Api\PaymentsApi;
+use Monei\Model\Payment as MoneiPayment;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\GetPayment;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\Logger;
 use Monei\ApiException;
 use Monei\MoneiClient;
-use Monei\PaymentsApi;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Test for GetPayment API service
+ *
+ * @category  Monei
+ * @package   Monei\MoneiPayment\Test\Unit\Service\Api
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
+ * @license   https://opensource.org/licenses/MIT MIT License
+ * @link      https://monei.com/
+ */
 class GetPaymentTest extends TestCase
 {
     /**
+     * GetPayment service instance
+     *
      * @var GetPayment
      */
-    private GetPayment $getPaymentService;
+    private GetPayment $_getPaymentService;
 
     /**
+     * Logger mock
+     *
      * @var Logger|MockObject
      */
-    private Logger $loggerMock;
+    private Logger $_loggerMock;
 
     /**
+     * Exception handler mock
+     *
      * @var ApiExceptionHandler|MockObject
      */
-    private ApiExceptionHandler $exceptionHandlerMock;
+    private ApiExceptionHandler $_exceptionHandlerMock;
 
     /**
+     * API client mock
+     *
      * @var MoneiApiClient|MockObject
      */
-    private MoneiApiClient $apiClientMock;
+    private MoneiApiClient $_apiClientMock;
 
     /**
+     * MoneiClient mock
+     *
      * @var MoneiClient|MockObject
      */
-    private MoneiClient $moneiClientMock;
+    private MoneiClient $_moneiClientMock;
 
     /**
+     * PaymentsApi mock
+     *
      * @var PaymentsApi|MockObject
      */
-    private PaymentsApi $paymentsApiMock;
+    private PaymentsApi $_paymentsApiMock;
 
+    /**
+     * Set up the test environment
+     *
+     * @return void
+     */
     protected function setUp(): void
     {
-        $this->loggerMock = $this->createMock(Logger::class);
-        $this->exceptionHandlerMock = $this->createMock(ApiExceptionHandler::class);
-        $this->apiClientMock = $this->createMock(MoneiApiClient::class);
-        $this->moneiClientMock = $this->createMock(MoneiClient::class);
-        $this->paymentsApiMock = $this->createMock(PaymentsApi::class);
+        $this->_loggerMock = $this->createMock(Logger::class);
+        $this->_exceptionHandlerMock = $this->createMock(ApiExceptionHandler::class);
 
-        // Configure Monei client mock
-        $this->moneiClientMock->payments = $this->paymentsApiMock;
+        // Create mock for PaymentsApi
+        $this->_paymentsApiMock = $this->createMock(PaymentsApi::class);
 
-        // Configure API client to return the Monei client mock
-        $this->apiClientMock->method('getMoneiSdk')->willReturn($this->moneiClientMock);
+        // Create mock for MoneiClient with payments property
+        $this->_moneiClientMock = $this->createMock(MoneiClient::class);
+        // Set up the payments property to provide access to the PaymentsApi
+        $this->_moneiClientMock->payments = $this->_paymentsApiMock;
 
-        $this->getPaymentService = new GetPayment(
-            $this->loggerMock,
-            $this->exceptionHandlerMock,
-            $this->apiClientMock
+        // Create API client mock that returns our MoneiClient mock
+        $this->_apiClientMock = $this->createMock(MoneiApiClient::class);
+        $this->_apiClientMock->method('getMoneiSdk')->willReturn($this->_moneiClientMock);
+
+        $this->_getPaymentService = new GetPayment(
+            $this->_loggerMock,
+            $this->_exceptionHandlerMock,
+            $this->_apiClientMock
         );
     }
 
+    /**
+     * Test with valid payment ID
+     *
+     * @return void
+     */
     public function testExecuteWithValidPaymentId(): void
     {
-        // Create mock payment response
-        $paymentMock = $this->createMock(Payment::class);
-        $paymentMock->method('getId')->willReturn('pay_123456');
-        $paymentMock->method('getStatus')->willReturn('SUCCEEDED');
+        $paymentId = 'pay_123456';
+        $expectedPayment = $this->createMock(MoneiPayment::class);
+        $expectedPayment->method('getId')->willReturn($paymentId);
+        $expectedPayment->method('getStatus')->willReturn('SUCCEEDED');
+        $expectedPayment->method('getAmount')->willReturn(1000);
+        $expectedPayment->method('getCurrency')->willReturn('EUR');
 
-        // Configure payments API to return the mock payment
+        // Configure PaymentsApi mock to return our payment
         $this
-            ->paymentsApiMock
+            ->_paymentsApiMock
+            ->expects($this->once())
             ->method('get')
-            ->with('pay_123456')
-            ->willReturn($paymentMock);
+            ->with($paymentId)
+            ->willReturn($expectedPayment);
 
         // Execute the service
-        $result = $this->getPaymentService->execute('pay_123456');
+        $result = $this->_getPaymentService->execute($paymentId);
 
         // Verify the result
-        $this->assertSame($paymentMock, $result);
-        $this->assertEquals('pay_123456', $result->getId());
+        $this->assertSame($expectedPayment, $result);
+        $this->assertEquals($paymentId, $result->getId());
         $this->assertEquals('SUCCEEDED', $result->getStatus());
+        $this->assertEquals(1000, $result->getAmount());
+        $this->assertEquals('EUR', $result->getCurrency());
     }
 
+    /**
+     * Test with empty payment ID
+     *
+     * @return void
+     */
     public function testExecuteWithEmptyPaymentId(): void
     {
         $this->expectException(LocalizedException::class);
         $this->expectExceptionMessage('Payment ID is required to retrieve payment details');
 
-        $this->getPaymentService->execute('');
+        $this->_getPaymentService->execute('');
     }
 
-    public function testExecuteWithApiException(): void
+    /**
+     * Test API error handling
+     *
+     * @return void
+     */
+    public function testExecuteWithApiError(): void
     {
-        // Create API exception
-        $apiException = new ApiException('Payment not found');
+        $paymentId = 'pay_123456';
+        $apiException = new ApiException('API Error');
 
-        // Configure payments API to throw the exception
+        // Configure PaymentsApi mock to throw an exception
         $this
-            ->paymentsApiMock
+            ->_paymentsApiMock
+            ->expects($this->once())
             ->method('get')
-            ->with('pay_invalid')
+            ->with($paymentId)
             ->willThrowException($apiException);
 
-        // Configure exception handler to rethrow as LocalizedException
+        // Configure exception handler
         $this
-            ->exceptionHandlerMock
+            ->_exceptionHandlerMock
+            ->expects($this->once())
             ->method('handle')
-            ->withAnyParameters()
-            ->willThrowException(new LocalizedException(__('Payment not found')));
+            ->with($apiException)
+            ->willThrowException(new LocalizedException(__('API Error')));
 
         $this->expectException(LocalizedException::class);
-        $this->expectExceptionMessage('Payment not found');
+        $this->expectExceptionMessage('API Error');
 
-        $this->getPaymentService->execute('pay_invalid');
+        $this->_getPaymentService->execute($paymentId);
     }
 }

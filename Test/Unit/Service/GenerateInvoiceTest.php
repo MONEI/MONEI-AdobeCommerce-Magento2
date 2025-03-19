@@ -5,7 +5,6 @@ namespace Monei\MoneiPayment\Test\Unit\Service;
 use Magento\Framework\DB\Transaction;
 use Magento\Framework\DB\TransactionFactory;
 use Magento\Sales\Model\Order\Invoice;
-use Magento\Sales\Model\Order\Payment;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
@@ -51,7 +50,7 @@ class GenerateInvoiceTest extends TestCase
     private $orderMock;
 
     /**
-     * @var Payment|MockObject
+     * @var TestablePayment|MockObject
      */
     private $paymentMock;
 
@@ -78,7 +77,7 @@ class GenerateInvoiceTest extends TestCase
 
         // Create models for testing
         $this->orderMock = $this->createMock(Order::class);
-        $this->paymentMock = $this->createMock(Payment::class);
+        $this->paymentMock = $this->createMock(TestablePayment::class);
         $this->invoiceMock = $this->createMock(Invoice::class);
         $this->transactionMock = $this->createMock(Transaction::class);
 
@@ -105,8 +104,12 @@ class GenerateInvoiceTest extends TestCase
         $this->orderMock->expects($this->once())->method('addRelatedObject')->with($this->invoiceMock);
 
         // Setup payment mock
-        $this->paymentMock->expects($this->once())->method('setLastTransId')->with('pay_123456');
-        $this->paymentMock->expects($this->once())->method('setCreatedInvoice')->with($this->invoiceMock);
+        $this
+            ->paymentMock
+            ->expects($this->once())
+            ->method('setCreatedInvoice')
+            ->with($this->invoiceMock)
+            ->willReturnSelf();
 
         // Setup invoice mock
         $this->invoiceMock->method('getAllItems')->willReturn([1]);  // Non-empty array to pass the check
@@ -124,9 +127,20 @@ class GenerateInvoiceTest extends TestCase
 
         // Setup transaction
         $this->transactionFactoryMock->method('create')->willReturn($this->transactionMock);
-        $this->transactionMock->expects($this->once())->method('addObject')->with($this->invoiceMock)->willReturnSelf();
-        $this->transactionMock->expects($this->once())->method('addObject')->with($this->orderMock)->willReturnSelf();
-        $this->transactionMock->expects($this->once())->method('save');
+        $this
+            ->transactionMock
+            ->expects($this->exactly(2))
+            ->method('addObject')
+            ->withConsecutive(
+                [$this->invoiceMock],
+                [$this->orderMock]
+            )
+            ->willReturnSelf();
+        $this
+            ->transactionMock
+            ->expects($this->once())
+            ->method('save')
+            ->willReturnSelf();
 
         // Payment data
         $paymentData = ['id' => 'pay_123456'];
@@ -152,7 +166,12 @@ class GenerateInvoiceTest extends TestCase
         $this->orderMock->method('getBaseTotalDue')->willReturn(99.99);
 
         // Setup payment mock
-        $this->paymentMock->expects($this->once())->method('setLastTransId')->with('pay_123456');
+        $this
+            ->paymentMock
+            ->expects($this->once())
+            ->method('setCreatedInvoice')
+            ->with($this->invoiceMock)
+            ->willReturnSelf();
 
         // Setup invoice mock
         $this->invoiceMock->method('getAllItems')->willReturn([1]);  // Non-empty array to pass the check
@@ -168,8 +187,20 @@ class GenerateInvoiceTest extends TestCase
 
         // Setup transaction
         $this->transactionFactoryMock->method('create')->willReturn($this->transactionMock);
-        $this->transactionMock->expects($this->once())->method('addObject')->with($this->invoiceMock)->willReturnSelf();
-        $this->transactionMock->expects($this->once())->method('addObject')->with($this->orderMock)->willReturnSelf();
+        $this
+            ->transactionMock
+            ->expects($this->exactly(2))
+            ->method('addObject')
+            ->withConsecutive(
+                [$this->invoiceMock],
+                [$this->orderMock]
+            )
+            ->willReturnSelf();
+        $this
+            ->transactionMock
+            ->expects($this->once())
+            ->method('save')
+            ->willReturnSelf();
 
         // Payment data
         $paymentData = ['id' => 'pay_123456'];
@@ -255,10 +286,16 @@ class GenerateInvoiceTest extends TestCase
         $this->orderMock->method('hasInvoices')->willReturn(false);
         $this->orderMock->method('getBaseTotalDue')->willReturn(99.99);
         $this->orderMock->method('getData')->with(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION)->willReturn(true);
-        $this->orderMock->expects($this->once())->method('setData')->with(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, true);
+        $this->orderMock->method('setData')->with(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, true)->willReturnSelf();
+        $this->orderMock->expects($this->once())->method('addRelatedObject')->with($this->invoiceMock);
 
         // Setup payment mock
-        $this->paymentMock->expects($this->once())->method('setLastTransId')->with('pay_123456');
+        $this
+            ->paymentMock
+            ->expects($this->once())
+            ->method('setCreatedInvoice')
+            ->with($this->invoiceMock)
+            ->willReturnSelf();
 
         // Setup invoice mock
         $this->invoiceMock->method('getAllItems')->willReturn([1]);  // Non-empty array to pass the check
@@ -271,6 +308,8 @@ class GenerateInvoiceTest extends TestCase
 
         // Setup lock manager
         $this->lockManagerMock->method('isOrderLocked')->with('100000123')->willReturn(false);
+        $this->lockManagerMock->expects($this->once())->method('lockOrder')->with('100000123');
+        $this->lockManagerMock->expects($this->once())->method('unlockOrder')->with('100000123');
 
         // Setup vault payment creation
         $this
@@ -282,8 +321,20 @@ class GenerateInvoiceTest extends TestCase
 
         // Setup transaction
         $this->transactionFactoryMock->method('create')->willReturn($this->transactionMock);
-        $this->transactionMock->expects($this->once())->method('addObject')->with($this->invoiceMock)->willReturnSelf();
-        $this->transactionMock->expects($this->once())->method('addObject')->with($this->orderMock)->willReturnSelf();
+        $this
+            ->transactionMock
+            ->expects($this->exactly(2))
+            ->method('addObject')
+            ->withConsecutive(
+                [$this->invoiceMock],
+                [$this->orderMock]
+            )
+            ->willReturnSelf();
+        $this
+            ->transactionMock
+            ->expects($this->once())
+            ->method('save')
+            ->willReturnSelf();
 
         // Payment data
         $paymentData = ['id' => 'pay_123456'];

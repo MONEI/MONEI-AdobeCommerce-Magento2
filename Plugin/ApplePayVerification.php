@@ -9,20 +9,15 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Plugin;
 
-use Magento\Framework\App\Request\Http as RequestHttp;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Response\Http as ResponseHttp;
 use Magento\Framework\App\FrontControllerInterface;
 use Magento\Framework\App\RequestInterface;
-use Magento\Framework\Controller\Result\Raw;
-use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
-use Magento\Framework\Event\ManagerInterface;
-use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\HTTP\Client\Curl;
-use Magento\Framework\Module\Dir\Reader;
-use Magento\Framework\Module\Dir;
+use Magento\Payment\Helper\Data as PaymentHelper;
 use Psr\Log\LoggerInterface;
-use Exception;
+use Closure;
 
 /**
  * Plugin for handling Apple Pay domain verification
@@ -30,129 +25,127 @@ use Exception;
 class ApplePayVerification
 {
     private const MONEI_APPLE_PAY_FILE_URL = 'https://assets.monei.com/apple-pay/apple-developer-merchantid-domain-association/';
-    private const APPLE_PAY_VERIFICATION_PATH = '/.well-known/apple-developer-merchantid-domain-association';
-
-    /**
-     * @var File
-     */
-    private $file;
-
-    /**
-     * @var Reader
-     */
-    private $moduleReader;
+    private const PAYMENT_METHOD_CODE = 'monei_google_apple';
+    private const APPLE_PAY_PATH = '/.well-known/apple-developer-merchantid-domain-association';
 
     /**
      * @var LoggerInterface
      */
-    private $logger;
+    private $_logger;
 
     /**
      * @var ResponseHttp
      */
-    private $response;
+    private $_response;
 
     /**
      * @var Curl
      */
-    private $curl;
+    private $_curl;
 
     /**
-     * @var ResultFactory
+     * @var PaymentHelper
      */
-    private $resultFactory;
+    private $_paymentHelper;
 
     /**
-     * @var ManagerInterface
+     * @var ScopeConfigInterface
      */
-    private $eventManager;
+    private $_scopeConfig;
 
     /**
-     * @param File $file
-     * @param Reader $moduleReader
      * @param LoggerInterface $logger
      * @param ResponseHttp $response
      * @param Curl $curl
-     * @param ResultFactory $resultFactory
-     * @param ManagerInterface $eventManager
+     * @param PaymentHelper $paymentHelper
+     * @param ScopeConfigInterface $scopeConfig
      */
     public function __construct(
-        File $file,
-        Reader $moduleReader,
         LoggerInterface $logger,
         ResponseHttp $response,
         Curl $curl,
-        ResultFactory $resultFactory,
-        ManagerInterface $eventManager
+        PaymentHelper $paymentHelper,
+        ScopeConfigInterface $scopeConfig
     ) {
-        $this->file = $file;
-        $this->moduleReader = $moduleReader;
-        $this->logger = $logger;
-        $this->response = $response;
-        $this->curl = $curl;
-        $this->resultFactory = $resultFactory;
-        $this->eventManager = $eventManager;
+        $this->_logger = $logger;
+        $this->_response = $response;
+        $this->_curl = $curl;
+        $this->_paymentHelper = $paymentHelper;
+        $this->_scopeConfig = $scopeConfig;
     }
 
     /**
-     * Intercept the dispatch process to serve the Apple Pay verification file
+     * Around plugin for dispatch to handle Apple Pay verification file requests
      *
      * @param FrontControllerInterface $subject
+     * @param Closure $proceed
      * @param RequestInterface $request
-     * @return ResultInterface|null
+     * @return ResultInterface|ResponseHttp|null
      */
-    public function beforeDispatch(
+    public function aroundDispatch(
         FrontControllerInterface $subject,
+        Closure $proceed,
         RequestInterface $request
     ) {
-        // Get the request URI in a way that works with both real requests and unit tests
-        $requestUri = '';
-        if ($request instanceof RequestHttp) {
-            $requestUri = $request->getRequestUri();
-        } else {
-            $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+        // Get the request URI and normalize it for comparison
+        $requestUri = $request->getRequestUri();
+        $pathInfo = parse_url($requestUri, PHP_URL_PATH);
+        if ($pathInfo === null) {
+            return $proceed($request);
         }
+        $pathInfo = rtrim($pathInfo, '/');
 
         // Check if this is a request for the Apple Pay verification file
-        if (strpos($requestUri, self::APPLE_PAY_VERIFICATION_PATH) !== false) {
-            try {
-                $this->eventManager->dispatch('controller_action_predispatch');
-
-                // Prepare Apple Pay verification response
-                $this->curl->get(self::MONEI_APPLE_PAY_FILE_URL);
-                $statusCode = $this->curl->getStatus();
-
-                if ($statusCode === 200) {
-                    $fileContent = $this->curl->getBody();
-
-                    /** @var Raw $result */
-                    $result = $this->resultFactory->create(ResultFactory::TYPE_RAW);
-                    $result->setHttpResponseCode(200);
-                    $result->setHeader('Content-Type', 'text/plain');
-                    $result->setContents($fileContent);
-
-                    // Returning a Result object will prevent normal dispatch
-                    return $result;
-                } else {
-                    $this->logger->error('[ApplePay] Failed to fetch verification file. Status code: ' . $statusCode);
-
-                    /** @var Raw $result */
-                    $result = $this->resultFactory->create(ResultFactory::TYPE_RAW);
-                    $result->setHttpResponseCode($statusCode);
-
-                    return $result;
-                }
-            } catch (Exception $e) {
-                $this->logger->error('[ApplePay] Error serving verification file: ' . $e->getMessage());
-
-                /** @var Raw $result */
-                $result = $this->resultFactory->create(ResultFactory::TYPE_RAW);
-                $result->setHttpResponseCode(500);
-
-                return $result;
-            }
+        if ($pathInfo === self::APPLE_PAY_PATH && $this->_isApplePayEnabled()) {
+            $this->_logger->info('[ApplePay] Processing Apple Pay verification request');
+            return $this->_handleApplePayVerification();
         }
 
-        return null;
+        return $proceed($request);
+    }
+
+    /**
+     * Check if Apple Pay is enabled
+     *
+     * @return bool
+     */
+    private function _isApplePayEnabled(): bool
+    {
+        try {
+            $method = $this->_paymentHelper->getMethodInstance(self::PAYMENT_METHOD_CODE);
+            return $method->isActive();
+        } catch (\Exception $e) {
+            $this->_logger->error('[ApplePay] Error checking if payment method is enabled: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Handle Apple Pay verification request
+     *
+     * @return ResponseHttp
+     */
+    private function _handleApplePayVerification(): ResponseHttp
+    {
+        try {
+            $this->_curl->get(self::MONEI_APPLE_PAY_FILE_URL);
+            $statusCode = $this->_curl->getStatus();
+
+            if ($statusCode === 200) {
+                $fileContent = $this->_curl->getBody();
+                $this->_response->setHeader('Content-Type', 'text/plain', true);
+                $this->_response->setBody($fileContent);
+                $this->_response->setStatusCode(200);
+                $this->_logger->info('[ApplePay] Successfully served verification file');
+            } else {
+                $this->_logger->error('[ApplePay] Failed to fetch verification file. Status code: ' . $statusCode);
+                $this->_response->setStatusCode($statusCode ?: 500);
+            }
+        } catch (\Exception $e) {
+            $this->_logger->error('[ApplePay] Error serving verification file: ' . $e->getMessage());
+            $this->_response->setStatusCode(500);
+        }
+
+        return $this->_response;
     }
 }

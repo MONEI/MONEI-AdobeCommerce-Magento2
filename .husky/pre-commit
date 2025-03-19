@@ -1,0 +1,8 @@
+# Run composer checks and tests
+echo "Running code quality checks..."
+composer check:all || exit 1
+
+echo "Running tests..."
+composer test || exit 1
+
+yarn lint-staged
