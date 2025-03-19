@@ -119,7 +119,6 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
     private function buildPaymentRequest(array $data): CreatePaymentRequest
     {
         // Create base payment request with required fields
-        /** @phpstan-ignore-next-line */
         $paymentRequest = new CreatePaymentRequest([
             'amount' => $data['amount'],  // Already converted to cents
             'currency' => $data['currency'],

@@ -80,7 +80,19 @@ class ApplePayVerificationTest extends TestCase
     protected function setUp(): void
     {
         $this->loggerMock = $this->createMock(LoggerInterface::class);
-        $this->responseMock = $this->createMock(ResponseHttp::class);
+
+        // We need to use getMockBuilder to have more control over the mock
+        $this->responseMock = $this
+            ->getMockBuilder(ResponseHttp::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        // Configure the response mock to return itself from method calls
+        $this->responseMock->method('setHeader')->willReturnSelf();
+        $this->responseMock->method('setBody')->willReturnSelf();
+        $this->responseMock->method('setHttpResponseCode')->willReturnSelf();
+        $this->responseMock->method('setStatusCode')->willReturnSelf();
+
         $this->subjectMock = $this->createMock(FrontControllerInterface::class);
         $this->requestMock = $this->createMock(RequestInterface::class);
         $this->curlMock = $this->createMock(Curl::class);
@@ -109,7 +121,7 @@ class ApplePayVerificationTest extends TestCase
         $this
             ->requestMock
             ->expects($this->once())
-            ->method('getPathInfo')
+            ->method('getRequestUri')
             ->willReturn('/some/other/path');
 
         $result = $this->plugin->aroundDispatch(
@@ -129,7 +141,7 @@ class ApplePayVerificationTest extends TestCase
         $this
             ->requestMock
             ->expects($this->once())
-            ->method('getPathInfo')
+            ->method('getRequestUri')
             ->willReturn('/.well-known/apple-developer-merchantid-domain-association');
 
         $this
@@ -167,18 +179,22 @@ class ApplePayVerificationTest extends TestCase
             ->responseMock
             ->expects($this->once())
             ->method('setHeader')
-            ->with('Content-Type', 'text/plain');
+            ->with('Content-Type', 'text/plain')
+            ->willReturnSelf();
 
         $this
             ->responseMock
             ->expects($this->once())
             ->method('setBody')
-            ->with('verification_file_content');
+            ->with('verification_file_content')
+            ->willReturnSelf();
 
         $this
             ->responseMock
             ->expects($this->once())
-            ->method('sendResponse');
+            ->method('setStatusCode')
+            ->with(200)
+            ->willReturnSelf();
 
         $result = $this->plugin->aroundDispatch(
             $this->subjectMock,
@@ -186,7 +202,8 @@ class ApplePayVerificationTest extends TestCase
             $this->requestMock
         );
 
-        $this->assertNull($result);
+        // The method should return the response object
+        $this->assertSame($this->responseMock, $result);
     }
 
     /**
@@ -197,7 +214,7 @@ class ApplePayVerificationTest extends TestCase
         $this
             ->requestMock
             ->expects($this->once())
-            ->method('getPathInfo')
+            ->method('getRequestUri')
             ->willReturn('/.well-known/apple-developer-merchantid-domain-association');
 
         $this
@@ -228,13 +245,9 @@ class ApplePayVerificationTest extends TestCase
         $this
             ->responseMock
             ->expects($this->once())
-            ->method('setHttpResponseCode')
-            ->with(404);
-
-        $this
-            ->responseMock
-            ->expects($this->once())
-            ->method('sendResponse');
+            ->method('setStatusCode')
+            ->with(404)
+            ->willReturnSelf();
 
         $result = $this->plugin->aroundDispatch(
             $this->subjectMock,
@@ -242,7 +255,8 @@ class ApplePayVerificationTest extends TestCase
             $this->requestMock
         );
 
-        $this->assertNull($result);
+        // The method should return the response object
+        $this->assertSame($this->responseMock, $result);
     }
 
     /**
@@ -253,7 +267,7 @@ class ApplePayVerificationTest extends TestCase
         $this
             ->requestMock
             ->expects($this->once())
-            ->method('getPathInfo')
+            ->method('getRequestUri')
             ->willReturn('/.well-known/apple-developer-merchantid-domain-association');
 
         $this
@@ -273,24 +287,21 @@ class ApplePayVerificationTest extends TestCase
             ->curlMock
             ->expects($this->once())
             ->method('get')
-            ->willThrowException(new \Exception('Test exception'));
+            ->with('https://assets.monei.com/apple-pay/apple-developer-merchantid-domain-association/')
+            ->willThrowException(new \Exception('Connection error'));
 
         $this
             ->loggerMock
             ->expects($this->once())
             ->method('error')
-            ->with('[ApplePay] Error serving verification file: Test exception');
+            ->with('[ApplePay] Error serving verification file: Connection error');
 
         $this
             ->responseMock
             ->expects($this->once())
-            ->method('setHttpResponseCode')
-            ->with(500);
-
-        $this
-            ->responseMock
-            ->expects($this->once())
-            ->method('sendResponse');
+            ->method('setStatusCode')
+            ->with(500)
+            ->willReturnSelf();
 
         $result = $this->plugin->aroundDispatch(
             $this->subjectMock,
@@ -298,6 +309,7 @@ class ApplePayVerificationTest extends TestCase
             $this->requestMock
         );
 
-        $this->assertNull($result);
+        // The method should return the response object
+        $this->assertSame($this->responseMock, $result);
     }
 }

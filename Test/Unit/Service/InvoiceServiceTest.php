@@ -8,6 +8,7 @@ use Magento\Sales\Api\InvoiceRepositoryInterface;
 use Magento\Sales\Model\Order\Email\Sender\InvoiceSender;
 use Magento\Sales\Model\Order\Invoice;
 use Magento\Sales\Model\Order\Payment;
+use Magento\Sales\Model\ResourceModel\Order\Invoice\Collection as InvoiceCollection;
 use Magento\Sales\Model\Service\InvoiceService as MagentoInvoiceService;
 use Magento\Sales\Model\Order;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
@@ -16,21 +17,6 @@ use Monei\MoneiPayment\Service\InvoiceService;
 use Monei\MoneiPayment\Service\Logger;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-
-/**
- * Extended invoice class for testing that includes required methods
- */
-class TestableInvoice extends Invoice
-{
-    /**
-     * @param string $mode
-     * @return $this
-     */
-    public function setRequestedCaptureCase($mode)
-    {
-        return $this;
-    }
-}
 
 /**
  * Test case for InvoiceService
@@ -114,10 +100,13 @@ class InvoiceServiceTest extends TestCase
         // Create order, payment, invoice and transaction mocks
         $this->orderMock = $this->createMock(Order::class);
         $this->paymentMock = $this->createMock(Payment::class);
-        $this->invoiceMock = $this->createMock(TestableInvoice::class);
+        $this->invoiceMock = $this
+            ->getMockBuilder(TestableInvoice::class)
+            ->disableOriginalConstructor()
+            ->getMock();
         $this->transactionMock = $this->createMock(Transaction::class);
 
-        // Create the service instance to test
+        // Create service
         $this->invoiceService = new InvoiceService(
             $this->magentoInvoiceServiceMock,
             $this->invoiceRepositoryMock,
@@ -134,34 +123,33 @@ class InvoiceServiceTest extends TestCase
      */
     public function testProcessInvoiceSuccess(): void
     {
+        // Setup mocks
+        $orderId = 123;
+        $incrementId = '100000123';
+        $transactionId = 'pay_123456';
+
         // Setup order mock
-        $this->orderMock->method('getIncrementId')->willReturn('100000123');
+        $this->orderMock->method('getId')->willReturn($orderId);
+        $this->orderMock->method('getIncrementId')->willReturn($incrementId);
         $this->orderMock->method('canInvoice')->willReturn(true);
         $this->orderMock->method('getPayment')->willReturn($this->paymentMock);
 
         // Setup payment mock
-        $this->paymentMock->method('getLastTransId')->willReturn('pay_123456');
+        $this->paymentMock->method('getLastTransId')->willReturn($transactionId);
 
-        // Setup invoice mock with more flexible expectations
+        // Setup invoice mock
         $this->invoiceMock->method('getTotalQty')->willReturn(1.0);
-        $this->invoiceMock->method('setTransactionId')->with('pay_123456')->willReturnSelf();
-        $this->invoiceMock->method('register')->willReturnSelf();
         $this->invoiceMock->method('setRequestedCaptureCase')->willReturnSelf();
-        $this->invoiceMock->method('getIncrementId')->willReturn('INV-123');
+        $this->invoiceMock->method('getItems')->willReturn([1]);  // Non-empty items array
 
-        // Setup transaction mock
-        $this->transactionFactoryMock->method('create')->willReturn($this->transactionMock);
-        $this->transactionMock->method('addObject')->willReturnSelf();
-        $this->transactionMock->method('save')->willReturnSelf();
-
-        // Setup Magento invoice service mock
+        // Setup Magento invoice service
         $this
             ->magentoInvoiceServiceMock
             ->method('prepareInvoice')
             ->with($this->orderMock)
             ->willReturn($this->invoiceMock);
 
-        // Setup lock manager to execute the callback
+        // Setup lock manager with executeWithPaymentLock
         $this
             ->lockManagerMock
             ->method('executeWithPaymentLock')
@@ -169,27 +157,42 @@ class InvoiceServiceTest extends TestCase
                 return $callback();
             });
 
-        // Execute
-        $result = $this->invoiceService->processInvoice($this->orderMock, 'pay_123456');
+        // Setup transaction
+        $this->transactionFactoryMock->method('create')->willReturn($this->transactionMock);
+        $this->transactionMock->method('addObject')->willReturnSelf();
+        $this->transactionMock->method('save');
 
-        // Verify
+        // Setup invoice repository
+        $this->invoiceRepositoryMock->method('save')->with($this->invoiceMock);
+
+        // Setup invoice sender
+        $this->invoiceSenderMock->method('send')->with($this->invoiceMock);
+
+        // Execute the service
+        $result = $this->invoiceService->processInvoice($this->orderMock, $transactionId);
+
+        // Verify the result
         $this->assertSame($this->invoiceMock, $result);
     }
 
     /**
-     * Test invoice processing when order cannot be invoiced
+     * Test process invoice when order cannot be invoiced
      */
     public function testProcessInvoiceWhenOrderCannotBeInvoiced(): void
     {
+        // Setup mocks
+        $incrementId = '100000123';
+        $transactionId = 'pay_123456';
+
         // Setup order mock
-        $this->orderMock->method('getIncrementId')->willReturn('100000123');
+        $this->orderMock->method('getIncrementId')->willReturn($incrementId);
         $this->orderMock->method('canInvoice')->willReturn(false);
         $this->orderMock->method('getPayment')->willReturn($this->paymentMock);
 
         // Setup payment mock
-        $this->paymentMock->method('getLastTransId')->willReturn('pay_123456');
+        $this->paymentMock->method('getLastTransId')->willReturn($transactionId);
 
-        // Setup lock manager to execute the callback
+        // Setup lock manager with executeWithPaymentLock
         $this
             ->lockManagerMock
             ->method('executeWithPaymentLock')
@@ -197,37 +200,44 @@ class InvoiceServiceTest extends TestCase
                 return $callback();
             });
 
-        // Execute
-        $result = $this->invoiceService->processInvoice($this->orderMock, 'pay_123456');
+        // Execute the service
+        $result = $this->invoiceService->processInvoice($this->orderMock, $transactionId);
 
-        // Verify
+        // Verify the result
         $this->assertNull($result);
     }
 
     /**
-     * Test invoice processing when invoice has zero items
+     * Test process invoice with zero items
      */
     public function testProcessInvoiceWithZeroItems(): void
     {
+        // Setup mocks
+        $orderId = 123;
+        $incrementId = '100000123';
+        $transactionId = 'pay_123456';
+
         // Setup order mock
-        $this->orderMock->method('getIncrementId')->willReturn('100000123');
+        $this->orderMock->method('getId')->willReturn($orderId);
+        $this->orderMock->method('getIncrementId')->willReturn($incrementId);
         $this->orderMock->method('canInvoice')->willReturn(true);
         $this->orderMock->method('getPayment')->willReturn($this->paymentMock);
 
         // Setup payment mock
-        $this->paymentMock->method('getLastTransId')->willReturn('pay_123456');
+        $this->paymentMock->method('getLastTransId')->willReturn($transactionId);
 
-        // Setup invoice mock
+        // Setup invoice mock with no items
         $this->invoiceMock->method('getTotalQty')->willReturn(0.0);
+        $this->invoiceMock->method('getItems')->willReturn([]);
 
-        // Setup Magento invoice service mock
+        // Setup Magento invoice service
         $this
             ->magentoInvoiceServiceMock
             ->method('prepareInvoice')
             ->with($this->orderMock)
             ->willReturn($this->invoiceMock);
 
-        // Setup lock manager to execute the callback
+        // Setup lock manager with executeWithPaymentLock
         $this
             ->lockManagerMock
             ->method('executeWithPaymentLock')
@@ -235,46 +245,45 @@ class InvoiceServiceTest extends TestCase
                 return $callback();
             });
 
-        // Execute
-        $result = $this->invoiceService->processInvoice($this->orderMock, 'pay_123456');
+        // Execute the service
+        $result = $this->invoiceService->processInvoice($this->orderMock, $transactionId);
 
-        // Verify
+        // Verify the result
         $this->assertNull($result);
     }
 
     /**
-     * Test creating a pending invoice for authorized payment
+     * Test create pending invoice
      */
     public function testCreatePendingInvoice(): void
     {
+        // Setup mocks
+        $orderId = 123;
+        $incrementId = '100000123';
+        $transactionId = 'pay_123456';
+
         // Setup order mock
-        $this->orderMock->method('getIncrementId')->willReturn('100000123');
+        $this->orderMock->method('getId')->willReturn($orderId);
+        $this->orderMock->method('getIncrementId')->willReturn($incrementId);
         $this->orderMock->method('canInvoice')->willReturn(true);
         $this->orderMock->method('getPayment')->willReturn($this->paymentMock);
 
         // Setup payment mock
-        $this->paymentMock->method('getLastTransId')->willReturn('pay_123456');
+        $this->paymentMock->method('getLastTransId')->willReturn($transactionId);
 
         // Setup invoice mock
         $this->invoiceMock->method('getTotalQty')->willReturn(1.0);
-        $this->invoiceMock->method('setTransactionId')->with('pay_123456')->willReturnSelf();
-        $this->invoiceMock->method('register')->willReturnSelf();
         $this->invoiceMock->method('setRequestedCaptureCase')->willReturnSelf();
-        $this->invoiceMock->method('getIncrementId')->willReturn('INV-123');
+        $this->invoiceMock->method('getItems')->willReturn([1]);  // Non-empty items array
 
-        // Setup transaction mock
-        $this->transactionFactoryMock->method('create')->willReturn($this->transactionMock);
-        $this->transactionMock->method('addObject')->willReturnSelf();
-        $this->transactionMock->method('save')->willReturnSelf();
-
-        // Setup Magento invoice service mock
+        // Setup Magento invoice service
         $this
             ->magentoInvoiceServiceMock
             ->method('prepareInvoice')
             ->with($this->orderMock)
             ->willReturn($this->invoiceMock);
 
-        // Setup lock manager to execute the callback
+        // Setup lock manager with executeWithPaymentLock
         $this
             ->lockManagerMock
             ->method('executeWithPaymentLock')
@@ -282,57 +291,65 @@ class InvoiceServiceTest extends TestCase
                 return $callback();
             });
 
-        // Execute
-        $result = $this->invoiceService->createPendingInvoice($this->orderMock, 'pay_123456');
+        // Setup transaction
+        $this->transactionFactoryMock->method('create')->willReturn($this->transactionMock);
+        $this->transactionMock->method('addObject')->willReturnSelf();
+        $this->transactionMock->method('save');
 
-        // Verify
+        // Setup invoice repository
+        $this->invoiceRepositoryMock->method('save')->with($this->invoiceMock);
+
+        // Setup module config for email sending
+        $this->moduleConfigMock->method('shouldSendInvoiceEmail')->willReturn(false);
+
+        // Email should not be sent
+        $this->invoiceSenderMock->expects($this->never())->method('send');
+
+        // Execute the service
+        $result = $this->invoiceService->createPendingInvoice($this->orderMock, $transactionId);
+
+        // Verify the result
         $this->assertSame($this->invoiceMock, $result);
     }
 
     /**
-     * Test processing a partial invoice
+     * Test process partial invoice
      */
     public function testProcessPartialInvoice(): void
     {
+        // Setup mocks
+        $orderId = 123;
+        $incrementId = '100000123';
+        $transactionId = 'pay_123456';
+        $itemsToInvoice = [1 => 2];  // Item ID 1, qty 2
+
         // Setup order mock
-        $this->orderMock->method('getIncrementId')->willReturn('100000123');
+        $this->orderMock->method('getId')->willReturn($orderId);
+        $this->orderMock->method('getIncrementId')->willReturn($incrementId);
         $this->orderMock->method('canInvoice')->willReturn(true);
         $this->orderMock->method('getPayment')->willReturn($this->paymentMock);
 
-        // Setup invoices collection mock to simulate no prior partial captures
-        $invoicesCollection = $this
-            ->getMockBuilder(\Magento\Sales\Model\ResourceModel\Order\Invoice\Collection::class)
-            ->disableOriginalConstructor()
-            ->onlyMethods(['count', 'getIterator'])
-            ->getMock();
-        $invoicesCollection->method('count')->willReturn(0);
-        $invoicesCollection->method('getIterator')->willReturn(new \ArrayIterator([]));
-        $this->orderMock->method('getInvoiceCollection')->willReturn($invoicesCollection);
+        // Setup empty invoice collection
+        $invoiceCollectionMock = $this->createMock(InvoiceCollection::class);
+        $invoiceCollectionMock->method('getIterator')->willReturn(new \ArrayIterator([]));
+        $this->orderMock->method('getInvoiceCollection')->willReturn($invoiceCollectionMock);
 
         // Setup payment mock
-        $this->paymentMock->method('getLastTransId')->willReturn('pay_123456');
+        $this->paymentMock->method('getLastTransId')->willReturn($transactionId);
 
-        // Setup invoice mock with more flexible expectations
+        // Setup invoice mock
         $this->invoiceMock->method('getTotalQty')->willReturn(1.0);
-        $this->invoiceMock->method('setTransactionId')->with('pay_123456')->willReturnSelf();
-        $this->invoiceMock->method('register')->willReturnSelf();
         $this->invoiceMock->method('setRequestedCaptureCase')->willReturnSelf();
-        $this->invoiceMock->method('getIncrementId')->willReturn('INV-123');
+        $this->invoiceMock->method('getItems')->willReturn([1]);  // Non-empty items array
 
-        // Setup transaction mock
-        $this->transactionFactoryMock->method('create')->willReturn($this->transactionMock);
-        $this->transactionMock->method('addObject')->willReturnSelf();
-        $this->transactionMock->method('save')->willReturnSelf();
-
-        // Setup Magento invoice service mock to handle the quantities properly
-        $quantities = ['item_1' => 1, 'item_2' => 2];
+        // Setup Magento invoice service
         $this
             ->magentoInvoiceServiceMock
             ->method('prepareInvoice')
-            ->with($this->orderMock, $quantities)
+            ->with($this->orderMock, $itemsToInvoice)
             ->willReturn($this->invoiceMock);
 
-        // Setup the lock manager mock to execute the callback
+        // Setup lock manager with executeWithPaymentLock
         $this
             ->lockManagerMock
             ->method('executeWithPaymentLock')
@@ -340,10 +357,25 @@ class InvoiceServiceTest extends TestCase
                 return $callback();
             });
 
-        // Execute
-        $result = $this->invoiceService->processPartialInvoice($this->orderMock, $quantities, 'pay_123456');
+        // Setup transaction
+        $this->transactionFactoryMock->method('create')->willReturn($this->transactionMock);
+        $this->transactionMock->method('addObject')->willReturnSelf();
+        $this->transactionMock->method('save');
 
-        // Verify
+        // Setup invoice repository
+        $this->invoiceRepositoryMock->method('save')->with($this->invoiceMock);
+
+        // Setup invoice sender
+        $this->invoiceSenderMock->method('send')->with($this->invoiceMock);
+
+        // Execute the service
+        $result = $this->invoiceService->processPartialInvoice(
+            $this->orderMock,
+            $itemsToInvoice,
+            $transactionId
+        );
+
+        // Verify the result
         $this->assertSame($this->invoiceMock, $result);
     }
 }

@@ -1,126 +1,148 @@
 <?php
 
+/**
+ * Test for the VerifyApplePayDomain API service
+ *
+ * @category  Monei
+ * @package   Monei\MoneiPayment\Test\Unit\Service\Api
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
+ * @license   https://opensource.org/licenses/MIT MIT License
+ * @link      https://monei.com/
+ */
+
+declare(strict_types=1);
+
 namespace Monei\MoneiPayment\Test\Unit\Service\Api;
 
 use Magento\Framework\Exception\LocalizedException;
+use Monei\Api\ApplePayDomainApi;
 use Monei\Model\ApplePayDomainRegister200Response;
 use Monei\Model\RegisterApplePayDomainRequest;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\Api\VerifyApplePayDomain;
 use Monei\MoneiPayment\Service\Logger;
+use Monei\MoneiPayment\Test\Unit\Service\Api\MockApplePayDomainRegister200Response;
 use Monei\ApiException;
-use Monei\ApplePayDomainApi;
 use Monei\MoneiClient;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Create mock class for ApplePayDomainRegister200Response to avoid type errors
+ * Test for VerifyApplePayDomain API service
+ *
+ * @category  Monei
+ * @package   Monei\MoneiPayment\Test\Unit\Service\Api
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
+ * @license   https://opensource.org/licenses/MIT MIT License
+ * @link      https://monei.com/
  */
-class MockApplePayDomainRegister200Response extends ApplePayDomainRegister200Response
-{
-    private $domainName;
-    private $status;
-
-    public function __construct($domainName = '', $status = 'verified')
-    {
-        $this->domainName = $domainName;
-        $this->status = $status;
-    }
-
-    public function getDomainName()
-    {
-        return $this->domainName;
-    }
-
-    public function getStatus()
-    {
-        return $this->status;
-    }
-}
-
 class VerifyApplePayDomainTest extends TestCase
 {
     /**
+     * VerifyApplePayDomain service instance
+     *
      * @var VerifyApplePayDomain
      */
-    private VerifyApplePayDomain $verifyApplePayDomainService;
+    private VerifyApplePayDomain $_verifyApplePayDomainService;
 
     /**
+     * Logger mock
+     *
      * @var Logger|MockObject
      */
-    private Logger $loggerMock;
+    private Logger $_loggerMock;
 
     /**
+     * Exception handler mock
+     *
      * @var ApiExceptionHandler|MockObject
      */
-    private ApiExceptionHandler $exceptionHandlerMock;
+    private ApiExceptionHandler $_exceptionHandlerMock;
 
     /**
+     * API client mock
+     *
      * @var MoneiApiClient|MockObject
      */
-    private MoneiApiClient $apiClientMock;
+    private MoneiApiClient $_apiClientMock;
 
     /**
+     * MoneiClient mock
+     *
      * @var MoneiClient|MockObject
      */
-    private MoneiClient $moneiClientMock;
+    private MoneiClient $_moneiClientMock;
 
     /**
-     * @var MockObject
+     * ApplePayDomainApi mock
+     *
+     * @var ApplePayDomainApi|MockObject
      */
-    private $applePayDomainApiMock;
+    private ApplePayDomainApi $_applePayDomainApiMock;
 
+    /**
+     * Set up the test environment
+     *
+     * @return void
+     */
     protected function setUp(): void
     {
-        $this->loggerMock = $this->createMock(Logger::class);
-        $this->exceptionHandlerMock = $this->createMock(ApiExceptionHandler::class);
-        $this->apiClientMock = $this->createMock(MoneiApiClient::class);
-        $this->moneiClientMock = $this
-            ->getMockBuilder(MoneiClient::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $this->applePayDomainApiMock = $this->getMockBuilder(\stdClass::class)->addMethods(['register'])->getMock();
+        $this->_loggerMock = $this->createMock(Logger::class);
+        $this->_exceptionHandlerMock = $this->createMock(ApiExceptionHandler::class);
 
-        // Configure Monei client mock
-        $this->moneiClientMock->applePayDomain = $this->applePayDomainApiMock;
+        // Create mock for ApplePayDomainApi
+        $this->_applePayDomainApiMock = $this->createMock(ApplePayDomainApi::class);
 
-        // Configure API client to return the Monei client mock
-        $this->apiClientMock->method('getMoneiSdk')->willReturn($this->moneiClientMock);
-        $this->apiClientMock->method('convertResponseToArray')->willReturn(['status' => 'verified']);
+        // Create mock for MoneiClient with applePayDomain property
+        $this->_moneiClientMock = $this->createMock(MoneiClient::class);
+        // Set up the applePayDomain property to provide access to the ApplePayDomainApi
+        $this->_moneiClientMock->applePayDomain = $this->_applePayDomainApiMock;
 
-        $this->verifyApplePayDomainService = new VerifyApplePayDomain(
-            $this->loggerMock,
-            $this->exceptionHandlerMock,
-            $this->apiClientMock
+        // Create API client mock that returns our MoneiClient mock
+        $this->_apiClientMock = $this->createMock(MoneiApiClient::class);
+        $this->_apiClientMock->method('getMoneiSdk')->willReturn($this->_moneiClientMock);
+        $this->_apiClientMock->method('convertResponseToArray')->willReturn(['status' => 'verified']);
+
+        $this->_verifyApplePayDomainService = new VerifyApplePayDomain(
+            $this->_loggerMock,
+            $this->_exceptionHandlerMock,
+            $this->_apiClientMock
         );
     }
 
+    /**
+     * Test execute with valid domain
+     *
+     * @return void
+     */
     public function testExecuteWithValidDomain(): void
     {
         $domain = 'example.com';
         $storeId = 1;
 
-        // Create proper mock response with correct type
+        // Create a response using our mock class
         $responseMock = new MockApplePayDomainRegister200Response($domain, 'verified');
 
         // Configure ApplePayDomainApi to return the mock response
         $this
-            ->applePayDomainApiMock
+            ->_applePayDomainApiMock
+            ->expects($this->once())
             ->method('register')
             ->willReturn($responseMock);
 
         // Verify the SDK was called with the correct store ID
         $this
-            ->apiClientMock
+            ->_apiClientMock
             ->expects($this->once())
             ->method('getMoneiSdk')
             ->with($this->equalTo($storeId))
-            ->willReturn($this->moneiClientMock);
+            ->willReturn($this->_moneiClientMock);
 
         // Execute the service
-        $result = $this->verifyApplePayDomainService->execute($domain, $storeId);
+        $result = $this->_verifyApplePayDomainService->execute($domain, $storeId);
 
         // Verify the result
         $this->assertSame($responseMock, $result);
@@ -128,14 +150,24 @@ class VerifyApplePayDomainTest extends TestCase
         $this->assertEquals($domain, $result->getDomainName());
     }
 
+    /**
+     * Test execute with empty domain
+     *
+     * @return void
+     */
     public function testExecuteWithEmptyDomain(): void
     {
         $this->expectException(LocalizedException::class);
         $this->expectExceptionMessage('Domain is required for Apple Pay verification');
 
-        $this->verifyApplePayDomainService->execute('');
+        $this->_verifyApplePayDomainService->execute('');
     }
 
+    /**
+     * Test execute with API exception
+     *
+     * @return void
+     */
     public function testExecuteWithApiException(): void
     {
         $domain = 'invalid-domain.com';
@@ -145,13 +177,13 @@ class VerifyApplePayDomainTest extends TestCase
 
         // Configure ApplePayDomainApi to throw the exception
         $this
-            ->applePayDomainApiMock
+            ->_applePayDomainApiMock
             ->method('register')
             ->willThrowException($apiException);
 
         // Configure exception handler to rethrow as LocalizedException
         $this
-            ->exceptionHandlerMock
+            ->_exceptionHandlerMock
             ->method('handle')
             ->withAnyParameters()
             ->willThrowException(new LocalizedException(__('Domain verification failed')));
@@ -159,35 +191,37 @@ class VerifyApplePayDomainTest extends TestCase
         $this->expectException(LocalizedException::class);
         $this->expectExceptionMessage('Domain verification failed');
 
-        $this->verifyApplePayDomainService->execute($domain);
+        $this->_verifyApplePayDomainService->execute($domain);
     }
 
     /**
      * Test that default null storeId works correctly
+     *
+     * @return void
      */
     public function testExecuteWithDefaultStoreId(): void
     {
         $domain = 'example.com';
 
-        // Create proper mock response with correct type
+        // Create a response using our mock class
         $responseMock = new MockApplePayDomainRegister200Response($domain, 'verified');
 
         // Configure ApplePayDomainApi to return the mock response
         $this
-            ->applePayDomainApiMock
+            ->_applePayDomainApiMock
             ->method('register')
             ->willReturn($responseMock);
 
         // Verify the SDK was called with null store ID
         $this
-            ->apiClientMock
+            ->_apiClientMock
             ->expects($this->once())
             ->method('getMoneiSdk')
             ->with($this->equalTo(null))
-            ->willReturn($this->moneiClientMock);
+            ->willReturn($this->_moneiClientMock);
 
         // Execute the service with default null storeId
-        $result = $this->verifyApplePayDomainService->execute($domain);
+        $result = $this->_verifyApplePayDomainService->execute($domain);
 
         $this->assertSame($responseMock, $result);
     }

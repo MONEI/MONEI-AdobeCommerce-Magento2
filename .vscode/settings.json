@@ -124,5 +124,11 @@
   },
   "[less]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "phpsab.snifferArguments": [
+    "--standard=Magento2",
+    "--extensions=php,phtml",
+    "--error-severity=10",
+    "--ignore-annotations"
+  ]
 }

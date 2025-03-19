@@ -5,7 +5,6 @@ namespace Monei\MoneiPayment\Test\Unit\Service;
 use Magento\Framework\DB\Transaction;
 use Magento\Framework\DB\TransactionFactory;
 use Magento\Sales\Model\Order\Invoice;
-use Magento\Sales\Model\Order\Payment;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
@@ -14,21 +13,6 @@ use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 use Monei\MoneiPayment\Service\GenerateInvoice;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-
-/**
- * Extended payment class for testing that includes the setCreatedInvoice method
- */
-class TestablePayment extends Payment
-{
-    /**
-     * @param Invoice $invoice
-     * @return $this
-     */
-    public function setCreatedInvoice($invoice)
-    {
-        return $this;
-    }
-}
 
 /**
  * Test case for GenerateInvoice service
