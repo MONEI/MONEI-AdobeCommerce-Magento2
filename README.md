@@ -21,6 +21,7 @@ Accept payments through [MONEI](https://monei.com) in your Adobe Commerce (Magen
       - [Option 2: Via Main Branch](#option-2-via-main-branch)
     - [Bitnami Installation](#bitnami-installation)
     - [Before You Begin](#before-you-begin)
+    - [Varnish Configuration](#varnish-configuration)
   - [Configuration](#configuration)
   - [Configuring Cloudflare Tunnel for Payment Callbacks](#configuring-cloudflare-tunnel-for-payment-callbacks)
   - [Available Commands](#available-commands)
@@ -171,6 +172,22 @@ When testing your integration:
 
 - Use your [test mode](https://docs.monei.com/docs/testing) API Key from [MONEI Dashboard → Settings → API Access](https://dashboard.monei.com/settings/api)
 - Check the status of test payments in your [MONEI Dashboard → Payments](https://dashboard.monei.com/payments) (in test mode)
+
+### Varnish Configuration
+
+If you're using Varnish with Magento, you'll need to properly configure it to work with the MONEI Payment module. Follow these steps:
+
+1. Copy the provided Varnish configuration from `etc/varnish-config.vcl` to your Varnish server.
+2. Include this configuration in your main Varnish VCL file:
+   ```vcl
+   include "path/to/monei/varnish-config.vcl";
+   ```
+3. Restart Varnish to apply the changes:
+   ```bash
+   systemctl restart varnish
+   ```
+
+For more details, see [Varnish Integration](docs/VARNISH.md).
 
 ## Configuration
 

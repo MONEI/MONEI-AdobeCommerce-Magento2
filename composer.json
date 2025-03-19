@@ -49,7 +49,11 @@
     "allow-plugins": {
       "magento/composer-dependency-version-audit-plugin": true,
       "dealerdirect/phpcodesniffer-composer-installer": true,
-      "phpstan/extension-installer": true
+      "phpstan/extension-installer": true,
+      "magento/composer-root-update-plugin": true,
+      "magento/inventory-composer-installer": true,
+      "magento/magento-composer-installer": true,
+      "php-http/discovery": true
     }
   },
   "scripts": {

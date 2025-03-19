@@ -1,4 +1,11 @@
 <?xml version="1.0" ?>
+<!--
+/**
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
+ * @link      https://monei.com/
+ */
+-->
 <page
   layout="1column"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -10,10 +17,15 @@
   <body>
     <referenceContainer name="content">
       <block
-        class="Monei\MoneiPayment\Block\Payment\Loading"
-        name="monei.payment.loading"
+        class="Magento\Framework\View\Element\Template"
+        name="monei_payment_loading"
         template="Monei_MoneiPayment::payment/loading.phtml"
-      />
+      >
+        <arguments>
+          <argument name="jsLayout" xsi:type="array" />
+        </arguments>
+      </block>
     </referenceContainer>
   </body>
+  <update handle="no_page_cache" />
 </page>

@@ -131,6 +131,11 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
      */
     public function execute()
     {
+        // Set no-cache headers to prevent Varnish caching
+        $this->response->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0', true);
+        $this->response->setHeader('Pragma', 'no-cache', true);
+        $this->response->setHeader('X-Magento-Cache-Debug', 'MISS', true);
+
         try {
             $this->logger->debug('[Callback] =============================================');
             $this->logger->debug('[Callback] Payment callback received');

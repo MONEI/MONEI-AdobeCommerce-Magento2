@@ -136,6 +136,12 @@ class Complete implements HttpGetActionInterface
      */
     public function execute()
     {
+        // Prevent caching of this sensitive payment completion page
+        $redirect = $this->resultRedirectFactory->create();
+        $redirect->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0', true);
+        $redirect->setHeader('Pragma', 'no-cache', true);
+        $redirect->setHeader('X-Magento-Cache-Debug', 'MISS', true);
+
         try {
             $this->logInitialRequestData();
 

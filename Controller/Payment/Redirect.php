@@ -74,6 +74,10 @@ class Redirect implements HttpGetActionInterface
      */
     public function execute()
     {
+        // Ensure this page is not cached by Varnish
+        $this->resultRedirectFactory->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0', true);
+        $this->resultRedirectFactory->setHeader('Pragma', 'no-cache', true);
+
         /** @var OrderInterface $order */
         $order = $this->checkoutSession->getLastRealOrder();
 

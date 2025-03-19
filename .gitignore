@@ -3,7 +3,7 @@
 .DS_Store
 
 # Composer
-/vendor/
+vendor
 composer.lock
 auth.json
 
@@ -19,23 +19,7 @@ node_modules
 !.yarn/sdks
 !.yarn/versions
 
-# Cache files
-.php-cs-fixer.cache
-.phpcs-cache
-.php_cs.cache
-.phpunit.result.cache
-/var/cache/*
-/generated/*
-/examples/*
-
-pretty-php.phar
-pretty-php.phar.asc
-
-# Development symlinks
-/dev/vendor_symlink
-/dev/magento_symlink
-
 # Temporary files
-/tmp/*
-Test/.phpunit.cache/test-results
+tmp
 var
+reports
