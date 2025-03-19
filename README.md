@@ -3,7 +3,6 @@
 [![Magento Marketplace](https://img.shields.io/badge/Magento-Marketplace-orange.svg)](https://marketplace.magento.com/monei-module-monei-payment.html)
 [![Latest Version](https://img.shields.io/packagist/v/monei/module-monei-payment.svg)](https://packagist.org/packages/monei/module-monei-payment)
 [![Minimum PHP Version](https://img.shields.io/badge/php-%3E%3D%208.1-8892BF.svg)](https://php.net/)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Accept payments through [MONEI](https://monei.com) in your Adobe Commerce (Magento 2) store with our official extension.
 
