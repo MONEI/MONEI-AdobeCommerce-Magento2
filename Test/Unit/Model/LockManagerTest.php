@@ -1,5 +1,14 @@
 <?php
 
+/**
+ * php version 8.1
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
+ * @link      https://monei.com/
+ */
+
+declare(strict_types=1);
+
 namespace Monei\MoneiPayment\Test\Unit\Model;
 
 use Magento\Framework\Exception\LocalizedException;
@@ -10,22 +19,25 @@ use Monei\MoneiPayment\Service\Logger;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @covers \Monei\MoneiPayment\Model\LockManager
+ */
 class LockManagerTest extends TestCase
 {
     /**
-     * @var LockManager
-     */
-    private LockManager $lockManager;
-
-    /**
      * @var MagentoLockManagerInterface|MockObject
      */
-    private MagentoLockManagerInterface $magentoLockManagerMock;
+    private $magentoLockManagerMock;
 
     /**
      * @var Logger|MockObject
      */
-    private Logger $loggerMock;
+    private $loggerMock;
+
+    /**
+     * @var LockManager
+     */
+    private $lockManager;
 
     protected function setUp(): void
     {
@@ -38,239 +50,580 @@ class LockManagerTest extends TestCase
         );
     }
 
-    public function testLockOrder(): void
+    /**
+     * Test lockOrder when lock is acquired successfully
+     */
+    public function testLockOrderSuccess(): void
     {
-        // Configure magento lock manager to return success
+        $incrementId = '000000001';
+        $lockName = 'MONEI_ORDER_LOCK_' . $incrementId;
+        $timeout = 60;
+
         $this
             ->magentoLockManagerMock
             ->expects($this->once())
             ->method('lock')
-            ->with('MONEI_ORDER_LOCK_12345', LockManagerInterface::DEFAULT_LOCK_TIMEOUT)
+            ->with($lockName, $timeout)
             ->willReturn(true);
 
-        // Call the method
-        $result = $this->lockManager->lockOrder('12345');
+        $this
+            ->loggerMock
+            ->expects($this->once())
+            ->method('info')
+            ->with(
+                '[LockManager] Order lock acquired',
+                [
+                    'order_id' => $incrementId,
+                    'timeout' => $timeout
+                ]
+            );
 
-        // Verify result
+        $result = $this->lockManager->lockOrder($incrementId, $timeout);
         $this->assertTrue($result);
     }
 
-    public function testLockOrderFails(): void
+    /**
+     * Test lockOrder when lock acquisition fails
+     */
+    public function testLockOrderFailure(): void
     {
-        // Configure magento lock manager to return failure
+        $incrementId = '000000001';
+        $lockName = 'MONEI_ORDER_LOCK_' . $incrementId;
+        $timeout = 60;
+
         $this
             ->magentoLockManagerMock
             ->expects($this->once())
             ->method('lock')
-            ->with('MONEI_ORDER_LOCK_12345', LockManagerInterface::DEFAULT_LOCK_TIMEOUT)
+            ->with($lockName, $timeout)
             ->willReturn(false);
 
-        // Call the method
-        $result = $this->lockManager->lockOrder('12345');
+        $this
+            ->loggerMock
+            ->expects($this->once())
+            ->method('warning')
+            ->with(
+                '[LockManager] Failed to acquire order lock',
+                [
+                    'order_id' => $incrementId,
+                    'timeout' => $timeout
+                ]
+            );
 
-        // Verify result
+        $result = $this->lockManager->lockOrder($incrementId, $timeout);
         $this->assertFalse($result);
     }
 
-    public function testUnlockOrder(): void
+    /**
+     * Test unlockOrder when unlock is successful
+     */
+    public function testUnlockOrderSuccess(): void
     {
-        // First check if it's locked
+        $incrementId = '000000001';
+        $lockName = 'MONEI_ORDER_LOCK_' . $incrementId;
+
+        // First check is lock exists
         $this
             ->magentoLockManagerMock
             ->expects($this->atLeastOnce())
             ->method('isLocked')
-            ->with('MONEI_ORDER_LOCK_12345')
+            ->with($lockName)
             ->willReturn(true, false);
 
-        // Configure magento lock manager to unlock successfully
+        // Then unlock
         $this
             ->magentoLockManagerMock
             ->expects($this->once())
             ->method('unlock')
-            ->with('MONEI_ORDER_LOCK_12345')
+            ->with($lockName)
             ->willReturn(true);
 
-        // Call the method
-        $result = $this->lockManager->unlockOrder('12345');
+        $this
+            ->loggerMock
+            ->expects($this->once())
+            ->method('info')
+            ->with(
+                '[LockManager] Order lock released',
+                ['order_id' => $incrementId]
+            );
 
-        // Verify result
+        $result = $this->lockManager->unlockOrder($incrementId);
         $this->assertTrue($result);
     }
 
-    public function testUnlockOrderWithRetries(): void
+    /**
+     * Test unlockOrder when unlock fails
+     */
+    public function testUnlockOrderFailure(): void
     {
-        // First check if it's locked - returns true multiple times then false
+        $incrementId = '000000001';
+        $lockName = 'MONEI_ORDER_LOCK_' . $incrementId;
+
+        // Lock exists but unlock fails
         $this
             ->magentoLockManagerMock
             ->expects($this->atLeastOnce())
             ->method('isLocked')
-            ->with('MONEI_ORDER_LOCK_12345')
-            ->willReturn(true, true, false);
+            ->with($lockName)
+            ->willReturn(true);
 
-        // Configure magento lock manager to unlock successfully after 2 tries
+        $this
+            ->magentoLockManagerMock
+            ->expects($this->exactly(3))
+            ->method('unlock')
+            ->with($lockName)
+            ->willReturn(false);
+
+        $this
+            ->loggerMock
+            ->expects($this->once())
+            ->method('warning')
+            ->with(
+                '[LockManager] Failed to release order lock',
+                ['order_id' => $incrementId]
+            );
+
+        $result = $this->lockManager->unlockOrder($incrementId);
+        $this->assertFalse($result);
+    }
+
+    /**
+     * Test isOrderLocked
+     */
+    public function testIsOrderLocked(): void
+    {
+        $incrementId = '000000001';
+        $lockName = 'MONEI_ORDER_LOCK_' . $incrementId;
+
+        // Test when is locked
+        $this->magentoLockManagerMock = $this->createMock(MagentoLockManagerInterface::class);
+        $this->lockManager = new LockManager($this->magentoLockManagerMock, $this->loggerMock);
+
+        $this
+            ->magentoLockManagerMock
+            ->expects($this->once())
+            ->method('isLocked')
+            ->with($lockName)
+            ->willReturn(true);
+
+        $result = $this->lockManager->isOrderLocked($incrementId);
+        $this->assertTrue($result);
+
+        // Test when not locked in a separate test
+        $this->magentoLockManagerMock = $this->createMock(MagentoLockManagerInterface::class);
+        $this->lockManager = new LockManager($this->magentoLockManagerMock, $this->loggerMock);
+
+        $this
+            ->magentoLockManagerMock
+            ->expects($this->once())
+            ->method('isLocked')
+            ->with($lockName)
+            ->willReturn(false);
+
+        $result = $this->lockManager->isOrderLocked($incrementId);
+        $this->assertFalse($result);
+    }
+
+    /**
+     * Test lockPayment when lock is acquired successfully
+     */
+    public function testLockPaymentSuccess(): void
+    {
+        $orderId = '000000001';
+        $paymentId = 'pay_123456';
+        $lockName = 'MONEI_PAYMENT_LOCK_' . $orderId . '_' . $paymentId;
+        $timeout = 60;
+
+        $this
+            ->magentoLockManagerMock
+            ->expects($this->once())
+            ->method('lock')
+            ->with($lockName, $timeout)
+            ->willReturn(true);
+
+        $this
+            ->loggerMock
+            ->expects($this->once())
+            ->method('info')
+            ->with(
+                '[LockManager] Payment lock acquired',
+                [
+                    'order_id' => $orderId,
+                    'payment_id' => $paymentId,
+                    'timeout' => $timeout
+                ]
+            );
+
+        $result = $this->lockManager->lockPayment($orderId, $paymentId, $timeout);
+        $this->assertTrue($result);
+    }
+
+    /**
+     * Test lockPayment when lock acquisition fails
+     */
+    public function testLockPaymentFailure(): void
+    {
+        $orderId = '000000001';
+        $paymentId = 'pay_123456';
+        $lockName = 'MONEI_PAYMENT_LOCK_' . $orderId . '_' . $paymentId;
+        $timeout = 60;
+
+        $this
+            ->magentoLockManagerMock
+            ->expects($this->once())
+            ->method('lock')
+            ->with($lockName, $timeout)
+            ->willReturn(false);
+
+        $this
+            ->loggerMock
+            ->expects($this->once())
+            ->method('warning')
+            ->with(
+                '[LockManager] Failed to acquire payment lock',
+                [
+                    'order_id' => $orderId,
+                    'payment_id' => $paymentId,
+                    'timeout' => $timeout
+                ]
+            );
+
+        $result = $this->lockManager->lockPayment($orderId, $paymentId, $timeout);
+        $this->assertFalse($result);
+    }
+
+    /**
+     * Test unlockPayment when unlock is successful
+     */
+    public function testUnlockPaymentSuccess(): void
+    {
+        $orderId = '000000001';
+        $paymentId = 'pay_123456';
+        $lockName = 'MONEI_PAYMENT_LOCK_' . $orderId . '_' . $paymentId;
+
+        // First check is lock exists
+        $this
+            ->magentoLockManagerMock
+            ->expects($this->atLeastOnce())
+            ->method('isLocked')
+            ->with($lockName)
+            ->willReturn(true, false);
+
+        // Then unlock
+        $this
+            ->magentoLockManagerMock
+            ->expects($this->once())
+            ->method('unlock')
+            ->with($lockName)
+            ->willReturn(true);
+
+        $this
+            ->loggerMock
+            ->expects($this->once())
+            ->method('info')
+            ->with(
+                '[LockManager] Payment lock released',
+                [
+                    'order_id' => $orderId,
+                    'payment_id' => $paymentId
+                ]
+            );
+
+        $result = $this->lockManager->unlockPayment($orderId, $paymentId);
+        $this->assertTrue($result);
+    }
+
+    /**
+     * Test unlockPayment when unlock fails
+     */
+    public function testUnlockPaymentFailure(): void
+    {
+        $orderId = '000000001';
+        $paymentId = 'pay_123456';
+        $lockName = 'MONEI_PAYMENT_LOCK_' . $orderId . '_' . $paymentId;
+
+        // Lock exists but unlock fails
+        $this
+            ->magentoLockManagerMock
+            ->expects($this->atLeastOnce())
+            ->method('isLocked')
+            ->with($lockName)
+            ->willReturn(true);
+
+        $this
+            ->magentoLockManagerMock
+            ->expects($this->exactly(3))
+            ->method('unlock')
+            ->with($lockName)
+            ->willReturn(false);
+
+        $this
+            ->loggerMock
+            ->expects($this->once())
+            ->method('warning')
+            ->with(
+                '[LockManager] Failed to release payment lock',
+                [
+                    'order_id' => $orderId,
+                    'payment_id' => $paymentId
+                ]
+            );
+
+        $result = $this->lockManager->unlockPayment($orderId, $paymentId);
+        $this->assertFalse($result);
+    }
+
+    /**
+     * Test isPaymentLocked
+     */
+    public function testIsPaymentLocked(): void
+    {
+        $orderId = '000000001';
+        $paymentId = 'pay_123456';
+        $lockName = 'MONEI_PAYMENT_LOCK_' . $orderId . '_' . $paymentId;
+
+        $this
+            ->magentoLockManagerMock
+            ->expects($this->once())
+            ->method('isLocked')
+            ->with($lockName)
+            ->willReturn(true);
+
+        $result = $this->lockManager->isPaymentLocked($orderId, $paymentId);
+        $this->assertTrue($result);
+    }
+
+    /**
+     * Test waitForPaymentUnlock with successful unlock
+     */
+    public function testWaitForPaymentUnlockSuccess(): void
+    {
+        $orderId = '000000001';
+        $paymentId = 'pay_123456';
+        $lockName = 'MONEI_PAYMENT_LOCK_' . $orderId . '_' . $paymentId;
+        $timeout = 5;
+        $interval = 100;
+
+        // First info log
+        $this
+            ->loggerMock
+            ->expects($this->exactly(2))
+            ->method('info')
+            ->withConsecutive(
+                [
+                    '[LockManager] Waiting for payment lock release',
+                    [
+                        'order_id' => $orderId,
+                        'payment_id' => $paymentId,
+                        'timeout' => $timeout,
+                        'interval' => $interval
+                    ]
+                ],
+                [
+                    '[LockManager] Payment lock released',
+                    $this->callback(function ($params) use ($orderId, $paymentId) {
+                        return isset($params['order_id']) &&
+                            $params['order_id'] === $orderId &&
+                            isset($params['payment_id']) &&
+                            $params['payment_id'] === $paymentId &&
+                            isset($params['waited']);
+                    })
+                ]
+            );
+
+        // Return false on the second call to simulate unlock
         $this
             ->magentoLockManagerMock
             ->expects($this->exactly(2))
-            ->method('unlock')
-            ->with('MONEI_ORDER_LOCK_12345')
-            ->willReturnOnConsecutiveCalls(false, true);
-
-        // Call the method
-        $result = $this->lockManager->unlockOrder('12345');
-
-        // Verify result
-        $this->assertTrue($result);
-    }
-
-    public function testIsOrderLocked(): void
-    {
-        // Configure magento lock manager
-        $this
-            ->magentoLockManagerMock
-            ->expects($this->once())
             ->method('isLocked')
-            ->with('MONEI_ORDER_LOCK_12345')
-            ->willReturn(true);
+            ->with($lockName)
+            ->willReturnOnConsecutiveCalls(true, false);
 
-        // Call the method
-        $result = $this->lockManager->isOrderLocked('12345');
-
-        // Verify result
+        $result = $this->lockManager->waitForPaymentUnlock($orderId, $paymentId, $timeout, $interval);
         $this->assertTrue($result);
     }
 
-    public function testLockPayment(): void
+    /**
+     * Test waitForPaymentUnlock with timeout
+     */
+    public function testWaitForPaymentUnlockTimeout(): void
     {
-        // Configure magento lock manager to return success
+        $orderId = '000000001';
+        $paymentId = 'pay_123456';
+        $lockName = 'MONEI_PAYMENT_LOCK_' . $orderId . '_' . $paymentId;
+        $timeout = 1;  // Short timeout for test
+        $interval = 100;
+
         $this
-            ->magentoLockManagerMock
+            ->loggerMock
             ->expects($this->once())
-            ->method('lock')
-            ->with('MONEI_PAYMENT_LOCK_12345_pay_67890', LockManagerInterface::DEFAULT_LOCK_TIMEOUT)
-            ->willReturn(true);
+            ->method('info')
+            ->with(
+                '[LockManager] Waiting for payment lock release',
+                [
+                    'order_id' => $orderId,
+                    'payment_id' => $paymentId,
+                    'timeout' => $timeout,
+                    'interval' => $interval
+                ]
+            );
 
-        // Call the method
-        $result = $this->lockManager->lockPayment('12345', 'pay_67890');
-
-        // Verify result
-        $this->assertTrue($result);
-    }
-
-    public function testExecuteWithOrderLock(): void
-    {
-        // Configure magento lock manager to lock successfully
-        $this
-            ->magentoLockManagerMock
-            ->expects($this->once())
-            ->method('lock')
-            ->with('MONEI_ORDER_LOCK_12345', LockManagerInterface::DEFAULT_LOCK_TIMEOUT)
-            ->willReturn(true);
-
-        // Mock isLocked to return true then false after unlock
+        // Always return true to simulate lock never released
         $this
             ->magentoLockManagerMock
             ->expects($this->atLeastOnce())
             ->method('isLocked')
-            ->with('MONEI_ORDER_LOCK_12345')
-            ->willReturn(true, false);
-
-        // Configure magento lock manager to unlock successfully
-        $this
-            ->magentoLockManagerMock
-            ->expects($this->once())
-            ->method('unlock')
-            ->with('MONEI_ORDER_LOCK_12345')
+            ->with($lockName)
             ->willReturn(true);
 
-        $callbackCalled = false;
-        $expectedResult = 'callback result';
+        $this
+            ->loggerMock
+            ->expects($this->once())
+            ->method('warning')
+            ->with(
+                '[LockManager] Timeout waiting for payment lock release',
+                [
+                    'order_id' => $orderId,
+                    'payment_id' => $paymentId,
+                    'timeout' => $timeout
+                ]
+            );
 
-        // Execute with lock
-        $result = $this->lockManager->executeWithOrderLock('12345', function () use (&$callbackCalled, $expectedResult) {
-            $callbackCalled = true;
-
-            return $expectedResult;
-        });
-
-        // Verify callback was called and returned the expected result
-        $this->assertTrue($callbackCalled);
-        $this->assertEquals($expectedResult, $result);
+        $result = $this->lockManager->waitForPaymentUnlock($orderId, $paymentId, $timeout, $interval);
+        $this->assertFalse($result);
     }
 
-    public function testExecuteWithOrderLockThrowsExceptionWhenLockFails(): void
+    /**
+     * Test executeWithPaymentLock with successful execution
+     */
+    public function testExecuteWithPaymentLockSuccess(): void
     {
-        // Configure magento lock manager to fail locking
+        $orderId = '000000001';
+        $paymentId = 'pay_123456';
+        $lockName = 'MONEI_PAYMENT_LOCK_' . $orderId . '_' . $paymentId;
+        $timeout = 60;
+        $callbackResult = 'success';
+        $callback = function () use ($callbackResult) {
+            return $callbackResult;
+        };
+
+        // Lock is acquired
         $this
             ->magentoLockManagerMock
             ->expects($this->once())
             ->method('lock')
-            ->with('MONEI_ORDER_LOCK_12345', LockManagerInterface::DEFAULT_LOCK_TIMEOUT)
+            ->with($lockName, $timeout)
+            ->willReturn(true);
+
+        // Unlock is called after callback
+        $this
+            ->magentoLockManagerMock
+            ->expects($this->atLeastOnce())
+            ->method('isLocked')
+            ->with($lockName)
+            ->willReturn(true, false);
+
+        $this
+            ->magentoLockManagerMock
+            ->expects($this->once())
+            ->method('unlock')
+            ->with($lockName)
+            ->willReturn(true);
+
+        $result = $this->lockManager->executeWithPaymentLock($orderId, $paymentId, $callback, $timeout);
+        $this->assertEquals($callbackResult, $result);
+    }
+
+    /**
+     * Test executeWithPaymentLock with failed lock acquisition
+     */
+    public function testExecuteWithPaymentLockFailure(): void
+    {
+        $orderId = '000000001';
+        $paymentId = 'pay_123456';
+        $lockName = 'MONEI_PAYMENT_LOCK_' . $orderId . '_' . $paymentId;
+        $timeout = 60;
+        $callback = function () {
+            $this->fail('Callback should not be executed');
+        };
+
+        // Lock fails
+        $this
+            ->magentoLockManagerMock
+            ->expects($this->once())
+            ->method('lock')
+            ->with($lockName, $timeout)
             ->willReturn(false);
 
-        // Ensure unlock is never called
-        $this
-            ->magentoLockManagerMock
-            ->expects($this->never())
-            ->method('unlock');
-
-        $callbackCalled = false;
-
         $this->expectException(LocalizedException::class);
-        $this->expectExceptionMessage('Unable to acquire order lock for order 12345');
+        $this->expectExceptionMessage('Unable to acquire payment lock for order ' . $orderId . ', payment ' . $paymentId);
 
-        // Execute with lock
-        $this->lockManager->executeWithOrderLock('12345', function () use (&$callbackCalled) {
-            $callbackCalled = true;
-        });
-
-        // Verify callback was not called
-        $this->assertFalse($callbackCalled);
+        $this->lockManager->executeWithPaymentLock($orderId, $paymentId, $callback, $timeout);
     }
 
-    public function testExecuteWithOrderLockUnlocksWhenCallbackThrows(): void
+    /**
+     * Test executeWithOrderLock with successful execution
+     */
+    public function testExecuteWithOrderLockSuccess(): void
     {
-        // Configure magento lock manager to lock successfully
+        $incrementId = '000000001';
+        $lockName = 'MONEI_ORDER_LOCK_' . $incrementId;
+        $timeout = 60;
+        $callbackResult = 'success';
+        $callback = function () use ($callbackResult) {
+            return $callbackResult;
+        };
+
+        // Lock is acquired
         $this
             ->magentoLockManagerMock
             ->expects($this->once())
             ->method('lock')
-            ->with('MONEI_ORDER_LOCK_12345', LockManagerInterface::DEFAULT_LOCK_TIMEOUT)
+            ->with($lockName, $timeout)
             ->willReturn(true);
 
-        // Mock isLocked to return true then false after unlock
+        // Unlock is called after callback
         $this
             ->magentoLockManagerMock
             ->expects($this->atLeastOnce())
             ->method('isLocked')
-            ->with('MONEI_ORDER_LOCK_12345')
+            ->with($lockName)
             ->willReturn(true, false);
 
-        // Configure magento lock manager to unlock successfully
         $this
             ->magentoLockManagerMock
             ->expects($this->once())
             ->method('unlock')
-            ->with('MONEI_ORDER_LOCK_12345')
+            ->with($lockName)
             ->willReturn(true);
 
-        $callbackCalled = false;
-        $exception = new \Exception('Callback throws exception');
+        $result = $this->lockManager->executeWithOrderLock($incrementId, $callback, $timeout);
+        $this->assertEquals($callbackResult, $result);
+    }
 
-        try {
-            // Execute with lock
-            $this->lockManager->executeWithOrderLock('12345', function () use (&$callbackCalled, $exception) {
-                $callbackCalled = true;
+    /**
+     * Test executeWithOrderLock with failed lock acquisition
+     */
+    public function testExecuteWithOrderLockFailure(): void
+    {
+        $incrementId = '000000001';
+        $lockName = 'MONEI_ORDER_LOCK_' . $incrementId;
+        $timeout = 60;
+        $callback = function () {
+            $this->fail('Callback should not be executed');
+        };
 
-                throw $exception;
-            });
+        // Lock fails
+        $this
+            ->magentoLockManagerMock
+            ->expects($this->once())
+            ->method('lock')
+            ->with($lockName, $timeout)
+            ->willReturn(false);
 
-            $this->fail('Expected exception was not thrown');
-        } catch (\Exception $e) {
-            // Verify the exception thrown was our original one
-            $this->assertSame($exception, $e);
-        }
+        $this->expectException(LocalizedException::class);
+        $this->expectExceptionMessage('Unable to acquire order lock for order ' . $incrementId);
 
-        // Verify callback was called
-        $this->assertTrue($callbackCalled);
+        $this->lockManager->executeWithOrderLock($incrementId, $callback, $timeout);
     }
 }
