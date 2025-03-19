@@ -59,7 +59,7 @@
     "test:unit-coverage": "./bin test/unit-coverage",
     "test:unit-xdebug": "./bin test/unit-xdebug",
     "cs:lint": "./bin phpcs",
-    "cs:fix": "./bin phpcbf || true",
+    "cs:fix": "./bin phpcbf",
     "analyze": "./bin analyse",
     "i18n:collect": "./bin i18n:collect-phrases",
     "magento": "./bin magento",

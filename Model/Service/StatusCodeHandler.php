@@ -1,7 +1,10 @@
 <?php
 
 /**
- * @copyright Copyright © Monei (https://monei.com)
+ * php version 8.1
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
+ * @link      https://monei.com/
  */
 
 declare(strict_types=1);
@@ -226,8 +229,7 @@ class StatusCodeHandler
         }
 
         if (isset($data['original_payment']) &&
-            method_exists($data['original_payment'], 'getStatusCode')
-        ) {
+                method_exists($data['original_payment'], 'getStatusCode')) {
             return $data['original_payment']->getStatusCode();
         }
 
@@ -264,8 +266,7 @@ class StatusCodeHandler
         }
 
         if (isset($data['original_payment']) &&
-            method_exists($data['original_payment'], 'getStatusMessage')
-        ) {
+                method_exists($data['original_payment'], 'getStatusMessage')) {
             return $data['original_payment']->getStatusMessage();
         }
 

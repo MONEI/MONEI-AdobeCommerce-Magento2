@@ -1,5 +1,10 @@
 /**
- * @copyright Copyright © Monei (https://monei.com)
+ * @category  Monei
+
+ * php version 8.1
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
+ * @link      https://monei.com/
  */
 
 define(['jquery', 'jquery/ui', 'Magento_Ui/js/modal/alert', 'mage/translate'], function (

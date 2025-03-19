@@ -1,7 +1,12 @@
-<?xml version="1.0"?>
+<?xml version="1.0" ?>
 <!--
 /**
- * @copyright Copyright © Monei (https://monei.com)
+ * @category  Monei
+
+ * php version 8.1
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
+ * @link      https://monei.com/
  */
 -->
 <page
@@ -35,86 +40,86 @@
                             <item name="renders" xsi:type="array">
                               <item name="children" xsi:type="array">
                                 <item name="monei-payments" xsi:type="array">
-                                  <item name="component" xsi:type="string"
-                                    >Monei_MoneiPayment/js/view/payment/monei-redirect</item
-                                  >
+                                  <item name="component" xsi:type="string">
+                                    Monei_MoneiPayment/js/view/payment/monei-redirect
+                                  </item>
                                   <item name="methods" xsi:type="array">
                                     <item name="monei" xsi:type="array">
-                                      <item name="isBillingAddressRequired" xsi:type="boolean"
-                                        >true</item
-                                      >
+                                      <item name="isBillingAddressRequired" xsi:type="boolean">
+                                        true
+                                      </item>
                                     </item>
                                   </item>
                                 </item>
                                 <item name="monei-card-payment" xsi:type="array">
-                                  <item name="component" xsi:type="string"
-                                    >Monei_MoneiPayment/js/view/payment/monei-card</item
-                                  >
+                                  <item name="component" xsi:type="string">
+                                    Monei_MoneiPayment/js/view/payment/monei-card
+                                  </item>
                                   <item name="methods" xsi:type="array">
                                     <item name="monei_card" xsi:type="array">
-                                      <item name="isBillingAddressRequired" xsi:type="boolean"
-                                        >true</item
-                                      >
+                                      <item name="isBillingAddressRequired" xsi:type="boolean">
+                                        true
+                                      </item>
                                     </item>
                                   </item>
                                 </item>
                                 <item name="monei-bizum-payment" xsi:type="array">
-                                  <item name="component" xsi:type="string"
-                                    >Monei_MoneiPayment/js/view/payment/monei-bizum</item
-                                  >
+                                  <item name="component" xsi:type="string">
+                                    Monei_MoneiPayment/js/view/payment/monei-bizum
+                                  </item>
                                   <item name="methods" xsi:type="array">
                                     <item name="monei_bizum" xsi:type="array">
-                                      <item name="isBillingAddressRequired" xsi:type="boolean"
-                                        >true</item
-                                      >
+                                      <item name="isBillingAddressRequired" xsi:type="boolean">
+                                        true
+                                      </item>
                                     </item>
                                   </item>
                                 </item>
                                 <item name="monei-google-apple-payment" xsi:type="array">
-                                  <item name="component" xsi:type="string"
-                                    >Monei_MoneiPayment/js/view/payment/monei-google-apple</item
-                                  >
+                                  <item name="component" xsi:type="string">
+                                    Monei_MoneiPayment/js/view/payment/monei-google-apple
+                                  </item>
                                   <item name="methods" xsi:type="array">
                                     <item name="monei_google_apple" xsi:type="array">
-                                      <item name="isBillingAddressRequired" xsi:type="boolean"
-                                        >true</item
-                                      >
+                                      <item name="isBillingAddressRequired" xsi:type="boolean">
+                                        true
+                                      </item>
                                     </item>
                                   </item>
                                 </item>
                                 <item name="monei-multibanco-redirect-payment" xsi:type="array">
-                                  <item name="component" xsi:type="string"
-                                    >Monei_MoneiPayment/js/view/payment/monei-multibanco-redirect</item
-                                  >
+                                  <item name="component" xsi:type="string">
+                                    Monei_MoneiPayment/js/view/payment/monei-multibanco-redirect
+                                  </item>
                                   <item name="methods" xsi:type="array">
                                     <item name="monei_multibanco_redirect" xsi:type="array">
-                                      <item name="isBillingAddressRequired" xsi:type="boolean"
-                                        >true</item
-                                      >
+                                      <item name="isBillingAddressRequired" xsi:type="boolean">
+                                        true
+                                      </item>
                                     </item>
                                   </item>
                                 </item>
                                 <item name="monei-mbway-redirect-payment" xsi:type="array">
-                                  <item name="component" xsi:type="string"
-                                    >Monei_MoneiPayment/js/view/payment/monei-mbway-redirect</item
-                                  >
+                                  <item name="component" xsi:type="string">
+                                    Monei_MoneiPayment/js/view/payment/monei-mbway-redirect
+                                  </item>
                                   <item name="methods" xsi:type="array">
                                     <item name="monei_mbway_redirect" xsi:type="array">
-                                      <item name="isBillingAddressRequired" xsi:type="boolean"
-                                        >true</item
-                                      >
+                                      <item name="isBillingAddressRequired" xsi:type="boolean">
+                                        true
+                                      </item>
                                     </item>
                                   </item>
                                 </item>
                                 <item name="monei-paypal-payment" xsi:type="array">
-                                  <item name="component" xsi:type="string"
-                                    >Monei_MoneiPayment/js/view/payment/monei-paypal</item
-                                  >
+                                  <item name="component" xsi:type="string">
+                                    Monei_MoneiPayment/js/view/payment/monei-paypal
+                                  </item>
                                   <item name="methods" xsi:type="array">
                                     <item name="monei_paypal" xsi:type="array">
-                                      <item name="isBillingAddressRequired" xsi:type="boolean"
-                                        >true</item
-                                      >
+                                      <item name="isBillingAddressRequired" xsi:type="boolean">
+                                        true
+                                      </item>
                                     </item>
                                   </item>
                                 </item>

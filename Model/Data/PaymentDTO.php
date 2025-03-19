@@ -1,7 +1,10 @@
 <?php
 
 /**
- * @copyright Copyright © Monei (https://monei.com)
+ * php version 8.1
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
+ * @link      https://monei.com/
  */
 
 declare(strict_types=1);
@@ -480,8 +483,7 @@ class PaymentDTO
     public function getPaymentMethodType(): ?string
     {
         if (isset($this->rawData['original_payment']) &&
-            method_exists($this->rawData['original_payment'], 'getPaymentMethod')
-        ) {
+                method_exists($this->rawData['original_payment'], 'getPaymentMethod')) {
             $paymentMethod = $this->rawData['original_payment']->getPaymentMethod();
             if (isset($paymentMethod->type)) {
                 return $paymentMethod->type;

@@ -5,9 +5,9 @@
  *
  * @category  Payment
  * @package   Monei\MoneiPayment
- * @author    MONEI <support@monei.com>
- * @copyright 2023 MONEI
- * @license   https://opensource.org/licenses/MIT MIT License
+ * php version 8.1
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
  * @link      https://monei.com/
  */
 
@@ -18,9 +18,6 @@ use Magento\Sales\Model\Order\Payment;
 /**
  * Extended Payment class for testing that includes required methods
  *
- * @category  Tests
- * @package   Monei\MoneiPayment\Test\Unit\Service
- * @author    MONEI <support@monei.com>
  * @license   https://opensource.org/licenses/MIT MIT License
  * @link      https://monei.com/
  */

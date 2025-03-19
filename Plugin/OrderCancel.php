@@ -1,7 +1,10 @@
 <?php
 
 /**
- * @copyright Copyright © Monei (https://monei.com)
+ * php version 8.1
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
+ * @link      https://monei.com/
  */
 
 declare(strict_types=1);
@@ -52,8 +55,7 @@ class OrderCancel
         try {
             // Skip non-Monei payments
             if (!$result->getPayment() ||
-                !in_array($result->getPayment()->getMethod(), Monei::PAYMENT_METHODS_MONEI)
-            ) {
+                    !in_array($result->getPayment()->getMethod(), Monei::PAYMENT_METHODS_MONEI)) {
                 return $result;
             }
 
@@ -85,14 +87,13 @@ class OrderCancel
             foreach ($historyEntries as $history) {
                 // Check for any entries that match the current status or have cancellation keywords
                 if (!$history->getIsCustomerNotified() && (
-                        $history->getStatus() === $result->getStatus() ||
-                        ($history->getComment() && (
-                            stripos((string) $history->getComment(), 'cancel') !== false ||
-                            stripos((string) $history->getComment(), 'cancelled') !== false ||
-                            stripos((string) $history->getComment(), 'canceled') !== false
-                        ))
-                    )
-                ) {
+                    $history->getStatus() === $result->getStatus() ||
+                    ($history->getComment() && (
+                        stripos((string) $history->getComment(), 'cancel') !== false ||
+                        stripos((string) $history->getComment(), 'cancelled') !== false ||
+                        stripos((string) $history->getComment(), 'canceled') !== false
+                    ))
+                )) {
                     // Mark as notified
                     $history->setIsCustomerNotified(true);
                     $updated = true;

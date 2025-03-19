@@ -1,7 +1,10 @@
 <?php
 
 /**
- * @copyright Copyright © Monei (https://monei.com)
+ * php version 8.1
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
+ * @link      https://monei.com/
  */
 
 declare(strict_types=1);
@@ -358,8 +361,7 @@ class InvoiceService
     {
         foreach ($order->getInvoiceCollection() as $invoice) {
             if ($invoice->getState() == Invoice::STATE_PAID &&
-                $invoice->getBaseGrandTotal() < $order->getBaseGrandTotal()
-            ) {
+                    $invoice->getBaseGrandTotal() < $order->getBaseGrandTotal()) {
                 return true;
             }
         }

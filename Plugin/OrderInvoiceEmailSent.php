@@ -1,7 +1,10 @@
 <?php
 
 /**
- * @copyright Copyright © Monei (https://monei.com)
+ * php version 8.1
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
+ * @link      https://monei.com/
  */
 
 declare(strict_types=1);
@@ -108,14 +111,13 @@ class OrderInvoiceEmailSent
             // Find and update status entries specifically related to the invoice capture
             foreach ($historyEntries as $history) {
                 if (!$history->getIsCustomerNotified() && (
-                        // Check for capture-related comments
-                        ($history->getComment() && strpos((string) $history->getComment(), 'Captured amount') !== false) ||
-                        // Check for status-related entries
-                        $history->getStatus() == $order->getStatus() ||
-                        // Check for capture-related status changes
-                        ($history->getEntityName() == 'invoice' && $history->getStatus() == $order->getStatus())
-                    )
-                ) {
+                    // Check for capture-related comments
+                    ($history->getComment() && strpos((string) $history->getComment(), 'Captured amount') !== false) ||
+                    // Check for status-related entries
+                    $history->getStatus() == $order->getStatus() ||
+                    // Check for capture-related status changes
+                    ($history->getEntityName() == 'invoice' && $history->getStatus() == $order->getStatus())
+                )) {
                     // Mark as notified
                     $history->setIsCustomerNotified(true);
                     $updated = true;

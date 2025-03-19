@@ -1,7 +1,10 @@
 <?php
 
 /**
- * @copyright Copyright © Monei (https://monei.com)
+ * php version 8.1
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
+ * @link      https://monei.com/
  */
 
 declare(strict_types=1);
@@ -92,8 +95,7 @@ class GetPaymentMethods extends AbstractApiService implements GetPaymentMethodsI
 
         // Return from static cache if already fetched and not expired
         if (isset(self::$paymentMethodsCache[$cacheKey]) &&
-            ($currentTime - self::$paymentMethodsCache[$cacheKey]['timestamp'] < self::CACHE_LIFETIME)
-        ) {
+                ($currentTime - self::$paymentMethodsCache[$cacheKey]['timestamp'] < self::CACHE_LIFETIME)) {
             $this->logger->debug('[ApiPaymentMethods] Using cached payment methods', ['accountId' => $accountId]);
             return self::$paymentMethodsCache[$cacheKey]['data'];
         }

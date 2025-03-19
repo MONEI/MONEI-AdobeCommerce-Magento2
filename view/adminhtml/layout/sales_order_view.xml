@@ -1,7 +1,12 @@
-<?xml version="1.0"?>
+<?xml version="1.0" ?>
 <!--
 /**
- * @copyright Copyright © Monei (https://monei.com)
+ * @category  Monei
+
+ * php version 8.1
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
+ * @link      https://monei.com/
  */
 -->
 <page
@@ -25,9 +30,9 @@
         after="-"
       >
         <arguments>
-          <argument name="view_model" xsi:type="object"
-            >Monei\MoneiPayment\ViewModel\Order\PaymentInfo</argument
-          >
+          <argument name="view_model" xsi:type="object">
+            Monei\MoneiPayment\ViewModel\Order\PaymentInfo
+          </argument>
         </arguments>
       </block>
     </referenceBlock>

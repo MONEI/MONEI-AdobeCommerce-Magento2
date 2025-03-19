@@ -1,7 +1,10 @@
 <?php
 
 /**
- * @copyright Copyright © Monei (https://monei.com)
+ * php version 8.1
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
+ * @link      https://monei.com/
  */
 
 declare(strict_types=1);
@@ -140,8 +143,7 @@ class Capture implements CommandInterface
 
                 // Set transaction ID on the invoice if available
                 if (isset($commandSubject['payment']) &&
-                    method_exists($commandSubject['payment'], 'getCreatedInvoice')
-                ) {
+                        method_exists($commandSubject['payment'], 'getCreatedInvoice')) {
                     $invoice = $commandSubject['payment']->getCreatedInvoice();
                     if ($invoice) {
                         $invoice->setTransactionId($captureId);

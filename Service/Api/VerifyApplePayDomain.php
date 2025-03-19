@@ -1,8 +1,11 @@
 <?php
 
 /**
- * Copyright © Monei. All rights reserved.
- * See LICENSE.md for license details.
+ * @category  Monei
+ * php version 8.1
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
+ * @link      https://monei.com/
  */
 
 declare(strict_types=1);

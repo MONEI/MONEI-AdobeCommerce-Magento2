@@ -130,5 +130,8 @@
     "--extensions=php,phtml",
     "--error-severity=10",
     "--ignore-annotations"
+  ],
+  "cSpell.words": [
+    "Magento"
   ]
 }

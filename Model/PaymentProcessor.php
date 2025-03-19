@@ -1,7 +1,10 @@
 <?php
 
 /**
- * @copyright Copyright © Monei (https://monei.com)
+ * php version 8.1
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
+ * @link      https://monei.com/
  */
 
 declare(strict_types=1);
@@ -483,9 +486,8 @@ class PaymentProcessor implements PaymentProcessorInterface
                     $comment = $history->getComment();
                     // Check for various capture-related texts
                     if (stripos($comment, 'Captured amount') !== false ||
-                        stripos($comment, 'Invoice') !== false ||
-                        stripos($comment, 'Capture') !== false
-                    ) {
+                            stripos($comment, 'Invoice') !== false ||
+                            stripos($comment, 'Capture') !== false) {
                         $history->setIsCustomerNotified(true);
                         $this->logger->debug(sprintf(
                             '[Payment] Order history entry marked as notified for order %s, Comment: %s',

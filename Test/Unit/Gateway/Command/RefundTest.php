@@ -6,7 +6,10 @@
  * @category  Monei
  * @package   Monei\MoneiPayment
  * @author    Monei <info@monei.com>
- * @copyright Copyright © Monei (https://monei.com)
+ * php version 8.1
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
+ * @link      https://monei.com/
  * @license   https://opensource.org/license/mit/ MIT License
  * @link      https://monei.com/
  */

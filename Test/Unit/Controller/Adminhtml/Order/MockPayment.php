@@ -5,9 +5,9 @@
  *
  * @category  Payment
  * @package   Monei\MoneiPayment
- * @author    MONEI <support@monei.com>
- * @copyright 2023 MONEI
- * @license   https://opensource.org/licenses/MIT MIT License
+ * php version 8.1
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
  * @link      https://monei.com/
  */
 
@@ -20,9 +20,6 @@ use ArrayAccess;
  * Mock Payment class for testing that implements ArrayAccess
  * to behave both as an object and array
  *
- * @category  Tests
- * @package   Monei\MoneiPayment\Test\Unit\Controller\Adminhtml\Order
- * @author    MONEI <support@monei.com>
  * @license   https://opensource.org/licenses/MIT MIT License
  * @link      https://monei.com/
  */

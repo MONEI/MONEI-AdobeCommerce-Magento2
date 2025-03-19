@@ -1,7 +1,10 @@
 <?php
 
 /**
- * @copyright Copyright © Monei (https://monei.com)
+ * php version 8.1
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
+ * @link      https://monei.com/
  */
 
 declare(strict_types=1);
@@ -23,11 +26,8 @@ use PHPUnit\Framework\TestCase;
 /**
  * Test for GetPayment API service
  *
- * @category  Monei
- * @package   Monei\MoneiPayment\Test\Unit\Service\Api
- * @author    Monei <support@monei.com>
+ * php version 8.1
  * @copyright 2023 Monei
- * @license   https://opensource.org/licenses/MIT MIT License
  * @link      https://monei.com/
  */
 class GetPaymentTest extends TestCase
