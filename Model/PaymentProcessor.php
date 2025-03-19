@@ -169,9 +169,9 @@ class PaymentProcessor implements PaymentProcessorInterface
 
             if ($result) {
                 return PaymentProcessingResult::createSuccess(
+                    $payment->getStatus(),
                     $orderId,
-                    $paymentId,
-                    $payment->getStatus()
+                    $paymentId
                 );
             } else {
                 return PaymentProcessingResult::createError(

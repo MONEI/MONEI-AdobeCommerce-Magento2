@@ -41,42 +41,42 @@ class PaymentProcessorTest extends TestCase
     /**
      * @var OrderRepositoryInterface|MockObject
      */
-    private OrderRepositoryInterface $orderRepositoryMock;
+    private OrderRepositoryInterface $orderRepository;
 
     /**
      * @var InvoiceService|MockObject
      */
-    private InvoiceService $invoiceServiceMock;
+    private InvoiceService $invoiceService;
 
     /**
      * @var LockManagerInterface|MockObject
      */
-    private LockManagerInterface $lockManagerMock;
+    private LockManagerInterface $lockManager;
 
     /**
      * @var Logger|MockObject
      */
-    private Logger $loggerMock;
+    private Logger $logger;
 
     /**
      * @var MoneiApiClient|MockObject
      */
-    private MoneiApiClient $moneiApiClientMock;
+    private MoneiApiClient $moneiApiClient;
 
     /**
      * @var MoneiPaymentModuleConfigInterface|MockObject
      */
-    private MoneiPaymentModuleConfigInterface $moduleConfigMock;
+    private MoneiPaymentModuleConfigInterface $moduleConfig;
 
     /**
      * @var OrderSender|MockObject
      */
-    private OrderSender $orderSenderMock;
+    private OrderSender $orderSender;
 
     /**
      * @var SearchCriteriaBuilder|MockObject
      */
-    private SearchCriteriaBuilder $searchCriteriaBuilderMock;
+    private SearchCriteriaBuilder $searchCriteriaBuilder;
 
     /**
      * @var SearchCriteriaInterface|MockObject
@@ -91,22 +91,22 @@ class PaymentProcessorTest extends TestCase
     /**
      * @var GetPaymentInterface|MockObject
      */
-    private GetPaymentInterface $getPaymentInterfaceMock;
+    private GetPaymentInterface $getPaymentInterface;
 
     /**
      * @var OrderFactory|MockObject
      */
-    private OrderFactory $orderFactoryMock;
+    private OrderFactory $orderFactory;
 
     /**
      * @var CreateVaultPayment|MockObject
      */
-    private CreateVaultPayment $createVaultPaymentMock;
+    private CreateVaultPayment $createVaultPayment;
 
     /**
      * @var PaymentDTOFactory|MockObject
      */
-    private PaymentDTOFactory $paymentDtoFactoryMock;
+    private PaymentDTOFactory $paymentDtoFactory;
 
     /**
      * @var PaymentProcessor
@@ -130,38 +130,32 @@ class PaymentProcessorTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->orderRepositoryMock = $this->createMock(OrderRepositoryInterface::class);
-        $this->invoiceServiceMock = $this->createMock(InvoiceService::class);
-        $this->lockManagerMock = $this->createMock(LockManagerInterface::class);
-        $this->loggerMock = $this->createMock(Logger::class);
-        $this->moneiApiClientMock = $this->createMock(MoneiApiClient::class);
-        $this->moduleConfigMock = $this->createMock(MoneiPaymentModuleConfigInterface::class);
-        $this->orderSenderMock = $this->createMock(OrderSender::class);
-        $this->searchCriteriaBuilderMock = $this->createMock(SearchCriteriaBuilder::class);
-        $this->searchCriteriaMock = $this->createMock(SearchCriteriaInterface::class);
-        $this->searchResultsMock = $this->createMock(SearchResultsInterface::class);
-        $this->getPaymentInterfaceMock = $this->createMock(GetPaymentInterface::class);
-        $this->orderFactoryMock = $this->createMock(OrderFactory::class);
-        $this->createVaultPaymentMock = $this->createMock(CreateVaultPayment::class);
-        $this->paymentDtoFactoryMock = $this->createMock(PaymentDTOFactory::class);
-
-        $this->orderMock = $this->createMock(OrderInterface::class);
-        $this->orderPaymentMock = $this->createMock(OrderPaymentInterface::class);
-        $this->paymentDtoMock = $this->createMock(PaymentDTO::class);
+        $this->orderRepository = $this->createMock(OrderRepositoryInterface::class);
+        $this->invoiceService = $this->createMock(InvoiceService::class);
+        $this->lockManager = $this->createMock(LockManagerInterface::class);
+        $this->logger = $this->createMock(Logger::class);
+        $this->moneiApiClient = $this->createMock(MoneiApiClient::class);
+        $this->moduleConfig = $this->createMock(MoneiPaymentModuleConfigInterface::class);
+        $this->orderSender = $this->createMock(OrderSender::class);
+        $this->searchCriteriaBuilder = $this->createMock(SearchCriteriaBuilder::class);
+        $this->getPaymentInterface = $this->createMock(GetPaymentInterface::class);
+        $this->orderFactory = $this->createMock(OrderFactory::class);
+        $this->createVaultPayment = $this->createMock(CreateVaultPayment::class);
+        $this->paymentDtoFactory = $this->createMock(PaymentDTOFactory::class);
 
         $this->paymentProcessor = new PaymentProcessor(
-            $this->orderRepositoryMock,
-            $this->invoiceServiceMock,
-            $this->lockManagerMock,
-            $this->loggerMock,
-            $this->moneiApiClientMock,
-            $this->moduleConfigMock,
-            $this->orderSenderMock,
-            $this->searchCriteriaBuilderMock,
-            $this->getPaymentInterfaceMock,
-            $this->orderFactoryMock,
-            $this->createVaultPaymentMock,
-            $this->paymentDtoFactoryMock
+            $this->orderRepository,
+            $this->invoiceService,
+            $this->lockManager,
+            $this->logger,
+            $this->moneiApiClient,
+            $this->moduleConfig,
+            $this->orderSender,
+            $this->searchCriteriaBuilder,
+            $this->getPaymentInterface,
+            $this->orderFactory,
+            $this->createVaultPayment,
+            $this->paymentDtoFactory
         );
     }
 
@@ -171,7 +165,7 @@ class PaymentProcessorTest extends TestCase
         $orderFactoryInstance = $this->createMock(Order::class);
         $orderFactoryInstance->method('loadByIncrementId')->willReturn($orderFactoryInstance);
         $orderFactoryInstance->method('getId')->willReturn(null);
-        $this->orderFactoryMock->method('create')->willReturn($orderFactoryInstance);
+        $this->orderFactory->method('create')->willReturn($orderFactoryInstance);
 
         // Execute the process method
         $result = $this->paymentProcessor->process('123456', 'pay_123456', ['status' => 'SUCCEEDED']);
@@ -183,141 +177,332 @@ class PaymentProcessorTest extends TestCase
         $this->assertNotNull($result->getStatusCode());
     }
 
-    public function testProcessWithSuccessfulPayment(): void
+    public function testProcessSuccessfulPayment()
     {
-        // Set up mock order
-        $this->orderMock->method('getIncrementId')->willReturn('123456');
-        $this->orderMock->method('getEntityId')->willReturn(1);
-        $this->orderMock->method('getPayment')->willReturn($this->orderPaymentMock);
-        $this->orderMock->method('getStoreId')->willReturn(1);
+        $orderId = '000000001';
+        $paymentId = 'pay_123';
+        $amount = 99.99;
 
-        // Set up order factory to return our mock order
-        $orderFactoryInstance = $this->createMock(Order::class);
-        $orderFactoryInstance->method('loadByIncrementId')->willReturn($orderFactoryInstance);
-        $orderFactoryInstance->method('getId')->willReturn(1);
-        $orderFactoryInstance->method('getIncrementId')->willReturn('123456');
-        $orderFactoryInstance->method('getEntityId')->willReturn(1);
-        $orderFactoryInstance->method('getPayment')->willReturn($this->orderPaymentMock);
-        $orderFactoryInstance->method('getStoreId')->willReturn(1);
-        $orderFactoryInstance->method('getState')->willReturn(Order::STATE_NEW);
-        $this->orderFactoryMock->method('create')->willReturn($orderFactoryInstance);
+        // Create mock order
+        $order = $this
+            ->getMockBuilder(\Magento\Sales\Model\Order::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $order->method('getId')->willReturn(1);
+        $order->method('getEntityId')->willReturn(1);
+        $order->method('getIncrementId')->willReturn($orderId);
 
-        // Set up payment dto
-        $this->paymentDtoMock->method('getId')->willReturn('pay_123456');
-        $this->paymentDtoMock->method('getStatus')->willReturn('SUCCEEDED');
-        $this->paymentDtoMock->method('isSucceeded')->willReturn(true);
-        $this->paymentDtoMock->method('isAuthorized')->willReturn(false);
-        $this->paymentDtoMock->method('isPending')->willReturn(false);
-        $this->paymentDtoMock->method('isFailed')->willReturn(false);
-        $this->paymentDtoMock->method('isCanceled')->willReturn(false);
-        $this->paymentDtoMock->method('isExpired')->willReturn(false);
-        $this->paymentDtoMock->method('getStatusCode')->willReturn(null);
-
-        // Set up payment dto factory
+        // Setup order factory mock
         $this
-            ->paymentDtoFactoryMock
+            ->orderFactory
+            ->expects($this->once())
+            ->method('create')
+            ->willReturn($order);
+
+        // Setup order mock to handle loadByIncrementId
+        $order
+            ->expects($this->once())
+            ->method('loadByIncrementId')
+            ->with($orderId)
+            ->willReturn($order);
+
+        // Setup payment DTO mock
+        $paymentDTO = $this->createMock(PaymentDTO::class);
+        $paymentDTO->method('getAmount')->willReturn($amount);
+        $paymentDTO->method('getAmountInCents')->willReturn(9999);
+        $paymentDTO->method('getStatus')->willReturn('SUCCEEDED');
+        $paymentDTO->method('getId')->willReturn($paymentId);
+        $paymentDTO->method('isSucceeded')->willReturn(true);
+        $paymentDTO->method('isAuthorized')->willReturn(false);
+        $paymentDTO->method('isPending')->willReturn(false);
+        $paymentDTO->method('isFailed')->willReturn(false);
+        $paymentDTO->method('isCanceled')->willReturn(false);
+        $paymentDTO->method('isExpired')->willReturn(false);
+
+        // Setup PaymentDTOFactory mock
+        $this
+            ->paymentDtoFactory
+            ->expects($this->once())
             ->method('createFromArray')
-            ->with(['status' => 'SUCCEEDED'])
-            ->willReturn($this->paymentDtoMock);
+            ->with([])
+            ->willReturn($paymentDTO);
 
-        // Set up lock manager
-        $this->lockManagerMock->method('lockOrder')->willReturn(true);
+        // Setup lock manager mock
+        $this
+            ->lockManager
+            ->expects($this->once())
+            ->method('lockOrder')
+            ->with($orderId)
+            ->willReturn(true);
 
-        // Set up module config
-        $this->moduleConfigMock->method('getConfirmedStatus')->willReturn('processing');
-        $this->moduleConfigMock->method('shouldSendOrderEmail')->willReturn(true);
-
-        // Process the payment
-        $result = $this->paymentProcessor->process('123456', 'pay_123456', ['status' => 'SUCCEEDED']);
-
-        // Verify success result
-        $this->assertInstanceOf(PaymentProcessingResult::class, $result);
+        $result = $this->paymentProcessor->process($orderId, $paymentId, []);
         $this->assertTrue($result->isSuccess());
-        // What's most important is that it's a success, not the exact status value
-        $this->assertNotNull($result->getStatus());
+        $this->assertEquals('SUCCEEDED', $result->getStatus());
+        $this->assertEquals($orderId, $result->getOrderId());
+        $this->assertEquals($paymentId, $result->getPaymentId());
     }
 
-    public function testProcessWithLockedOrder(): void
+    public function testProcessAuthorizedPayment()
     {
-        // Set up order factory
-        $orderFactoryInstance = $this->createMock(Order::class);
-        $orderFactoryInstance->method('loadByIncrementId')->willReturn($orderFactoryInstance);
-        $orderFactoryInstance->method('getId')->willReturn(1);
-        $orderFactoryInstance->method('getIncrementId')->willReturn('123456');
-        $this->orderFactoryMock->method('create')->willReturn($orderFactoryInstance);
+        $orderId = '000000001';
+        $paymentId = 'pay_123';
+        $amount = 99.99;
 
-        // Set up payment dto
-        $this->paymentDtoMock->method('getId')->willReturn('pay_123456');
-        $this->paymentDtoMock->method('getStatus')->willReturn('SUCCEEDED');
+        // Create mock order
+        $order = $this
+            ->getMockBuilder(\Magento\Sales\Model\Order::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $order->method('getId')->willReturn(1);
+        $order->method('getEntityId')->willReturn(1);
+        $order->method('getIncrementId')->willReturn($orderId);
 
-        // Set up payment dto factory
+        // Setup order factory mock
         $this
-            ->paymentDtoFactoryMock
+            ->orderFactory
+            ->expects($this->once())
+            ->method('create')
+            ->willReturn($order);
+
+        // Setup order mock to handle loadByIncrementId
+        $order
+            ->expects($this->once())
+            ->method('loadByIncrementId')
+            ->with($orderId)
+            ->willReturn($order);
+
+        // Setup payment DTO mock
+        $paymentDTO = $this->createMock(PaymentDTO::class);
+        $paymentDTO->method('getAmount')->willReturn($amount);
+        $paymentDTO->method('getAmountInCents')->willReturn(9999);
+        $paymentDTO->method('getStatus')->willReturn('AUTHORIZED');
+        $paymentDTO->method('getId')->willReturn($paymentId);
+        $paymentDTO->method('isSucceeded')->willReturn(false);
+        $paymentDTO->method('isAuthorized')->willReturn(true);
+        $paymentDTO->method('isPending')->willReturn(false);
+        $paymentDTO->method('isFailed')->willReturn(false);
+        $paymentDTO->method('isCanceled')->willReturn(false);
+        $paymentDTO->method('isExpired')->willReturn(false);
+
+        // Setup PaymentDTOFactory mock
+        $this
+            ->paymentDtoFactory
+            ->expects($this->once())
             ->method('createFromArray')
-            ->with(['status' => 'SUCCEEDED'])
-            ->willReturn($this->paymentDtoMock);
+            ->with([])
+            ->willReturn($paymentDTO);
 
-        // Set up lock manager to indicate order is locked
-        $this->lockManagerMock->method('lockOrder')->willReturn(false);
+        // Setup lock manager mock
+        $this
+            ->lockManager
+            ->expects($this->once())
+            ->method('lockOrder')
+            ->with($orderId)
+            ->willReturn(true);
 
-        // Process the payment
-        $result = $this->paymentProcessor->process('123456', 'pay_123456', ['status' => 'SUCCEEDED']);
+        $result = $this->paymentProcessor->process($orderId, $paymentId, []);
+        $this->assertTrue($result->isSuccess());
+        $this->assertEquals('AUTHORIZED', $result->getStatus());
+        $this->assertEquals($orderId, $result->getOrderId());
+        $this->assertEquals($paymentId, $result->getPaymentId());
+    }
 
-        // Verify error result
-        $this->assertInstanceOf(PaymentProcessingResult::class, $result);
+    public function testProcessFailedPayment()
+    {
+        $orderId = '000000001';
+        $paymentId = 'pay_123';
+        $amount = 99.99;
+
+        // Create mock order
+        $order = $this
+            ->getMockBuilder(\Magento\Sales\Model\Order::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $order->method('getId')->willReturn(1);
+        $order->method('getEntityId')->willReturn(1);
+        $order->method('getIncrementId')->willReturn($orderId);
+
+        // Setup order factory mock
+        $this
+            ->orderFactory
+            ->expects($this->once())
+            ->method('create')
+            ->willReturn($order);
+
+        // Setup order mock to handle loadByIncrementId
+        $order
+            ->expects($this->once())
+            ->method('loadByIncrementId')
+            ->with($orderId)
+            ->willReturn($order);
+
+        // Setup payment DTO mock
+        $paymentDTO = $this->createMock(PaymentDTO::class);
+        $paymentDTO->method('getAmount')->willReturn($amount);
+        $paymentDTO->method('getAmountInCents')->willReturn(9999);
+        $paymentDTO->method('getStatus')->willReturn('FAILED');
+        $paymentDTO->method('getId')->willReturn($paymentId);
+        $paymentDTO->method('isSucceeded')->willReturn(false);
+        $paymentDTO->method('isAuthorized')->willReturn(false);
+        $paymentDTO->method('isPending')->willReturn(false);
+        $paymentDTO->method('isFailed')->willReturn(true);
+        $paymentDTO->method('isCanceled')->willReturn(false);
+        $paymentDTO->method('isExpired')->willReturn(false);
+
+        // Setup PaymentDTOFactory mock
+        $this
+            ->paymentDtoFactory
+            ->expects($this->once())
+            ->method('createFromArray')
+            ->with([])
+            ->willReturn($paymentDTO);
+
+        // Setup lock manager mock
+        $this
+            ->lockManager
+            ->expects($this->once())
+            ->method('lockOrder')
+            ->with($orderId)
+            ->willReturn(true);
+
+        $result = $this->paymentProcessor->process($orderId, $paymentId, []);
+        $this->assertTrue($result->isSuccess());
+        $this->assertEquals('FAILED', $result->getStatus());
+        $this->assertEquals($orderId, $result->getOrderId());
+        $this->assertEquals($paymentId, $result->getPaymentId());
+    }
+
+    public function testProcessPaymentLockFailure()
+    {
+        $orderId = '000000001';
+        $paymentId = 'pay_123';
+
+        // Create mock order
+        $order = $this
+            ->getMockBuilder(\Magento\Sales\Model\Order::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $order->method('getId')->willReturn(1);
+        $order->method('getEntityId')->willReturn(1);
+        $order->method('getIncrementId')->willReturn($orderId);
+
+        // Setup order factory mock
+        $this
+            ->orderFactory
+            ->expects($this->once())
+            ->method('create')
+            ->willReturn($order);
+
+        // Setup order mock to handle loadByIncrementId
+        $order
+            ->expects($this->once())
+            ->method('loadByIncrementId')
+            ->with($orderId)
+            ->willReturn($order);
+
+        // Setup lock manager mock to fail
+        $this
+            ->lockManager
+            ->expects($this->once())
+            ->method('lockOrder')
+            ->with($orderId)
+            ->willReturn(false);
+
+        $result = $this->paymentProcessor->process($orderId, $paymentId, []);
         $this->assertFalse($result->isSuccess());
-        // What's most important is that it's an error, not the exact status code value
-        $this->assertNotNull($result->getStatusCode());
+        $this->assertEquals(PaymentErrorCodeInterface::ERROR_PROCESSING_FAILED, $result->getErrorMessage());
+    }
+
+    public function testProcessInvalidPaymentData()
+    {
+        $orderId = '000000001';
+        $paymentId = 'pay_123';
+        $amount = 99.99;
+
+        // Create mock order
+        $order = $this
+            ->getMockBuilder(\Magento\Sales\Model\Order::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $order->method('getId')->willReturn(1);
+        $order->method('getEntityId')->willReturn(1);
+        $order->method('getIncrementId')->willReturn($orderId);
+
+        // Setup order factory mock
+        $this
+            ->orderFactory
+            ->expects($this->once())
+            ->method('create')
+            ->willReturn($order);
+
+        // Setup order mock to handle loadByIncrementId
+        $order
+            ->expects($this->once())
+            ->method('loadByIncrementId')
+            ->with($orderId)
+            ->willReturn($order);
+
+        // Setup PaymentDTOFactory mock to throw an exception
+        $this
+            ->paymentDtoFactory
+            ->expects($this->once())
+            ->method('createFromArray')
+            ->with([])
+            ->willThrowException(new \InvalidArgumentException('Invalid payment data'));
+
+        $result = $this->paymentProcessor->process($orderId, $paymentId, []);
+        $this->assertFalse($result->isSuccess());
+        $this->assertEquals(PaymentErrorCodeInterface::ERROR_EXCEPTION, $result->getErrorMessage());
     }
 
     public function testIsProcessing(): void
     {
         // Test when order is locked
-        $this->lockManagerMock->method('isOrderLocked')->with('123456')->willReturn(true);
-        $this->lockManagerMock->method('isPaymentLocked')->with('123456', 'pay_123456')->willReturn(false);
+        $this->lockManager->method('isOrderLocked')->with('123456')->willReturn(true);
+        $this->lockManager->method('isPaymentLocked')->with('123456', 'pay_123456')->willReturn(false);
 
         $this->assertTrue($this->paymentProcessor->isProcessing('123456', 'pay_123456'));
 
         // Test when payment is locked
-        $this->lockManagerMock = $this->createMock(LockManagerInterface::class);
-        $this->lockManagerMock->method('isOrderLocked')->with('123456')->willReturn(false);
-        $this->lockManagerMock->method('isPaymentLocked')->with('123456', 'pay_123456')->willReturn(true);
+        $this->lockManager = $this->createMock(LockManagerInterface::class);
+        $this->lockManager->method('isOrderLocked')->with('123456')->willReturn(false);
+        $this->lockManager->method('isPaymentLocked')->with('123456', 'pay_123456')->willReturn(true);
 
         $this->paymentProcessor = new PaymentProcessor(
-            $this->orderRepositoryMock,
-            $this->invoiceServiceMock,
-            $this->lockManagerMock,
-            $this->loggerMock,
-            $this->moneiApiClientMock,
-            $this->moduleConfigMock,
-            $this->orderSenderMock,
-            $this->searchCriteriaBuilderMock,
-            $this->getPaymentInterfaceMock,
-            $this->orderFactoryMock,
-            $this->createVaultPaymentMock,
-            $this->paymentDtoFactoryMock
+            $this->orderRepository,
+            $this->invoiceService,
+            $this->lockManager,
+            $this->logger,
+            $this->moneiApiClient,
+            $this->moduleConfig,
+            $this->orderSender,
+            $this->searchCriteriaBuilder,
+            $this->getPaymentInterface,
+            $this->orderFactory,
+            $this->createVaultPayment,
+            $this->paymentDtoFactory
         );
 
         $this->assertTrue($this->paymentProcessor->isProcessing('123456', 'pay_123456'));
 
         // Test when neither is locked
-        $this->lockManagerMock = $this->createMock(LockManagerInterface::class);
-        $this->lockManagerMock->method('isOrderLocked')->with('123456')->willReturn(false);
-        $this->lockManagerMock->method('isPaymentLocked')->with('123456', 'pay_123456')->willReturn(false);
+        $this->lockManager = $this->createMock(LockManagerInterface::class);
+        $this->lockManager->method('isOrderLocked')->with('123456')->willReturn(false);
+        $this->lockManager->method('isPaymentLocked')->with('123456', 'pay_123456')->willReturn(false);
 
         $this->paymentProcessor = new PaymentProcessor(
-            $this->orderRepositoryMock,
-            $this->invoiceServiceMock,
-            $this->lockManagerMock,
-            $this->loggerMock,
-            $this->moneiApiClientMock,
-            $this->moduleConfigMock,
-            $this->orderSenderMock,
-            $this->searchCriteriaBuilderMock,
-            $this->getPaymentInterfaceMock,
-            $this->orderFactoryMock,
-            $this->createVaultPaymentMock,
-            $this->paymentDtoFactoryMock
+            $this->orderRepository,
+            $this->invoiceService,
+            $this->lockManager,
+            $this->logger,
+            $this->moneiApiClient,
+            $this->moduleConfig,
+            $this->orderSender,
+            $this->searchCriteriaBuilder,
+            $this->getPaymentInterface,
+            $this->orderFactory,
+            $this->createVaultPayment,
+            $this->paymentDtoFactory
         );
 
         $this->assertFalse($this->paymentProcessor->isProcessing('123456', 'pay_123456'));
@@ -357,7 +542,7 @@ class PaymentProcessorTest extends TestCase
         $paymentId = 'pay_123456';
 
         $this
-            ->lockManagerMock
+            ->lockManager
             ->expects($this->once())
             ->method('isOrderLocked')
             ->with($orderId)
@@ -365,7 +550,7 @@ class PaymentProcessorTest extends TestCase
 
         // Payment lock check shouldn't be called since order is already locked
         $this
-            ->lockManagerMock
+            ->lockManager
             ->expects($this->never())
             ->method('isPaymentLocked');
 
@@ -381,14 +566,14 @@ class PaymentProcessorTest extends TestCase
         $paymentId = 'pay_123456';
 
         $this
-            ->lockManagerMock
+            ->lockManager
             ->expects($this->once())
             ->method('isOrderLocked')
             ->with($orderId)
             ->willReturn(false);
 
         $this
-            ->lockManagerMock
+            ->lockManager
             ->expects($this->once())
             ->method('isPaymentLocked')
             ->with($orderId, $paymentId)
@@ -406,14 +591,14 @@ class PaymentProcessorTest extends TestCase
         $paymentId = 'pay_123456';
 
         $this
-            ->lockManagerMock
+            ->lockManager
             ->expects($this->once())
             ->method('isOrderLocked')
             ->with($orderId)
             ->willReturn(false);
 
         $this
-            ->lockManagerMock
+            ->lockManager
             ->expects($this->once())
             ->method('isPaymentLocked')
             ->with($orderId, $paymentId)
@@ -433,14 +618,14 @@ class PaymentProcessorTest extends TestCase
 
         // First check returns processing, second check returns not processing
         $this
-            ->lockManagerMock
+            ->lockManager
             ->expects($this->exactly(2))
             ->method('isOrderLocked')
             ->with($orderId)
             ->willReturnOnConsecutiveCalls(true, false);
 
         $this
-            ->lockManagerMock
+            ->lockManager
             ->expects($this->once())
             ->method('isPaymentLocked')
             ->with($orderId, $paymentId)
@@ -471,7 +656,7 @@ class PaymentProcessorTest extends TestCase
 
         // Configure the getPaymentInterface mock to return our Payment mock
         $this
-            ->getPaymentInterfaceMock
+            ->getPaymentInterface
             ->expects($this->once())
             ->method('execute')
             ->with($paymentId)
@@ -496,14 +681,14 @@ class PaymentProcessorTest extends TestCase
         $errorMessage = 'API connection error';
 
         $this
-            ->getPaymentInterfaceMock
+            ->getPaymentInterface
             ->expects($this->once())
             ->method('execute')
             ->with($paymentId)
             ->willThrowException(new \Exception($errorMessage));
 
         $this
-            ->loggerMock
+            ->logger
             ->expects($this->once())
             ->method('error')
             ->with(
@@ -542,7 +727,7 @@ class PaymentProcessorTest extends TestCase
             ->willReturn(null);
 
         $this
-            ->orderFactoryMock
+            ->orderFactory
             ->expects($this->once())
             ->method('create')
             ->willReturn($orderMock);
@@ -552,5 +737,31 @@ class PaymentProcessorTest extends TestCase
 
         $this->assertInstanceOf(PaymentProcessingResultInterface::class, $result);
         $this->assertFalse($result->isSuccess());
+    }
+
+    /**
+     * Test waitForProcessing with timeout
+     */
+    public function testWaitForProcessingTimeout(): void
+    {
+        $orderId = '10000001';
+        $paymentId = 'pay_123456';
+        $timeout = 1;
+
+        // Mock that the order remains locked
+        $this
+            ->lockManager
+            ->method('isOrderLocked')
+            ->with($orderId)
+            ->willReturn(true);
+
+        $this
+            ->logger
+            ->expects($this->once())
+            ->method('warning')
+            ->with($this->stringContains('Timeout waiting for processing'));
+
+        $result = $this->paymentProcessor->waitForProcessing($orderId, $paymentId, $timeout);
+        $this->assertFalse($result);
     }
 }
