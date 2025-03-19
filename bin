@@ -150,6 +150,7 @@ case "$1" in
     run_in_root bin/cli php -d xdebug.mode=coverage vendor/bin/phpunit -c $config \
         --coverage-text \
         --coverage-clover=dev/tests/unit/report/clover.xml \
+        --coverage-filter=/var/www/html/$MODULE_PATH \
         /var/www/html/$target_path "$@"
     ;;
 
