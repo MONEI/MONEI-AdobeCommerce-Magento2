@@ -23,6 +23,7 @@ jobs:
             .vscode/*
             .cursor/*
             vendor/*
+            scripts/*
             composer.lock
             package.json
             yarn.lock
