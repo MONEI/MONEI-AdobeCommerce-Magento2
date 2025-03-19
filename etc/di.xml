@@ -110,37 +110,33 @@
       <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
     </arguments>
   </type>
+
   <type name="Monei\MoneiPayment\Service\Logger">
     <arguments>
       <argument name="handler" xsi:type="object">Monei\MoneiPayment\Service\Logger\Handler</argument>
       <argument name="name" xsi:type="string">monei</argument>
     </arguments>
   </type>
-  <type name="Magento\Framework\Console\CommandList">
-    <arguments>
-      <argument name="commands" xsi:type="array">
-        <item name="moneiUpdateStatusLabels" xsi:type="object">Monei\MoneiPayment\Command\UpdateStatusLabels</item>
-        <item name="moneiVerifyApplePayDomain" xsi:type="object">
-          Monei\MoneiPayment\Command\VerifyApplePayDomainCommand
-        </item>
-      </argument>
-    </arguments>
-  </type>
+
   <type name="Magento\Sales\Model\Service\CreditmemoService">
     <plugin name="set_order_status_after_refund" type="Monei\MoneiPayment\Plugin\OrderStatusAfterRefund" />
   </type>
+
   <type name="Magento\Checkout\Model\ShippingInformationManagement">
     <plugin
       name="monei_checkout_shipping_information_management"
       type="Monei\MoneiPayment\Plugin\CheckoutShippingInformationManagement"
     />
   </type>
+
   <type name="Magento\Sales\Model\Order\StatusLabel">
     <plugin name="monei_order_status_label" type="Monei\MoneiPayment\Plugin\SalesOrderStatusLabel" />
   </type>
+
   <type name="Magento\Sales\Model\Order\Config">
     <plugin name="monei_order_config" type="Monei\MoneiPayment\Plugin\SalesOrderConfig" />
   </type>
+
   <virtualType name="MoneiPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
     <arguments>
       <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::REDIRECT_CODE</argument>
@@ -150,6 +146,7 @@
       <argument name="commandPool" xsi:type="object">MoneiCommandPool</argument>
     </arguments>
   </virtualType>
+
   <type name="Magento\Payment\Gateway\Config\ValueHandlerPool">
     <arguments>
       <argument name="handlers" xsi:type="array">
@@ -157,16 +154,19 @@
       </argument>
     </arguments>
   </type>
+
   <type name="Magento\Payment\Gateway\Config\ConfigValueHandler">
     <arguments>
       <argument name="configInterface" xsi:type="object">Magento\Payment\Gateway\Config\Config</argument>
     </arguments>
   </type>
+
   <type name="Magento\Payment\Gateway\Config\Config">
     <arguments>
       <argument name="methodCode" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::REDIRECT_CODE</argument>
     </arguments>
   </type>
+
   <virtualType name="MoneiCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
     <arguments>
       <argument name="commands" xsi:type="array">
@@ -186,16 +186,19 @@
       </argument>
     </arguments>
   </virtualType>
+
   <virtualType name="MoneiCardPaymentValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
     <arguments>
       <argument name="configInterface" xsi:type="object">MoneiCardPaymentConfig</argument>
     </arguments>
   </virtualType>
+
   <virtualType name="MoneiCardPaymentConfig" type="Magento\Payment\Gateway\Config\Config">
     <arguments>
       <argument name="methodCode" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::CARD_CODE</argument>
     </arguments>
   </virtualType>
+
   <virtualType name="MoneiCardPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
     <arguments>
       <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::CARD_CODE</argument>
@@ -213,11 +216,13 @@
       <argument name="methodCode" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::CC_VAULT_CODE</argument>
     </arguments>
   </virtualType>
+
   <virtualType name="MoneiVaultPaymentValueHandler" type="VaultPaymentDefaultValueHandler">
     <arguments>
       <argument name="configInterface" xsi:type="object">MoneiVaultPaymentConfig</argument>
     </arguments>
   </virtualType>
+
   <virtualType name="MoneiVaultPaymentValueHandlerPool" type="VaultPaymentValueHandlerPool">
     <arguments>
       <argument name="handlers" xsi:type="array">
@@ -225,6 +230,7 @@
       </argument>
     </arguments>
   </virtualType>
+
   <virtualType name="MoneiCardVaultFacade" type="Magento\Vault\Model\Method\Vault">
     <arguments>
       <argument name="config" xsi:type="object">MoneiVaultPaymentConfig</argument>
@@ -243,16 +249,19 @@
       </argument>
     </arguments>
   </virtualType>
+
   <virtualType name="MoneiBizumPaymentValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
     <arguments>
       <argument name="configInterface" xsi:type="object">MoneiBizumPaymentConfig</argument>
     </arguments>
   </virtualType>
+
   <virtualType name="MoneiBizumPaymentConfig" type="Magento\Payment\Gateway\Config\Config">
     <arguments>
       <argument name="methodCode" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::BIZUM_CODE</argument>
     </arguments>
   </virtualType>
+
   <virtualType name="MoneiBizumPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
     <arguments>
       <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::BIZUM_CODE</argument>
@@ -272,16 +281,19 @@
       </argument>
     </arguments>
   </virtualType>
+
   <virtualType name="MoneiGoogleApplePaymentValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
     <arguments>
       <argument name="configInterface" xsi:type="object">MoneiGoogleApplePaymentConfig</argument>
     </arguments>
   </virtualType>
+
   <virtualType name="MoneiGoogleApplePaymentConfig" type="Magento\Payment\Gateway\Config\Config">
     <arguments>
       <argument name="methodCode" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::GOOGLE_APPLE_CODE</argument>
     </arguments>
   </virtualType>
+
   <virtualType name="MoneiGoogleApplePaymentFacade" type="Magento\Payment\Model\Method\Adapter">
     <arguments>
       <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::GOOGLE_APPLE_CODE</argument>
@@ -304,6 +316,7 @@
       </argument>
     </arguments>
   </virtualType>
+
   <virtualType
     name="MoneiMultibancoRedirectPaymentValueHandler"
     type="Magento\Payment\Gateway\Config\ConfigValueHandler"
@@ -312,6 +325,7 @@
       <argument name="configInterface" xsi:type="object">MoneiMultibancoRedirectPaymentConfig</argument>
     </arguments>
   </virtualType>
+
   <virtualType name="MoneiMultibancoRedirectPaymentConfig" type="Magento\Payment\Gateway\Config\Config">
     <arguments>
       <argument name="methodCode" xsi:type="const">
@@ -319,15 +333,18 @@
       </argument>
     </arguments>
   </virtualType>
+
   <type name="Monei\MoneiPayment\Model\Config\MoneiMultibancoRedirectPaymentModuleConfig">
     <arguments>
       <argument name="scopeConfig" xsi:type="object">Magento\Framework\App\Config\ScopeConfigInterface</argument>
     </arguments>
   </type>
+
   <preference
     for="Monei\MoneiPayment\Api\Config\MoneiMultibancoRedirectPaymentModuleConfigInterface"
     type="Monei\MoneiPayment\Model\Config\MoneiMultibancoRedirectPaymentModuleConfig"
   />
+
   <virtualType name="MoneiMultibancoRedirectPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
     <arguments>
       <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::MULTIBANCO_REDIRECT_CODE</argument>
@@ -347,11 +364,13 @@
       </argument>
     </arguments>
   </virtualType>
+
   <virtualType name="MoneiMBWayRedirectPaymentValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
     <arguments>
       <argument name="configInterface" xsi:type="object">MoneiMBWayRedirectPaymentConfig</argument>
     </arguments>
   </virtualType>
+
   <virtualType name="MoneiMBWayRedirectPaymentConfig" type="Magento\Payment\Gateway\Config\Config">
     <arguments>
       <argument name="methodCode" xsi:type="const">
@@ -359,15 +378,18 @@
       </argument>
     </arguments>
   </virtualType>
+
   <type name="Monei\MoneiPayment\Model\Config\MoneiMBWayRedirectPaymentModuleConfig">
     <arguments>
       <argument name="scopeConfig" xsi:type="object">Magento\Framework\App\Config\ScopeConfigInterface</argument>
     </arguments>
   </type>
+
   <preference
     for="Monei\MoneiPayment\Api\Config\MoneiMBWayRedirectPaymentModuleConfigInterface"
     type="Monei\MoneiPayment\Model\Config\MoneiMBWayRedirectPaymentModuleConfig"
   />
+
   <virtualType name="MoneiMBWayRedirectPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
     <arguments>
       <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::MBWAY_REDIRECT_CODE</argument>
@@ -387,16 +409,19 @@
       </argument>
     </arguments>
   </virtualType>
+
   <virtualType name="MoneiPaypalPaymentValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
     <arguments>
       <argument name="configInterface" xsi:type="object">MoneiPaypalPaymentConfig</argument>
     </arguments>
   </virtualType>
+
   <virtualType name="MoneiPaypalPaymentConfig" type="Magento\Payment\Gateway\Config\Config">
     <arguments>
       <argument name="methodCode" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::PAYPAL_CODE</argument>
     </arguments>
   </virtualType>
+
   <virtualType name="MoneiPaypalPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
     <arguments>
       <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::PAYPAL_CODE</argument>
@@ -464,6 +489,7 @@
     for="Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface"
     type="Monei\MoneiPayment\Service\Quote\GetAddressDetailsByQuoteAddress"
   />
+
   <preference
     for="Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface"
     type="Monei\MoneiPayment\Service\Quote\GetCustomerDetailsByQuote"
@@ -753,9 +779,11 @@
   <type name="Magento\Framework\App\Http\Context">
     <plugin name="monei_payment_context_plugin" type="Monei\MoneiPayment\Plugin\App\Http\ContextPlugin" />
   </type>
+
   <type name="Magento\PageCache\Observer\ProcessLayoutRenderElement">
     <plugin name="monei_payment_process_layout" type="Monei\MoneiPayment\Plugin\PageCache\ProcessLayoutPlugin" />
   </type>
+
   <!-- Varnish Configuration -->
   <type name="Magento\Framework\App\PageCache\Identifier">
     <plugin name="monei_payment_cache_identifier" type="Monei\MoneiPayment\Plugin\PageCache\IdentifierPlugin" />
