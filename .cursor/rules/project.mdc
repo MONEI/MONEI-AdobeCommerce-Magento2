@@ -33,3 +33,6 @@ yarn format                           # Format frontend code
 - **Errors**: Use specialized exception classes and detailed logging
 - **Structure**: Follow Magento module structure (interfaces in Api/, implementation in Service/)
 - **Testing**: All new code should have unit test coverage
+
+# MONEI SDK
+MONEI SDK structure and methods can be found in `vendor/monei/monei-php-sdk`
