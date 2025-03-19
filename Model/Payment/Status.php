@@ -118,7 +118,6 @@ class Status
      */
     public static function getAllStatuses(): array
     {
-        // @phpstan-ignore-next-line
         return PaymentStatus::getAllowableEnumValues();
     }
 }

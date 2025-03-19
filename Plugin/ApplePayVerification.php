@@ -90,6 +90,9 @@ class ApplePayVerification
         // Get the request URI and normalize it for comparison
         $requestUri = $request->getRequestUri();
         $pathInfo = parse_url($requestUri, PHP_URL_PATH);
+        if ($pathInfo === null) {
+            return $proceed($request);
+        }
         $pathInfo = rtrim($pathInfo, '/');
 
         // Check if this is a request for the Apple Pay verification file
