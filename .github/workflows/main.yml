@@ -13,7 +13,7 @@ jobs:
         uses: thedoctor0/zip-release@0.7.5
         with:
           type: "zip"
-          filename: "monei-module-monei-payment-${{github.event.release.tag_name}}.zip"
+          filename: "monei-module-monei-payment.zip"
           exclusions: |
             *.git*
             *.github*
@@ -42,6 +42,6 @@ jobs:
         with:
           allowUpdates: true
           omitBodyDuringUpdate: true
-          artifacts: "monei-module-monei-payment-${{github.event.release.tag_name}}.zip"
+          artifacts: "monei-module-monei-payment.zip"
           artifactContentType: "application/zip"
           token: ${{ secrets.GITHUB_TOKEN }}
