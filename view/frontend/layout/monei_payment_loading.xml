@@ -1,11 +1,19 @@
-<?xml version="1.0"?>
-<page layout="1column" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
-    <head>
-        <title>Processing Payment</title>
-    </head>
-    <body>
-        <referenceContainer name="content">
-            <block class="Monei\MoneiPayment\Block\Payment\Loading" name="monei.payment.loading" template="Monei_MoneiPayment::payment/loading.phtml" />
-        </referenceContainer>
-    </body>
+<?xml version="1.0" ?>
+<page
+  layout="1column"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd"
+>
+  <head>
+    <title>Processing Payment</title>
+  </head>
+  <body>
+    <referenceContainer name="content">
+      <block
+        class="Monei\MoneiPayment\Block\Payment\Loading"
+        name="monei.payment.loading"
+        template="Monei_MoneiPayment::payment/loading.phtml"
+      />
+    </referenceContainer>
+  </body>
 </page>

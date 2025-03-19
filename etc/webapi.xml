@@ -1,44 +1,59 @@
-<?xml version="1.0"?>
+<?xml version="1.0" ?>
 <!--
   ~ @author Monei Team
   ~ @copyright Copyright © Monei (https://monei.com)
   -->
-<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Webapi:etc/webapi.xsd">
-    <!-- Guest User -->
-    <route url="/V1/guest-checkout/:cartId/createmoneipaymentinsite" method="POST">
-        <service class="Monei\MoneiPayment\Api\Service\Checkout\CreateGuestMoneiPaymentInSiteInterface" method="execute"/>
-        <resources>
-            <resource ref="anonymous"/>
-        </resources>
-    </route>
-    <!-- Logged User -->
-    <route url="/V1/checkout/createmoneipaymentinsite" method="POST">
-        <service class="Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentInSiteInterface" method="execute"/>
-        <resources>
-            <resource ref="self" />
-        </resources>
-        <data>
-            <parameter name="cartId" force="true">%cart_id%</parameter>
-        </data>
-    </route>
-    <!-- Logged User -->
-    <route url="/V1/checkout/createmoneipaymentvault" method="POST">
-        <service class="Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentVaultInterface" method="execute"/>
-        <resources>
-            <resource ref="self" />
-        </resources>
-        <data>
-            <parameter name="cartId" force="true">%cart_id%</parameter>
-        </data>
-    </route>
-    <!-- Logged User -->
-    <route url="/V1/checkout/savemoneitokenization" method="POST">
-        <service class="Monei\MoneiPayment\Api\Service\Checkout\SaveTokenizationInterface" method="execute"/>
-        <resources>
-            <resource ref="self" />
-        </resources>
-        <data>
-            <parameter name="cartId" force="true">%cart_id%</parameter>
-        </data>
-    </route>
+<routes
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Webapi:etc/webapi.xsd"
+>
+  <!-- Guest User -->
+  <route url="/V1/guest-checkout/:cartId/createmoneipaymentinsite" method="POST">
+    <service
+      class="Monei\MoneiPayment\Api\Service\Checkout\CreateGuestMoneiPaymentInSiteInterface"
+      method="execute"
+    />
+    <resources>
+      <resource ref="anonymous" />
+    </resources>
+  </route>
+  <!-- Logged User -->
+  <route url="/V1/checkout/createmoneipaymentinsite" method="POST">
+    <service
+      class="Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentInSiteInterface"
+      method="execute"
+    />
+    <resources>
+      <resource ref="self" />
+    </resources>
+    <data>
+      <parameter name="cartId" force="true">%cart_id%</parameter>
+    </data>
+  </route>
+  <!-- Logged User -->
+  <route url="/V1/checkout/createmoneipaymentvault" method="POST">
+    <service
+      class="Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentVaultInterface"
+      method="execute"
+    />
+    <resources>
+      <resource ref="self" />
+    </resources>
+    <data>
+      <parameter name="cartId" force="true">%cart_id%</parameter>
+    </data>
+  </route>
+  <!-- Logged User -->
+  <route url="/V1/checkout/savemoneitokenization" method="POST">
+    <service
+      class="Monei\MoneiPayment\Api\Service\Checkout\SaveTokenizationInterface"
+      method="execute"
+    />
+    <resources>
+      <resource ref="self" />
+    </resources>
+    <data>
+      <parameter name="cartId" force="true">%cart_id%</parameter>
+    </data>
+  </route>
 </routes>

@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="1.0" ?>
 <!--
   ~ @author Monei Team
   ~ @copyright Copyright © Monei (https://monei.com)
@@ -53,10 +53,10 @@
           showInStore="1"
         >
           <label>Log Level</label>
-          <comment
-            >Select the logging level for debug purposes. Higher levels include all lower
-            levels.</comment
-          >
+          <comment>
+            Select the logging level for debug purposes. Higher levels include all lower
+            levels.
+          </comment>
           <source_model>Monei\MoneiPayment\Model\Config\Source\LogLevel</source_model>
         </field>
         <field
@@ -69,9 +69,9 @@
           showInStore="1"
         >
           <label>Mode</label>
-          <comment
-            >To define if we are going to connect with production or testing WS environment</comment
-          >
+          <comment>
+            To define if we are going to connect with production or testing WS environment
+          </comment>
           <source_model>Monei\MoneiPayment\Model\Config\Source\Mode</source_model>
         </field>
         <field
@@ -157,11 +157,11 @@
           showInStore="1"
         >
           <label>Payment Action</label>
-          <comment
-            >Choose whether to only authorize payments or to authorize and capture them immediately.
+          <comment>
+            Choose whether to only authorize payments or to authorize and capture them immediately.
             Note: Pre-authorization (Authorize option) is only supported for card payments, not for
-            MBWay or Multibanco.</comment
-          >
+            MBWay or Multibanco.
+          </comment>
           <source_model>Monei\MoneiPayment\Model\Config\Source\TypeOfPayment</source_model>
         </field>
         <field
@@ -211,9 +211,9 @@
           showInStore="1"
         >
           <label>Send Order Email</label>
-          <comment
-            >Controls whether to send order confirmation emails after payment is confirmed</comment
-          >
+          <comment>
+            Controls whether to send order confirmation emails after payment is confirmed
+          </comment>
           <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
           <config_path>payment/monei/send_order_email</config_path>
         </field>
@@ -227,11 +227,11 @@
           showInStore="1"
         >
           <label>Send Invoice Email</label>
-          <comment
-            >Controls whether to send invoice emails for automatically created invoices. Does not
+          <comment>
+            Controls whether to send invoice emails for automatically created invoices. Does not
             affect manually created invoices, for which merchants can choose to notify customers
-            during creation.</comment
-          >
+            during creation.
+          </comment>
           <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
           <config_path>payment/monei/send_invoice_email</config_path>
         </field>
@@ -455,10 +455,9 @@
         >
           <label>Json style</label>
           <comment
-            ><![CDATA[Custom json style for the card component. Must be valid JSON format. View more
+          ><![CDATA[Custom json style for the card component. Must be valid JSON format. View more
             info <a href="https://docs.monei.com/docs/monei-js/reference/#cardinput-style-object"
-            target="_blank" rel="noopener noreferrer">here</a>]]></comment
-          >
+            target="_blank" rel="noopener noreferrer">here</a>]]></comment>
           <config_path>payment/monei_card/json_style</config_path>
           <backend_model>Monei\MoneiPayment\Model\Config\Backend\JsonValidator</backend_model>
           <frontend_class>validate-json</frontend_class>
@@ -571,10 +570,9 @@
         >
           <label>Json style</label>
           <comment
-            ><![CDATA[Custom json style for the bizum component. Must be valid JSON format. View
+          ><![CDATA[Custom json style for the bizum component. Must be valid JSON format. View
             more info <a href="https://docs.monei.com/docs/monei-js/reference/#bizum-options"
-            target="_blank" rel="noopener noreferrer">here</a>]]></comment
-          >
+            target="_blank" rel="noopener noreferrer">here</a>]]></comment>
           <config_path>payment/monei_bizum/json_style</config_path>
           <backend_model>Monei\MoneiPayment\Model\Config\Backend\JsonValidator</backend_model>
           <frontend_class>validate-json</frontend_class>
@@ -609,9 +607,9 @@
           <comment>Select 'Yes' if you want to enable this payment method. Otherwise 'No'.</comment>
           <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
           <config_path>payment/monei_google_apple/active</config_path>
-          <backend_model
-            >Monei\MoneiPayment\Model\Config\Backend\EnableGoogleApplePay</backend_model
-          >
+          <backend_model>
+            Monei\MoneiPayment\Model\Config\Backend\EnableGoogleApplePay
+          </backend_model>
         </field>
         <field
           id="title_google_insite"
@@ -705,11 +703,10 @@
         >
           <label>Json style</label>
           <comment
-            ><![CDATA[Custom json style for the google and apple component. Must be valid JSON
+          ><![CDATA[Custom json style for the google and apple component. Must be valid JSON
             format. View more info <a
             href="https://docs.monei.com/docs/monei-js/reference/#paymentrequest-options"
-            target="_blank" rel="noopener noreferrer">here</a>]]></comment
-          >
+            target="_blank" rel="noopener noreferrer">here</a>]]></comment>
           <config_path>payment/monei_google_apple/json_style</config_path>
           <backend_model>Monei\MoneiPayment\Model\Config\Backend\JsonValidator</backend_model>
           <frontend_class>validate-json</frontend_class>
@@ -1011,10 +1008,9 @@
         >
           <label>Json style</label>
           <comment
-            ><![CDATA[Custom json style for the PayPal component. Must be valid JSON format. View
+          ><![CDATA[Custom json style for the PayPal component. Must be valid JSON format. View
             more info <a href="https://docs.monei.com/docs/monei-js/reference/#paypal-options"
-            target="_blank" rel="noopener noreferrer">here</a>]]></comment
-          >
+            target="_blank" rel="noopener noreferrer">here</a>]]></comment>
           <config_path>payment/monei_paypal/json_style</config_path>
           <backend_model>Monei\MoneiPayment\Model\Config\Backend\JsonValidator</backend_model>
           <frontend_class>validate-json</frontend_class>
