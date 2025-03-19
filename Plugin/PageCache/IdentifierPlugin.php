@@ -43,9 +43,13 @@ class IdentifierPlugin
     public function afterGetValue(Identifier $subject, string $result): string
     {
         if ($this->isMoneiPaymentPage()) {
-            // Add a timestamp to ensure a unique cache key for payment pages
-            // This effectively prevents caching of payment pages by Varnish
-            return $result . '_monei_' . time() . '_' . uniqid();
+            // Add a specific suffix for MONEI payment pages
+            // Instead of using time() and uniqid which create excessive cache entries
+            $orderId = $this->request->getParam('order_id') ?: '';
+            $sessionId = $this->request->getParam('session_id') ?: '';
+
+            // Create a more stable but still unique cache identifier
+            return $result . '_monei_payment_' . $orderId . '_' . $sessionId;
         }
 
         return $result;

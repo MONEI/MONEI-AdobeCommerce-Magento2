@@ -27,5 +27,5 @@
       </block>
     </referenceContainer>
   </body>
-  <update handle="no_page_cache" />
+  <update handle="page_cache_disable" />
 </page>

@@ -48,23 +48,29 @@ class ProcessLayoutPlugin
     ) {
         // Process normally for non-payment pages
         if (!$this->isMoneiPaymentPage()) {
-            $result = $proceed($observer);
-            // Ensure we always return a value even if $proceed returns null
-            return $result ?? $this;
+            return $proceed($observer);
         }
 
-        // For MONEI payment pages, add no-cache headers to the response
+        // For MONEI payment pages, we should properly mark the page as non-cacheable
+        // using Magento's built-in mechanisms
         $event = $observer->getEvent();
         $response = $event->getData('response');
+        $layout = $event->getData('layout');
+
+        if ($layout) {
+            // This is the correct way to disable FPC for specific pages
+            $layout->getUpdate()->addHandle('page_cache_disable');
+        }
 
         if ($response) {
-            $response->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0', true);
-            $response->setHeader('Pragma', 'no-cache', true);
+            // Set proper cache control headers as per Magento standards
+            $response->setPublicHeaders(0);
+            $response->setHeader('X-Magento-Cache-Control', 'no-cache, no-store, must-revalidate', true);
             $response->setHeader('X-Magento-Cache-Debug', 'MISS', true);
         }
 
-        // Return without further processing to prevent caching
-        return $this;
+        // Continue with normal processing after setting no-cache directives
+        return $proceed($observer);
     }
 
     /**
