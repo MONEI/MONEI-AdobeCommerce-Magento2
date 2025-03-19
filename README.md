@@ -46,6 +46,8 @@ MONEI Payments for Adobe Commerce (Magento 2) allows you to seamlessly integrate
 
 ### Via Composer (Recommended)
 
+Go to your Adobe Commerce (Magento 2) root directory and run the following commands:
+
 1. Add the package to your Magento installation:
 
 ```bash
@@ -58,42 +60,28 @@ composer require monei/module-monei-payment
 bin/magento module:enable Monei_MoneiPayment
 ```
 
-3. Run setup upgrade:
+3. Run the following commands to upgrade and compile the module:
 
 ```bash
 bin/magento setup:upgrade
-```
-
-4. Compile dependency injection:
-
-```bash
 bin/magento setup:di:compile
-```
-
-5. Deploy static content:
-
-```bash
 bin/magento setup:static-content:deploy
-```
-
-6. Flush cache:
-
-```bash
-bin/magento cache:flush
+bin/magento cache:clean
 ```
 
 ### Manual Installation
 
+Go to your Adobe Commerce (Magento 2) root directory.
+
 1. Download the latest release from the [GitHub repository](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/releases)
 2. Extract the contents to your `app/code/Monei/MoneiPayment` directory
-3. Follow steps 2-5 from the Composer installation instructions
-4. Install the MONEI PHP SDK:
+3. Install the MONEI PHP SDK:
 
 ```bash
 composer require monei/monei-php-sdk:^2.4.3
 ```
 
-5. Go to your Adobe Commerce (Magento 2) root directory and run:
+4. Go to your Adobe Commerce (Magento 2) root directory and run:
 
 ```bash
 bin/magento module:enable Monei_MoneiPayment
