@@ -6,6 +6,7 @@
   "author": "MONEI <support@monei.com>",
   "license": "MIT",
   "private": true,
+  "type": "module",
   "scripts": {
     "release": "release-it",
     "format": "prettier --write .",
