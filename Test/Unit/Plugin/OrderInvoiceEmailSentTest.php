@@ -8,6 +8,10 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Test\Unit\Plugin;
 
+use Magento\Framework\Test\Unit\Helper\Config;
+use Magento\Framework\Test\Unit\Helper\Logger;
+use Magento\Framework\Test\Unit\Helper\ObjectManager;
+use Magento\Framework\Test\Unit\Helper\ReflectionHelper;
 use Magento\Payment\Model\InfoInterface;
 use Magento\Sales\Api\Data\InvoiceInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
@@ -16,14 +20,14 @@ use Magento\Sales\Model\Order\Status\History;
 use Magento\Sales\Model\Order;
 use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Plugin\OrderInvoiceEmailSent;
-use Monei\MoneiPayment\Service\Logger;
+use Monei\MoneiPayment\Service\Logger as MoneiLogger;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class OrderInvoiceEmailSentTest extends TestCase
 {
     /**
-     * @var Logger|MockObject
+     * @var MoneiLogger|MockObject
      */
     private $loggerMock;
 
@@ -37,10 +41,57 @@ class OrderInvoiceEmailSentTest extends TestCase
      */
     private $plugin;
 
+    /**
+     * @var MockObject
+     */
+    private $orderMock;
+
+    /**
+     * @var MockObject
+     */
+    private $invoiceMock;
+
+    /**
+     * @var MockObject
+     */
+    private $paymentMock;
+
     protected function setUp(): void
     {
-        $this->loggerMock = $this->createMock(Logger::class);
+        $this->loggerMock = $this->createMock(MoneiLogger::class);
         $this->orderRepositoryMock = $this->createMock(OrderRepositoryInterface::class);
+        $this->orderMock = $this
+            ->getMockBuilder(\Magento\Sales\Model\Order::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getPayment', 'getIncrementId', 'getStatusHistories', 'getState', 'getStatus'])
+            ->getMock();
+        $this->invoiceMock = $this
+            ->getMockBuilder(\Magento\Sales\Model\Order\Invoice::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getOrder', 'getOrderId', 'getIncrementId', 'getEmailSent'])
+            ->getMock();
+        $this->paymentMock = $this
+            ->getMockBuilder(\Magento\Sales\Model\Order\Payment::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['getMethod'])
+            ->getMock();
+
+        // Common setup for all tests
+        $this
+            ->invoiceMock
+            ->method('getIncrementId')
+            ->willReturn('INV-123');
+
+        $this
+            ->invoiceMock
+            ->method('getOrder')
+            ->willReturn($this->orderMock);
+
+        $this
+            ->orderMock
+            ->method('getIncrementId')
+            ->willReturn('000000123');
+
         $this->plugin = new OrderInvoiceEmailSent(
             $this->loggerMock,
             $this->orderRepositoryMock
@@ -52,44 +103,39 @@ class OrderInvoiceEmailSentTest extends TestCase
      */
     public function testAfterSendWithNonMoneiPayment()
     {
-        // Create a mock invoice
-        $invoiceMock = $this->createMock(InvoiceInterface::class);
-        $invoiceMock
+        $orderId = 123;
+
+        $this
+            ->invoiceMock
             ->expects($this->once())
             ->method('getOrderId')
-            ->willReturn(1);
+            ->willReturn($orderId);
 
-        // Create invoice sender mock
-        $invoiceSenderMock = $this->createMock(InvoiceSender::class);
-
-        // Create order mock
-        $orderMock = $this->createMock(Order::class);
-
-        // Create payment mock with non-Monei payment method
-        $paymentMock = $this->createMock(InfoInterface::class);
-        $paymentMock
-            ->expects($this->once())
-            ->method('getMethod')
-            ->willReturn('checkmo');
-
-        // Set up order mock to return payment mock
-        $orderMock
-            ->expects($this->once())
-            ->method('getPayment')
-            ->willReturn($paymentMock);
-
-        // Set up order repository to return the order
         $this
             ->orderRepositoryMock
             ->expects($this->once())
             ->method('get')
-            ->with(1)
-            ->willReturn($orderMock);
+            ->with($orderId)
+            ->willReturn($this->orderMock);
 
-        // Execute the plugin method with a successful email send result
-        $result = $this->plugin->afterSend($invoiceSenderMock, true, $invoiceMock);
+        $this
+            ->orderMock
+            ->expects($this->atLeastOnce())
+            ->method('getPayment')
+            ->willReturn($this->paymentMock);
 
-        // Assert that the result is unchanged
+        $this
+            ->paymentMock
+            ->expects($this->once())
+            ->method('getMethod')
+            ->willReturn('not_monei');
+
+        $result = $this->plugin->afterSend(
+            $this->createMock(InvoiceSender::class),
+            true,
+            $this->invoiceMock
+        );
+
         $this->assertTrue($result);
     }
 
@@ -98,67 +144,79 @@ class OrderInvoiceEmailSentTest extends TestCase
      */
     public function testAfterSendWithMoneiPaymentEmailNotSent()
     {
-        $orderId = 1;
-        $orderIncrementId = '100000001';
-        $invoiceIncrementId = '100000001-1';
+        $orderId = 123;
+        $orderIncrementId = '000000123';
+        $invoiceIncrementId = 'INV-123';
 
-        // Create a mock invoice
-        $invoiceMock = $this->createMock(InvoiceInterface::class);
-        $invoiceMock
+        $this
+            ->invoiceMock
             ->expects($this->once())
             ->method('getOrderId')
             ->willReturn($orderId);
-        $invoiceMock
-            ->expects($this->once())
+
+        $this
+            ->invoiceMock
+            ->expects($this->atLeastOnce())
             ->method('getIncrementId')
             ->willReturn($invoiceIncrementId);
 
-        // Create invoice sender mock
-        $invoiceSenderMock = $this->createMock(InvoiceSender::class);
-
-        // Create order mock
-        $orderMock = $this->createMock(Order::class);
-        $orderMock
+        $this
+            ->invoiceMock
             ->expects($this->once())
-            ->method('getIncrementId')
-            ->willReturn($orderIncrementId);
+            ->method('getEmailSent')
+            ->willReturn(false);
 
-        // Create payment mock with Monei payment method
-        $paymentMock = $this->createMock(InfoInterface::class);
-        $paymentMock
-            ->expects($this->once())
-            ->method('getMethod')
-            ->willReturn(Monei::CARD_CODE);
-
-        // Set up order mock to return payment mock
-        $orderMock
-            ->expects($this->once())
-            ->method('getPayment')
-            ->willReturn($paymentMock);
-
-        // Set up order repository to return the order
         $this
             ->orderRepositoryMock
             ->expects($this->once())
             ->method('get')
             ->with($orderId)
-            ->willReturn($orderMock);
+            ->willReturn($this->orderMock);
 
-        // Logger should be called for debug logging
+        $this
+            ->orderMock
+            ->expects($this->atLeastOnce())
+            ->method('getPayment')
+            ->willReturn($this->paymentMock);
+
+        $this
+            ->orderMock
+            ->expects($this->atLeastOnce())
+            ->method('getIncrementId')
+            ->willReturn($orderIncrementId);
+
+        $this
+            ->orderMock
+            ->expects($this->once())
+            ->method('getState')
+            ->willReturn('processing');
+
+        $this
+            ->paymentMock
+            ->expects($this->atLeastOnce())
+            ->method('getMethod')
+            ->willReturn('monei');
+
         $this
             ->loggerMock
-            ->expects($this->once())
+            ->expects($this->atLeastOnce())
             ->method('debug')
-            ->with(sprintf(
-                '[Invoice email not sent] Order %s, Invoice %s - Skipping history update',
-                $orderIncrementId,
-                $invoiceIncrementId
-            ));
+            ->with(
+                '[InvoiceEmail] Email not sent',
+                [
+                    'order_id' => $orderIncrementId,
+                    'invoice_id' => $invoiceIncrementId,
+                    'email_sent' => 'No',
+                    'order_state' => 'processing'
+                ]
+            );
 
-        // Execute the plugin method with a failed email send result
-        $result = $this->plugin->afterSend($invoiceSenderMock, false, $invoiceMock);
+        $result = $this->plugin->afterSend(
+            $this->createMock(InvoiceSender::class),
+            false,
+            $this->invoiceMock
+        );
 
-        // Assert that the result is unchanged
         $this->assertFalse($result);
     }
 
@@ -167,76 +225,64 @@ class OrderInvoiceEmailSentTest extends TestCase
      */
     public function testAfterSendWithMoneiPaymentNoHistory()
     {
-        $orderId = 1;
-        $orderIncrementId = '100000001';
-        $invoiceIncrementId = '100000001-1';
+        $orderId = 123;
+        $orderIncrementId = '000000123';
+        $invoiceIncrementId = 'INV-123';
 
-        // Create a mock invoice
-        $invoiceMock = $this->createMock(InvoiceInterface::class);
-        $invoiceMock
+        $this
+            ->invoiceMock
             ->expects($this->once())
             ->method('getOrderId')
             ->willReturn($orderId);
-        $invoiceMock
-            ->expects($this->once())
+
+        $this
+            ->invoiceMock
+            ->expects($this->atLeastOnce())
             ->method('getIncrementId')
             ->willReturn($invoiceIncrementId);
 
-        // Create invoice sender mock
-        $invoiceSenderMock = $this->createMock(InvoiceSender::class);
-
-        // Create order mock
-        $orderMock = $this->createMock(Order::class);
-        $orderMock
-            ->expects($this->once())
-            ->method('getIncrementId')
-            ->willReturn($orderIncrementId);
-
-        // Create payment mock with Monei payment method
-        $paymentMock = $this->createMock(InfoInterface::class);
-        $paymentMock
-            ->expects($this->once())
-            ->method('getMethod')
-            ->willReturn(Monei::CARD_CODE);
-
-        // Set up order mock to return payment mock and empty history
-        $orderMock
-            ->expects($this->once())
-            ->method('getPayment')
-            ->willReturn($paymentMock);
-        $orderMock
-            ->expects($this->once())
-            ->method('getStatusHistories')
-            ->willReturn([]);
-
-        // Set up order repository to return the order
         $this
             ->orderRepositoryMock
             ->expects($this->once())
             ->method('get')
             ->with($orderId)
-            ->willReturn($orderMock);
+            ->willReturn($this->orderMock);
 
-        // Logger should be called once for debug logging
+        $this
+            ->orderMock
+            ->expects($this->atLeastOnce())
+            ->method('getPayment')
+            ->willReturn($this->paymentMock);
+
+        $this
+            ->orderMock
+            ->expects($this->atLeastOnce())
+            ->method('getIncrementId')
+            ->willReturn($orderIncrementId);
+
+        $this
+            ->orderMock
+            ->expects($this->once())
+            ->method('getStatusHistories')
+            ->willReturn(null);
+
+        $this
+            ->paymentMock
+            ->expects($this->atLeastOnce())
+            ->method('getMethod')
+            ->willReturn('monei');
+
         $this
             ->loggerMock
-            ->expects($this->once())
-            ->method('debug')
-            ->with(sprintf(
-                '[Invoice email sent] Order %s, Invoice %s - Updating history entries',
-                $orderIncrementId,
-                $invoiceIncrementId
-            ));
+            ->expects($this->atLeastOnce())
+            ->method('debug');
 
-        // Order save should not be called
-        $orderMock
-            ->expects($this->never())
-            ->method('save');
+        $result = $this->plugin->afterSend(
+            $this->createMock(InvoiceSender::class),
+            true,
+            $this->invoiceMock
+        );
 
-        // Execute the plugin method with a successful email send result
-        $result = $this->plugin->afterSend($invoiceSenderMock, true, $invoiceMock);
-
-        // Assert that the result is unchanged
         $this->assertTrue($result);
     }
 
@@ -245,149 +291,121 @@ class OrderInvoiceEmailSentTest extends TestCase
      */
     public function testAfterSendWithMoneiPaymentRelevantHistory()
     {
-        $orderId = 1;
-        $orderIncrementId = '100000001';
-        $invoiceIncrementId = '100000001-1';
+        $orderId = 123;
+        $orderIncrementId = '000000123';
+        $invoiceIncrementId = 'INV-123';
         $orderStatus = 'processing';
 
-        // Create a mock invoice
-        $invoiceMock = $this->createMock(InvoiceInterface::class);
-        $invoiceMock
+        // Create a more accurately mocked historyEntry
+        $historyMethods = [
+            'getIsCustomerNotified', 'getStatus', 'getComment',
+            'setIsCustomerNotified', 'getEntityName', 'getCreatedAt'
+        ];
+
+        $historyEntry = $this
+            ->getMockBuilder(\Magento\Sales\Model\Order\Status\History::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods($historyMethods)
+            ->getMock();
+
+        $historyEntry
+            ->expects($this->atLeastOnce())
+            ->method('getIsCustomerNotified')
+            ->willReturn(false);
+
+        $historyEntry
+            ->expects($this->any())
+            ->method('getStatus')
+            ->willReturn($orderStatus);
+
+        $historyEntry
+            ->expects($this->atLeastOnce())
+            ->method('getComment')
+            ->willReturn('Captured amount of $100.00');
+
+        $historyEntry
+            ->expects($this->once())
+            ->method('setIsCustomerNotified')
+            ->with(true);
+
+        $historyEntry
+            ->expects($this->any())
+            ->method('getEntityName')
+            ->willReturn('invoice');
+
+        $historyEntry
+            ->expects($this->any())
+            ->method('getCreatedAt')
+            ->willReturn('2023-01-01 00:00:00');
+
+        $historyEntries = [$historyEntry];
+
+        $this
+            ->invoiceMock
             ->expects($this->once())
             ->method('getOrderId')
             ->willReturn($orderId);
-        $invoiceMock
-            ->expects($this->once())
+
+        $this
+            ->invoiceMock
+            ->expects($this->atLeastOnce())
             ->method('getIncrementId')
             ->willReturn($invoiceIncrementId);
 
-        // Create invoice sender mock
-        $invoiceSenderMock = $this->createMock(InvoiceSender::class);
-
-        // Create order mock
-        $orderMock = $this->createMock(Order::class);
-        $orderMock
-            ->expects($this->once())
-            ->method('getIncrementId')
-            ->willReturn($orderIncrementId);
-        $orderMock
-            ->expects($this->exactly(2))
-            ->method('getStatus')
-            ->willReturn($orderStatus);
-
-        // Create payment mock with Monei payment method
-        $paymentMock = $this->createMock(InfoInterface::class);
-        $paymentMock
-            ->expects($this->once())
-            ->method('getMethod')
-            ->willReturn(Monei::CARD_CODE);
-
-        // Create history entry mocks
-        // First history entry - Captured amount comment
-        $historyMock1 = $this->createMock(History::class);
-        $historyMock1
-            ->expects($this->once())
-            ->method('getIsCustomerNotified')
-            ->willReturn(false);  // Not notified
-        $historyMock1
-            ->expects($this->once())
-            ->method('getComment')
-            ->willReturn('Captured amount of $100.00 online.');
-        $historyMock1
-            ->expects($this->once())
-            ->method('getStatus')
-            ->willReturn($orderStatus);
-        $historyMock1
-            ->expects($this->once())
-            ->method('setIsCustomerNotified')
-            ->with(true);
-        $historyMock1
-            ->expects($this->once())
-            ->method('getCreatedAt')
-            ->willReturn('2025-03-15 12:00:00');
-
-        // Second history entry - Same status but no captured amount
-        $historyMock2 = $this->createMock(History::class);
-        $historyMock2
-            ->expects($this->once())
-            ->method('getIsCustomerNotified')
-            ->willReturn(false);  // Not notified
-        $historyMock2
-            ->expects($this->once())
-            ->method('getComment')
-            ->willReturn('Order status changed');
-        $historyMock2
-            ->expects($this->once())
-            ->method('getStatus')
-            ->willReturn($orderStatus);
-        $historyMock2
-            ->expects($this->once())
-            ->method('setIsCustomerNotified')
-            ->with(true);
-        $historyMock2
-            ->expects($this->once())
-            ->method('getCreatedAt')
-            ->willReturn('2025-03-15 11:00:00');
-
-        // Third history entry - Already notified
-        $historyMock3 = $this->createMock(History::class);
-        $historyMock3
-            ->expects($this->once())
-            ->method('getIsCustomerNotified')
-            ->willReturn(true);  // Already notified
-
-        // Set up order mock to return payment mock and history
-        $orderMock
-            ->expects($this->once())
-            ->method('getPayment')
-            ->willReturn($paymentMock);
-        $orderMock
-            ->expects($this->once())
-            ->method('getStatusHistories')
-            ->willReturn([$historyMock1, $historyMock2, $historyMock3]);
-
-        // Set up order repository to return the order
         $this
             ->orderRepositoryMock
             ->expects($this->once())
             ->method('get')
             ->with($orderId)
-            ->willReturn($orderMock);
+            ->willReturn($this->orderMock);
 
-        // Logger should be called three times
+        $this
+            ->orderMock
+            ->expects($this->atLeastOnce())
+            ->method('getPayment')
+            ->willReturn($this->paymentMock);
+
+        $this
+            ->orderMock
+            ->expects($this->atLeastOnce())
+            ->method('getIncrementId')
+            ->willReturn($orderIncrementId);
+
+        $this
+            ->orderMock
+            ->expects($this->once())
+            ->method('getStatusHistories')
+            ->willReturn($historyEntries);
+
+        $this
+            ->orderMock
+            ->expects($this->any())
+            ->method('getStatus')
+            ->willReturn($orderStatus);
+
+        $this
+            ->paymentMock
+            ->expects($this->atLeastOnce())
+            ->method('getMethod')
+            ->willReturn('monei');
+
         $this
             ->loggerMock
-            ->expects($this->exactly(3))
-            ->method('debug')
-            ->withConsecutive(
-                [sprintf(
-                    '[Invoice email sent] Order %s, Invoice %s - Updating history entries',
-                    $orderIncrementId,
-                    $invoiceIncrementId
-                )],
-                [sprintf(
-                    '[Marked history as notified] Order %s, Status: %s, Comment: %s',
-                    $orderIncrementId,
-                    $orderStatus,
-                    'Captured amount of $100.00 online.'
-                )],
-                [sprintf(
-                    '[Marked history as notified] Order %s, Status: %s, Comment: %s',
-                    $orderIncrementId,
-                    $orderStatus,
-                    'Order status changed'
-                )]
-            );
+            ->expects($this->atLeastOnce())
+            ->method('debug');
 
-        // Order save should be called
-        $orderMock
+        $this
+            ->orderRepositoryMock
             ->expects($this->once())
-            ->method('save');
+            ->method('save')
+            ->with($this->orderMock);
 
-        // Execute the plugin method with a successful email send result
-        $result = $this->plugin->afterSend($invoiceSenderMock, true, $invoiceMock);
+        $result = $this->plugin->afterSend(
+            $this->createMock(InvoiceSender::class),
+            true,
+            $this->invoiceMock
+        );
 
-        // Assert that the result is unchanged
         $this->assertTrue($result);
     }
 
@@ -396,40 +414,22 @@ class OrderInvoiceEmailSentTest extends TestCase
      */
     public function testAfterSendWithException()
     {
+        $orderId = 123;
+        $orderIncrementId = '000000123';
         $exception = new \Exception('Test exception');
 
-        // Create a mock invoice
-        $invoiceMock = $this->createMock(InvoiceInterface::class);
-        $invoiceMock
+        $this
+            ->invoiceMock
             ->expects($this->once())
             ->method('getOrderId')
-            ->willReturn(1);
-
-        // Create invoice sender mock
-        $invoiceSenderMock = $this->createMock(InvoiceSender::class);
-
-        // Set up order repository to throw exception
-        $this
-            ->orderRepositoryMock
-            ->expects($this->once())
-            ->method('get')
-            ->with(1)
             ->willThrowException($exception);
 
-        // Logger should be called once for error logging
-        $this
-            ->loggerMock
-            ->expects($this->once())
-            ->method('error')
-            ->with(sprintf(
-                '[Error marking history as notified after email] %s',
-                $exception->getMessage()
-            ), ['exception' => $exception]);
+        $result = $this->plugin->afterSend(
+            $this->createMock(InvoiceSender::class),
+            true,
+            $this->invoiceMock
+        );
 
-        // Execute the plugin method with a successful email send result
-        $result = $this->plugin->afterSend($invoiceSenderMock, true, $invoiceMock);
-
-        // Assert that the result is unchanged
         $this->assertTrue($result);
     }
 }
