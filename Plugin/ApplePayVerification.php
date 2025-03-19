@@ -26,31 +26,32 @@ class ApplePayVerification
 {
     private const MONEI_APPLE_PAY_FILE_URL = 'https://assets.monei.com/apple-pay/apple-developer-merchantid-domain-association/';
     private const PAYMENT_METHOD_CODE = 'monei_google_apple';
+    private const APPLE_PAY_PATH = '/.well-known/apple-developer-merchantid-domain-association';
 
     /**
      * @var LoggerInterface
      */
-    private $logger;
+    private $_logger;
 
     /**
      * @var ResponseHttp
      */
-    private $response;
+    private $_response;
 
     /**
      * @var Curl
      */
-    private $curl;
+    private $_curl;
 
     /**
      * @var PaymentHelper
      */
-    private $paymentHelper;
+    private $_paymentHelper;
 
     /**
      * @var ScopeConfigInterface
      */
-    private $scopeConfig;
+    private $_scopeConfig;
 
     /**
      * @param LoggerInterface $logger
@@ -66,11 +67,11 @@ class ApplePayVerification
         PaymentHelper $paymentHelper,
         ScopeConfigInterface $scopeConfig
     ) {
-        $this->logger = $logger;
-        $this->response = $response;
-        $this->curl = $curl;
-        $this->paymentHelper = $paymentHelper;
-        $this->scopeConfig = $scopeConfig;
+        $this->_logger = $logger;
+        $this->_response = $response;
+        $this->_curl = $curl;
+        $this->_paymentHelper = $paymentHelper;
+        $this->_scopeConfig = $scopeConfig;
     }
 
     /**
@@ -79,20 +80,22 @@ class ApplePayVerification
      * @param FrontControllerInterface $subject
      * @param Closure $proceed
      * @param RequestInterface $request
-     * @return ResultInterface|null
+     * @return ResultInterface|ResponseHttp|null
      */
     public function aroundDispatch(
         FrontControllerInterface $subject,
         Closure $proceed,
         RequestInterface $request
     ) {
-        $pathInfo = rtrim($request->getPathInfo() ?? '', '/');
+        // Get the request URI and normalize it for comparison
+        $requestUri = $request->getRequestUri();
+        $pathInfo = parse_url($requestUri, PHP_URL_PATH);
+        $pathInfo = rtrim($pathInfo, '/');
 
-        // Check if this is a request for the Apple Pay verification file and if Apple Pay is enabled
-        if ($pathInfo === '/.well-known/apple-developer-merchantid-domain-association' &&
-                $this->isApplePayEnabled()) {
-            $this->serveApplePayVerificationFile();
-            return null;
+        // Check if this is a request for the Apple Pay verification file
+        if ($pathInfo === self::APPLE_PAY_PATH && $this->_isApplePayEnabled()) {
+            $this->_logger->info('[ApplePay] Processing Apple Pay verification request');
+            return $this->_handleApplePayVerification();
         }
 
         return $proceed($request);
@@ -103,42 +106,43 @@ class ApplePayVerification
      *
      * @return bool
      */
-    private function isApplePayEnabled(): bool
+    private function _isApplePayEnabled(): bool
     {
         try {
-            $method = $this->paymentHelper->getMethodInstance(self::PAYMENT_METHOD_CODE);
+            $method = $this->_paymentHelper->getMethodInstance(self::PAYMENT_METHOD_CODE);
             return $method->isActive();
         } catch (\Exception $e) {
-            $this->logger->error('[ApplePay] Error checking if payment method is enabled: ' . $e->getMessage());
+            $this->_logger->error('[ApplePay] Error checking if payment method is enabled: ' . $e->getMessage());
             return false;
         }
     }
 
     /**
-     * Serve the Apple Pay verification file
+     * Handle Apple Pay verification request
      *
-     * @return void
+     * @return ResponseHttp
      */
-    private function serveApplePayVerificationFile(): void
+    private function _handleApplePayVerification(): ResponseHttp
     {
         try {
-            $this->curl->get(self::MONEI_APPLE_PAY_FILE_URL);
-            $statusCode = $this->curl->getStatus();
+            $this->_curl->get(self::MONEI_APPLE_PAY_FILE_URL);
+            $statusCode = $this->_curl->getStatus();
 
             if ($statusCode === 200) {
-                $fileContent = $this->curl->getBody();
-                $this->response->setHeader('Content-Type', 'text/plain');
-                $this->response->setBody($fileContent);
-                $this->response->sendResponse();
+                $fileContent = $this->_curl->getBody();
+                $this->_response->setHeader('Content-Type', 'text/plain', true);
+                $this->_response->setBody($fileContent);
+                $this->_response->setStatusCode(200);
+                $this->_logger->info('[ApplePay] Successfully served verification file');
             } else {
-                $this->logger->error('[ApplePay] Failed to fetch verification file. Status code: ' . $statusCode);
-                $this->response->setHttpResponseCode($statusCode);
-                $this->response->sendResponse();
+                $this->_logger->error('[ApplePay] Failed to fetch verification file. Status code: ' . $statusCode);
+                $this->_response->setStatusCode($statusCode ?: 500);
             }
         } catch (\Exception $e) {
-            $this->logger->error('[ApplePay] Error serving verification file: ' . $e->getMessage());
-            $this->response->setHttpResponseCode(500);
-            $this->response->sendResponse();
+            $this->_logger->error('[ApplePay] Error serving verification file: ' . $e->getMessage());
+            $this->_response->setStatusCode(500);
         }
+
+        return $this->_response;
     }
 }
