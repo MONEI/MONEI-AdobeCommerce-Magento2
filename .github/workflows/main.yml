@@ -24,6 +24,7 @@ jobs:
             .cursor/*
             vendor/*
             scripts/*
+            node_modules/*
             composer.lock
             package.json
             yarn.lock
