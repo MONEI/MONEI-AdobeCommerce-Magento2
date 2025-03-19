@@ -16,6 +16,7 @@ cat >"$TMP_EXCLUDE" <<EOL
 .vscode/*
 .cursor/*
 vendor/*
+node_modules/*
 composer.lock
 package.json
 yarn.lock
