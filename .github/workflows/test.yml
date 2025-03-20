@@ -5,7 +5,6 @@ on: [push]
 jobs:
   magento2-build:
     runs-on: ubuntu-latest
-    container: ubuntu
     name: 'MONEI Payment module tests & build'
     services:
       mysql:
@@ -17,10 +16,10 @@ jobs:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
       opensearch:
-        image: ghcr.io/mad-i-t/magento-opensearch:2.5.0
+        image: opensearchproject/opensearch:1.2.1
         ports:
           - 9200:9200
-        options: -e="discovery.type=single-node" -e "plugins.security.disabled=true" --health-cmd="curl http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
+        options: -e="discovery.type=single-node" -e "plugins.security.disabled=true" -e "plugins.security.ssl.http.enabled=false" --health-cmd="curl http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
       ### Download the module code in custom dir###
@@ -28,8 +27,13 @@ jobs:
         with:
           path: Monei_MoneiPayment
 
+      - name: 'Debug workspace before install'
+        run: |
+          pwd
+          ls -la
+
       - name: 'install fresh magento repo'
-        uses: MAD-I-T/magento-actions@master
+        uses: MAD-I-T/magento-actions@v3.31
         env:
           COMPOSER_AUTH: ${{secrets.COMPOSER_AUTH}}
         with:
@@ -38,14 +42,26 @@ jobs:
           php: 8.1
           no_push: 1   ## add this arg to not push to the repo ideal for quick test on specific version
 
-      - name: 'Install MONEI PHP SDK dependency'
+      - name: 'Debug workspace after Magento install'
+        run: |
+          pwd
+          ls -la
+          if [ -d "magento" ]; then
+            echo "Magento directory exists at $(pwd)/magento"
+            cd magento && ls -la && cd ..
+          else
+            echo "Magento directory not found at $(pwd)"
+            find . -type d -name 'magento*' | xargs ls -la
+          fi
+
+      - name: 'Install MONEI PHP SDK'
         run: |
           cd magento
           composer require monei/monei-php-sdk:^2.4.3
 
       - name: 'launch magento2 unit test'
         if: always()
-        uses: MAD-I-T/magento-actions@master
+        uses: MAD-I-T/magento-actions@v3.31
         env:
           COMPOSER_AUTH: ${{secrets.COMPOSER_AUTH}}
         with:
@@ -55,7 +71,7 @@ jobs:
 
       - name: 'phpstan'
         if: always()
-        uses: MAD-I-T/magento-actions@master
+        uses: MAD-I-T/magento-actions@v3.31
         with:
           process: 'phpstan'
           php: 8.1
@@ -63,7 +79,7 @@ jobs:
 
       - name: 'mess detector'
         if: always()
-        uses: MAD-I-T/magento-actions@master
+        uses: MAD-I-T/magento-actions@v3.31
         with:
           process: 'mess-detector'
           php: 8.1
@@ -71,7 +87,7 @@ jobs:
 
       - name: 'Magento coding standard checking'
         if: always()
-        uses: MAD-I-T/magento-actions@master
+        uses: MAD-I-T/magento-actions@v3.31
         with:
           php: 8.1
           process: 'phpcs-test'
