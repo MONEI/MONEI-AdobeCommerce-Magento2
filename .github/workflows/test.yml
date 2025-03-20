@@ -32,6 +32,8 @@ jobs:
         with:
           working_dir: ./MoneiPayment
           php_version: 8.1
+          php_extensions: bcmath
+          command: install --ignore-platform-reqs
         env:
           COMPOSER_AUTH: ${{secrets.COMPOSER_AUTH}}
 
