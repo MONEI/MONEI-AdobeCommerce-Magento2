@@ -1,0 +1,18 @@
+---
+description: Testing Guidelines
+globs: 
+alwaysApply: false
+---
+**IMPORTANT** Before writing any test make sure you understand all data structures and constant involved in the test. You need to make sure the methods and constants used in tests exist!
+
+## Test Commands
+
+- Check test coverage with `./bin test/unit-coverage`, it will output coverage directly in the terminal. Do not run this command on every change, only when individual tests are passing
+- Run individual tests with `./bin test/unit [path] [args]` for faster feedback
+- Run `./bin test --testdox` to run all tests with verbose output
+- After test is passing run `./bin analyse` to make sure there are no type errors
+
+## Coverage Requirements
+- Minimum 80% code coverage for new features
+- 100% coverage for critical payment processing code
+- Test all error conditions and exception handling
