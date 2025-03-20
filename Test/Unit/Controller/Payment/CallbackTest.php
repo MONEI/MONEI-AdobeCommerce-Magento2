@@ -357,6 +357,80 @@ class CallbackTest extends TestCase
     }
 
     /**
+     * Test validate for CSRF with exception during validation
+     */
+    public function testValidateForCsrfWithException(): void
+    {
+        // Use a simple payload
+        $rawBody = '{"id":"test123","amount":10000}';
+        $signature = 'valid_signature';
+
+        // Set up the input stream mock first
+        $this->setUpInputStreamMock($rawBody);
+
+        // Save original server variable
+        $originalServer = $_SERVER['HTTP_MONEI_SIGNATURE'] ?? null;
+
+        // Set signature header
+        $_SERVER['HTTP_MONEI_SIGNATURE'] = $signature;
+
+        // Create moneiSdkMock to throw exception when verifying signature
+        $moneiSdkMock = $this
+            ->getMockBuilder(\Monei\MoneiClient::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $moneiSdkMock
+            ->method('verifySignature')
+            ->with($this->anything(), $signature)
+            ->willThrowException(new \Exception('Test exception during signature verification'));
+
+        // Create API client mock
+        $apiClientMock = $this->createMock(MoneiApiClient::class);
+        $apiClientMock->method('getMoneiSdk')->willReturn($moneiSdkMock);
+
+        // Create logger mock that expects critical error to be logged for exception
+        $loggerMock = $this->createMock(Logger::class);
+        $loggerMock
+            ->expects($this->once())
+            ->method('critical')
+            ->with($this->stringContains('[Callback CSRF] Test exception during signature verification'))
+            ->willReturnCallback(function () {
+                // Critical is a void method, so don't return anything
+            });
+
+        // Create controller with our mocks
+        $controller = new Callback(
+            $loggerMock,
+            $this->createMock(JsonFactory::class),
+            $this->createMock(PaymentProcessorInterface::class),
+            $apiClientMock,
+            $this->createMock(OrderRepositoryInterface::class),
+            $this->createMock(HttpRequest::class),
+            $this->createMock(HttpResponse::class),
+            $this->createMock(PaymentDTOFactory::class),
+            $this->createMock(\Magento\Framework\App\Config\ScopeConfigInterface::class)
+        );
+
+        // Execute the validateForCsrf method
+        $result = $controller->validateForCsrf($this->createMock(RequestInterface::class));
+
+        // Assert result is false (exception during validation)
+        $this->assertFalse($result);
+
+        // Restore original server variable
+        if ($originalServer !== null) {
+            $_SERVER['HTTP_MONEI_SIGNATURE'] = $originalServer;
+        } else {
+            unset($_SERVER['HTTP_MONEI_SIGNATURE']);
+        }
+
+        // Teardown the mock stream
+        if (in_array('php', stream_get_wrappers())) {
+            stream_wrapper_unregister('php');
+        }
+    }
+
+    /**
      * Test execute with successful payment
      */
     public function testExecuteWithSuccessfulPayment(): void
@@ -914,6 +988,239 @@ class CallbackTest extends TestCase
             $loggerMock,
             $jsonFactoryMock,
             $this->createMock(PaymentProcessorInterface::class),
+            $apiClientMock,
+            $this->createMock(OrderRepositoryInterface::class),
+            $this->createMock(HttpRequest::class),
+            $responseMock,
+            $paymentDtoFactoryMock,
+            $this->createMock(\Magento\Framework\App\Config\ScopeConfigInterface::class)
+        );
+
+        // Execute controller
+        $result = $controller->execute();
+
+        // Assert returned the JSON response
+        $this->assertSame($jsonResponseMock, $result);
+
+        // Restore original server variable
+        if ($originalServer !== null) {
+            $_SERVER['HTTP_MONEI_SIGNATURE'] = $originalServer;
+        } else {
+            unset($_SERVER['HTTP_MONEI_SIGNATURE']);
+        }
+
+        // Teardown the mock stream
+        if (in_array('php', stream_get_wrappers())) {
+            stream_wrapper_unregister('php');
+        }
+    }
+
+    /**
+     * Test execute with unexpected exception
+     */
+    public function testExecuteWithUnexpectedException(): void
+    {
+        // Use a simple payload
+        $rawBody = '{"id":"test123","amount":10000,"orderId":"000000001"}';
+        $signature = 'valid_signature';
+
+        // Set up the input stream mock first
+        $this->setUpInputStreamMock($rawBody);
+
+        // Save original server variable
+        $originalServer = $_SERVER['HTTP_MONEI_SIGNATURE'] ?? null;
+
+        // Set signature header
+        $_SERVER['HTTP_MONEI_SIGNATURE'] = $signature;
+
+        // Expected payment data (the Object that would be returned from verifySignature)
+        $paymentData = json_decode($rawBody);
+
+        // Create a fully mocked instance for this test
+        $jsonResponseMock = $this->createMock(Json::class);
+        $jsonFactoryMock = $this->createMock(JsonFactory::class);
+        $jsonFactoryMock->method('create')->willReturn($jsonResponseMock);
+
+        // Setup setData to return self for any parameters
+        $jsonResponseMock
+            ->method('setData')
+            ->willReturnSelf();
+
+        // Setup setHttpResponseCode to return self and expect 500 status code
+        $jsonResponseMock
+            ->method('setHttpResponseCode')
+            ->with(500)
+            ->willReturnSelf();
+
+        // Create moneiSdkMock to return verified data
+        $moneiSdkMock = $this
+            ->getMockBuilder(\Monei\MoneiClient::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $moneiSdkMock
+            ->method('verifySignature')
+            ->with($this->anything(), $signature)
+            ->willReturn($paymentData);
+
+        // Create API client mock that throws exception during execute
+        $apiClientMock = $this->createMock(MoneiApiClient::class);
+        $apiClientMock
+            ->method('getMoneiSdk')
+            ->willThrowException(new \Exception('Unexpected general exception'));
+
+        // Create logger mock that expects error to be logged for exception
+        $loggerMock = $this->createMock(Logger::class);
+        $loggerMock
+            ->method('debug')
+            ->willReturnCallback(function () {
+                // Debug is a void method, so don't return anything
+            });
+        $loggerMock
+            ->method('error')
+            ->willReturnCallback(function () {
+                // Error is a void method, so don't return anything
+            });
+        $loggerMock
+            ->expects($this->atLeastOnce())
+            ->method('error')
+            ->with($this->stringContains('[Callback] Error processing callback: Unexpected general exception'));
+
+        // Create response mock
+        $responseMock = $this->createMock(HttpResponse::class);
+        $responseMock->method('setHeader')->willReturnSelf();
+
+        // Create controller with all our mocks
+        $controller = new Callback(
+            $loggerMock,
+            $jsonFactoryMock,
+            $this->createMock(PaymentProcessorInterface::class),
+            $apiClientMock,
+            $this->createMock(OrderRepositoryInterface::class),
+            $this->createMock(HttpRequest::class),
+            $responseMock,
+            $this->createMock(PaymentDTOFactory::class),
+            $this->createMock(\Magento\Framework\App\Config\ScopeConfigInterface::class)
+        );
+
+        // Execute controller
+        $result = $controller->execute();
+
+        // Assert returned the JSON response
+        $this->assertSame($jsonResponseMock, $result);
+
+        // Restore original server variable
+        if ($originalServer !== null) {
+            $_SERVER['HTTP_MONEI_SIGNATURE'] = $originalServer;
+        } else {
+            unset($_SERVER['HTTP_MONEI_SIGNATURE']);
+        }
+
+        // Teardown the mock stream
+        if (in_array('php', stream_get_wrappers())) {
+            stream_wrapper_unregister('php');
+        }
+    }
+
+    /**
+     * Test execute with failed payment status
+     */
+    public function testExecuteWithFailedPaymentStatus(): void
+    {
+        // Use the same test payload format as MONEI PHP SDK but with FAILED status
+        $timestamp = '1602604555';
+        $rawBody = '{"id":"3690bd3f7294db82fed08c7371bace32","amount":11700,"currency":"EUR","orderId":"000000001","status":"FAILED","message":"Transaction Failed"}';
+
+        // Generate signature in the same format as the SDK tests
+        $hmac = hash_hmac('SHA256', $timestamp . '.' . $rawBody, 'test_api_key');
+        $signature = "t={$timestamp},v1={$hmac}";
+
+        // Set up the input stream mock first
+        $this->setUpInputStreamMock($rawBody);
+
+        // Save original server variable
+        $originalServer = $_SERVER['HTTP_MONEI_SIGNATURE'] ?? null;
+
+        // Set signature header
+        $_SERVER['HTTP_MONEI_SIGNATURE'] = $signature;
+
+        // Expected payment data (the Object that would be returned from verifySignature)
+        $paymentData = json_decode($rawBody);
+
+        // Create a fully mocked instance for this test
+        $jsonResponseMock = $this->createMock(Json::class);
+        $jsonFactoryMock = $this->createMock(JsonFactory::class);
+        $jsonFactoryMock->method('create')->willReturn($jsonResponseMock);
+
+        // Setup setData to return self for any parameters
+        $jsonResponseMock
+            ->method('setData')
+            ->willReturnSelf();
+
+        // Also allow setHttpResponseCode to be called (for error cases)
+        $jsonResponseMock
+            ->method('setHttpResponseCode')
+            ->willReturnSelf();
+
+        // Create moneiSdkMock to return verified data
+        $moneiSdkMock = $this
+            ->getMockBuilder(\Monei\MoneiClient::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $moneiSdkMock
+            ->method('verifySignature')
+            ->with($this->anything(), $signature)
+            ->willReturn($paymentData);
+
+        // Create API client mock
+        $apiClientMock = $this->createMock(MoneiApiClient::class);
+        $apiClientMock->method('getMoneiSdk')->willReturn($moneiSdkMock);
+
+        // Create DTO mock and factory
+        $paymentDtoMock = $this->createMock(PaymentDTO::class);
+        $paymentDtoMock->method('getId')->willReturn($paymentData->id);
+        $paymentDtoMock->method('getOrderId')->willReturn($paymentData->orderId);
+        $paymentDtoMock->method('getStatus')->willReturn($paymentData->status);
+        $paymentDtoMock->method('getRawData')->willReturn((array) $paymentData);
+
+        $paymentDtoFactoryMock = $this->createMock(PaymentDTOFactory::class);
+        $paymentDtoFactoryMock
+            ->method('createFromArray')
+            ->with($this->isType('array'))
+            ->willReturn($paymentDtoMock);
+
+        // Create successful processing result
+        $processingResultMock = $this->createMock(PaymentProcessingResultInterface::class);
+        $processingResultMock->method('isSuccess')->willReturn(true);
+        $processingResultMock->method('getMessage')->willReturn('Payment processed successfully');
+
+        // Create payment processor mock
+        $paymentProcessorMock = $this->createMock(PaymentProcessorInterface::class);
+        $paymentProcessorMock
+            ->method('process')
+            ->with(
+                $this->equalTo($paymentData->orderId),
+                $this->equalTo($paymentData->id),
+                $this->isType('array')
+            )
+            ->willReturn($processingResultMock);
+
+        // Create logger mock that allows multiple calls
+        $loggerMock = $this->createMock(Logger::class);
+        $loggerMock
+            ->method('debug')
+            ->willReturnCallback(function () {
+                // Debug is a void method, so don't return anything
+            });
+
+        // Create response mock
+        $responseMock = $this->createMock(HttpResponse::class);
+        $responseMock->method('setHeader')->willReturnSelf();
+
+        // Create controller with all our mocks
+        $controller = new Callback(
+            $loggerMock,
+            $jsonFactoryMock,
+            $paymentProcessorMock,
             $apiClientMock,
             $this->createMock(OrderRepositoryInterface::class),
             $this->createMock(HttpRequest::class),
