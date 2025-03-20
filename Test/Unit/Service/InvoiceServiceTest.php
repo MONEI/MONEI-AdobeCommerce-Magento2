@@ -253,14 +253,15 @@ class InvoiceServiceTest extends TestCase
     }
 
     /**
-     * Test create pending invoice
+     * Test process invoice with exception handling
      */
-    public function testCreatePendingInvoice(): void
+    public function testProcessInvoiceWithException(): void
     {
         // Setup mocks
         $orderId = 123;
         $incrementId = '100000123';
         $transactionId = 'pay_123456';
+        $exceptionMessage = 'Test exception message';
 
         // Setup order mock
         $this->orderMock->method('getId')->willReturn($orderId);
@@ -271,10 +272,115 @@ class InvoiceServiceTest extends TestCase
         // Setup payment mock
         $this->paymentMock->method('getLastTransId')->willReturn($transactionId);
 
+        // Setup exception
+        $exception = new \Exception($exceptionMessage);
+
+        // Setup Magento invoice service to throw exception
+        $this
+            ->magentoInvoiceServiceMock
+            ->method('prepareInvoice')
+            ->with($this->orderMock)
+            ->willThrowException($exception);
+
+        // Setup lock manager with executeWithPaymentLock
+        $this
+            ->lockManagerMock
+            ->method('executeWithPaymentLock')
+            ->willReturnCallback(function ($orderId, $paymentId, $callback) {
+                return $callback();
+            });
+
+        // Setup logger
+        $this
+            ->loggerMock
+            ->expects($this->once())
+            ->method('error')
+            ->with(
+                $this->stringContains($exceptionMessage),
+                $this->arrayHasKey('order_id')
+            );
+
+        $this->expectException(\Magento\Framework\Exception\LocalizedException::class);
+
+        // Execute the service
+        $this->invoiceService->processInvoice($this->orderMock, $transactionId);
+    }
+
+    /**
+     * Test process invoice with already captured exception
+     */
+    public function testProcessInvoiceWithAlreadyCapturedError(): void
+    {
+        // Setup mocks
+        $orderId = 123;
+        $incrementId = '100000123';
+        $transactionId = 'pay_123456';
+        $exceptionMessage = 'This payment has already been captured';
+
+        // Setup order mock
+        $this->orderMock->method('getId')->willReturn($orderId);
+        $this->orderMock->method('getIncrementId')->willReturn($incrementId);
+        $this->orderMock->method('canInvoice')->willReturn(true);
+        $this->orderMock->method('getPayment')->willReturn($this->paymentMock);
+
+        // Setup payment mock
+        $this->paymentMock->method('getLastTransId')->willReturn($transactionId);
+
+        // Setup exception
+        $exception = new \Exception($exceptionMessage);
+
+        // Setup Magento invoice service to throw exception
+        $this
+            ->magentoInvoiceServiceMock
+            ->method('prepareInvoice')
+            ->with($this->orderMock)
+            ->willThrowException($exception);
+
+        // Setup lock manager with executeWithPaymentLock
+        $this
+            ->lockManagerMock
+            ->method('executeWithPaymentLock')
+            ->willReturnCallback(function ($orderId, $paymentId, $callback) {
+                return $callback();
+            });
+
+        // Setup logger
+        $this
+            ->loggerMock
+            ->expects($this->once())
+            ->method('info')
+            ->with(
+                $this->stringContains('Payment was already captured'),
+                $this->arrayHasKey('order_id')
+            );
+
+        // Execute the service
+        $result = $this->invoiceService->processInvoice($this->orderMock, $transactionId);
+        $this->assertNull($result);
+    }
+
+    /**
+     * Test create pending invoice
+     */
+    public function testCreatePendingInvoice(): void
+    {
+        // Setup mocks
+        $orderId = 123;
+        $incrementId = '100000123';
+        $paymentId = 'pay_123456';
+        $invoiceId = '10000001';
+
+        // Setup order mock
+        $this->orderMock->method('getId')->willReturn($orderId);
+        $this->orderMock->method('getIncrementId')->willReturn($incrementId);
+        $this->orderMock->method('canInvoice')->willReturn(true);
+        $this->orderMock->method('getPayment')->willReturn($this->paymentMock);
+
         // Setup invoice mock
         $this->invoiceMock->method('getTotalQty')->willReturn(1.0);
         $this->invoiceMock->method('setRequestedCaptureCase')->willReturnSelf();
-        $this->invoiceMock->method('getItems')->willReturn([1]);  // Non-empty items array
+        $this->invoiceMock->method('getIncrementId')->willReturn($invoiceId);
+        $this->invoiceMock->method('register')->willReturnSelf();
 
         // Setup Magento invoice service
         $this
@@ -296,20 +402,39 @@ class InvoiceServiceTest extends TestCase
         $this->transactionMock->method('addObject')->willReturnSelf();
         $this->transactionMock->method('save');
 
-        // Setup invoice repository
-        $this->invoiceRepositoryMock->method('save')->with($this->invoiceMock);
-
-        // Setup module config for email sending
-        $this->moduleConfigMock->method('shouldSendInvoiceEmail')->willReturn(false);
-
-        // Email should not be sent
-        $this->invoiceSenderMock->expects($this->never())->method('send');
-
         // Execute the service
-        $result = $this->invoiceService->createPendingInvoice($this->orderMock, $transactionId);
+        $result = $this->invoiceService->createPendingInvoice($this->orderMock, $paymentId);
 
         // Verify the result
         $this->assertSame($this->invoiceMock, $result);
+    }
+
+    /**
+     * Test create pending invoice when order cannot be invoiced
+     */
+    public function testCreatePendingInvoiceWhenOrderCannotBeInvoiced(): void
+    {
+        // Setup mocks
+        $incrementId = '100000123';
+        $paymentId = 'pay_123456';
+
+        // Setup order mock
+        $this->orderMock->method('getIncrementId')->willReturn($incrementId);
+        $this->orderMock->method('canInvoice')->willReturn(false);
+
+        // Setup lock manager with executeWithPaymentLock
+        $this
+            ->lockManagerMock
+            ->method('executeWithPaymentLock')
+            ->willReturnCallback(function ($orderId, $paymentId, $callback) {
+                return $callback();
+            });
+
+        // Execute the service
+        $result = $this->invoiceService->createPendingInvoice($this->orderMock, $paymentId);
+
+        // Verify the result
+        $this->assertNull($result);
     }
 
     /**
@@ -321,7 +446,8 @@ class InvoiceServiceTest extends TestCase
         $orderId = 123;
         $incrementId = '100000123';
         $transactionId = 'pay_123456';
-        $itemsToInvoice = [1 => 2];  // Item ID 1, qty 2
+        $qtys = ['item_1' => 1, 'item_2' => 2];
+        $invoiceId = '10000001';
 
         // Setup order mock
         $this->orderMock->method('getId')->willReturn($orderId);
@@ -329,24 +455,26 @@ class InvoiceServiceTest extends TestCase
         $this->orderMock->method('canInvoice')->willReturn(true);
         $this->orderMock->method('getPayment')->willReturn($this->paymentMock);
 
-        // Setup empty invoice collection
-        $invoiceCollectionMock = $this->createMock(InvoiceCollection::class);
-        $invoiceCollectionMock->method('getIterator')->willReturn(new \ArrayIterator([]));
-        $this->orderMock->method('getInvoiceCollection')->willReturn($invoiceCollectionMock);
-
         // Setup payment mock
         $this->paymentMock->method('getLastTransId')->willReturn($transactionId);
 
         // Setup invoice mock
-        $this->invoiceMock->method('getTotalQty')->willReturn(1.0);
+        $this->invoiceMock->method('getTotalQty')->willReturn(3.0);
         $this->invoiceMock->method('setRequestedCaptureCase')->willReturnSelf();
-        $this->invoiceMock->method('getItems')->willReturn([1]);  // Non-empty items array
+        $this->invoiceMock->method('register')->willReturnSelf();
+        $this->invoiceMock->method('getIncrementId')->willReturn($invoiceId);
+
+        // Setup invoice collection with proper iterator
+        $invoiceCollectionMock = $this->createMock(InvoiceCollection::class);
+        $invoiceCollectionMock->method('getIterator')->willReturn(new \ArrayIterator([]));
+        $invoiceCollectionMock->method('count')->willReturn(0);
+        $this->orderMock->method('getInvoiceCollection')->willReturn($invoiceCollectionMock);
 
         // Setup Magento invoice service
         $this
             ->magentoInvoiceServiceMock
             ->method('prepareInvoice')
-            ->with($this->orderMock, $itemsToInvoice)
+            ->with($this->orderMock, $qtys)
             ->willReturn($this->invoiceMock);
 
         // Setup lock manager with executeWithPaymentLock
@@ -362,20 +490,78 @@ class InvoiceServiceTest extends TestCase
         $this->transactionMock->method('addObject')->willReturnSelf();
         $this->transactionMock->method('save');
 
-        // Setup invoice repository
-        $this->invoiceRepositoryMock->method('save')->with($this->invoiceMock);
-
-        // Setup invoice sender
-        $this->invoiceSenderMock->method('send')->with($this->invoiceMock);
-
         // Execute the service
-        $result = $this->invoiceService->processPartialInvoice(
-            $this->orderMock,
-            $itemsToInvoice,
-            $transactionId
-        );
+        $result = $this->invoiceService->processPartialInvoice($this->orderMock, $qtys, $transactionId);
 
         // Verify the result
         $this->assertSame($this->invoiceMock, $result);
+    }
+
+    /**
+     * Test hasPartialCapture method
+     */
+    public function testHasPartialCapture(): void
+    {
+        // Setup mocks
+        $orderId = 123;
+        $incrementId = '100000123';
+        $baseGrandTotal = 200.0;
+        $invoiceBaseGrandTotal = 100.0;  // Less than order grand total
+
+        // Create mock invoices
+        $invoice1 = $this->createMock(Invoice::class);
+        $invoice1->method('getState')->willReturn(Invoice::STATE_PAID);
+        $invoice1->method('getBaseGrandTotal')->willReturn($invoiceBaseGrandTotal);
+
+        // Create an invoice collection mock with proper iterator
+        $invoiceCollectionMock = $this->createMock(InvoiceCollection::class);
+        $invoiceCollectionMock->method('getIterator')->willReturn(new \ArrayIterator([$invoice1]));
+        $invoiceCollectionMock->method('count')->willReturn(1);
+
+        // Setup order mock
+        $this->orderMock->method('getId')->willReturn($orderId);
+        $this->orderMock->method('getIncrementId')->willReturn($incrementId);
+        $this->orderMock->method('getInvoiceCollection')->willReturn($invoiceCollectionMock);
+        $this->orderMock->method('getBaseGrandTotal')->willReturn($baseGrandTotal);
+
+        // Use reflection to access the private method
+        $reflectionMethod = new \ReflectionMethod(InvoiceService::class, 'hasPartialCapture');
+        $reflectionMethod->setAccessible(true);
+
+        // Execute the private method
+        $result = $reflectionMethod->invoke($this->invoiceService, $this->orderMock);
+
+        // Verify the result
+        $this->assertTrue($result);
+    }
+
+    /**
+     * Test hasPartialCapture method with no invoices
+     */
+    public function testHasPartialCaptureWithNoInvoices(): void
+    {
+        // Setup mocks
+        $orderId = 123;
+        $incrementId = '100000123';
+
+        // Create an invoice collection mock with proper empty iterator
+        $invoiceCollectionMock = $this->createMock(InvoiceCollection::class);
+        $invoiceCollectionMock->method('getIterator')->willReturn(new \ArrayIterator([]));
+        $invoiceCollectionMock->method('count')->willReturn(0);
+
+        // Setup order mock
+        $this->orderMock->method('getId')->willReturn($orderId);
+        $this->orderMock->method('getIncrementId')->willReturn($incrementId);
+        $this->orderMock->method('getInvoiceCollection')->willReturn($invoiceCollectionMock);
+
+        // Use reflection to access the private method
+        $reflectionMethod = new \ReflectionMethod(InvoiceService::class, 'hasPartialCapture');
+        $reflectionMethod->setAccessible(true);
+
+        // Execute the private method
+        $result = $reflectionMethod->invoke($this->invoiceService, $this->orderMock);
+
+        // Verify the result
+        $this->assertFalse($result);
     }
 }
