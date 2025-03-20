@@ -3,7 +3,7 @@ description: Testing Guidelines
 globs: 
 alwaysApply: false
 ---
-**IMPORTANT** Before writing any test make sure you understand all data structures and constant involved in the test. You need to make sure the methods and constants used in tests exist!
+**IMPORTANT** Before writing any test make sure you understand all data structures and constants involved in the test. You need to make sure the methods and constants used in tests exist!
 
 ## Test Commands
 

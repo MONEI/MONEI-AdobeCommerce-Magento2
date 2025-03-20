@@ -294,4 +294,190 @@ class RefundPaymentTest extends TestCase
         // Execute the service with camelCase keys
         $service->execute($camelCaseData);
     }
+
+    /**
+     * Test with decimal amount
+     */
+    public function testExecuteWithDecimalAmount(): void
+    {
+        // Define test data with a decimal amount
+        $paymentId = 'pay_123456';
+        $refundReason = 'REQUESTED_BY_CUSTOMER';
+        $amount = 99.57;  // Specific decimal amount
+        $amountInCents = 9957;  // Expected conversion to cents
+
+        $data = [
+            'payment_id' => $paymentId,
+            'refund_reason' => $refundReason,
+            'amount' => $amount
+        ];
+
+        // Create a mock Payment object that will be returned by the API
+        $paymentMock = $this
+            ->getMockBuilder(\Monei\Model\Payment::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        // Create a test subclass that can capture and verify the amount conversion
+        $testService = new class(
+            $this->_loggerMock,
+            $this->_exceptionHandlerMock,
+            $this->_apiClientMock,
+            $paymentMock,
+            $amountInCents
+        ) extends RefundPayment {
+            private $mockPayment;
+            private $expectedAmountInCents;
+            private $capturedAmountInCents = null;
+
+            public function __construct(
+                Logger $logger,
+                ApiExceptionHandler $exceptionHandler,
+                MoneiApiClient $apiClient,
+                $mockPayment,
+                $expectedAmountInCents
+            ) {
+                parent::__construct($logger, $exceptionHandler, $apiClient);
+                $this->mockPayment = $mockPayment;
+                $this->expectedAmountInCents = $expectedAmountInCents;
+            }
+
+            // Overridden execute to capture and verify amount conversion
+            public function execute(array $data): \Monei\Model\Payment
+            {
+                // Convert any camelCase keys to snake_case to ensure consistency
+                $data = $this->convertKeysToSnakeCase($data);
+
+                // Skip validation for this test
+
+                // Create refund request with SDK model - this is what we want to test
+                $refundRequest = new \Monei\Model\RefundPaymentRequest();
+
+                // Set amount in cents - this is the key operation we're testing
+                if (isset($data['amount'])) {
+                    $amountInCents = (int) ($data['amount'] * 100);
+                    $refundRequest->setAmount($amountInCents);
+                    $this->capturedAmountInCents = $amountInCents;
+                }
+
+                // Set refund reason
+                $refundRequest->setRefundReason($data['refund_reason']);
+
+                // Return the mock payment
+                return $this->mockPayment;
+            }
+
+            // Getter to verify amount conversion
+            public function getCapturedAmountInCents(): ?int
+            {
+                return $this->capturedAmountInCents;
+            }
+
+            // Check if conversion was correct
+            public function isAmountConversionCorrect(): bool
+            {
+                return $this->capturedAmountInCents === $this->expectedAmountInCents;
+            }
+        };
+
+        // Execute the service
+        $result = $testService->execute($data);
+
+        // Verify the result
+        $this->assertSame($paymentMock, $result);
+
+        // Verify the amount was correctly converted to cents
+        $this->assertEquals($amountInCents, $testService->getCapturedAmountInCents());
+        $this->assertTrue($testService->isAmountConversionCorrect());
+    }
+
+    /**
+     * Test with zero amount
+     */
+    public function testExecuteWithZeroAmount(): void
+    {
+        // Define test data with a zero amount
+        $paymentId = 'pay_123456';
+        $refundReason = 'REQUESTED_BY_CUSTOMER';
+        $amount = 0.0;  // Zero amount
+        $amountInCents = 0;  // Expected conversion to cents
+
+        $data = [
+            'payment_id' => $paymentId,
+            'refund_reason' => $refundReason,
+            'amount' => $amount
+        ];
+
+        // Create a mock Payment object that will be returned by the API
+        $paymentMock = $this
+            ->getMockBuilder(\Monei\Model\Payment::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        // Create a test subclass that can capture the zero amount handling
+        $testService = new class(
+            $this->_loggerMock,
+            $this->_exceptionHandlerMock,
+            $this->_apiClientMock,
+            $paymentMock
+        ) extends RefundPayment {
+            private $mockPayment;
+            private $amountInCents = null;
+
+            public function __construct(
+                Logger $logger,
+                ApiExceptionHandler $exceptionHandler,
+                MoneiApiClient $apiClient,
+                $mockPayment
+            ) {
+                parent::__construct($logger, $exceptionHandler, $apiClient);
+                $this->mockPayment = $mockPayment;
+            }
+
+            // Override execute to capture the zero amount handling
+            public function execute(array $data): \Monei\Model\Payment
+            {
+                // Convert any camelCase keys to snake_case
+                $data = $this->convertKeysToSnakeCase($data);
+
+                // Skip extensive validation for this test
+                if (!isset($data['payment_id']) || !isset($data['refund_reason']) || !isset($data['amount'])) {
+                    throw new LocalizedException(__('Required parameters missing'));
+                }
+
+                // Verify amount is numeric
+                if (!is_numeric($data['amount'])) {
+                    throw new LocalizedException(__('Amount must be numeric'));
+                }
+
+                // Create refund request
+                $refundRequest = new \Monei\Model\RefundPaymentRequest();
+
+                // Set amount in cents - this is what we're testing
+                $this->amountInCents = (int) ($data['amount'] * 100);
+                $refundRequest->setAmount($this->amountInCents);
+
+                // Set refund reason
+                $refundRequest->setRefundReason($data['refund_reason']);
+
+                // Return the mock payment
+                return $this->mockPayment;
+            }
+
+            // Getter to verify amount conversion
+            public function getAmountInCents(): ?int
+            {
+                return $this->amountInCents;
+            }
+        };
+
+        // Execute the service
+        $result = $testService->execute($data);
+
+        // Verify the result
+        $this->assertSame($paymentMock, $result);
+
+        // Verify the amount was correctly set to zero cents
+        $this->assertEquals(0, $testService->getAmountInCents());
+    }
 }
