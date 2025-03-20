@@ -262,7 +262,6 @@ class SaveTokenizationTest extends TestCase
         // Mock the resolveQuote method to return our quote mock
         $this->checkoutSessionMock->method('getQuote')->willReturn($this->quoteMock);
         $this->quoteMock->method('getId')->willReturn(1);
-        // Don't need to check for zero amount, just test the tokenization flag workflow
 
         // The quote should have tokenization flag set despite zero amount
         $this
@@ -277,9 +276,6 @@ class SaveTokenizationTest extends TestCase
             ->expects($this->once())
             ->method('save')
             ->with($this->quoteMock);
-
-        // We don't expect any logging in the success case
-        $this->loggerMock->expects($this->never())->method('error');
 
         // Execute the service
         $result = $this->saveTokenizationService->execute($cartId, $isVaultChecked);

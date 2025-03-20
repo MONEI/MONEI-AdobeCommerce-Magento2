@@ -377,14 +377,21 @@ class CreateLoggedMoneiPaymentVaultTest extends TestCase
         $this->quoteMock->method('getId')->willReturn($cartId);
         $this->quoteMock->method('getCustomerId')->willReturn(0);  // No customer ID
 
-        // The error message doesn't match our expectation, so let's just check that any error is logged
+        // Logger should log error about missing customer ID
         $this
             ->loggerMock
-            ->expects($this->atLeastOnce())
-            ->method('error');
+            ->expects($this->once())
+            ->method('error')
+            ->with(
+                $this->stringContains('Error retrieving payment token'),
+                $this->callback(function ($context) use ($cartId) {
+                    return isset($context['cartId']) && $context['cartId'] === $cartId;
+                })
+            );
 
-        // Expect a localized exception without checking the specific message
+        // Expect a localized exception
         $this->expectException(LocalizedException::class);
+        $this->expectExceptionMessage('Could not retrieve the saved card information');
 
         // Execute the service
         $this->createVaultPaymentService->execute($cartId, $publicHash);
