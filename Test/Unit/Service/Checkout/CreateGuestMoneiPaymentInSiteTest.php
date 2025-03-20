@@ -447,4 +447,152 @@ class CreateGuestMoneiPaymentInSiteTest extends TestCase
             $this->assertEquals('An error occurred while retrieving quote information', $e->getMessage());
         }
     }
+
+    /**
+     * Test execution with invalid payment method
+     */
+    public function testExecuteWithInvalidPaymentMethod(): void
+    {
+        $maskedCartId = 'masked_123456';
+        $quoteId = 123456;
+        $email = 'customer@example.com';
+        $invalidPaymentMethod = 'invalid_method';
+
+        // Mock masked quote ID conversion
+        $this
+            ->maskedQuoteIdToQuoteIdMock
+            ->expects($this->once())
+            ->method('execute')
+            ->with($maskedCartId)
+            ->willReturn($quoteId);
+
+        // Configure mock for checkout session
+        $this
+            ->checkoutSessionMock
+            ->expects($this->once())
+            ->method('getQuote')
+            ->willReturn($this->quoteMock);
+
+        // Mock quote basics
+        $this->quoteMock->method('getId')->willReturn($quoteId);
+        $this->quoteMock->method('reserveOrderId')->willReturnSelf();
+        $this->quoteMock->method('getReservedOrderId')->willReturn('100000123');
+        $this->quoteMock->method('getData')->willReturn(null);
+        $this->quoteMock->method('getBillingAddress')->willReturn($this->quoteAddressMock);
+        $this->quoteMock->method('getShippingAddress')->willReturn($this->quoteAddressMock);
+
+        // Mock customer details
+        $customerDetails = ['email' => $email, 'name' => 'Test Customer'];
+        $this
+            ->getCustomerDetailsByQuoteMock
+            ->method('execute')
+            ->willReturn($customerDetails);
+
+        // Mock address details
+        $addressDetails = ['address' => ['city' => 'Test City']];
+        $this
+            ->getAddressDetailsByQuoteAddressMock
+            ->method('executeBilling')
+            ->willReturn($addressDetails);
+
+        $this
+            ->getAddressDetailsByQuoteAddressMock
+            ->method('executeShipping')
+            ->willReturn($addressDetails);
+
+        // Add direct service mock to bypass API call path
+        $service = $this
+            ->getMockBuilder(CreateGuestMoneiPaymentInSite::class)
+            ->setConstructorArgs([
+                $this->loggerMock,
+                $this->exceptionHandlerMock,
+                $this->apiClientMock,
+                $this->quoteRepositoryMock,
+                $this->checkoutSessionMock,
+                $this->maskedQuoteIdToQuoteIdMock,
+                $this->getCustomerDetailsByQuoteMock,
+                $this->getAddressDetailsByQuoteAddressMock,
+                $this->moduleConfigMock,
+                $this->createPaymentMock,
+                $this->getPaymentServiceMock
+            ])
+            ->onlyMethods(['executeApiCall'])
+            ->getMock();
+
+        // Mock the executeApiCall method to throw a localized exception
+        $service
+            ->method('executeApiCall')
+            ->willThrowException(new LocalizedException(__('Invalid payment method selected')));
+
+        // Expect a localized exception
+        $this->expectException(LocalizedException::class);
+        $this->expectExceptionMessage('Invalid payment method selected');
+
+        // Execute the service
+        $service->execute($maskedCartId, $email);
+    }
+
+    /**
+     * Test handling of validation errors in payment data
+     */
+    public function testExecuteWithValidationErrors(): void
+    {
+        $maskedCartId = 'masked_123456';
+        $quoteId = 123456;
+        $email = 'invalid-email';  // Invalid email format
+        $orderIncrementId = '000000123';
+        $currency = 'EUR';
+        $amount = 100.0;
+
+        // Mock masked quote ID conversion
+        $this
+            ->maskedQuoteIdToQuoteIdMock
+            ->expects($this->once())
+            ->method('execute')
+            ->with($maskedCartId)
+            ->willReturn($quoteId);
+
+        // Configure mock for checkout session
+        $this
+            ->checkoutSessionMock
+            ->expects($this->once())
+            ->method('getQuote')
+            ->willReturn($this->quoteMock);
+
+        // Mock quote basics
+        $this->quoteMock->method('getId')->willReturn($quoteId);
+        $this->quoteMock->method('reserveOrderId')->willReturnSelf();
+        $this->quoteMock->method('getReservedOrderId')->willReturn($orderIncrementId);
+        $this->quoteMock->method('getData')->willReturn(null);
+        $this->quoteMock->method('getBaseGrandTotal')->willReturn($amount);
+        $this->quoteMock->method('getBaseCurrencyCode')->willReturn($currency);
+        $this->quoteMock->method('getBillingAddress')->willReturn($this->quoteAddressMock);
+        $this->quoteMock->method('getShippingAddress')->willReturn($this->quoteAddressMock);
+
+        // Mock validation error from the API
+        $validationException = new \Exception('Validation failed: Invalid email format');
+        $this
+            ->createPaymentMock
+            ->expects($this->once())
+            ->method('execute')
+            ->willThrowException($validationException);
+
+        // Mock exception handler to pass-through the validation error
+        // No need to mock exceptionHandler since it seems to pass through the actual exception
+
+        // Mock customer & address details services for completeness
+        $customerDetails = ['email' => $email, 'name' => 'Test Customer'];
+        $this->getCustomerDetailsByQuoteMock->method('execute')->willReturn($customerDetails);
+
+        $addressDetails = ['address' => ['city' => 'Test City']];
+        $this->getAddressDetailsByQuoteAddressMock->method('executeBilling')->willReturn($addressDetails);
+        $this->getAddressDetailsByQuoteAddressMock->method('executeShipping')->willReturn($addressDetails);
+
+        // Expect an exception with the actual message format
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessageMatches('/Validation failed: Invalid email format/');
+
+        // Execute the service
+        $this->createGuestPaymentService->execute($maskedCartId, $email);
+    }
 }
