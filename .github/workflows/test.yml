@@ -47,7 +47,7 @@ jobs:
         with:
           command: require
           args: monei/monei-php-sdk:^2.4.3
-          container_workdir: magento
+          container_workdir: /magento
         env:
           COMPOSER_AUTH: ${{secrets.COMPOSER_AUTH}}
 
