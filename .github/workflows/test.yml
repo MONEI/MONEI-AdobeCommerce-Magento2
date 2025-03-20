@@ -30,7 +30,7 @@ jobs:
       - name: 'Install dependencies'
         uses: php-actions/composer@v6
         with:
-          container_workdir: /MoneiPayment
+          working_dir: ./MoneiPayment
         env:
           COMPOSER_AUTH: ${{secrets.COMPOSER_AUTH}}
 
