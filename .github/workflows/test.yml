@@ -39,7 +39,9 @@ jobs:
           no_push: 1   ## add this arg to not push to the repo ideal for quick test on specific version
 
       - name: 'Install MONEI PHP SDK dependency'
-        run: composer require monei/monei-php-sdk:^2.4.3
+        run: |
+          cd magento
+          composer require monei/monei-php-sdk:^2.4.3
 
       - name: 'launch magento2 unit test'
         if: always()
