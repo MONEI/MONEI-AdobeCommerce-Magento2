@@ -27,11 +27,6 @@ jobs:
         with:
           path: Monei_MoneiPayment
 
-      - name: 'Debug workspace before install'
-        run: |
-          pwd
-          ls -la
-
       - name: 'install fresh magento repo'
         uses: MAD-I-T/magento-actions@v3.31
         env:
@@ -41,26 +36,14 @@ jobs:
           magento_version: 2.4.7-p3
           php: 8.1
           no_push: 1   ## add this arg to not push to the repo ideal for quick test on specific version
-
-      - name: 'Debug workspace after Magento install'
-        run: |
-          pwd
-          ls -la
-          if [ -d "magento" ]; then
-            echo "Magento directory exists at $(pwd)/magento"
-            cd magento && ls -la && cd ..
-          else
-            echo "Magento directory not found at $(pwd)"
-            find . -type d -name 'magento*' | xargs ls -la
-          fi
-
       - name: 'Install MONEI PHP SDK'
+        env:
+          COMPOSER_AUTH: ${{secrets.COMPOSER_AUTH}}
         run: |
           cd magento
-          composer require monei/monei-php-sdk:^2.4.3
+          sudo composer require monei/monei-php-sdk:^2.4.3
 
       - name: 'launch magento2 unit test'
-        if: always()
         uses: MAD-I-T/magento-actions@v3.31
         env:
           COMPOSER_AUTH: ${{secrets.COMPOSER_AUTH}}
@@ -70,7 +53,6 @@ jobs:
           unit_test_subset_path: '../Monei_MoneiPayment/'
 
       - name: 'phpstan'
-        if: always()
         uses: MAD-I-T/magento-actions@v3.31
         with:
           process: 'phpstan'
@@ -78,7 +60,6 @@ jobs:
           exec_path: '../Monei_MoneiPayment/'
 
       - name: 'mess detector'
-        if: always()
         uses: MAD-I-T/magento-actions@v3.31
         with:
           process: 'mess-detector'
@@ -86,7 +67,6 @@ jobs:
           md_src_path: '../Monei_MoneiPayment/'
 
       - name: 'Magento coding standard checking'
-        if: always()
         uses: MAD-I-T/magento-actions@v3.31
         with:
           php: 8.1
