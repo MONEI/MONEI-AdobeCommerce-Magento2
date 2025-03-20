@@ -8,6 +8,8 @@ use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
 use Monei\Model\Payment;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use Monei\MoneiPayment\Api\Data\QuoteInterface;
+use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentInSiteInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
@@ -69,7 +71,7 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
     /**
      * @var GetPaymentInterface|\PHPUnit\Framework\MockObject\MockObject
      */
-    private GetPaymentInterface $getPaymentServiceMock;
+    private GetPaymentInterface $getPaymentMock;
 
     /**
      * @var Quote|\PHPUnit\Framework\MockObject\MockObject
@@ -97,7 +99,7 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
         $this->getAddressDetailsByQuoteAddressMock = $this->createMock(GetAddressDetailsByQuoteAddressInterface::class);
         $this->moduleConfigMock = $this->createMock(MoneiPaymentModuleConfigInterface::class);
         $this->createPaymentMock = $this->createMock(CreatePaymentInterface::class);
-        $this->getPaymentServiceMock = $this->createMock(GetPaymentInterface::class);
+        $this->getPaymentMock = $this->createMock(GetPaymentInterface::class);
 
         // Create a mock of the Quote class
         $this->quoteMock = $this->createMock(QuoteStub::class);
@@ -114,7 +116,7 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
             $this->getAddressDetailsByQuoteAddressMock,
             $this->moduleConfigMock,
             $this->createPaymentMock,
-            $this->getPaymentServiceMock
+            $this->getPaymentMock
         );
     }
 
@@ -143,7 +145,7 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
                 $this->getAddressDetailsByQuoteAddressMock,
                 $this->moduleConfigMock,
                 $this->createPaymentMock,
-                $this->getPaymentServiceMock
+                $this->getPaymentMock
             ])
             ->onlyMethods(['resolveQuote', 'checkExistingPayment', 'executeApiCall'])
             ->getMock();
@@ -241,7 +243,7 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
                 $this->getAddressDetailsByQuoteAddressMock,
                 $this->moduleConfigMock,
                 $this->createPaymentMock,
-                $this->getPaymentServiceMock
+                $this->getPaymentMock
             ])
             ->onlyMethods(['resolveQuote', 'checkExistingPayment'])
             ->getMock();
@@ -295,7 +297,7 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
                 $this->getAddressDetailsByQuoteAddressMock,
                 $this->moduleConfigMock,
                 $this->createPaymentMock,
-                $this->getPaymentServiceMock
+                $this->getPaymentMock
             ])
             ->onlyMethods(['resolveQuote', 'checkExistingPayment', 'executeApiCall'])
             ->getMock();
@@ -390,7 +392,7 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
                 $this->getAddressDetailsByQuoteAddressMock,
                 $this->moduleConfigMock,
                 $this->createPaymentMock,
-                $this->getPaymentServiceMock
+                $this->getPaymentMock
             ])
             ->onlyMethods(['executeApiCall'])
             ->getMock();
@@ -406,5 +408,95 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
 
         // Execute the service
         $service->execute($cartId, $paymentMethod);
+    }
+
+    /**
+     * Test execution with a specific payment method (Bizum)
+     */
+    public function testExecuteWithSpecificPaymentMethod(): void
+    {
+        $cartId = '123456';
+        $paymentMethod = 'bizum';
+        $paymentId = 'pay_1234567890';
+        $customerPhone = '+34600000000';  // Required for Bizum
+
+        // Configure quote mock with basics
+        $this->quoteMock->method('getId')->willReturn($cartId);
+        $this->quoteMock->method('reserveOrderId')->willReturnSelf();
+        $this->quoteMock->method('getReservedOrderId')->willReturn('000000123');
+        $this->quoteMock->method('getBaseGrandTotal')->willReturn(100.0);
+        $this->quoteMock->method('getBaseCurrencyCode')->willReturn('EUR');
+        $this->quoteMock->method('getBillingAddress')->willReturn($this->quoteAddressMock);
+        $this->quoteMock->method('getShippingAddress')->willReturn($this->quoteAddressMock);
+        $this->quoteMock->method('getData')->willReturn(null);
+
+        // Mock checkout session to return the quote
+        $this->checkoutSessionMock->method('getQuote')->willReturn($this->quoteMock);
+
+        // Mock customer details with phone required for Bizum
+        $customerDetails = [
+            'email' => 'customer@example.com',
+            'name' => 'Test Customer',
+            'phone' => $customerPhone
+        ];
+
+        $this
+            ->getCustomerDetailsByQuoteMock
+            ->method('execute')
+            ->willReturn($customerDetails);
+
+        // Mock address details
+        $addressDetails = ['address' => ['city' => 'Madrid', 'country' => 'ES']];
+        $this
+            ->getAddressDetailsByQuoteAddressMock
+            ->method('executeBilling')
+            ->willReturn($addressDetails);
+
+        $this
+            ->getAddressDetailsByQuoteAddressMock
+            ->method('executeShipping')
+            ->willReturn($addressDetails);
+
+        // Create a payment mock with expected ID
+        $paymentMock = $this->createMock(Payment::class);
+        $paymentMock->method('getId')->willReturn($paymentId);
+
+        // Mock the createPayment to return our payment mock
+        $this
+            ->createPaymentMock
+            ->method('execute')
+            ->willReturn($paymentMock);
+
+        // Create a partial mock of the CreateLoggedMoneiPaymentInSite class to bypass method for checking methods
+        $service = $this
+            ->getMockBuilder(CreateLoggedMoneiPaymentInSite::class)
+            ->setConstructorArgs([
+                $this->loggerMock,
+                $this->exceptionHandlerMock,
+                $this->apiClientMock,
+                $this->quoteRepositoryMock,
+                $this->checkoutSessionMock,
+                $this->getCustomerDetailsByQuoteMock,
+                $this->getAddressDetailsByQuoteAddressMock,
+                $this->moduleConfigMock,
+                $this->createPaymentMock,
+                $this->getPaymentMock
+            ])
+            ->onlyMethods(['executeApiCall'])
+            ->getMock();
+
+        // Mock executeApiCall to return a successful payment result
+        $service
+            ->method('executeApiCall')
+            ->willReturn([['id' => $paymentId]]);
+
+        // Execute the service with specific payment method
+        $result = $service->execute($cartId, $paymentMethod);
+
+        // Verify result
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey(0, $result);
+        $this->assertArrayHasKey('id', $result[0]);
+        $this->assertEquals($paymentId, $result[0]['id']);
     }
 }

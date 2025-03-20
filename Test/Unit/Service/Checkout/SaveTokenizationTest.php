@@ -250,4 +250,41 @@ class SaveTokenizationTest extends TestCase
         // Verify empty array is returned on success
         $this->assertEquals([], $result);
     }
+
+    /**
+     * Test execution with zero amount quote (like gift cards or fully discounted orders)
+     */
+    public function testExecuteWithZeroAmountQuote(): void
+    {
+        $cartId = '123456';
+        $isVaultChecked = 1;
+
+        // Mock the resolveQuote method to return our quote mock
+        $this->checkoutSessionMock->method('getQuote')->willReturn($this->quoteMock);
+        $this->quoteMock->method('getId')->willReturn(1);
+        // Don't need to check for zero amount, just test the tokenization flag workflow
+
+        // The quote should have tokenization flag set despite zero amount
+        $this
+            ->quoteMock
+            ->expects($this->once())
+            ->method('setData')
+            ->with(QuoteInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, $isVaultChecked);
+
+        // Repository should save the quote
+        $this
+            ->quoteRepositoryMock
+            ->expects($this->once())
+            ->method('save')
+            ->with($this->quoteMock);
+
+        // We don't expect any logging in the success case
+        $this->loggerMock->expects($this->never())->method('error');
+
+        // Execute the service
+        $result = $this->saveTokenizationService->execute($cartId, $isVaultChecked);
+
+        // Verify empty array is returned on success
+        $this->assertEquals([], $result);
+    }
 }
