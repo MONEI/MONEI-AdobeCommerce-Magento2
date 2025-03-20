@@ -1,6 +1,6 @@
 name: monei-payment-test
 
-on: [pull_request]
+on: [push]
 
 jobs:
   magento2-build:
