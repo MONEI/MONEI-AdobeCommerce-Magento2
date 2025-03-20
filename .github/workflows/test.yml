@@ -22,7 +22,12 @@ jobs:
         options: -e="discovery.type=single-node" -e "plugins.security.disabled=true" -e "plugins.security.ssl.http.enabled=false" --health-cmd="curl http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
-      - name: 'Install fresh magento repo'
+      ### Download the module code in custom dir###
+      - uses: actions/checkout@v4
+        with:
+          path: Monei_MoneiPayment
+
+      - name: 'install fresh magento repo'
         uses: MAD-I-T/magento-actions@v3.31
         env:
           COMPOSER_AUTH: ${{secrets.COMPOSER_AUTH}}
@@ -32,17 +37,12 @@ jobs:
           php: 8.1
           no_push: 1   ## add this arg to not push to the repo ideal for quick test on specific version
 
-      - name: 'Checkout module code'
-        uses: actions/checkout@v4
-        with:
-          path: magento/app/code/Monei/MoneiPayment
-
       - name: 'Install MONEI PHP SDK'
         run: |
           cd magento
           sudo composer require monei/monei-php-sdk:^2.4.3 --no-install
 
-      - name: 'Launch magento2 unit test'
+      - name: 'launch magento2 unit test'
         uses: MAD-I-T/magento-actions@v3.31
         env:
           COMPOSER_AUTH: ${{secrets.COMPOSER_AUTH}}
@@ -51,14 +51,14 @@ jobs:
           unit_test_config: 'dev/tests/unit/phpunit.xml.dist'
           unit_test_subset_path: '../Monei_MoneiPayment/'
 
-      - name: 'PHPStan analysis'
+      - name: 'phpstan'
         uses: MAD-I-T/magento-actions@v3.31
         with:
           process: 'phpstan'
           php: 8.1
           exec_path: '../Monei_MoneiPayment/'
 
-      - name: 'Mess detector'
+      - name: 'mess detector'
         uses: MAD-I-T/magento-actions@v3.31
         with:
           process: 'mess-detector'
