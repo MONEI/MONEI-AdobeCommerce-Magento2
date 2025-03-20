@@ -39,8 +39,8 @@ jobs:
 
       - name: 'Copy module to Magento directory'
         run: |
-          mkdir -p magento/app/code/Monei/MoneiPayment
-          cp -R Monei_MoneiPayment/* magento/app/code/Monei/MoneiPayment/
+          sudo mkdir -p magento/app/code/Monei/MoneiPayment
+          sudo cp -R Monei_MoneiPayment/* magento/app/code/Monei/MoneiPayment/
 
       - name: 'Install MONEI PHP SDK'
         env:
