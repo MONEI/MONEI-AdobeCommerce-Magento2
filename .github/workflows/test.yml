@@ -43,19 +43,21 @@ jobs:
           sudo cp -R Monei_MoneiPayment/* magento/app/code/Monei/MoneiPayment/
 
       - name: 'Install MONEI PHP SDK'
+        uses: php-actions/composer@v6
+        with:
+          command: require
+          args: monei/monei-php-sdk:^2.4.3
+          container_workdir: magento
         env:
           COMPOSER_AUTH: ${{secrets.COMPOSER_AUTH}}
-        run: |
-          cd magento
-          sudo composer require monei/monei-php-sdk:^2.4.3
 
       - name: 'Enable MONEI Payment module'
         run: |
           cd magento
-          bin/magento module:enable Monei_MoneiPayment
-          bin/magento setup:upgrade
-          bin/magento setup:di:compile
-          bin/magento cache:clean
+          sudo bin/magento module:enable Monei_MoneiPayment
+          sudo bin/magento setup:upgrade
+          sudo bin/magento setup:di:compile
+          sudo bin/magento cache:clean
 
       - name: 'launch magento2 unit test'
         uses: MAD-I-T/magento-actions@v3.31
