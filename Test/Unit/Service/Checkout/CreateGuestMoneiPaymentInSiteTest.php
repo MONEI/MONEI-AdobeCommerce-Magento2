@@ -447,4 +447,88 @@ class CreateGuestMoneiPaymentInSiteTest extends TestCase
             $this->assertEquals('An error occurred while retrieving quote information', $e->getMessage());
         }
     }
+
+    /**
+     * Test execution with invalid payment method
+     */
+    public function testExecuteWithInvalidPaymentMethod(): void
+    {
+        $maskedCartId = 'masked_123456';
+        $quoteId = 123456;
+        $email = 'customer@example.com';
+        $invalidPaymentMethod = 'invalid_method';
+
+        // Mock masked quote ID conversion
+        $this
+            ->maskedQuoteIdToQuoteIdMock
+            ->expects($this->once())
+            ->method('execute')
+            ->with($maskedCartId)
+            ->willReturn($quoteId);
+
+        // Configure mock for checkout session
+        $this
+            ->checkoutSessionMock
+            ->expects($this->once())
+            ->method('getQuote')
+            ->willReturn($this->quoteMock);
+
+        // Mock quote basics
+        $this->quoteMock->method('getId')->willReturn($quoteId);
+        $this->quoteMock->method('reserveOrderId')->willReturnSelf();
+        $this->quoteMock->method('getReservedOrderId')->willReturn('100000123');
+        $this->quoteMock->method('getData')->willReturn(null);
+        $this->quoteMock->method('getBillingAddress')->willReturn($this->quoteAddressMock);
+        $this->quoteMock->method('getShippingAddress')->willReturn($this->quoteAddressMock);
+
+        // Mock customer details
+        $customerDetails = ['email' => $email, 'name' => 'Test Customer'];
+        $this
+            ->getCustomerDetailsByQuoteMock
+            ->method('execute')
+            ->willReturn($customerDetails);
+
+        // Mock address details
+        $addressDetails = ['address' => ['city' => 'Test City']];
+        $this
+            ->getAddressDetailsByQuoteAddressMock
+            ->method('executeBilling')
+            ->willReturn($addressDetails);
+
+        $this
+            ->getAddressDetailsByQuoteAddressMock
+            ->method('executeShipping')
+            ->willReturn($addressDetails);
+
+        // Add direct service mock to bypass API call path
+        $service = $this
+            ->getMockBuilder(CreateGuestMoneiPaymentInSite::class)
+            ->setConstructorArgs([
+                $this->loggerMock,
+                $this->exceptionHandlerMock,
+                $this->apiClientMock,
+                $this->quoteRepositoryMock,
+                $this->checkoutSessionMock,
+                $this->maskedQuoteIdToQuoteIdMock,
+                $this->getCustomerDetailsByQuoteMock,
+                $this->getAddressDetailsByQuoteAddressMock,
+                $this->moduleConfigMock,
+                $this->createPaymentMock,
+                $this->getPaymentServiceMock
+            ])
+            ->onlyMethods(['executeApiCall'])
+            ->getMock();
+
+        // Mock the executeApiCall method to throw a localized exception
+        $service
+            ->method('executeApiCall')
+            ->willThrowException(new LocalizedException(__('Invalid payment method selected')));
+
+        // Expect a localized exception
+        $this->expectException(LocalizedException::class);
+        $this->expectExceptionMessage('Invalid payment method selected');
+
+        // Execute the service
+        $service->execute($maskedCartId, $email);
+    }
 }

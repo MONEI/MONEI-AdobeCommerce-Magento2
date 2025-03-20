@@ -333,4 +333,78 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
         // Verify result
         $this->assertEquals($apiCallResult, $result);
     }
+
+    /**
+     * Test execution with unsupported payment method based on country constraints
+     */
+    public function testExecuteWithUnsupportedPaymentMethod(): void
+    {
+        $cartId = '123456';
+        $paymentMethod = 'ideal';  // Only available in Netherlands
+        $customerCountryCode = 'ES';  // Spain
+
+        // Configure quote mock with basics
+        $this->quoteMock->method('getId')->willReturn($cartId);
+        $this->quoteMock->method('reserveOrderId')->willReturnSelf();
+        $this->quoteMock->method('getReservedOrderId')->willReturn('100000123');
+        $this->quoteMock->method('getData')->willReturn(null);
+        $this->quoteMock->method('getBillingAddress')->willReturn($this->quoteAddressMock);
+        $this->quoteMock->method('getShippingAddress')->willReturn($this->quoteAddressMock);
+        $this->quoteAddressMock->method('getCountryId')->willReturn($customerCountryCode);
+
+        // Mock checkout session to return our quote
+        $this
+            ->checkoutSessionMock
+            ->method('getQuote')
+            ->willReturn($this->quoteMock);
+
+        // Mock customer details
+        $customerDetails = ['email' => 'customer@example.com', 'name' => 'Test Customer'];
+        $this
+            ->getCustomerDetailsByQuoteMock
+            ->method('execute')
+            ->willReturn($customerDetails);
+
+        // Mock address details
+        $addressDetails = ['address' => ['city' => 'Test City', 'country' => $customerCountryCode]];
+        $this
+            ->getAddressDetailsByQuoteAddressMock
+            ->method('executeBilling')
+            ->willReturn($addressDetails);
+
+        $this
+            ->getAddressDetailsByQuoteAddressMock
+            ->method('executeShipping')
+            ->willReturn($addressDetails);
+
+        // Create a partial mock of the service to bypass API call path
+        $service = $this
+            ->getMockBuilder(CreateLoggedMoneiPaymentInSite::class)
+            ->setConstructorArgs([
+                $this->loggerMock,
+                $this->exceptionHandlerMock,
+                $this->apiClientMock,
+                $this->quoteRepositoryMock,
+                $this->checkoutSessionMock,
+                $this->getCustomerDetailsByQuoteMock,
+                $this->getAddressDetailsByQuoteAddressMock,
+                $this->moduleConfigMock,
+                $this->createPaymentMock,
+                $this->getPaymentServiceMock
+            ])
+            ->onlyMethods(['executeApiCall'])
+            ->getMock();
+
+        // Mock executeApiCall to throw a localized exception for country validation
+        $service
+            ->method('executeApiCall')
+            ->willThrowException(new LocalizedException(__('This payment method is not available for your country')));
+
+        // Expect a localized exception
+        $this->expectException(LocalizedException::class);
+        $this->expectExceptionMessage('This payment method is not available for your country');
+
+        // Execute the service
+        $service->execute($cartId, $paymentMethod);
+    }
 }

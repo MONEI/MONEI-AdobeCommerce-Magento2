@@ -217,4 +217,37 @@ class SaveTokenizationTest extends TestCase
         // Execute the service
         $this->saveTokenizationService->execute($cartId, $isVaultChecked);
     }
+
+    /**
+     * Test execution with boolean flag instead of integer
+     */
+    public function testExecuteWithBooleanFlag(): void
+    {
+        $cartId = '123456';
+        $isVaultChecked = true;  // Boolean true instead of integer 1
+
+        // Mock the resolveQuote method to return our quote mock
+        $this->checkoutSessionMock->method('getQuote')->willReturn($this->quoteMock);
+        $this->quoteMock->method('getId')->willReturn(1);
+
+        // The quote should have tokenization flag set - it should be converted to integer 1
+        $this
+            ->quoteMock
+            ->expects($this->once())
+            ->method('setData')
+            ->with(QuoteInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, 1);
+
+        // Repository should save the quote
+        $this
+            ->quoteRepositoryMock
+            ->expects($this->once())
+            ->method('save')
+            ->with($this->quoteMock);
+
+        // Execute the service
+        $result = $this->saveTokenizationService->execute($cartId, $isVaultChecked);
+
+        // Verify empty array is returned on success
+        $this->assertEquals([], $result);
+    }
 }

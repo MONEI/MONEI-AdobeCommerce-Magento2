@@ -316,4 +316,51 @@ class CreateLoggedMoneiPaymentVaultTest extends TestCase
         $reflectionClass = new \ReflectionClass(CreateLoggedMoneiPaymentVault::class);
         $this->assertTrue($reflectionClass->hasMethod('execute'), 'The execute method exists');
     }
+
+    /**
+     * Test execution with expired token
+     */
+    public function testExecuteWithExpiredToken(): void
+    {
+        $cartId = '123456';
+        $publicHash = 'valid_hash';
+        $expiresAt = date('Y-m-d H:i:s', strtotime('-1 day'));  // Token expired 1 day ago
+
+        // Mock checkout session to return quote
+        $this->checkoutSessionMock->method('getQuote')->willReturn($this->quoteMock);
+        $this->quoteMock->method('getId')->willReturn($cartId);
+        $this->quoteMock->method('getCustomerId')->willReturn(1);
+
+        // Payment token is found but has expired
+        $this->paymentTokenMock->method('getPublicHash')->willReturn($publicHash);
+        $this->paymentTokenMock->method('getExpiresAt')->willReturn($expiresAt);
+
+        $this
+            ->tokenManagementMock
+            ->expects($this->once())
+            ->method('getByPublicHash')
+            ->with($publicHash, 1)
+            ->willReturn($this->paymentTokenMock);
+
+        // Logger should log the error about token retrieval
+        $this
+            ->loggerMock
+            ->expects($this->once())
+            ->method('error')
+            ->with(
+                $this->stringContains('Error retrieving payment token'),
+                $this->callback(function ($context) use ($cartId, $publicHash) {
+                    return isset($context['cartId']) &&
+                        isset($context['publicHash']) &&
+                        $context['cartId'] === $cartId &&
+                        $context['publicHash'] === $publicHash;
+                })
+            );
+
+        // Expect a localized exception
+        $this->expectException(LocalizedException::class);
+
+        // Execute the service
+        $this->createVaultPaymentService->execute($cartId, $publicHash);
+    }
 }
