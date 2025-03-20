@@ -17,9 +17,12 @@ namespace Monei\MoneiPayment\Test\Unit\Controller\Payment;
 
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Request\Http as HttpRequest;
+use Magento\Framework\App\Response\Http;
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Controller\Result\RedirectFactory;
 use Magento\Framework\Message\ManagerInterface;
+use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
+use Magento\Framework\Phrase;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
@@ -564,6 +567,495 @@ class CompleteTest extends TestCase
         $result = $this->_completeController->execute();
 
         // Assert redirect
+        $this->assertSame($this->_redirectMock, $result);
+    }
+
+    /**
+     * Test execute with general exception
+     */
+    public function testExecuteWithGeneralException(): void
+    {
+        // Mock request to throw exception during getParams
+        $this
+            ->_requestMock
+            ->method('getParams')
+            ->willThrowException(new \Exception('Unexpected error'));
+
+        // Expect logging of error
+        $this
+            ->_loggerMock
+            ->expects($this->once())
+            ->method('error')
+            ->with('[Complete] Unhandled exception', $this->anything());
+
+        // Setup redirect
+        $this
+            ->_redirectMock
+            ->method('setHeader')
+            ->willReturnSelf();
+
+        // Message should indicate general error
+        $this
+            ->_messageManagerMock
+            ->expects($this->once())
+            ->method('addErrorMessage');
+
+        // Should restore quote
+        $this
+            ->_checkoutSessionMock
+            ->expects($this->once())
+            ->method('restoreQuote');
+
+        // Should redirect to cart
+        $this
+            ->_redirectMock
+            ->expects($this->once())
+            ->method('setPath')
+            ->with('checkout/cart')
+            ->willReturnSelf();
+
+        // Execute and check result
+        $result = $this->_completeController->execute();
+        $this->assertSame($this->_redirectMock, $result);
+    }
+
+    /**
+     * Test execute with timeout waiting for processing
+     */
+    public function testExecuteWithProcessingTimeout(): void
+    {
+        // Request parameters
+        $params = [
+            'id' => 'pay_123456',
+            'orderId' => '100000123'
+        ];
+        $this->_requestMock->method('getParams')->willReturn($params);
+
+        // Setup redirect
+        $this
+            ->_redirectMock
+            ->method('setHeader')
+            ->willReturnSelf();
+
+        // GetPayment service returns a payment
+        $this->_getPaymentServiceMock->method('execute')->willReturn($this->_moneiPaymentMock);
+
+        // Payment DTO configuration
+        $this->_paymentDtoMock->method('getId')->willReturn('pay_123456');
+        $this->_paymentDtoMock->method('getOrderId')->willReturn('100000123');
+        $this->_paymentDtoMock->method('getStatus')->willReturn('SUCCEEDED');
+        $this->_paymentDtoMock->method('getRawData')->willReturn(['id' => 'pay_123456', 'status' => 'SUCCEEDED']);
+        $this->_paymentDtoMock->method('isSucceeded')->willReturn(true);
+        $this->_paymentDtoMock->method('isAuthorized')->willReturn(false);
+        $this->_paymentDtoMock->method('isPending')->willReturn(false);
+
+        // Factory returns the DTO
+        $this->_paymentDtoFactoryMock->method('createFromPaymentObject')->willReturn($this->_paymentDtoMock);
+
+        // Mock payment processor is processing and times out
+        $this->_paymentProcessorMock->method('isProcessing')->willReturn(true);
+        $this
+            ->_paymentProcessorMock
+            ->expects($this->once())
+            ->method('waitForProcessing')
+            ->with('100000123', 'pay_123456', 5)
+            ->willReturn(false);  // Timeout - processing not completed
+
+        // Logger should log timeout warning
+        $this
+            ->_loggerMock
+            ->expects($this->once())
+            ->method('warning')
+            ->with('[Complete] Timeout waiting for payment processing', $this->anything());
+
+        // Process payment returns success
+        $this->_processingResultMock->method('isSuccess')->willReturn(true);
+        $this->_paymentProcessorMock->method('process')->willReturn($this->_processingResultMock);
+
+        // Should redirect to success page since payment status is SUCCEEDED
+        $this
+            ->_redirectMock
+            ->expects($this->once())
+            ->method('setPath')
+            ->with('checkout/onepage/success')
+            ->willReturnSelf();
+
+        // Execute controller
+        $result = $this->_completeController->execute();
+
+        $this->assertSame($this->_redirectMock, $result);
+    }
+
+    /**
+     * Test execute with processing completing during wait
+     */
+    public function testExecuteWithProcessingCompletingDuringWait(): void
+    {
+        // Request parameters
+        $params = [
+            'id' => 'pay_123456',
+            'orderId' => '100000123'
+        ];
+        $this->_requestMock->method('getParams')->willReturn($params);
+
+        // Setup redirect
+        $this
+            ->_redirectMock
+            ->method('setHeader')
+            ->willReturnSelf();
+
+        // GetPayment service returns a payment
+        $this->_getPaymentServiceMock->method('execute')->willReturn($this->_moneiPaymentMock);
+
+        // Payment DTO configuration - this payment is FAILED despite processing success
+        $this->_paymentDtoMock->method('getId')->willReturn('pay_123456');
+        $this->_paymentDtoMock->method('getOrderId')->willReturn('100000123');
+        $this->_paymentDtoMock->method('getStatus')->willReturn('FAILED');
+        $this->_paymentDtoMock->method('getRawData')->willReturn(['id' => 'pay_123456', 'status' => 'FAILED']);
+        $this->_paymentDtoMock->method('isSucceeded')->willReturn(false);  // Critical to use false here for failed payment
+        $this->_paymentDtoMock->method('isAuthorized')->willReturn(false);
+        $this->_paymentDtoMock->method('isPending')->willReturn(false);
+        $this->_paymentDtoMock->method('isCanceled')->willReturn(false);
+        $this->_paymentDtoMock->method('isExpired')->willReturn(false);
+
+        // Factory returns the DTO
+        $this->_paymentDtoFactoryMock->method('createFromPaymentObject')->willReturn($this->_paymentDtoMock);
+
+        // Mock payment processor is processing but completes during wait
+        $this->_paymentProcessorMock->method('isProcessing')->willReturn(true);
+        $this
+            ->_paymentProcessorMock
+            ->expects($this->once())
+            ->method('waitForProcessing')
+            ->with('100000123', 'pay_123456', 5)
+            ->willReturn(true);  // Successfully completed during wait
+
+        // Test that the specific log messages are called
+        $this
+            ->_loggerMock
+            ->expects($this->atLeastOnce())
+            ->method('info')
+            ->withConsecutive(
+                [$this->stringContains('Payment is already being processed')],
+                [$this->stringContains('Payment processing completed')]
+            );
+
+        // Process payment returns success (but payment status is failed)
+        $this->_processingResultMock->method('isSuccess')->willReturn(true);
+        $this->_paymentProcessorMock->method('process')->willReturn($this->_processingResultMock);
+
+        // Quote should be restored for a failed payment
+        $this
+            ->_checkoutSessionMock
+            ->expects($this->once())
+            ->method('restoreQuote');
+
+        // Error message should be shown for failed payment
+        $this
+            ->_messageManagerMock
+            ->expects($this->once())
+            ->method('addErrorMessage');
+
+        // Should redirect to cart for failed payment
+        $this
+            ->_redirectMock
+            ->expects($this->once())
+            ->method('setPath')
+            ->with('checkout/cart')
+            ->willReturnSelf();
+
+        // Execute controller
+        $result = $this->_completeController->execute();
+
+        $this->assertSame($this->_redirectMock, $result);
+    }
+
+    /**
+     * Test execute with failed payment containing specific error code and message
+     */
+    public function testExecuteWithFailedPaymentSpecificError(): void
+    {
+        // Request parameters
+        $params = [
+            'id' => 'pay_123456',
+            'orderId' => '100000123'
+        ];
+        $this->_requestMock->method('getParams')->willReturn($params);
+
+        // Setup redirect
+        $this
+            ->_redirectMock
+            ->method('setHeader')
+            ->willReturnSelf();
+
+        // Mock payment processor is not processing
+        $this->_paymentProcessorMock->method('isProcessing')->willReturn(false);
+
+        // GetPayment service returns a payment
+        $this->_getPaymentServiceMock->method('execute')->willReturn($this->_moneiPaymentMock);
+
+        // Payment DTO configuration - failed payment with specific error
+        $this->_paymentDtoMock->method('getId')->willReturn('pay_123456');
+        $this->_paymentDtoMock->method('getOrderId')->willReturn('100000123');
+        $this->_paymentDtoMock->method('getStatus')->willReturn('FAILED');
+        $this->_paymentDtoMock->method('getRawData')->willReturn([
+            'id' => 'pay_123456',
+            'status' => 'FAILED',
+            'statusCode' => 'card_declined',
+            'statusMessage' => 'Card was declined by issuer'
+        ]);
+        $this->_paymentDtoMock->method('isSucceeded')->willReturn(false);
+        $this->_paymentDtoMock->method('isAuthorized')->willReturn(false);
+        $this->_paymentDtoMock->method('isCanceled')->willReturn(false);
+        $this->_paymentDtoMock->method('isExpired')->willReturn(false);
+        $this->_paymentDtoMock->method('isPending')->willReturn(false);
+        $this->_paymentDtoMock->method('getStatusMessage')->willReturn('Card was declined by issuer');
+        $this->_paymentDtoMock->method('getStatusCode')->willReturn('card_declined');
+
+        // Factory returns the DTO
+        $this->_paymentDtoFactoryMock->method('createFromPaymentObject')->willReturn($this->_paymentDtoMock);
+
+        // Process payment returns failure result
+        $this->_processingResultMock->method('isSuccess')->willReturn(false);
+        $this->_paymentProcessorMock->method('process')->willReturn($this->_processingResultMock);
+
+        // Quote should be restored
+        $this
+            ->_checkoutSessionMock
+            ->expects($this->once())
+            ->method('restoreQuote');
+
+        // Error message should contain error from payment
+        $this
+            ->_messageManagerMock
+            ->expects($this->once())
+            ->method('addErrorMessage');
+
+        // Should redirect to cart
+        $this
+            ->_redirectMock
+            ->expects($this->once())
+            ->method('setPath')
+            ->with('checkout/cart')
+            ->willReturnSelf();
+
+        // Execute controller
+        $result = $this->_completeController->execute();
+        $this->assertSame($this->_redirectMock, $result);
+    }
+
+    /**
+     * Test execute with expired payment
+     */
+    public function testExecuteWithExpiredPayment(): void
+    {
+        // Request parameters
+        $params = [
+            'id' => 'pay_123456',
+            'orderId' => '100000123'
+        ];
+        $this->_requestMock->method('getParams')->willReturn($params);
+
+        // Setup redirect
+        $this
+            ->_redirectMock
+            ->method('setHeader')
+            ->willReturnSelf();
+
+        // Mock payment processor is not processing
+        $this->_paymentProcessorMock->method('isProcessing')->willReturn(false);
+
+        // GetPayment service returns a payment
+        $this->_getPaymentServiceMock->method('execute')->willReturn($this->_moneiPaymentMock);
+
+        // Payment DTO configuration - expired payment
+        $this->_paymentDtoMock->method('getId')->willReturn('pay_123456');
+        $this->_paymentDtoMock->method('getOrderId')->willReturn('100000123');
+        $this->_paymentDtoMock->method('getStatus')->willReturn('EXPIRED');
+        $this->_paymentDtoMock->method('getRawData')->willReturn([
+            'id' => 'pay_123456',
+            'status' => 'EXPIRED'
+        ]);
+        $this->_paymentDtoMock->method('isSucceeded')->willReturn(false);
+        $this->_paymentDtoMock->method('isAuthorized')->willReturn(false);
+        $this->_paymentDtoMock->method('isCanceled')->willReturn(false);
+        $this->_paymentDtoMock->method('isExpired')->willReturn(true);
+        $this->_paymentDtoMock->method('isPending')->willReturn(false);
+
+        // Factory returns the DTO
+        $this->_paymentDtoFactoryMock->method('createFromPaymentObject')->willReturn($this->_paymentDtoMock);
+
+        // Process payment returns failure result
+        $this->_processingResultMock->method('isSuccess')->willReturn(false);
+        $this->_paymentProcessorMock->method('process')->willReturn($this->_processingResultMock);
+
+        // Quote should be restored
+        $this
+            ->_checkoutSessionMock
+            ->expects($this->once())
+            ->method('restoreQuote');
+
+        // Error message should be about expired payment
+        $this
+            ->_messageManagerMock
+            ->expects($this->once())
+            ->method('addErrorMessage');
+
+        // Should redirect to cart
+        $this
+            ->_redirectMock
+            ->expects($this->once())
+            ->method('setPath')
+            ->with('checkout/cart')
+            ->willReturnSelf();
+
+        // Execute controller
+        $result = $this->_completeController->execute();
+        $this->assertSame($this->_redirectMock, $result);
+    }
+
+    /**
+     * Test exception when restoring quote for failed payment
+     */
+    public function testRestoreQuoteExceptionHandling(): void
+    {
+        // Request parameters
+        $params = [
+            'id' => 'pay_123456',
+            'orderId' => '100000123'
+        ];
+        $this->_requestMock->method('getParams')->willReturn($params);
+
+        // Setup redirect
+        $this
+            ->_redirectMock
+            ->method('setHeader')
+            ->willReturnSelf();
+
+        // Mock payment processor is not processing
+        $this->_paymentProcessorMock->method('isProcessing')->willReturn(false);
+
+        // GetPayment service returns a payment
+        $this->_getPaymentServiceMock->method('execute')->willReturn($this->_moneiPaymentMock);
+
+        // Payment DTO configuration - failed payment
+        $this->_paymentDtoMock->method('getId')->willReturn('pay_123456');
+        $this->_paymentDtoMock->method('getOrderId')->willReturn('100000123');
+        $this->_paymentDtoMock->method('getStatus')->willReturn('FAILED');
+        $this->_paymentDtoMock->method('getRawData')->willReturn([
+            'id' => 'pay_123456',
+            'status' => 'FAILED'
+        ]);
+        $this->_paymentDtoMock->method('isSucceeded')->willReturn(false);
+        $this->_paymentDtoMock->method('isAuthorized')->willReturn(false);
+        $this->_paymentDtoMock->method('isCanceled')->willReturn(false);
+        $this->_paymentDtoMock->method('isExpired')->willReturn(false);
+        $this->_paymentDtoMock->method('isPending')->willReturn(false);
+
+        // Factory returns the DTO
+        $this->_paymentDtoFactoryMock->method('createFromPaymentObject')->willReturn($this->_paymentDtoMock);
+
+        // Process payment returns failure result
+        $this->_processingResultMock->method('isSuccess')->willReturn(false);
+        $this->_paymentProcessorMock->method('process')->willReturn($this->_processingResultMock);
+
+        // Quote restoration throws exception
+        $this
+            ->_checkoutSessionMock
+            ->expects($this->once())
+            ->method('restoreQuote')
+            ->willThrowException(new \Exception('Failed to restore quote'));
+
+        // Logger should log the restore quote failure
+        $this
+            ->_loggerMock
+            ->expects($this->once())
+            ->method('error')
+            ->with($this->stringContains('[Complete] Failed to restore quote for order'));
+
+        // Error message for failed payment should still be shown
+        $this
+            ->_messageManagerMock
+            ->expects($this->once())
+            ->method('addErrorMessage');
+
+        // Should redirect to cart
+        $this
+            ->_redirectMock
+            ->expects($this->once())
+            ->method('setPath')
+            ->with('checkout/cart')
+            ->willReturnSelf();
+
+        // Execute controller
+        $result = $this->_completeController->execute();
+        $this->assertSame($this->_redirectMock, $result);
+    }
+
+    /**
+     * Test pending payment for non-MBWAY method (should go to loading page)
+     */
+    public function testExecuteWithPendingNonMBWayPayment(): void
+    {
+        // Request parameters
+        $params = [
+            'id' => 'pay_123456',
+            'orderId' => '100000123'
+        ];
+        $this->_requestMock->method('getParams')->willReturn($params);
+
+        // Setup redirect
+        $this
+            ->_redirectMock
+            ->method('setHeader')
+            ->willReturnSelf();
+
+        // Mock payment processor is not processing
+        $this->_paymentProcessorMock->method('isProcessing')->willReturn(false);
+
+        // GetPayment service returns a payment
+        $this->_getPaymentServiceMock->method('execute')->willReturn($this->_moneiPaymentMock);
+
+        // Payment DTO configuration - pending payment, non-MBWAY
+        $this->_paymentDtoMock->method('getId')->willReturn('pay_123456');
+        $this->_paymentDtoMock->method('getOrderId')->willReturn('100000123');
+        $this->_paymentDtoMock->method('getStatus')->willReturn('PENDING');
+        $this->_paymentDtoMock->method('getRawData')->willReturn([
+            'id' => 'pay_123456',
+            'status' => 'PENDING'
+        ]);
+        $this->_paymentDtoMock->method('isSucceeded')->willReturn(false);
+        $this->_paymentDtoMock->method('isAuthorized')->willReturn(false);
+        $this->_paymentDtoMock->method('isPending')->willReturn(true);
+        $this->_paymentDtoMock->method('isMultibanco')->willReturn(false);
+        $this->_paymentDtoMock->method('isMbway')->willReturn(false);
+
+        // Factory returns the DTO
+        $this->_paymentDtoFactoryMock->method('createFromPaymentObject')->willReturn($this->_paymentDtoMock);
+
+        // Logger should note redirection to loading page
+        $this
+            ->_loggerMock
+            ->expects($this->once())
+            ->method('info')
+            ->with('[Complete] Payment still in pending state, redirecting to loading page', $this->anything());
+
+        // Should redirect to loading page
+        $this
+            ->_redirectMock
+            ->expects($this->once())
+            ->method('setPath')
+            ->with(
+                'monei/payment/loading',
+                [
+                    'payment_id' => 'pay_123456',
+                    'order_id' => '100000123'
+                ]
+            )
+            ->willReturnSelf();
+
+        // Execute controller
+        $result = $this->_completeController->execute();
         $this->assertSame($this->_redirectMock, $result);
     }
 }
