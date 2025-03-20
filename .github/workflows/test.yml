@@ -1,0 +1,81 @@
+name: monei-payment-test
+
+on: [pull_request]
+
+jobs:
+  magento2-build:
+    runs-on: ubuntu-latest
+    container: ubuntu
+    name: 'MONEI Payment module tests & build'
+    services:
+      mysql:
+        image: docker://mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: magento
+          MYSQL_DATABASE: magento
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+      opensearch:
+        image: ghcr.io/mad-i-t/magento-opensearch:2.5.0
+        ports:
+          - 9200:9200
+        options: -e="discovery.type=single-node" -e "plugins.security.disabled=true" --health-cmd="curl http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
+
+    steps:
+      ### Download the module code in custom dir###
+      - uses: actions/checkout@v4
+        with:
+          path: Monei_MoneiPayment
+
+      - name: 'install fresh magento repo'
+        uses: MAD-I-T/magento-actions@master
+        env:
+          COMPOSER_AUTH: ${{secrets.COMPOSER_AUTH}}
+        with:
+          process: 'install-magento'
+          magento_version: 2.4.7-p3
+          php: 8.1
+          no_push: 1   ## add this arg to not push to the repo ideal for quick test on specific version
+
+      - name: 'Install MONEI PHP SDK dependency'
+        run: |
+          cd /var/www/html/
+          composer require monei/monei-php-sdk:^2.4.3
+
+      - name: 'launch magento2 unit test'
+        if: always()
+        uses: MAD-I-T/magento-actions@master
+        env:
+          COMPOSER_AUTH: ${{secrets.COMPOSER_AUTH}}
+        with:
+          process: 'unit-test'
+          unit_test_config: 'dev/tests/unit/phpunit.xml.dist'
+          unit_test_subset_path: '../Monei_MoneiPayment/'
+
+      - name: 'phpstan'
+        if: always()
+        uses: MAD-I-T/magento-actions@master
+        with:
+          process: 'phpstan'
+          php: 8.1
+          exec_path: '../Monei_MoneiPayment/'
+
+      - name: 'mess detector'
+        if: always()
+        uses: MAD-I-T/magento-actions@master
+        with:
+          process: 'mess-detector'
+          php: 8.1
+          md_src_path: '../Monei_MoneiPayment/'
+
+      - name: 'Magento coding standard checking'
+        if: always()
+        uses: MAD-I-T/magento-actions@master
+        with:
+          php: 8.1
+          process: 'phpcs-test'
+          extension: 'Monei_MoneiPayment'
+          severity: 10
+          standard: 'Magento2'
+
