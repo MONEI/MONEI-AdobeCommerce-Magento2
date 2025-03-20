@@ -37,10 +37,25 @@ jobs:
           php: 8.1
           no_push: 1   ## add this arg to not push to the repo ideal for quick test on specific version
 
+      - name: 'Copy module to Magento directory'
+        run: |
+          mkdir -p magento/app/code/Monei/MoneiPayment
+          cp -R Monei_MoneiPayment/* magento/app/code/Monei/MoneiPayment/
+
       - name: 'Install MONEI PHP SDK'
+        env:
+          COMPOSER_AUTH: ${{secrets.COMPOSER_AUTH}}
         run: |
           cd magento
-          sudo composer require monei/monei-php-sdk:^2.4.3 --no-install
+          sudo composer require monei/monei-php-sdk:^2.4.3
+
+      - name: 'Enable MONEI Payment module'
+        run: |
+          cd magento
+          bin/magento module:enable Monei_MoneiPayment
+          bin/magento setup:upgrade
+          bin/magento setup:di:compile
+          bin/magento cache:clean
 
       - name: 'launch magento2 unit test'
         uses: MAD-I-T/magento-actions@v3.31
@@ -49,21 +64,21 @@ jobs:
         with:
           process: 'unit-test'
           unit_test_config: 'dev/tests/unit/phpunit.xml.dist'
-          unit_test_subset_path: '../Monei_MoneiPayment/'
+          unit_test_subset_path: 'app/code/Monei/MoneiPayment/'
 
       - name: 'phpstan'
         uses: MAD-I-T/magento-actions@v3.31
         with:
           process: 'phpstan'
           php: 8.1
-          exec_path: '../Monei_MoneiPayment/'
+          exec_path: 'app/code/Monei/MoneiPayment/'
 
       - name: 'mess detector'
         uses: MAD-I-T/magento-actions@v3.31
         with:
           process: 'mess-detector'
           php: 8.1
-          md_src_path: '../Monei_MoneiPayment/'
+          md_src_path: 'app/code/Monei/MoneiPayment/'
 
       - name: 'Magento coding standard checking'
         uses: MAD-I-T/magento-actions@v3.31
