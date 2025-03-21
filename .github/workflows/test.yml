@@ -37,10 +37,11 @@ jobs:
           php: 8.1
           no_push: 1 ## add this arg to not push to the repo ideal for quick test on specific version
 
-      - name: 'Copy module to Magento directory'
+      - name: 'Move module to Magento directory'
         run: |
-          sudo mkdir -p ./magento/app/code/Monei/MoneiPayment
-          sudo cp -R ./MoneiPayment/* ./magento/app/code/Monei/MoneiPayment/
+          sudo mkdir -p ./magento/app/code/Monei/
+          sudo mv ./MoneiPayment ./magento/app/code/Monei/
+          sudo chown -R $USER:$GROUP ./magento/app/code/Monei/
 
       - name: 'Install dependencies'
         uses: php-actions/composer@v6
@@ -51,6 +52,14 @@ jobs:
           command: require monei/monei-php-sdk:^2.6 --ignore-platform-reqs --no-install
         env:
           COMPOSER_AUTH: ${{secrets.COMPOSER_AUTH}}
+
+      - name: 'Enable MONEI Payment module'
+        run: |
+          cd magento
+          sudo bin/magento module:enable Monei_MoneiPayment
+          sudo bin/magento setup:upgrade
+          sudo bin/magento setup:di:compile
+          sudo bin/magento cache:clean
 
       - name: 'launch magento2 unit test'
         uses: MAD-I-T/magento-actions@v3.31
