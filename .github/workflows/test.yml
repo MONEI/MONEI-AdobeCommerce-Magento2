@@ -56,10 +56,10 @@ jobs:
       - name: 'Enable MONEI Payment module'
         run: |
           cd magento
-          php bin/magento module:enable Monei_MoneiPayment
-          php bin/magento setup:upgrade
-          php bin/magento setup:di:compile
-          php bin/magento cache:clean
+          sudo bin/magento module:enable Monei_MoneiPayment
+          sudo bin/magento setup:upgrade
+          sudo bin/magento setup:di:compile
+          sudo bin/magento cache:clean
 
       - name: 'launch magento2 unit test'
         uses: MAD-I-T/magento-actions@v3.31
