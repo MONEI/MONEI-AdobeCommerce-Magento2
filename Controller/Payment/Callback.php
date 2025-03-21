@@ -234,17 +234,17 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     public function validateForCsrf(RequestInterface $request): ?bool
     {
         try {
-            $body = file_get_contents('php://input');
-            $header = $_SERVER['HTTP_MONEI_SIGNATURE'] ?? '';
+            $body = $request->getContent();
+            $signatureHeader = $request->getHeader('MONEI-Signature');
 
-            if (empty($header)) {
+            if (empty($signatureHeader)) {
                 $this->errorMessage = 'Missing signature header';
                 $this->logger->critical('[Callback CSRF] Missing signature header');
 
                 return false;
             }
 
-            $signature = $header;
+            $signature = $signatureHeader;
 
             // Verify signature and store the result for later use in execute()
             $this->verifiedPayment = $this->apiClient->getMoneiSdk()->verifySignature($body, $signature);
