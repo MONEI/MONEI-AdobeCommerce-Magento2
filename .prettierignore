@@ -18,9 +18,3 @@ package-lock.json
 # Cache
 .php-cs-fixer.cache
 .phpstan-cache
-
-# Misc
-.git
-.github
-.vscode
-.cursor
