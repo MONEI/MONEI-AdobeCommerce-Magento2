@@ -158,13 +158,18 @@ class CreateVaultPayment
             $paymentToken->setTokenDetails(json_encode($tokenDetails));
 
             // Set the token on the payment
-            if (!$payment->getExtensionAttributes()) {
+            $extensionAttributes = $payment->getExtensionAttributes();
+            if (!$extensionAttributes) {
                 $this->logger->debug('[Vault] Payment extension attributes are null');
-
                 return false;
             }
 
-            $payment->getExtensionAttributes()->setVaultPaymentToken($paymentToken);
+            if (!method_exists($extensionAttributes, 'setVaultPaymentToken')) {
+                $this->logger->debug('[Vault] Payment extension attributes do not support vault payment tokens');
+                return false;
+            }
+
+            $extensionAttributes->setVaultPaymentToken($paymentToken);
 
             $this->logger->debug('[Vault] Payment token successfully created and assigned');
 

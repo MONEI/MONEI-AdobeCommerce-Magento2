@@ -53,21 +53,12 @@ jobs:
         env:
           COMPOSER_AUTH: ${{secrets.COMPOSER_AUTH}}
 
-      - name: 'Enable MONEI Payment module'
-        run: |
-          cd magento
-          sudo bin/magento module:enable Monei_MoneiPayment
-          sudo bin/magento setup:upgrade
-          sudo bin/magento setup:di:compile
-          sudo bin/magento cache:clean
-
       - name: 'launch magento2 unit test'
         uses: MAD-I-T/magento-actions@v3.31
         env:
           COMPOSER_AUTH: ${{secrets.COMPOSER_AUTH}}
         with:
           process: 'unit-test'
-          unit_test_config: 'dev/tests/unit/phpunit.xml.dist'
           unit_test_subset_path: 'app/code/Monei/MoneiPayment/'
 
       - name: 'phpstan'
