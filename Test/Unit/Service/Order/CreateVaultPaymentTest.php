@@ -65,7 +65,11 @@ class CreateVaultPaymentTest extends TestCase
         $orderPaymentMock->method('getMethod')->willReturn(Monei::CARD_CODE);
 
         // Create extension attributes mock
-        $extensionAttributesMock = $this->createMock(OrderPaymentExtensionInterface::class);
+        $extensionAttributesMock = $this
+            ->getMockBuilder(OrderPaymentExtensionInterface::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['setVaultPaymentToken'])
+            ->getMockForAbstractClass();
         $orderPaymentMock->method('getExtensionAttributes')->willReturn($extensionAttributesMock);
 
         // Setup expectations for extension attributes
