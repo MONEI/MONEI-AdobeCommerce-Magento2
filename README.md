@@ -39,7 +39,7 @@ MONEI Payments for Adobe Commerce (Magento 2) allows you to seamlessly integrate
 - PHP: ^8.1.0
 - Magento: >=2.4.4 (Support for Magento 2.4.0-2.4.3 release line ended on November 28, 2022) ([Adobe Commerce Release Versions](https://experienceleague.adobe.com/en/docs/commerce-operations/release/versions))
 - MONEI Account ([Sign up here](https://monei.com/signup))
-- MONEI PHP SDK: ^2.4.3 (automatically installed with Composer)
+- MONEI PHP SDK: ^2.6.0 (automatically installed with Composer)
 
 ## Installation
 
