@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.2.0 (2025-03-25)
+
+- refactor: Enhance InvoiceServiceTest with comprehensive exception handling tests ([3de3626](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/3de3626))
+- refactor: Enhance LockManagerTest and PaymentDTOTest for improved clarity and functionality ([afea584](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/afea584))
+- refactor: Improve InvoiceServiceTest structure and coverage ([c3de47b](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/c3de47b))
+- refactor: Revise ApiExceptionHandlerTest for enhanced clarity and functionality ([f4f1eeb](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/f4f1eeb))
+- refactor: Update CSRF validation in Callback controller and improve unit tests ([131bd94](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/131bd94))
+- feat: Add comprehensive payment processing tests in PaymentProcessorAdditionalTest ([3c30835](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/3c30835))
+- feat: Add testing guidelines document for improved test practices ([db3f0cd](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/db3f0cd))
+- feat: Add tests for CSRF validation and exception handling in Callback ([776fb7a](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/776fb7a))
+- feat: Add tests for handling invalid and unsupported payment methods ([304999c](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/304999c))
+- feat: Add tests for handling validation errors and specific payment methods ([978e756](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/978e756))
+- feat: Enhance CallbackTest with comprehensive payment validation scenarios ([f406e0a](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/f406e0a))
+- feat: Enhance InvoiceServiceTest with new scenarios and guidelines ([292f5f4](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/292f5f4))
+- feat: Refactor payment tests for improved clarity and functionality ([ea7640b](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/ea7640b))
+- style: Update monei-payment.css for improved layout and spacing ([77454f2](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/77454f2))
+- chore: Remove license badge from README for simplification ([a1ba12d](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/a1ba12d))
+- chore: Update README to clarify installation steps and commands ([14f29c1](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/14f29c1))
+- chore: Update README to simplify manual installation instructions ([1993180](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/1993180))
+
 ## <small>2.1.2 (2025-03-18)</small>
 
 - chore: Update code quality tools and documentation ([0d74922](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/0d74922))
