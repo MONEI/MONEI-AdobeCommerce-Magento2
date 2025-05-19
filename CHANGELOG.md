@@ -1,5 +1,12 @@
 # Changelog
 
+## <small>2.2.1 (2025-05-19)</small>
+
+- fix: cast history comment to string for consistency in PaymentProcessor. Fixes #83 ([baadfd9](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/baadfd9)), closes [#83](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/83)
+- chore: remove monei-module-monei-payment.zip file ([2a04ec4](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/2a04ec4))
+- chore: update .prettierignore and README for monei-php-sdk version change ([0267324](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/0267324))
+- chore: update README to reflect new MONEI PHP SDK version requirement ([1479d59](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/1479d59))
+
 ## 2.2.0 (2025-03-25)
 
 - refactor: Enhance InvoiceServiceTest with comprehensive exception handling tests ([3de3626](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/3de3626))
