@@ -486,7 +486,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             // Find and update invoice and capture related entries
             foreach ($historyEntries as $history) {
                 if (!$history->getIsCustomerNotified() && $history->getComment()) {
-                    $comment = $history->getComment();
+                    $comment = (string) $history->getComment();
                     // Check for various capture-related texts
                     if (stripos($comment, 'Captured amount') !== false ||
                             stripos($comment, 'Invoice') !== false ||
