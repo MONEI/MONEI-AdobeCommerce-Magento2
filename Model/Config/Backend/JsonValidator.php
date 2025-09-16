@@ -55,8 +55,8 @@ class JsonValidator extends Value
         TypeListInterface $cacheTypeList,
         ManagerInterface $messageManager,
         PolicyInterface $policyInterface,
-        AbstractResource $resource = null,
-        AbstractDb $resourceCollection = null,
+        ?AbstractResource $resource = null,
+        ?AbstractDb $resourceCollection = null,
         array $data = []
     ) {
         $this->messageManager = $messageManager;
