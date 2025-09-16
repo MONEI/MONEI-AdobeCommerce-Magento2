@@ -28,7 +28,7 @@
     "magento/module-sales": "103.0.*",
     "magento/module-vault": "101.2.*",
     "monei/monei-php-sdk": "^2.8.3",
-    "monolog/monolog": "2.*"
+    "monolog/monolog": "^2.0 || ^3.0"
   },
   "conflict": {
     "magento/product-community-edition": "<2.4.4"

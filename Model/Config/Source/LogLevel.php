@@ -16,7 +16,6 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Model\Config\Source;
 
 use Magento\Framework\Data\OptionSourceInterface;
-use Monolog\Logger as MonologLogger;
 
 /**
  * Source model for log level configuration
@@ -26,10 +25,12 @@ use Monolog\Logger as MonologLogger;
  */
 class LogLevel implements OptionSourceInterface
 {
-    public const LEVEL_ERROR = MonologLogger::ERROR;
-    public const LEVEL_WARNING = MonologLogger::WARNING;
-    public const LEVEL_INFO = MonologLogger::INFO;
-    public const LEVEL_DEBUG = MonologLogger::DEBUG;
+    // Use numeric values directly to support both Monolog 2.x and 3.x
+    // These values are consistent across both versions
+    public const LEVEL_ERROR = 400;    // MonologLogger::ERROR or Level::Error->value
+    public const LEVEL_WARNING = 300;  // MonologLogger::WARNING or Level::Warning->value
+    public const LEVEL_INFO = 200;     // MonologLogger::INFO or Level::Info->value
+    public const LEVEL_DEBUG = 100;    // MonologLogger::DEBUG or Level::Debug->value
 
     /**
      * Get available log level options
