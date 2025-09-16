@@ -12,8 +12,8 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Controller\Adminhtml\Order\Creditmemo;
 
 use Magento\Backend\App\Action;
-use Magento\Backend\Model\View\Result\ForwardFactory;
 use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Exception\LocalizedException;
@@ -46,11 +46,6 @@ class Save extends Action implements HttpPostActionInterface
     protected $creditmemoSender;
 
     /**
-     * @var \Magento\Backend\Model\View\Result\ForwardFactory
-     */
-    protected $resultForwardFactory;
-
-    /**
      * @var SalesData
      */
     private $salesData;
@@ -61,19 +56,16 @@ class Save extends Action implements HttpPostActionInterface
      * @param Action\Context $context
      * @param CreditmemoLoader $creditmemoLoader
      * @param CreditmemoSender $creditmemoSender
-     * @param ForwardFactory $resultForwardFactory
      * @param SalesData|null $salesData
      */
     public function __construct(
         Action\Context $context,
         CreditmemoLoader $creditmemoLoader,
         CreditmemoSender $creditmemoSender,
-        ForwardFactory $resultForwardFactory,
         ?SalesData $salesData = null
     ) {
         $this->creditmemoLoader = $creditmemoLoader;
         $this->creditmemoSender = $creditmemoSender;
-        $this->resultForwardFactory = $resultForwardFactory;
         $this->salesData = $salesData ?: ObjectManager::getInstance()->get(SalesData::class);
         parent::__construct($context);
     }
@@ -147,7 +139,8 @@ class Save extends Action implements HttpPostActionInterface
 
                 return $resultRedirect;
             }
-            $resultForward = $this->resultForwardFactory->create();
+            /** @var \Magento\Backend\Model\View\Result\Forward $resultForward */
+            $resultForward = $this->resultFactory->create(ResultFactory::TYPE_FORWARD);
             $resultForward->forward('noroute');
 
             return $resultForward;

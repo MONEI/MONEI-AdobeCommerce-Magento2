@@ -16,7 +16,6 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Test\Unit\Controller\Adminhtml\Order\Creditmemo;
 
 use Magento\Backend\App\Action\Context;
-use Magento\Backend\Model\View\Result\ForwardFactory;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Controller\Result\RedirectFactory;
@@ -128,9 +127,6 @@ class SaveTest extends TestCase
         // Set up creditmemo sender
         $creditmemoSenderMock = $this->createMock(CreditmemoSender::class);
 
-        // Set up forward factory
-        $resultForwardFactoryMock = $this->createMock(ForwardFactory::class);
-
         // Set up sales data helper
         $salesDataMock = $this->createMock(SalesData::class);
 
@@ -142,7 +138,6 @@ class SaveTest extends TestCase
                 $contextMock,
                 $creditmemoLoaderMock,
                 $creditmemoSenderMock,
-                $resultForwardFactoryMock,
                 $salesDataMock
             ])
             ->getMock();
@@ -231,9 +226,6 @@ class SaveTest extends TestCase
         // Set up creditmemo sender
         $creditmemoSenderMock = $this->createMock(CreditmemoSender::class);
 
-        // Set up forward factory
-        $resultForwardFactoryMock = $this->createMock(ForwardFactory::class);
-
         // Set up sales data helper
         $salesDataMock = $this->createMock(SalesData::class);
 
@@ -245,7 +237,6 @@ class SaveTest extends TestCase
                 $contextMock,
                 $creditmemoLoaderMock,
                 $creditmemoSenderMock,
-                $resultForwardFactoryMock,
                 $salesDataMock
             ])
             ->getMock();
@@ -350,9 +341,6 @@ class SaveTest extends TestCase
         // Set up creditmemo sender
         $creditmemoSenderMock = $this->createMock(CreditmemoSender::class);
 
-        // Set up forward factory
-        $resultForwardFactoryMock = $this->createMock(ForwardFactory::class);
-
         // Set up sales data helper
         $salesDataMock = $this->createMock(SalesData::class);
 
@@ -364,7 +352,6 @@ class SaveTest extends TestCase
                 $contextMock,
                 $creditmemoLoaderMock,
                 $creditmemoSenderMock,
-                $resultForwardFactoryMock,
                 $salesDataMock
             ])
             ->getMock();

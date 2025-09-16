@@ -15,7 +15,6 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Test\Unit\Service;
 
-use GuzzleHttp\ClientFactory;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Framework\UrlInterface;
@@ -42,10 +41,6 @@ class AbstractServiceTest extends TestCase
      */
     private $_abstractServiceMock;
 
-    /**
-     * @var MockObject|ClientFactory
-     */
-    private $_clientFactoryMock;
 
     /**
      * @var MockObject|MoneiPaymentModuleConfigInterface
@@ -84,7 +79,6 @@ class AbstractServiceTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->_clientFactoryMock = $this->createMock(ClientFactory::class);
         $this->_moduleConfigMock = $this->createMock(MoneiPaymentModuleConfigInterface::class);
         $this->_storeManagerMock = $this->createMock(StoreManagerInterface::class);
         $this->_urlBuilderMock = $this->createMock(UrlInterface::class);
@@ -100,7 +94,6 @@ class AbstractServiceTest extends TestCase
         $this->_abstractServiceMock = $this->getMockForAbstractClass(
             AbstractService::class,
             [
-                $this->_clientFactoryMock,
                 $this->_moduleConfigMock,
                 $this->_storeManagerMock,
                 $this->_urlBuilderMock,
@@ -262,7 +255,6 @@ class AbstractServiceTest extends TestCase
     {
         $storeId = 1;
         $apiUrl = 'https://api.monei.com/v1';
-        $client = $this->createMock(\GuzzleHttp\Client::class);
 
         // Set up the module config to return our API URL
         $this
@@ -272,13 +264,6 @@ class AbstractServiceTest extends TestCase
             ->with($storeId)
             ->willReturn($apiUrl);
 
-        // Set up the client factory to return our mock client
-        $this
-            ->_clientFactoryMock
-            ->expects($this->once())
-            ->method('create')
-            ->with(['config' => ['base_uri' => $apiUrl]])
-            ->willReturn($client);
 
         $store = $this->createMock(\Magento\Store\Api\Data\StoreInterface::class);
         $store->method('getId')->willReturn($storeId);
@@ -292,7 +277,7 @@ class AbstractServiceTest extends TestCase
         // Call the method
         $result = $this->_abstractServiceMock->createClient();
 
-        // Assert the result is our mock client
-        $this->assertSame($client, $result);
+        // Since we can't mock the new operator, we just verify that a Client instance is returned
+        $this->assertInstanceOf(\GuzzleHttp\Client::class, $result);
     }
 }

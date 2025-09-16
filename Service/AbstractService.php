@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Service;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\ClientFactory;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Serialize\SerializerInterface;
@@ -54,14 +53,6 @@ abstract class AbstractService
      */
     protected $logger;
 
-    /**
-     * HTTP client factory for creating API clients.
-     *
-     * @var ClientFactory
-     *
-     * @phpstan-var \GuzzleHttp\ClientFactory
-     */
-    private $clientFactory;
 
     /**
      * Magento URL builder service for generating URLs.
@@ -80,7 +71,6 @@ abstract class AbstractService
     /**
      * Constructor for AbstractService.
      *
-     * @param ClientFactory $clientFactory HTTP client factory
      * @param MoneiPaymentModuleConfigInterface $moduleConfig Module configuration provider
      * @param StoreManagerInterface $storeManager Magento store manager
      * @param UrlInterface $urlBuilder URL builder service
@@ -89,7 +79,6 @@ abstract class AbstractService
      * @param ModuleVersion $moduleVersion Module version provider
      */
     public function __construct(
-        ClientFactory $clientFactory,
         MoneiPaymentModuleConfigInterface $moduleConfig,
         StoreManagerInterface $storeManager,
         UrlInterface $urlBuilder,
@@ -97,7 +86,6 @@ abstract class AbstractService
         Logger $logger,
         ModuleVersion $moduleVersion
     ) {
-        $this->clientFactory = $clientFactory;
         $this->moduleConfig = $moduleConfig;
         $this->storeManager = $storeManager;
         $this->urlBuilder = $urlBuilder;
@@ -115,9 +103,9 @@ abstract class AbstractService
      */
     public function createClient(?int $storeId = null): Client
     {
-        return $this->clientFactory->create(['config' => [
+        return new Client([
             'base_uri' => $this->getApiUrl($storeId),
-        ]]);
+        ]);
     }
 
     /**
