@@ -1,5 +1,10 @@
 # Changelog
 
+## <small>2.2.2 (2025-09-16)</small>
+
+- fix: include Magento and PHP versions in user agent ([f58df89](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/f58df89))
+- fix: remove non-existent class dependencies ([3527383](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/3527383))
+
 ## <small>2.2.1 (2025-05-19)</small>
 
 - fix: cast history comment to string for consistency in PaymentProcessor. Fixes #83 ([baadfd9](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/baadfd9)), closes [#83](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/83)
