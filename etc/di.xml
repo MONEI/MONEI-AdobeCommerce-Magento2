@@ -771,18 +771,5 @@
     </arguments>
   </type>
 
-  <!-- Page Cache Configuration -->
-  <type name="Magento\Framework\App\Http\Context">
-    <plugin name="monei_payment_context_plugin" type="Monei\MoneiPayment\Plugin\App\Http\ContextPlugin" />
-  </type>
-
-  <type name="Magento\PageCache\Observer\ProcessLayoutRenderElement">
-    <plugin name="monei_payment_process_layout" type="Monei\MoneiPayment\Plugin\PageCache\ProcessLayoutPlugin" />
-  </type>
-
-  <!-- Varnish Configuration -->
-  <type name="Magento\Framework\App\PageCache\Identifier">
-    <plugin name="monei_payment_cache_identifier" type="Monei\MoneiPayment\Plugin\PageCache\IdentifierPlugin" />
-  </type>
 </config>
 <!-- Updated configuration for dependency injection fix -->
