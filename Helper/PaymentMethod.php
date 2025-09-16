@@ -420,7 +420,9 @@ class PaymentMethod
         if (isset($this->moneiToInternalTypeMap[$type])) {
             $type = $this->moneiToInternalTypeMap[$type];
         } else {
-            // Check if this is a Magento payment method code and try to map via PAYMENT_METHOD_MAP
+            // Fallback: Check if this is a MONEI code that appears in any of the payment method mappings
+            // This handles edge cases where a MONEI code might be present in PAYMENT_METHOD_MAP
+            // but not in the primary moneiToInternalTypeMap
             foreach (Monei::PAYMENT_METHOD_MAP as $magentoCode => $moneiCodes) {
                 if (in_array($type, $moneiCodes) && isset($this->moneiToInternalTypeMap[$type])) {
                     $type = $this->moneiToInternalTypeMap[$type];

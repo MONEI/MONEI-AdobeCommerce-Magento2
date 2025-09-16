@@ -110,7 +110,7 @@ class CreateLoggedMoneiPaymentInSite extends AbstractCheckoutService implements 
      * @return array The payment creation result containing payment details
      * @throws LocalizedException If the quote cannot be retrieved or payment creation fails
      */
-    public function execute(string $cartId, $email)
+    public function execute(string $cartId, string $email): array
     {
         // First, resolve the quote from cart ID - use parent class method
         $quote = $this->resolveQuote($cartId);
