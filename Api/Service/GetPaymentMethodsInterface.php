@@ -24,5 +24,5 @@ interface GetPaymentMethodsInterface
      * @param string|null $accountId Optional account ID to filter payment methods
      * @return PaymentMethods MONEI SDK payment methods object
      */
-    public function execute(string $accountId = null): PaymentMethods;
+    public function execute(?string $accountId = null): PaymentMethods;
 }

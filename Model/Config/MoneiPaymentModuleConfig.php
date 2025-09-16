@@ -51,7 +51,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      *
      * @return bool True if the payment method is enabled, false otherwise
      */
-    public function isEnabled($storeId = null): bool
+    public function isEnabled(?int $storeId = null): bool
     {
         return (bool) $this->scopeConfig->getValue(
             self::IS_PAYMENT_ENABLED,
@@ -67,7 +67,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      *
      * @return int The mode value (1 for test, 2 for production)
      */
-    public function getMode($storeId = null): int
+    public function getMode(?int $storeId = null): int
     {
         return (int) $this->scopeConfig->getValue(
             self::MODE,
@@ -83,7 +83,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      *
      * @return string The URL for the current mode
      */
-    public function getUrl($storeId = null): string
+    public function getUrl(?int $storeId = null): string
     {
         return Mode::MODE_TEST === $this->getMode($storeId)
             ? $this->getTestUrl($storeId)
@@ -97,7 +97,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      *
      * @return string The test URL
      */
-    public function getTestUrl($storeId = null): string
+    public function getTestUrl(?int $storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
             self::TEST_URL,
@@ -113,7 +113,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      *
      * @return string The production URL
      */
-    public function getProductionUrl($storeId = null): string
+    public function getProductionUrl(?int $storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
             self::PRODUCTION_URL,
@@ -175,7 +175,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      *
      * @return string The API key for the current mode
      */
-    public function getApiKey($storeId = null): string
+    public function getApiKey(?int $storeId = null): string
     {
         return Mode::MODE_TEST === $this->getMode($storeId)
             ? $this->getTestApiKey($storeId)
@@ -189,7 +189,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      *
      * @return string The test API key
      */
-    public function getTestApiKey($storeId = null): string
+    public function getTestApiKey(?int $storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
             self::TEST_API_KEY,
@@ -205,7 +205,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      *
      * @return string The production API key
      */
-    public function getProductionApiKey($storeId = null): string
+    public function getProductionApiKey(?int $storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
             self::PRODUCTION_API_KEY,
@@ -255,7 +255,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      *
      * @return string The payment method title
      */
-    public function getTitle($storeId = null): string
+    public function getTitle(?int $storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
             self::TITLE,
@@ -271,7 +271,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      *
      * @return string The payment method description
      */
-    public function getDescription($storeId = null): string
+    public function getDescription(?int $storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
             self::DESCRIPTION,
@@ -287,7 +287,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      *
      * @return int The payment type value
      */
-    public function getTypeOfPayment($storeId = null): int
+    public function getTypeOfPayment(?int $storeId = null): int
     {
         return (int) $this->scopeConfig->getValue(
             self::TYPE_OF_PAYMENT,
@@ -303,7 +303,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      *
      * @return string The confirmed status code
      */
-    public function getConfirmedStatus($storeId = null): string
+    public function getConfirmedStatus(?int $storeId = null): string
     {
         $configuredStatus = $this->scopeConfig->getValue(
             self::CONFIRMED_STATUS,
@@ -326,7 +326,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      *
      * @return string The pre-authorized status code
      */
-    public function getPreAuthorizedStatus($storeId = null): string
+    public function getPreAuthorizedStatus(?int $storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
             self::PRE_AUTHORIZED_STATUS,
@@ -342,7 +342,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      *
      * @return bool True if the payment method is restricted to specific countries
      */
-    public function isAllowSpecific($storeId = null): bool
+    public function isAllowSpecific(?int $storeId = null): bool
     {
         return (bool) $this->scopeConfig->getValue(
             self::ALLOW_SPECIFIC,
@@ -358,7 +358,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      *
      * @return string Comma-separated list of country codes
      */
-    public function getSpecificCountries($storeId = null): string
+    public function getSpecificCountries(?int $storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
             self::SPECIFIC_COUNTRIES,
@@ -374,7 +374,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      *
      * @return int The sort order value
      */
-    public function getSortOrder($storeId = null): int
+    public function getSortOrder(?int $storeId = null): int
     {
         return (int) $this->scopeConfig->getValue(
             self::SORT_ORDER,
@@ -390,7 +390,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      *
      * @return bool True if invoice emails should be sent, false otherwise
      */
-    public function shouldSendInvoiceEmail($storeId = null): bool
+    public function shouldSendInvoiceEmail(?int $storeId = null): bool
     {
         // Check if invoice emails are enabled in Magento's global settings
         $sendInvoiceEmail = $this->scopeConfig->getValue(
@@ -417,7 +417,7 @@ class MoneiPaymentModuleConfig implements MoneiPaymentModuleConfigInterface
      *
      * @return bool True if order emails should be sent, false otherwise
      */
-    public function shouldSendOrderEmail($storeId = null): bool
+    public function shouldSendOrderEmail(?int $storeId = null): bool
     {
         // Check if order emails are enabled in Magento's global settings
         $sendOrderEmail = $this->scopeConfig->getValue(

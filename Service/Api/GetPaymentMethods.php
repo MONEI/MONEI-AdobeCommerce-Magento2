@@ -81,7 +81,7 @@ class GetPaymentMethods extends AbstractApiService implements GetPaymentMethodsI
      * @return PaymentMethods MONEI SDK payment methods object
      * @throws LocalizedException If payment methods cannot be retrieved
      */
-    public function execute(string $accountId = null): PaymentMethods
+    public function execute(?string $accountId = null): PaymentMethods
     {
         // Determine account ID if not provided
         if ($accountId === null) {

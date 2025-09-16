@@ -57,35 +57,35 @@ interface MoneiPaymentModuleConfigInterface
      *
      * @param int|null $storeId
      */
-    public function isEnabled($storeId = null): bool;
+    public function isEnabled(?int $storeId = null): bool;
 
     /**
      * Get payment mode.
      *
      * @param int|null $storeId
      */
-    public function getMode($storeId = null): int;
+    public function getMode(?int $storeId = null): int;
 
     /**
      * Get test URL.
      *
      * @param int|null $storeId
      */
-    public function getUrl($storeId = null): string;
+    public function getUrl(?int $storeId = null): string;
 
     /**
      * Get test URL.
      *
      * @param int|null $storeId
      */
-    public function getTestUrl($storeId = null): string;
+    public function getTestUrl(?int $storeId = null): string;
 
     /**
      * Get production URL.
      *
      * @param int|null $storeId
      */
-    public function getProductionUrl($storeId = null): string;
+    public function getProductionUrl(?int $storeId = null): string;
 
     /**
      * Get account id.
@@ -113,21 +113,21 @@ interface MoneiPaymentModuleConfigInterface
      *
      * @param int|null $storeId
      */
-    public function getApiKey($storeId = null): string;
+    public function getApiKey(?int $storeId = null): string;
 
     /**
      * Get test API key.
      *
      * @param int|null $storeId
      */
-    public function getTestApiKey($storeId = null): string;
+    public function getTestApiKey(?int $storeId = null): string;
 
     /**
      * Get production API key.
      *
      * @param int|null $storeId
      */
-    public function getProductionApiKey($storeId = null): string;
+    public function getProductionApiKey(?int $storeId = null): string;
 
     /**
      * Get language based on store locale.
@@ -141,68 +141,68 @@ interface MoneiPaymentModuleConfigInterface
      *
      * @param int|null $storeId
      */
-    public function getTitle($storeId = null): string;
+    public function getTitle(?int $storeId = null): string;
 
     /**
      * Get payment method description.
      *
      * @param int|null $storeId
      */
-    public function getDescription($storeId = null): string;
+    public function getDescription(?int $storeId = null): string;
 
     /**
      * Get type of payment.
      *
      * @param int|null $storeId
      */
-    public function getTypeOfPayment($storeId = null): int;
+    public function getTypeOfPayment(?int $storeId = null): int;
 
     /**
      * Get confirmed status.
      *
      * @param int|null $storeId
      */
-    public function getConfirmedStatus($storeId = null): string;
+    public function getConfirmedStatus(?int $storeId = null): string;
 
     /**
      * Get pre-authorized status.
      *
      * @param int|null $storeId
      */
-    public function getPreAuthorizedStatus($storeId = null): string;
+    public function getPreAuthorizedStatus(?int $storeId = null): string;
 
     /**
      * Get allow specific countries.
      *
      * @param int|null $storeId
      */
-    public function isAllowSpecific($storeId = null): bool;
+    public function isAllowSpecific(?int $storeId = null): bool;
 
     /**
      * Get specific countries for payment method.
      *
      * @param int|null $storeId
      */
-    public function getSpecificCountries($storeId = null): string;
+    public function getSpecificCountries(?int $storeId = null): string;
 
     /**
      * Get payment method sort order.
      *
      * @param int|null $storeId
      */
-    public function getSortOrder($storeId = null): int;
+    public function getSortOrder(?int $storeId = null): int;
 
     /**
      * Check if invoice emails should be sent.
      *
      * @param int|null $storeId
      */
-    public function shouldSendInvoiceEmail($storeId = null): bool;
+    public function shouldSendInvoiceEmail(?int $storeId = null): bool;
 
     /**
      * Check if order emails should be sent after payment confirmation.
      *
      * @param int|null $storeId
      */
-    public function shouldSendOrderEmail($storeId = null): bool;
+    public function shouldSendOrderEmail(?int $storeId = null): bool;
 }
