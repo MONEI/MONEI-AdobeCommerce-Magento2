@@ -15,7 +15,7 @@ namespace Monei\MoneiPayment\Test\Unit\Service\Api;
 
 use Magento\Framework\Exception\LocalizedException;
 use Monei\Api\ApplePayDomainApi;
-use Monei\Model\ApplePayDomainRegister200Response;
+use Monei\Model\InlineObject;
 use Monei\Model\RegisterApplePayDomainRequest;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
@@ -118,7 +118,7 @@ class VerifyApplePayDomainTest extends TestCase
         $storeId = 1;
 
         // Create a mock response
-        $responseMock = $this->getMockBuilder(ApplePayDomainRegister200Response::class)
+        $responseMock = $this->getMockBuilder(InlineObject::class)
             ->disableOriginalConstructor()
             ->addMethods(['getStatus', 'getDomainName'])
             ->getMock();
@@ -203,7 +203,7 @@ class VerifyApplePayDomainTest extends TestCase
         $domain = 'example.com';
 
         // Create a mock response
-        $responseMock = $this->getMockBuilder(ApplePayDomainRegister200Response::class)
+        $responseMock = $this->getMockBuilder(InlineObject::class)
             ->disableOriginalConstructor()
             ->addMethods(['getStatus', 'getDomainName'])
             ->getMock();

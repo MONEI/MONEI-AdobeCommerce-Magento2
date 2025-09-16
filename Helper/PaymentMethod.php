@@ -414,7 +414,7 @@ class PaymentMethod
      * @param string|null $format Image format (optional)
      * @return string Icon URL
      */
-    public function getIconFromPaymentType($type, $cardType = self::CARD_TYPE_VISA, $format = null)
+    public function getIconFromPaymentType($type, $cardType = self::CARD_TYPE_VISA, ?string $format = null)
     {
         // Map payment method types from Monei API to our internal constants
         if (isset($this->moneiToInternalTypeMap[$type])) {

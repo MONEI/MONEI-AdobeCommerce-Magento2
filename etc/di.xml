@@ -671,10 +671,6 @@
 
   <!-- Payment Processing Services -->
   <preference for="Monei\MoneiPayment\Api\PaymentProcessorInterface" type="Monei\MoneiPayment\Model\PaymentProcessor" />
-  <preference
-    for="Monei\MoneiPayment\Api\Service\ValidateWebhookSignatureInterface"
-    type="Monei\MoneiPayment\Service\ValidateWebhookSignature"
-  />
 
   <!-- Type configuration for ValidateWebhookSignature -->
   <type name="Monei\MoneiPayment\Service\ValidateWebhookSignature">

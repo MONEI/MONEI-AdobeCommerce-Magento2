@@ -425,7 +425,7 @@ class PaymentProcessor implements PaymentProcessorInterface
 
             // Update order status
             $order->setState(Order::STATE_PROCESSING);
-            $orderStatus = $this->moduleConfig->getConfirmedStatus($order->getStoreId());
+            $orderStatus = $this->moduleConfig->getConfirmedStatus((int) $order->getStoreId());
             $order->setStatus($orderStatus);
 
             // Set the flag to allow sending the email now
@@ -434,7 +434,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             // Send order email if it hasn't been sent yet
             if (!$order->getEmailSent()) {
                 try {
-                    if ($this->moduleConfig->shouldSendOrderEmail($order->getStoreId())) {
+                    if ($this->moduleConfig->shouldSendOrderEmail((int) $order->getStoreId())) {
                         $this->logger->debug('[Payment] Sending order email');
                         $this->orderSender->send($order);
                     }
@@ -552,7 +552,7 @@ class PaymentProcessor implements PaymentProcessorInterface
 
             // Update order status
             $order->setState(Order::STATE_PROCESSING);
-            $orderStatus = $this->moduleConfig->getPreAuthorizedStatus($order->getStoreId());
+            $orderStatus = $this->moduleConfig->getPreAuthorizedStatus((int) $order->getStoreId());
             $order->setStatus($orderStatus);
 
             // Set the flag to allow sending the email now
@@ -561,7 +561,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             // Send order email if it hasn't been sent yet
             if (!$order->getEmailSent()) {
                 try {
-                    if ($this->moduleConfig->shouldSendOrderEmail($order->getStoreId())) {
+                    if ($this->moduleConfig->shouldSendOrderEmail((int) $order->getStoreId())) {
                         $this->logger->debug('[Payment] Sending order email for authorized payment');
                         $this->orderSender->send($order);
                     }
@@ -707,7 +707,7 @@ class PaymentProcessor implements PaymentProcessorInterface
 
             // Update order status similar to authorized payment
             $order->setState(Order::STATE_PROCESSING);
-            $orderStatus = $this->moduleConfig->getPreAuthorizedStatus($order->getStoreId());
+            $orderStatus = $this->moduleConfig->getPreAuthorizedStatus((int) $order->getStoreId());
             $order->setStatus($orderStatus);
 
             // Set the flag to allow sending the email now
@@ -716,7 +716,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             // Send order email if it hasn't been sent yet
             if (!$order->getEmailSent()) {
                 try {
-                    if ($this->moduleConfig->shouldSendOrderEmail($order->getStoreId())) {
+                    if ($this->moduleConfig->shouldSendOrderEmail((int) $order->getStoreId())) {
                         $this->logger->debug('[Payment] Sending order email for pending payment');
                         $this->orderSender->send($order);
                     }

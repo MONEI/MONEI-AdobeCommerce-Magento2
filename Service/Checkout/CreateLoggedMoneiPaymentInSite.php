@@ -151,7 +151,7 @@ class CreateLoggedMoneiPaymentInSite extends AbstractCheckoutService implements 
      * @param string|null $email Optional customer email override
      * @return array Payment data ready for the CreatePayment service
      */
-    private function preparePaymentData(Quote $quote, $email = null): array
+    private function preparePaymentData(Quote $quote, ?string $email = null): array
     {
         // Get shipping address or fallback to billing if shipping is not available
         $shippingAddress = $quote->getShippingAddress();

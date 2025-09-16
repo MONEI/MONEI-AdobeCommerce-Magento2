@@ -192,7 +192,7 @@ class InvoiceService
         // Send invoice email if needed
         try {
             // Check if invoice emails should be sent based on configuration
-            if ($this->moduleConfig->shouldSendInvoiceEmail($order->getStoreId())) {
+            if ($this->moduleConfig->shouldSendInvoiceEmail((int) $order->getStoreId())) {
                 $this->logger->debug('[Invoice] Sending invoice email');
                 $this->invoiceSender->send($invoice);
             }
