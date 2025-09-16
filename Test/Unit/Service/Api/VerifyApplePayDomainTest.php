@@ -21,7 +21,7 @@ use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\Api\VerifyApplePayDomain;
 use Monei\MoneiPayment\Service\Logger;
-use Monei\MoneiPayment\Test\Unit\Service\Api\MockApplePayDomainRegister200Response;
+use Monei\Model\InlineObject;
 use Monei\ApiException;
 use Monei\MoneiClient;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -118,8 +118,13 @@ class VerifyApplePayDomainTest extends TestCase
         $domain = 'example.com';
         $storeId = 1;
 
-        // Create a response using our mock class
-        $responseMock = new MockApplePayDomainRegister200Response($domain, 'verified');
+        // Create a mock response
+        $responseMock = $this->getMockBuilder(InlineObject::class)
+            ->disableOriginalConstructor()
+            ->addMethods(['getStatus', 'getDomainName'])
+            ->getMock();
+        $responseMock->method('getStatus')->willReturn('verified');
+        $responseMock->method('getDomainName')->willReturn($domain);
 
         // Configure ApplePayDomainApi to return the mock response
         $this
@@ -198,8 +203,13 @@ class VerifyApplePayDomainTest extends TestCase
     {
         $domain = 'example.com';
 
-        // Create a response using our mock class
-        $responseMock = new MockApplePayDomainRegister200Response($domain, 'verified');
+        // Create a mock response
+        $responseMock = $this->getMockBuilder(InlineObject::class)
+            ->disableOriginalConstructor()
+            ->addMethods(['getStatus', 'getDomainName'])
+            ->getMock();
+        $responseMock->method('getStatus')->willReturn('verified');
+        $responseMock->method('getDomainName')->willReturn($domain);
 
         // Configure ApplePayDomainApi to return the mock response
         $this

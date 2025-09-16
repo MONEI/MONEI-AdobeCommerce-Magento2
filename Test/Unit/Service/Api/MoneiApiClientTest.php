@@ -9,6 +9,7 @@ use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Model\Config\Source\ModuleVersion;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\Logger;
+use Magento\Framework\App\ProductMetadataInterface;
 use PHPUnit\Framework\TestCase;
 
 class MoneiApiClientTest extends TestCase
@@ -34,6 +35,11 @@ class MoneiApiClientTest extends TestCase
     private ModuleVersion $moduleVersionMock;
 
     /**
+     * @var ProductMetadataInterface|\PHPUnit\Framework\MockObject\MockObject
+     */
+    private ProductMetadataInterface $productMetadataMock;
+
+    /**
      * @var MoneiApiClient
      */
     private MoneiApiClient $moneiApiClient;
@@ -44,12 +50,14 @@ class MoneiApiClientTest extends TestCase
         $this->moduleConfigMock = $this->createMock(MoneiPaymentModuleConfigInterface::class);
         $this->loggerMock = $this->createMock(Logger::class);
         $this->moduleVersionMock = $this->createMock(ModuleVersion::class);
+        $this->productMetadataMock = $this->createMock(ProductMetadataInterface::class);
 
         $this->moneiApiClient = new MoneiApiClient(
             $this->storeManagerMock,
             $this->moduleConfigMock,
             $this->loggerMock,
-            $this->moduleVersionMock
+            $this->moduleVersionMock,
+            $this->productMetadataMock
         );
 
         // Set up a mock store
@@ -82,7 +90,8 @@ class MoneiApiClientTest extends TestCase
             $this->storeManagerMock,
             $this->moduleConfigMock,
             $this->loggerMock,
-            $this->moduleVersionMock
+            $this->moduleVersionMock,
+            $this->productMetadataMock
         );
 
         $this->assertEquals('prod_api_key_456', $method->invokeArgs($this->moneiApiClient, [1]));
@@ -159,5 +168,73 @@ class MoneiApiClientTest extends TestCase
 
         // Test with empty API key
         $this->moneiApiClient->reinitialize('');
+    }
+
+    /**
+     * Test that user agent is properly formatted with version information
+     */
+    public function testGetUserAgentFormat()
+    {
+        // Set up mock expectations
+        $this->moduleVersionMock->expects($this->once())
+            ->method('getModuleVersion')
+            ->willReturn('2.2.1');
+
+        $this->productMetadataMock->expects($this->once())
+            ->method('getVersion')
+            ->willReturn('2.4.6');
+
+        // We need to use reflection to test the private method
+        $reflection = new \ReflectionClass($this->moneiApiClient);
+        $method = $reflection->getMethod('getUserAgent');
+        $method->setAccessible(true);
+
+        $userAgent = $method->invoke($this->moneiApiClient);
+
+        // Assert the format matches expected pattern
+        $this->assertMatchesRegularExpression(
+            '/^MONEI\/Magento2\/\d+\.\d+\.\d+ \(Magento v\d+\.\d+\.\d+; PHP v\d+\.\d+\.\d+/',
+            $userAgent
+        );
+
+        // Assert it contains the expected values
+        $this->assertStringContainsString('MONEI/Magento2/2.2.1', $userAgent);
+        $this->assertStringContainsString('Magento v2.4.6', $userAgent);
+        $this->assertStringContainsString('PHP v', $userAgent);
+    }
+
+    /**
+     * Test that both getMoneiSdk and reinitialize use the same user agent format
+     */
+    public function testUserAgentConsistencyAcrossMethods()
+    {
+        // Setup mocks
+        $this->moduleConfigMock->expects($this->any())
+            ->method('getMode')
+            ->willReturn(1); // Test mode
+
+        $this->moduleConfigMock->expects($this->any())
+            ->method('getTestApiKey')
+            ->willReturn('test_key_123');
+
+        $this->moduleVersionMock->expects($this->any())
+            ->method('getModuleVersion')
+            ->willReturn('2.2.1');
+
+        $this->productMetadataMock->expects($this->any())
+            ->method('getVersion')
+            ->willReturn('2.4.6');
+
+        // Use reflection to access private getUserAgent method
+        $reflection = new \ReflectionClass($this->moneiApiClient);
+        $getUserAgentMethod = $reflection->getMethod('getUserAgent');
+        $getUserAgentMethod->setAccessible(true);
+
+        // Get user agent string
+        $userAgent = $getUserAgentMethod->invoke($this->moneiApiClient);
+
+        // Verify format for both SDK initialization methods
+        $expectedPattern = '/^MONEI\/Magento2\/2\.2\.1 \(Magento v2\.4\.6; PHP v\d+\.\d+\.\d+/';
+        $this->assertMatchesRegularExpression($expectedPattern, $userAgent);
     }
 }

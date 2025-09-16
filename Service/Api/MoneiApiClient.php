@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service\Api;
 
+use Magento\Framework\App\ProductMetadataInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\StoreManagerInterface;
@@ -57,6 +58,13 @@ class MoneiApiClient
     private ModuleVersion $moduleVersion;
 
     /**
+     * Product metadata interface to get Magento version
+     *
+     * @var ProductMetadataInterface
+     */
+    private ProductMetadataInterface $productMetadata;
+
+    /**
      * Cache of SDK instances by store ID
      *
      * @var array<string, MoneiClient>
@@ -68,17 +76,20 @@ class MoneiApiClient
      * @param MoneiPaymentModuleConfigInterface $moduleConfig Module configuration provider
      * @param Logger $logger Logger for API operations
      * @param ModuleVersion $moduleVersion Module version provider
+     * @param ProductMetadataInterface $productMetadata Product metadata to get Magento version
      */
     public function __construct(
         StoreManagerInterface $storeManager,
         MoneiPaymentModuleConfigInterface $moduleConfig,
         Logger $logger,
-        ModuleVersion $moduleVersion
+        ModuleVersion $moduleVersion,
+        ProductMetadataInterface $productMetadata
     ) {
         $this->storeManager = $storeManager;
         $this->moduleConfig = $moduleConfig;
         $this->logger = $logger;
         $this->moduleVersion = $moduleVersion;
+        $this->productMetadata = $productMetadata;
     }
 
     /**
@@ -102,12 +113,10 @@ class MoneiApiClient
                 $monei = new MoneiClient($apiKey);
 
                 // Set custom User-Agent header to identify the integration
-                $monei->setUserAgent('MONEI/Magento2/' . $this->moduleVersion->getModuleVersion());
+                $monei->setUserAgent($this->getUserAgent());
 
                 // Store the SDK instance in cache
                 $this->instances[$cacheKey] = $monei;
-
-                $this->logger->debug('[ApiClient] SDK initialized', ['store_id' => $currentStoreId]);
             } catch (LocalizedException $e) {
                 $this->logger->logApiError('initSdk', $e->getMessage(), [
                     'store_id' => $currentStoreId
@@ -196,7 +205,7 @@ class MoneiApiClient
             $monei = new MoneiClient($apiKey);
 
             // Set custom User-Agent header to identify the integration
-            $monei->setUserAgent('MONEI/Magento2/' . $this->moduleVersion->getModuleVersion());
+            $monei->setUserAgent($this->getUserAgent());
 
             // Store the SDK instance in cache
             $this->instances[$cacheKey] = $monei;
@@ -332,5 +341,24 @@ class MoneiApiClient
     {
         $currentStoreId = $storeId !== null ? $storeId : (int) $this->storeManager->getStore()->getId();
         return $this->moduleConfig->getMode($currentStoreId) === 1;  // 1 = Test, 0 = Production
+    }
+
+    /**
+     * Generate user agent string for API requests
+     *
+     * @return string User agent string with module, Magento, and PHP versions
+     */
+    private function getUserAgent(): string
+    {
+        $magentoVersion = $this->productMetadata->getVersion();
+        $phpVersion = phpversion();
+        $moduleVersion = $this->moduleVersion->getModuleVersion();
+
+        return sprintf(
+            'MONEI/Magento2/%s (Magento v%s; PHP v%s)',
+            $moduleVersion,
+            $magentoVersion,
+            $phpVersion
+        );
     }
 }

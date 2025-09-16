@@ -9,6 +9,7 @@ use Monei\MoneiPayment\Model\Config\Source\ModuleVersion;
 use Monei\MoneiPayment\Model\MoneiApiClient;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient as ServiceMoneiApiClient;
 use Monei\MoneiPayment\Service\Logger;
+use Magento\Framework\App\ProductMetadataInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -35,6 +36,11 @@ class MoneiApiClientTest extends TestCase
     private $moduleVersionMock;
 
     /**
+     * @var ProductMetadataInterface|MockObject
+     */
+    private $productMetadataMock;
+
+    /**
      * @var MoneiApiClient
      */
     private $moneiApiClient;
@@ -50,6 +56,7 @@ class MoneiApiClientTest extends TestCase
         $this->moduleConfigMock = $this->createMock(MoneiPaymentModuleConfigInterface::class);
         $this->loggerMock = $this->createMock(Logger::class);
         $this->moduleVersionMock = $this->createMock(ModuleVersion::class);
+        $this->productMetadataMock = $this->createMock(ProductMetadataInterface::class);
 
         // Set up a mock store
         $this->storeMock = $this->createMock(StoreInterface::class);
@@ -60,7 +67,8 @@ class MoneiApiClientTest extends TestCase
             $this->storeManagerMock,
             $this->moduleConfigMock,
             $this->loggerMock,
-            $this->moduleVersionMock
+            $this->moduleVersionMock,
+            $this->productMetadataMock
         );
     }
 

@@ -23,3 +23,5 @@ node_modules
 tmp
 var
 reports
+
+.playwright-mcp

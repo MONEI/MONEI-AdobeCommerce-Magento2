@@ -27,7 +27,7 @@
     "magento/module-payment": "100.4.*",
     "magento/module-sales": "103.0.*",
     "magento/module-vault": "101.2.*",
-    "monei/monei-php-sdk": "^2.6",
+    "monei/monei-php-sdk": "^2.8.3",
     "monolog/monolog": "2.*"
   },
   "conflict": {
