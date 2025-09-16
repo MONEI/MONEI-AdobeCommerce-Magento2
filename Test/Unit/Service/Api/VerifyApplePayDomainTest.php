@@ -21,7 +21,6 @@ use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\Api\VerifyApplePayDomain;
 use Monei\MoneiPayment\Service\Logger;
-use Monei\Model\InlineObject;
 use Monei\ApiException;
 use Monei\MoneiClient;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -119,7 +118,7 @@ class VerifyApplePayDomainTest extends TestCase
         $storeId = 1;
 
         // Create a mock response
-        $responseMock = $this->getMockBuilder(InlineObject::class)
+        $responseMock = $this->getMockBuilder(ApplePayDomainRegister200Response::class)
             ->disableOriginalConstructor()
             ->addMethods(['getStatus', 'getDomainName'])
             ->getMock();
@@ -204,7 +203,7 @@ class VerifyApplePayDomainTest extends TestCase
         $domain = 'example.com';
 
         // Create a mock response
-        $responseMock = $this->getMockBuilder(InlineObject::class)
+        $responseMock = $this->getMockBuilder(ApplePayDomainRegister200Response::class)
             ->disableOriginalConstructor()
             ->addMethods(['getStatus', 'getDomainName'])
             ->getMock();

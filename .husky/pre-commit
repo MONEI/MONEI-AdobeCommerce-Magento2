@@ -1,8 +1,26 @@
+#!/usr/bin/env sh
+
+# Exit on any error
+set -e
+
 # Run composer checks and tests
 echo "Running code quality checks..."
-composer check:all || exit 1
+if ! composer check:all; then
+    echo "❌ Code quality checks failed. Please fix the issues before committing."
+    exit 1
+fi
 
 echo "Running tests..."
-composer test || exit 1
+if ! composer test; then
+    echo "❌ Tests failed. Please fix the failing tests before committing."
+    exit 1
+fi
 
-yarn lint-staged
+# Run lint-staged for JS/CSS files if yarn is available
+if command -v yarn >/dev/null 2>&1; then
+    yarn lint-staged
+else
+    echo "⚠️  Yarn not found, skipping lint-staged"
+fi
+
+echo "✅ All pre-commit checks passed!"
