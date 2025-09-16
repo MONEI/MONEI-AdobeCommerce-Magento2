@@ -21,5 +21,5 @@ interface CreateLoggedMoneiPaymentInSiteInterface
      *
      * @return mixed[]
      */
-    public function execute(string $cartId, string $email);
+    public function execute(string $cartId, string $email): array;
 }

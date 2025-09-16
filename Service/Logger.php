@@ -17,6 +17,7 @@ namespace Monei\MoneiPayment\Service;
 
 use Monei\MoneiPayment\Service\Logger\Handler;
 use Monolog\Logger as MonologLogger;
+use Psr\Log\LoggerInterface;
 
 /**
  * Enhanced logger for MONEI payment operations
@@ -24,10 +25,12 @@ use Monolog\Logger as MonologLogger;
  * Provides standardized logging with consistent formatting for payment operations,
  * API calls, and error handling throughout the module.
  *
+ * Compatible with both Monolog 2.x and 3.x by using composition instead of inheritance.
+ *
  * @license  https://opensource.org/licenses/OSL-3.0 Open Software License 3.0
  * @link     https://monei.com
  */
-class Logger extends MonologLogger
+class Logger implements LoggerInterface
 {
     public const LOG_FILE_PATH = '/var/log/monei.log';
 
@@ -35,6 +38,11 @@ class Logger extends MonologLogger
      * Options for JSON encoding in logs
      */
     public const JSON_OPTIONS = JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
+
+    /**
+     * @var MonologLogger
+     */
+    private MonologLogger $logger;
 
     /**
      * Logger constructor
@@ -46,8 +54,126 @@ class Logger extends MonologLogger
         Handler $handler,
         string $name = 'monei'
     ) {
-        parent::__construct($name);
-        $this->pushHandler($handler);
+        $this->logger = new MonologLogger($name);
+        $this->logger->pushHandler($handler);
+    }
+
+    /**
+     * System is unusable.
+     *
+     * @param string|\Stringable $message
+     * @param array $context
+     *
+     * @return void
+     */
+    public function emergency($message, array $context = []): void
+    {
+        $this->logger->emergency($message, $context);
+    }
+
+    /**
+     * Action must be taken immediately.
+     *
+     * @param string|\Stringable $message
+     * @param array $context
+     *
+     * @return void
+     */
+    public function alert($message, array $context = []): void
+    {
+        $this->logger->alert($message, $context);
+    }
+
+    /**
+     * Critical conditions.
+     *
+     * @param string|\Stringable $message
+     * @param array $context
+     *
+     * @return void
+     */
+    public function critical($message, array $context = []): void
+    {
+        $this->logger->critical($message, $context);
+    }
+
+    /**
+     * Runtime errors that do not require immediate action.
+     *
+     * @param string|\Stringable $message
+     * @param array $context
+     *
+     * @return void
+     */
+    public function error($message, array $context = []): void
+    {
+        $this->logger->error($message, $context);
+    }
+
+    /**
+     * Exceptional occurrences that are not errors.
+     *
+     * @param string|\Stringable $message
+     * @param array $context
+     *
+     * @return void
+     */
+    public function warning($message, array $context = []): void
+    {
+        $this->logger->warning($message, $context);
+    }
+
+    /**
+     * Normal but significant events.
+     *
+     * @param string|\Stringable $message
+     * @param array $context
+     *
+     * @return void
+     */
+    public function notice($message, array $context = []): void
+    {
+        $this->logger->notice($message, $context);
+    }
+
+    /**
+     * Interesting events.
+     *
+     * @param string|\Stringable $message
+     * @param array $context
+     *
+     * @return void
+     */
+    public function info($message, array $context = []): void
+    {
+        $this->logger->info($message, $context);
+    }
+
+    /**
+     * Detailed debug information.
+     *
+     * @param string|\Stringable $message
+     * @param array $context
+     *
+     * @return void
+     */
+    public function debug($message, array $context = []): void
+    {
+        $this->logger->debug($message, $context);
+    }
+
+    /**
+     * Logs with an arbitrary level.
+     *
+     * @param mixed $level
+     * @param string|\Stringable $message
+     * @param array $context
+     *
+     * @return void
+     */
+    public function log($level, $message, array $context = []): void
+    {
+        $this->logger->log($level, $message, $context);
     }
 
     /**
@@ -146,5 +272,15 @@ class Logger extends MonologLogger
         } catch (\Throwable $e) {
             return 'Unable to encode data to JSON: ' . $e->getMessage();
         }
+    }
+
+    /**
+     * Get the internal Monolog logger instance
+     *
+     * @return MonologLogger
+     */
+    public function getMonologInstance(): MonologLogger
+    {
+        return $this->logger;
     }
 }

@@ -23,5 +23,5 @@ interface AllMoneiPaymentModuleConfigInterface
      *
      * @return bool
      */
-    public function isAnyPaymentEnabled($storeId = null): bool;
+    public function isAnyPaymentEnabled(?int $storeId = null): bool;
 }

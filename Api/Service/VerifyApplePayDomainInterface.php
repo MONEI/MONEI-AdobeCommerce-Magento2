@@ -13,7 +13,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Api\Service;
 
 use Magento\Framework\Exception\LocalizedException;
-use Monei\Model\ApplePayDomainRegister200Response;
+use Monei\Model\InlineObject;
 
 /**
  * Interface for service to register a domain with Apple Pay
@@ -25,8 +25,8 @@ interface VerifyApplePayDomainInterface
      *
      * @param string $domain Domain to register with Apple Pay
      * @param int|null $storeId The store ID to use for configurations
-     * @return ApplePayDomainRegister200Response
+     * @return InlineObject
      * @throws LocalizedException If registration fails
      */
-    public function execute(string $domain, ?int $storeId = null): ApplePayDomainRegister200Response;
+    public function execute(string $domain, ?int $storeId = null): InlineObject;
 }

@@ -22,5 +22,5 @@ interface GenerateInvoiceInterface
      * @param \Magento\Sales\Api\Data\OrderInterface|string $order
      * @param array|null $paymentData
      */
-    public function execute($order, $paymentData = null): void;
+    public function execute($order, ?array $paymentData = null): void;
 }

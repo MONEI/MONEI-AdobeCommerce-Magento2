@@ -93,7 +93,7 @@ class AllMoneiPaymentModuleConfig implements AllMoneiPaymentModuleConfigInterfac
      *
      * @return bool True if any payment method is enabled, false otherwise
      */
-    public function isAnyPaymentEnabled($storeId = null): bool
+    public function isAnyPaymentEnabled(?int $storeId = null): bool
     {
         return (bool) $this->moneiPaymentModuleConfig->isEnabled($storeId) ||
             (bool) $this->moneiCardPaymentModuleConfig->isEnabled($storeId) ||

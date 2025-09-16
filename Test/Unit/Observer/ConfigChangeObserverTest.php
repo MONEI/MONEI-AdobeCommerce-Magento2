@@ -10,7 +10,7 @@ use Magento\Framework\UrlInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
-use Monei\Model\ApplePayDomainRegister200Response;
+use Monei\Model\InlineObject;
 use Monei\MoneiPayment\Api\Config\MoneiGoogleApplePaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\VerifyApplePayDomainInterface;
@@ -138,7 +138,7 @@ class ConfigChangeObserverTest extends TestCase
 
         // Response from verification
         $responseMock = $this
-            ->getMockBuilder(ApplePayDomainRegister200Response::class)
+            ->getMockBuilder(InlineObject::class)
             ->disableOriginalConstructor()
             ->addMethods(['getStatus', 'getDomainName'])
             ->getMock();

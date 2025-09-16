@@ -70,7 +70,7 @@ class GenerateInvoice implements GenerateInvoiceInterface
      * @param array|null $paymentData Payment data from MONEI
      * @return void
      */
-    public function execute($order, $paymentData = null): void
+    public function execute($order, ?array $paymentData = null): void
     {
         if (!is_object($order)) {
             $incrementId = $order;
