@@ -2,6 +2,9 @@
 
 ## <small>2.2.2 (2025-09-16)</small>
 
+- fix: correct Apple Pay domain verification return type and improve pre-commit hook ([4b992ba](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/4b992ba))
+- fix: add explicit nullable types for PHP 8.4 compatibility ([fecb993](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/fecb993))
+- fix: PHP 8.4 compatibility - explicit nullable types in JsonValidator ([eff422e](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/eff422e))
 - fix: add Monolog 3.x compatibility for Adobe Commerce submission ([69d58f6](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/69d58f6))
 - fix: include Magento and PHP versions in user agent ([f58df89](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/f58df89))
 - fix: remove non-existent class dependencies ([3527383](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/3527383))
