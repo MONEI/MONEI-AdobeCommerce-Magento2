@@ -2,6 +2,7 @@
 
 ## <small>2.2.2 (2025-09-16)</small>
 
+- fix: add Monolog 3.x compatibility for Adobe Commerce submission ([69d58f6](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/69d58f6))
 - fix: include Magento and PHP versions in user agent ([f58df89](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/f58df89))
 - fix: remove non-existent class dependencies ([3527383](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/3527383))
 
