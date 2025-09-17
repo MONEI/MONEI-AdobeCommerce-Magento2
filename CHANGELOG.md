@@ -1,5 +1,11 @@
 # Changelog
 
+## <small>2.2.3 (2025-09-17)</small>
+
+- fix: remove cache plugins that interfere with Varnish tests ([aea34cb](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/aea34cb))
+- fix: resolve checkout API HmacInterface error and code style fixes ([ad783c5](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/ad783c5))
+- chore: update CHANGELOG for 2.2.2 PHP 8.4 compatibility fixes ([3305efa](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/3305efa))
+
 ## <small>2.2.2 (2025-09-16)</small>
 
 - fix: correct Apple Pay domain verification return type and improve pre-commit hook ([4b992ba](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/4b992ba))
