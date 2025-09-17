@@ -82,7 +82,7 @@ class CheckoutShippingInformationManagement
         callable $proceed,
         $cartId,
         ShippingInformationInterface $addressInformation
-    ) {
+    ): PaymentDetailsInterface {
         $paymentDetails = $proceed($cartId, $addressInformation);
 
         return $this->filterPaymentMethods($paymentDetails, $addressInformation);
