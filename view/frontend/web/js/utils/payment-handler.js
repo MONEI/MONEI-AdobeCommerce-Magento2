@@ -51,7 +51,14 @@ define([
         .catch(function (error) {
           fullScreenLoader.stopLoader();
           errorHandler.handleApiError(error);
-          if (component.cancelOrderUrl) {
+          // Redirect to Complete controller which verifies actual payment status
+          // instead of Cancel which blindly cancels (fixes race condition)
+          if (component.completeUrl && paymentId) {
+            setTimeout(function () {
+              window.location.replace(url.build(component.completeUrl + '?id=' + paymentId));
+            }, 3000);
+          } else if (component.cancelOrderUrl) {
+            // Fallback if no completeUrl or paymentId available
             setTimeout(function () {
               window.location.replace(url.build(component.cancelOrderUrl));
             }, 3000);

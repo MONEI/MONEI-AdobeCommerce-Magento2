@@ -110,9 +110,10 @@ class InvoiceService
                 try {
                     // If order already has an invoice, don't create a new one
                     if (!$order->canInvoice()) {
+                        $reason = $this->getCannotInvoiceReason($order);
                         $this->logger->info(
-                            sprintf('[Invoice] Order already has an invoice, skipping invoice creation'),
-                            ['order_id' => $order->getIncrementId()]
+                            sprintf('[Invoice] Cannot create invoice: %s', $reason),
+                            ['order_id' => $order->getIncrementId(), 'state' => $order->getState()]
                         );
 
                         return null;
@@ -367,5 +368,35 @@ class InvoiceService
         }
 
         return false;
+    }
+
+    /**
+     * Get the reason why an order cannot be invoiced
+     *
+     * @param Order $order
+     * @return string
+     */
+    private function getCannotInvoiceReason(Order $order): string
+    {
+        $state = $order->getState();
+
+        if ($state === Order::STATE_CANCELED) {
+            return 'Order is cancelled';
+        }
+        if ($state === Order::STATE_CLOSED) {
+            return 'Order is closed';
+        }
+        if ($state === Order::STATE_COMPLETE) {
+            return 'Order is complete';
+        }
+
+        // Check if all items already invoiced
+        foreach ($order->getAllItems() as $item) {
+            if ($item->getQtyToInvoice() > 0) {
+                return 'Unknown reason';
+            }
+        }
+
+        return 'All items already invoiced';
     }
 }
