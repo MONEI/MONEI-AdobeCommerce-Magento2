@@ -1,5 +1,12 @@
 # Changelog
 
+## <small>2.2.4 (2026-01-23)</small>
+
+- fix: handle race condition when order cancelled but payment succeeds ([7f28ee8](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/7f28ee8))
+- fix: update tests for cancelled order restoration feature ([318f273](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/318f273))
+- fix: URL encode paymentId in redirect ([85d6e2c](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/85d6e2c))
+- chore: remove unused .mcp.json configuration file ([1370c6e](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/1370c6e))
+
 ## <small>2.2.3 (2025-09-17)</small>
 
 - fix: remove cache plugins that interfere with Varnish tests ([aea34cb](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/aea34cb))
