@@ -585,19 +585,26 @@ class PaymentProcessorAdditionalTest extends TestCase
         $orderMock->method('getId')->willReturn(1);
         $orderMock->method('getEntityId')->willReturn(1);
         $orderMock->method('getIncrementId')->willReturn($orderId);
-        $orderMock->method('getState')->willReturn(Order::STATE_CANCELED);
+        // First call returns CANCELED (triggers restore), subsequent calls return NEW then PROCESSING
+        $orderMock->method('getState')->willReturnOnConsecutiveCalls(
+            Order::STATE_CANCELED,  // Check in handleSuccessfulPayment (not PROCESSING)
+            Order::STATE_CANCELED   // Check for CANCELED state (triggers restore)
+        );
         $orderMock->method('canUnhold')->willReturn(false);
         $orderMock->method('getStoreId')->willReturn(1);
+        $orderMock->method('getAllItems')->willReturn([]);  // No items for simplicity
+        $orderMock->method('getStatusHistories')->willReturn([]);
 
-        // Order should be updated to processing regardless of previous state
+        // Order state transitions: first to NEW (restore), then to PROCESSING (success)
         $orderMock
-            ->expects($this->once())
+            ->expects($this->exactly(2))
             ->method('setState')
-            ->with(Order::STATE_PROCESSING);
+            ->withConsecutive([Order::STATE_NEW], [Order::STATE_PROCESSING]);
+        // Status transitions: first to 'pending' (restore), then to config status (success)
         $orderMock
-            ->expects($this->once())
+            ->expects($this->exactly(2))
             ->method('setStatus')
-            ->with($this->anything());  // The actual status comes from config
+            ->withConsecutive(['pending'], [$this->anything()]);
 
         // Load order mock
         $this
