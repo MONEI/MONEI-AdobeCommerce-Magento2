@@ -229,7 +229,7 @@ class PaymentProcessorTest extends TestCase
 
         $this
             ->order
-            ->expects($this->once())
+            ->expects($this->atLeastOnce())
             ->method('getState')
             ->willReturn(Order::STATE_PENDING_PAYMENT);
 

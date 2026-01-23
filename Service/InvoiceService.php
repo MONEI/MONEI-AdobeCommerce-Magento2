@@ -391,9 +391,12 @@ class InvoiceService
         }
 
         // Check if all items already invoiced
-        foreach ($order->getAllItems() as $item) {
-            if ($item->getQtyToInvoice() > 0) {
-                return 'Unknown reason';
+        $items = $order->getAllItems();
+        if ($items) {
+            foreach ($items as $item) {
+                if ($item->getQtyToInvoice() > 0) {
+                    return 'Unknown reason';
+                }
             }
         }
 
