@@ -408,6 +408,17 @@ class PaymentProcessor implements PaymentProcessorInterface
                 return true;
             }
 
+            // Check if order was cancelled but payment succeeded - restore it
+            if ($order->getState() === Order::STATE_CANCELED) {
+                $this->logger->warning(sprintf(
+                    '[Payment] Race condition: Order %s cancelled but payment %s succeeded. Restoring order.',
+                    $incrementId,
+                    $paymentId
+                ));
+
+                $this->restoreCancelledOrder($order);
+            }
+
             // Update payment information first
             $this->updatePaymentInformation($order, $payment);
 
@@ -464,6 +475,38 @@ class PaymentProcessor implements PaymentProcessorInterface
 
             return false;
         }
+    }
+
+    /**
+     * Restore a cancelled order when payment actually succeeded
+     * Follows Stripe's approach for handling race conditions
+     *
+     * @param OrderInterface $order
+     * @return void
+     */
+    private function restoreCancelledOrder(OrderInterface $order): void
+    {
+        // Reset order state to allow processing
+        $order->setState(Order::STATE_NEW);
+        $order->setStatus('pending');
+
+        // Reset cancelled quantities on all items (critical for invoicing)
+        foreach ($order->getAllItems() as $item) {
+            if ($item->getQtyCanceled() > 0) {
+                $item->setQtyCanceled(0);
+            }
+            $item->setQtyToInvoice($item->getQtyOrdered() - $item->getQtyInvoiced());
+        }
+
+        // Document the restoration
+        $order->addCommentToStatusHistory(
+            __('Order restored: Payment confirmed as successful by MONEI callback after order was cancelled.')
+        );
+
+        $this->logger->info(sprintf(
+            '[Payment] Order %s restored from CANCELED to NEW',
+            $order->getIncrementId()
+        ));
     }
 
     /**
