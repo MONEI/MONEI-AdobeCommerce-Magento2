@@ -55,7 +55,7 @@ define([
           // instead of Cancel which blindly cancels (fixes race condition)
           if (component.completeUrl && paymentId) {
             setTimeout(function () {
-              window.location.replace(url.build(component.completeUrl + '?id=' + paymentId));
+              window.location.replace(url.build(component.completeUrl + '?id=' + encodeURIComponent(paymentId)));
             }, 3000);
           } else if (component.cancelOrderUrl) {
             // Fallback if no completeUrl or paymentId available
