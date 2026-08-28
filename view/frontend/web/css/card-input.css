@@ -44,8 +44,9 @@
 /*
  * Split card layout: number on its own row, expiry and CVC sharing the next.
  *
- * No `em` units for field heights - the parent font-size differs between
- * checkout surfaces, so `em` gives a different height on each.
+ * Heights are px on purpose. The mount points inherit the surrounding font
+ * size, which differs between checkout surfaces, so em would resolve to a
+ * different height on each.
  */
 .monei-card-split-row {
   display: flex;
@@ -60,4 +61,27 @@
 
 .monei-card-number-field {
   margin-bottom: 12px;
+}
+
+/*
+ * Unlike CardInput, a CardGroup part does not size itself: monei.js mounts it
+ * with an inline height of its own that collapses to zero. The container must
+ * set the height and the mounted iframe must be forced to fill it, or all three
+ * fields render invisible.
+ */
+#monei-insite-card-number,
+#monei-insite-card-expiry,
+#monei-insite-card-cvc {
+  box-sizing: border-box;
+  height: 40px;
+  width: 100%;
+}
+
+#monei-insite-card-number > *,
+#monei-insite-card-expiry > *,
+#monei-insite-card-cvc > *,
+#monei-insite-card-number iframe,
+#monei-insite-card-expiry iframe,
+#monei-insite-card-cvc iframe {
+  height: 100% !important;
 }
