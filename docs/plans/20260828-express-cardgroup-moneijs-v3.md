@@ -421,6 +421,15 @@ create failure: `pending_payment`, `monei_payment_id` NULL, invisible to
       API as `Invalid email address at "body.customer.email"`, which reads as a MONEI fault
       rather than a missing field (Woo `:443-449`)
 - [ ] fall back between billing and shipping when either has no country
+- [ ] **validate the address against Magento's per-country required fields BEFORE
+      `CreatePayment`.** Cheap insurance: this ordering reserves an order id and creates a
+      payment first, so a required-field failure discovered later leaves both to unwind.
+      PrestaShop hit exactly this — Spain requires a national ID (`need_identification_number`)
+      that no wallet supplies, which killed express in their primary market. Magento ships
+      `taxvat_show` empty so there is no stock equivalent, but a merchant can make taxvat or a
+      custom attribute required per country
+- [ ] when validation fails, surface a message the **shopper** can act on, and log the
+      **merchant** remedy — never a raw framework validation string
 - [ ] **apply only the shipping address before recomputing**, exactly as Task 7's callbacks
       did. Setting the billing address as well would move the total on a store that taxes by
       billing address — *after* the wallet already showed its figure. The order still records
@@ -558,6 +567,13 @@ create failure: `pending_payment`, `monei_payment_id` NULL, invisible to
 - [ ] verify placement empirically against the **active** theme
 - [ ] unit tests: observer per surface, every disabled path, error ownership
 - [ ] e2e: express succeeds from cart, mini-cart, product page
+- [ ] **e2e: drive `placeOrder` with a real shipping address, including a country that has
+      extra required fields, and assert the shopper-facing message.** PrestaShop shipped
+      29/29 green with express dead in its primary market because every express spec asserted
+      rendering, gating and failure surfacing, and nothing ever completed an order *with an
+      address*. The gap was a missing scenario, not a missing assertion. Use a second country
+      as a control so the guard cannot quietly disable express everywhere, and verify the spec
+      goes red with the guard removed
 - [ ] e2e: sheet total updates on option change, and the charged amount equals the total the
       sheet last showed
 - [ ] e2e: declined express surfaces the error on the originating surface, cart intact
