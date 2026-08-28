@@ -20,6 +20,10 @@
     type="Monei\MoneiPayment\Model\Config\MoneiCardPaymentModuleConfig"
   />
   <preference
+    for="Monei\MoneiPayment\Api\Service\Express\ExpressCheckoutInterface"
+    type="Monei\MoneiPayment\Service\Express\ExpressCheckout"
+  />
+  <preference
     for="Monei\MoneiPayment\Api\Config\MoneiExpressCheckoutConfigInterface"
     type="Monei\MoneiPayment\Model\Config\MoneiExpressCheckoutConfig"
   />
