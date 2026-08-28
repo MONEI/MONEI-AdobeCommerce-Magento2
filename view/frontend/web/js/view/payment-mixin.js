@@ -9,7 +9,7 @@ define(['Magento_Ui/js/model/messageList', 'jquery'], function (globalMessageLis
 
   var mixin = {
     accountId: '',
-    apiKey: '',
+    apiKeyIsSet: false,
     isEnabled: false,
 
     initialize: function () {
@@ -22,9 +22,9 @@ define(['Magento_Ui/js/model/messageList', 'jquery'], function (globalMessageLis
 
     showErrorMessages: function () {
       this.accountId = window.checkoutConfig.moneiAccountId;
-      this.apiKey = window.checkoutConfig.moneiApiKey;
+      this.apiKeyIsSet = window.checkoutConfig.moneiApiKeyIsSet;
       this.isEnabled = window.checkoutConfig.moneiPaymentIsEnabled;
-      if (this.isEnabled && (!this.accountId || !this.apiKey)) {
+      if (this.isEnabled && (!this.accountId || !this.apiKeyIsSet)) {
         globalMessageList.addErrorMessage({
           message: $.mage.__('MONEI payment methods are not available. Please, check your MONEI configuration.')
         });

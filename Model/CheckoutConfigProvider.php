@@ -187,7 +187,10 @@ class CheckoutConfigProvider implements ConfigProviderInterface
      * Get configuration for checkout.
      *
      * Provides configuration data needed for the checkout process.
-     * Includes account ID, API key, mode settings, and payment method configurations.
+     * Includes account ID, mode settings, and payment method configurations.
+     *
+     * Never place the API key here. This array is serialized into window.checkoutConfig
+     * and served to every shopper. Only a boolean "is it configured" flag is exposed.
      *
      * @return array Configuration data for checkout
      */
@@ -197,7 +200,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
 
         $config = [
             'moneiAccountId' => $this->moneiPaymentConfig->getAccountId($storeId),
-            'moneiApiKey' => $this->moneiPaymentConfig->getApiKey($storeId),
+            'moneiApiKeyIsSet' => '' !== trim($this->moneiPaymentConfig->getApiKey($storeId)),
             'moneiPaymentIsEnabled' => $this->allMoneiPaymentModuleConfig->isAnyPaymentEnabled($storeId),
             'isMoneiTestMode' => Mode::MODE_TEST === $this->moneiPaymentConfig->getMode($storeId),
             'moneiLanguage' => $this->moneiPaymentConfig->getLanguage($storeId),
@@ -439,44 +442,6 @@ class CheckoutConfigProvider implements ConfigProviderInterface
         ];
 
         return $icons;
-    }
-
-    /**
-     * Get payment method configuration with icon information
-     *
-     * @param string $methodCode
-     * @param string|null $appendIcon
-     * @return array
-     */
-    private function getMethodConfig(string $methodCode, ?string $appendIcon = null): array
-    {
-        $paymentConfig = [];
-        $paymentActionUrl = $this->urlBuilder->getUrl('monei/action');
-        $completeUrl = $this->urlBuilder->getUrl('monei/payment/complete');
-        $cancelOrderUrl = $this->urlBuilder->getUrl('monei/payment/cancel');
-        $failOrderStatus = Status::FAILED;
-
-        // Basic configuration
-        $paymentConfig['completeUrl'] = $completeUrl;
-        $paymentConfig['cancelOrderUrl'] = $cancelOrderUrl;
-        $paymentConfig['failOrderStatus'] = $failOrderStatus;
-        $paymentConfig['accountId'] = $this->moneiPaymentConfig->getApiKey();
-
-        // Add payment icon
-        $paymentType = str_replace('monei_', '', $methodCode);
-        if ($appendIcon) {
-            $paymentType = $appendIcon;
-        }
-
-        // Get icon URL
-        $paymentConfig['icon'] = $this->paymentMethodHelper->getIconFromPaymentType($paymentType);
-
-        // Get icon dimensions
-        $dimensions = $this->paymentMethodHelper->getPaymentMethodDimensions($paymentType);
-        $paymentConfig['iconWidth'] = (int) str_replace('px', '', $dimensions['width']);
-        $paymentConfig['iconHeight'] = (int) str_replace('px', '', $dimensions['height']);
-
-        return $paymentConfig;
     }
 
     /**

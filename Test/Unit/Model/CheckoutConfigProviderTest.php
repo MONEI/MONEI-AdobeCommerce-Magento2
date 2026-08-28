@@ -301,8 +301,16 @@ class CheckoutConfigProviderTest extends TestCase
         // Check account ID
         $this->assertEquals('account_123', $config['payment']['monei_card']['accountId']);
 
-        // Check API key
-        $this->assertEquals('api_key_test_123', $config['moneiApiKey']);
+        // The checkout config is serialized into window.checkoutConfig and served to every
+        // shopper. The secret API key must never appear in it - at any depth, under any key
+        // name - only a boolean "is it configured" flag.
+        $this->assertArrayNotHasKey('moneiApiKey', $config);
+        $this->assertTrue($config['moneiApiKeyIsSet']);
+        $this->assertStringNotContainsString(
+            'api_key_test_123',
+            json_encode($config),
+            'The MONEI API key leaked into the checkout config sent to the browser.'
+        );
 
         // Check redirect URLs
         $this->assertEquals('https://example.com/monei/payment/action', $config['payment']['monei']['redirectUrl']);
