@@ -151,4 +151,33 @@ class MoneiCardPaymentModuleConfig implements MoneiCardPaymentModuleConfigInterf
 
         return $result ? json_decode($result, true) : [];
     }
+
+    /**
+     * Get the card input layout.
+     *
+     * Defaults to the split layout when unset, which is what a store upgrading
+     * from before this setting existed will hit.
+     *
+     * @param int|null $storeId The store ID to check the configuration for
+     */
+    public function getCardInputLayout(?int $storeId = null): string
+    {
+        $value = (string) $this->scopeConfig->getValue(
+            self::CARD_INPUT_LAYOUT,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+
+        return self::LAYOUT_SINGLE === $value ? self::LAYOUT_SINGLE : self::LAYOUT_SPLIT;
+    }
+
+    /**
+     * Whether the card form renders as separate number / expiry / CVC fields.
+     *
+     * @param int|null $storeId The store ID to check the configuration for
+     */
+    public function isSplitCardInput(?int $storeId = null): bool
+    {
+        return self::LAYOUT_SPLIT === $this->getCardInputLayout($storeId);
+    }
 }

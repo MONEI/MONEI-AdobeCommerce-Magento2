@@ -242,3 +242,8 @@ Description,Description
             more info <a href=""https://docs.monei.com/docs/monei-js/reference/#paypal-options""
             target=""_blank"" rel=""noopener noreferrer"">here</a>"
 "Processing Payment","Processing Payment"
+"Expiry date","Expiry date"
+"Security code","Security code"
+"Separate fields (card number, expiry, CVC)","Separate fields (card number, expiry, CVC)"
+"Single combined field","Single combined field"
+"Card Field Layout","Card Field Layout"

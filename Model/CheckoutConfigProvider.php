@@ -248,6 +248,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                     'isEnabledTokenization' => $this->moneiCardPaymentConfig->isEnabledTokenization($storeId),
                     'ccVaultCode' => Monei::CC_VAULT_CODE,
                     'jsonStyle' => $this->moneiCardPaymentConfig->getJsonStyle($storeId),
+                    'cardInputLayout' => $this->moneiCardPaymentConfig->getCardInputLayout($storeId),
                     'icon' => $this->paymentMethodHelper->getIconFromPaymentType('card'),
                     'icons' => $this->getCardIcons(),
                 ],

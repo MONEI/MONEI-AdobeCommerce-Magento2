@@ -30,6 +30,12 @@ interface MoneiCardPaymentModuleConfigInterface
 
     public const JSON_STYLE = 'payment/monei_card/json_style';
 
+    public const CARD_INPUT_LAYOUT = 'payment/monei_card/card_input_layout';
+
+    public const LAYOUT_SPLIT = 'split';
+
+    public const LAYOUT_SINGLE = 'single';
+
     /**
      * Check if payment method is enabled.
      *
@@ -78,4 +84,18 @@ interface MoneiCardPaymentModuleConfigInterface
      * @param ?int $storeId
      */
     public function getJsonStyle(?int $storeId = null): array;
+
+    /**
+     * Get the card input layout: split fields or a single combined input.
+     *
+     * @param ?int $storeId
+     */
+    public function getCardInputLayout(?int $storeId = null): string;
+
+    /**
+     * Whether the card form renders as separate number / expiry / CVC fields.
+     *
+     * @param ?int $storeId
+     */
+    public function isSplitCardInput(?int $storeId = null): bool;
 }

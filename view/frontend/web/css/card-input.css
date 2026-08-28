@@ -40,3 +40,24 @@
   margin-top: 7px;
   font-size: 1.2rem;
 }
+
+/*
+ * Split card layout: number on its own row, expiry and CVC sharing the next.
+ *
+ * No `em` units for field heights - the parent font-size differs between
+ * checkout surfaces, so `em` gives a different height on each.
+ */
+.monei-card-split-row {
+  display: flex;
+  gap: 12px;
+}
+
+.monei-card-split-row .monei-card-expiry-field,
+.monei-card-split-row .monei-card-cvc-field {
+  flex: 1 1 50%;
+  min-width: 0;
+}
+
+.monei-card-number-field {
+  margin-bottom: 12px;
+}

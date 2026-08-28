@@ -357,6 +357,26 @@
           </depends>
         </field>
         <field
+          id="card_input_layout"
+          translate="label comment"
+          sortOrder="225"
+          type="select"
+          showInDefault="1"
+          showInWebsite="1"
+          showInStore="1"
+        >
+          <label>Card Field Layout</label>
+          <comment>
+            Separate fields show card number, expiry and CVC as three inputs. Changing this
+            alters the appearance of your live checkout.
+          </comment>
+          <source_model>Monei\MoneiPayment\Model\Config\Source\CardInputLayout</source_model>
+          <config_path>payment/monei_card/card_input_layout</config_path>
+          <depends>
+            <field id="active_card_insite">1</field>
+          </depends>
+        </field>
+        <field
           id="allowspecific_card_insite"
           translate="label comment"
           sortOrder="230"

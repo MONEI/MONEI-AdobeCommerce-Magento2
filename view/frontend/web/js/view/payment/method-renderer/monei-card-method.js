@@ -56,14 +56,20 @@ define([
     },
     redirectAfterPlaceOrder: true,
     cardInput: null,
+    cardGroup: null,
+    cardGroupParts: [],
     idCardHolderInput: 'monei-insite-cardholder-name',
     idCardInput: 'monei-insite-card-input',
+    idCardNumber: 'monei-insite-card-number',
+    idCardExpiry: 'monei-insite-card-expiry',
+    idCardCvc: 'monei-insite-card-cvc',
     idCardError: 'monei-insite-card-error',
     isEnabledTokenization: false,
     failOrderStatus: '',
     language: 'en',
     accountId: '',
     jsonStyle: JSON.parse('{"base":{"height":"30px","padding":"0","font-size":"14px"},"input":{"height":"30px"}}'),
+    isSplitCardInput: ko.observable(true),
     cardHolderNameValid: ko.observable(true),
     errorMessageCardHolderName: ko.observable(''),
     checkedVault: ko.observable(false),
@@ -90,6 +96,9 @@ define([
       this.failOrderStatus = window.checkoutConfig.payment[this.getCode()].failOrderStatus;
       this.accountId = window.checkoutConfig.payment[this.getCode()].accountId;
       this.jsonStyle = window.checkoutConfig.payment[this.getCode()].jsonStyle ?? this.jsonStyle;
+      // Split fields are the default. An older store that never saved the setting
+      // therefore gets the split layout on upgrade, which is intentional.
+      this.isSplitCardInput(window.checkoutConfig.payment[this.getCode()].cardInputLayout !== 'single');
     },
 
     initMoneiObservable: function () {
@@ -129,9 +138,20 @@ define([
       return data;
     },
 
+    /**
+     * Element the SDK mounts into, which differs by layout. The single layout has
+     * one container; the split layout has three, of which the number field is the
+     * first to be rendered.
+     *
+     * @returns {String}
+     */
+    getMountElementId: function () {
+      return this.isSplitCardInput() ? this.idCardNumber : this.idCardInput;
+    },
+
     /** Create a payment in monei when the type of connection is "insite" */
     createMoneiPayment: function () {
-      if ($.trim($('#' + this.idCardInput).html()) === '') {
+      if ($.trim($('#' + this.getMountElementId()).html()) === '') {
         fullScreenLoader.startLoader();
         this.isPlaceOrderActionAllowed(false);
 
@@ -165,8 +185,108 @@ define([
       return quote.totals()['base_currency_code'];
     },
 
-    /** Render the card input */
+    /** Render the card form in whichever layout the store is configured for */
     renderCard: function () {
+      if (this.isSplitCardInput()) {
+        this.renderCardGroup();
+      } else {
+        this.renderCardInput();
+      }
+    },
+
+    /**
+     * Split layout: one CardGroup carrying the payment details, plus three
+     * presentation-only parts.
+     *
+     * amount and currency belong on the group only - a part throws when given
+     * either. The parts must also be destroyed before the group they belong to.
+     */
+    renderCardGroup: function () {
+      var self = this;
+
+      // A checkout re-render replaces the mount containers. Without this the
+      // previous group and its parts stay alive with their listeners attached.
+      this.destroyCardGroup();
+
+      this.errorText = document.getElementById(this.idCardError);
+      this.container = document.getElementById(this.idCardNumber);
+
+      var group = monei.CardGroup({
+        accountId: this.accountId,
+        amount: this.getAmount(),
+        currency: this.getCurrencyCode(),
+        language: this.language,
+        style: this.jsonStyle,
+        onChange: function (event) {
+          if (event.isTouched && event.error) {
+            self.errorText.innerText = event.error;
+          } else {
+            self.errorText.innerText = '';
+          }
+
+          if (event.brand) {
+            self.updateCardBrandDisplay(event.brand);
+          }
+        },
+        onEnter: function () {
+          if (self.isPlaceOrderActionAllowed()) {
+            self.placeOrder();
+          }
+        },
+        onLoad: function () {
+          self.isPlaceOrderActionAllowed(true);
+        }
+      });
+
+      this.cardGroupParts = [
+        [monei.CardNumber, this.idCardNumber],
+        [monei.CardExpiry, this.idCardExpiry],
+        [monei.CardCvc, this.idCardCvc]
+      ].map(function (part) {
+        var instance = part[0]({group: group});
+        instance.render(document.getElementById(part[1]));
+
+        return instance;
+      });
+
+      this.cardGroup = group;
+    },
+
+    /** Tear down the split layout. The SDK requires the parts to go before the group. */
+    destroyCardGroup: function () {
+      this.cardGroupParts.forEach(function (part) {
+        if (part && part.destroy) {
+          try {
+            part.destroy();
+          } catch (e) {
+            // Silent cleanup: a part may already be gone with its container.
+          }
+        }
+      });
+      this.cardGroupParts = [];
+
+      if (this.cardGroup && this.cardGroup.destroy) {
+        try {
+          this.cardGroup.destroy();
+        } catch (e) {
+          // Silent cleanup.
+        }
+      }
+      this.cardGroup = null;
+    },
+
+    /**
+     * The component that holds the card details and is asked for a token,
+     * whichever layout is active.
+     *
+     * @returns {Object|null}
+     */
+    getCardComponent: function () {
+      return this.isSplitCardInput() ? this.cardGroup : this.cardInput;
+    },
+
+    /** Single-field layout */
+    renderCardInput: function () {
       var self = this;
       this.container = document.getElementById(this.idCardInput);
       this.errorText = document.getElementById(this.idCardError);
@@ -223,8 +343,11 @@ define([
 
       if (this.validate() && additionalValidators.validate()) {
         fullScreenLoader.startLoader();
-        monei
-          .createToken(this.cardInput)
+        // submit() rather than monei.createToken(component): a CardGroup rejects
+        // createToken with "Index is not registered", and submit() works for both
+        // layouts.
+        this.getCardComponent()
+          .submit()
           .then(function (result) {
             fullScreenLoader.stopLoader();
             if (result.error) {
