@@ -411,7 +411,24 @@ create failure: `pending_payment`, `monei_payment_id` NULL, invisible to
 - [ ] `placeOrder($result, $location)` takes the `SubmitResult` payload — token,
       `billingDetails`, `shippingDetails`, `shippingOption` — **and rejects any
       client-supplied amount**; `finalAmount` is a cross-check only
-- [ ] guard: empty cart / expired session throws a clear error
+- [ ] guard: empty cart throws a clear error
+- [ ] **guard: session id must match the one the component was initialised with.** The token
+      was created against that session; a rotated session is rejected by MONEI with nothing a
+      shopper can act on, so catch it here with a message they can (Woo
+      `ExpressCheckoutAjaxHandler.php:417-421`)
+- [ ] **guard: the wallet must return an email.** Express has no form for a guest to type one
+      into, so the wallet is the only source. Without it the failure surfaces from the MONEI
+      API as `Invalid email address at "body.customer.email"`, which reads as a MONEI fault
+      rather than a missing field (Woo `:443-449`)
+- [ ] fall back between billing and shipping when either has no country
+- [ ] **apply only the shipping address before recomputing**, exactly as Task 7's callbacks
+      did. Setting the billing address as well would move the total on a store that taxes by
+      billing address — *after* the wallet already showed its figure. The order still records
+      the wallet's billing address (Woo `:452-457`)
+- [ ] **cross-check the wallet's `finalAmount` against the recomputed total and refuse the
+      order if they differ**, logging both. `finalAmount` is never the charged amount, but a
+      mismatch means the shopper approved a different number than we are about to charge
+      (Woo `:462-472`, and its `ExpressAmountVerificationTest.php`)
 - [ ] apply the sheet's chosen carrier:
       `setCollectShippingRates(true)->collectShippingRates()->setShippingMethod($id)`, and
       throw when no method is set
