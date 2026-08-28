@@ -370,6 +370,11 @@ read `stripe/.../Api/Response/ECEResponse.php` before writing this.
 
 - [ ] `getShippingOptions($address, $location)` — apply the partial address, collect rates,
       return `ShippingOption[]` **and** the recalculated amount
+- [ ] **the wallet auto-selects the first option**, so apply `$options[0]` and recalculate
+      before returning — the amount must already include it, or the sheet shows a total the
+      shopper never gets (WooCommerce `ExpressCheckoutAjaxHandler.php:204-207`)
+- [ ] virtual cart / `!needs_shipping`: return empty `shippingOptions` plus current totals,
+      do not attempt rate collection
 - [ ] `selectShippingOption($address, $optionId)` — apply the carrier, return the new amount
 - [ ] use `ShipmentEstimationInterface::estimateByExtendedAddress()`, **not**
       `ShippingInformationManagement::saveAddressInformation()` — the latter validates
@@ -384,8 +389,8 @@ read `stripe/.../Api/Response/ECEResponse.php` before writing this.
       (`(int)($quote->getBaseGrandTotal()*100)`), or multi-currency stores disagree
 - [ ] restore the previously selected shipping method when it survives the address change
 - [ ] cap the returned rates — Stripe caps at 9; wallets do not render unbounded lists
-- [ ] return a clear failure when no carrier serves the address, so the wallet rejects it
-      rather than showing a total the server will not honour
+- [ ] return a distinct `invalid_shipping_address` result when no carrier serves the address,
+      so the wallet rejects it rather than showing a total the server will not honour
 - [ ] unit tests: multiple carriers, single carrier, no carrier, virtual cart, option id
       round-trip, base-currency conversion, logged-in customer with a saved address
 - [ ] run tests before Task 8
