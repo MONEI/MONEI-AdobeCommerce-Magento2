@@ -144,6 +144,27 @@ define([
       }
     },
 
+    /**
+     * Amount in minor units, in the store's base currency.
+     *
+     * Must match Service/Checkout/AbstractCheckoutService.php, which creates the
+     * payment from getBaseGrandTotal()/getBaseCurrencyCode(). Using the quote
+     * currency here would show the shopper one figure and charge another on a
+     * multi-currency store.
+     *
+     * @returns {Number}
+     */
+    getAmount: function () {
+      return Math.round(quote.totals()['base_grand_total'] * 100);
+    },
+
+    /**
+     * @returns {String}
+     */
+    getCurrencyCode: function () {
+      return quote.totals()['base_currency_code'];
+    },
+
     /** Render the card input */
     renderCard: function () {
       var self = this;
@@ -153,6 +174,10 @@ define([
       this.cardInput = monei.CardInput({
         // paymentId: paymentId,
         accountId: this.accountId,
+        // monei.js v3 rejects accountId without amount and currency, rendering no iframe.
+        // Base currency, to match the amount the server creates the payment with.
+        amount: this.getAmount(),
+        currency: this.getCurrencyCode(),
         language: this.language,
         style: this.jsonStyle,
         onChange: function (event) {
