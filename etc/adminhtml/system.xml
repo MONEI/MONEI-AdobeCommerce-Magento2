@@ -963,6 +963,116 @@
             <field id="active_paypal_insite">1</field>
           </depends>
         </field>
+        <field
+          id="heading_express"
+          translate="label"
+          sortOrder="900"
+          showInDefault="1"
+          showInWebsite="1"
+          showInStore="1"
+        >
+          <label><![CDATA[<h2>Express Checkout</h2>]]></label>
+          <frontend_model>Magento\Config\Block\System\Config\Form\Field\Heading</frontend_model>
+        </field>
+        <field
+          id="active_express"
+          translate="label comment"
+          sortOrder="910"
+          type="select"
+          showInDefault="1"
+          showInWebsite="1"
+          showInStore="1"
+        >
+          <label>Enable Express Checkout</label>
+          <comment>
+            Shows an Apple Pay or Google Pay button that skips the checkout form. The shopper
+            approves in the wallet sheet, which supplies the shipping address.
+          </comment>
+          <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+          <config_path>payment/monei_express/active</config_path>
+        </field>
+        <field
+          id="express_on_product"
+          translate="label"
+          sortOrder="920"
+          type="select"
+          showInDefault="1"
+          showInWebsite="1"
+          showInStore="1"
+        >
+          <label>Show on Product Page</label>
+          <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+          <config_path>payment/monei_express/enabled_on_product</config_path>
+          <depends>
+            <field id="active_express">1</field>
+          </depends>
+        </field>
+        <field
+          id="express_on_cart"
+          translate="label"
+          sortOrder="930"
+          type="select"
+          showInDefault="1"
+          showInWebsite="1"
+          showInStore="1"
+        >
+          <label>Show on Cart Page</label>
+          <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+          <config_path>payment/monei_express/enabled_on_cart</config_path>
+          <depends>
+            <field id="active_express">1</field>
+          </depends>
+        </field>
+        <field
+          id="express_on_minicart"
+          translate="label"
+          sortOrder="940"
+          type="select"
+          showInDefault="1"
+          showInWebsite="1"
+          showInStore="1"
+        >
+          <label>Show in Mini Cart</label>
+          <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+          <config_path>payment/monei_express/enabled_on_minicart</config_path>
+          <depends>
+            <field id="active_express">1</field>
+          </depends>
+        </field>
+        <field
+          id="express_on_checkout"
+          translate="label"
+          sortOrder="950"
+          type="select"
+          showInDefault="1"
+          showInWebsite="1"
+          showInStore="1"
+        >
+          <label>Show on Checkout Page</label>
+          <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+          <config_path>payment/monei_express/enabled_on_checkout</config_path>
+          <depends>
+            <field id="active_express">1</field>
+          </depends>
+        </field>
+        <field
+          id="express_json_style"
+          translate="label comment"
+          sortOrder="960"
+          type="textarea"
+          showInDefault="1"
+          showInWebsite="1"
+        >
+          <label>Json style</label>
+          <comment><![CDATA[Custom json style for the express button. Must be valid JSON format.]]></comment>
+          <config_path>payment/monei_express/json_style</config_path>
+          <backend_model>Monei\MoneiPayment\Model\Config\Backend\JsonValidator</backend_model>
+          <frontend_class>validate-json</frontend_class>
+          <validate>validate-no-html-tags</validate>
+          <depends>
+            <field id="active_express">1</field>
+          </depends>
+        </field>
         <!-- -->
       </group>
     </section>

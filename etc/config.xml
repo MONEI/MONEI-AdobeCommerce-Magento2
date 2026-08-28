@@ -57,6 +57,14 @@
         ><![CDATA[{"base":{"height":"30px","padding":"0","font-size":"14px"},"input":{"height":"30px"}}]]></json_style>
         <card_input_layout>split</card_input_layout>
       </monei_card>
+      <monei_express>
+        <active>0</active>
+        <enabled_on_product>1</enabled_on_product>
+        <enabled_on_cart>1</enabled_on_cart>
+        <enabled_on_minicart>1</enabled_on_minicart>
+        <enabled_on_checkout>1</enabled_on_checkout>
+        <json_style><![CDATA[{"height":"45px"}]]></json_style>
+      </monei_express>
       <monei_cc_vault>
         <active>1</active>
         <model>MoneiCardVaultFacade</model>

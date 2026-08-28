@@ -20,6 +20,10 @@
     type="Monei\MoneiPayment\Model\Config\MoneiCardPaymentModuleConfig"
   />
   <preference
+    for="Monei\MoneiPayment\Api\Config\MoneiExpressCheckoutConfigInterface"
+    type="Monei\MoneiPayment\Model\Config\MoneiExpressCheckoutConfig"
+  />
+  <preference
     for="Monei\MoneiPayment\Api\Config\MoneiBizumPaymentModuleConfigInterface"
     type="Monei\MoneiPayment\Model\Config\MoneiBizumPaymentModuleConfig"
   />
@@ -770,6 +774,5 @@
       <argument name="configWriter" xsi:type="object">Magento\Framework\App\Config\Storage\WriterInterface</argument>
     </arguments>
   </type>
-
 </config>
 <!-- Updated configuration for dependency injection fix -->
