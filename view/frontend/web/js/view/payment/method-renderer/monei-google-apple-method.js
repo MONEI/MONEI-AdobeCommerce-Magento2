@@ -157,7 +157,9 @@ define([
       // Create an instance of the Google and Apple using payment_id.
       this.googleAppleContainer = monei.PaymentRequest({
         accountId: this.accountId,
-        amount: quote.totals().base_grand_total * 100,
+        // Rounded, not truncated: a float multiplication such as 39.9 * 100 lands
+        // on 3989.9999... and the SDK expects an integer number of minor units.
+        amount: Math.round(quote.totals().base_grand_total * 100),
         currency: quote.totals().base_currency_code,
         language: this.language,
         style: this.jsonStyle,

@@ -24,3 +24,16 @@
   display: none;
   margin-top: 8px;
 }
+
+/* Checkout-page express: separated from the payment methods below it. */
+.monei-express-checkout {
+  margin-bottom: 20px;
+}
+
+.monei-express-separator {
+  border-top: 1px solid #e0e0e0;
+  color: #666;
+  margin-top: 16px;
+  padding-top: 12px;
+  text-align: center;
+}
