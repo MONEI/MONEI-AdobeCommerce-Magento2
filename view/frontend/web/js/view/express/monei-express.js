@@ -32,6 +32,10 @@ define(['jquery', 'moneijs', 'mage/url', 'Magento_Ui/js/model/messageList', 'mag
       type: 'POST',
       contentType: 'application/json',
       data: JSON.stringify(payload)
+    }).then(function (response) {
+      // Results come back JSON-encoded: an untyped array return is serialised
+      // positionally by Magento's webapi layer, which drops the keys.
+      return JSON.parse(Array.isArray(response) ? response[0] : response);
     });
   }
 
@@ -106,18 +110,16 @@ define(['jquery', 'moneijs', 'mage/url', 'Magento_Ui/js/model/messageList', 'mag
         // No amount is sent. The server recomputes it and refuses the order if
         // the wallet's own figure disagrees.
         post(REST.placeOrder, {
-          payload: {
+          payload: JSON.stringify({
             token: result.token,
             billingDetails: result.billingDetails,
             shippingDetails: result.shippingDetails,
             shippingOption: result.shippingOption,
             finalAmount: result.finalAmount,
             location: location
-          }
+          })
         })
-          .done(function (response) {
-            var data = Array.isArray(response) ? response[0] : response;
-
+          .done(function (data) {
             if (data && data.redirectUrl) {
               window.location.replace(data.redirectUrl);
 
@@ -146,9 +148,7 @@ define(['jquery', 'moneijs', 'mage/url', 'Magento_Ui/js/model/messageList', 'mag
        * charged - the server applies the first option before answering.
        */
       props.onShippingAddressChange = function (address) {
-        return post(REST.shippingOptions, {address: address}).then(function (response) {
-          var data = Array.isArray(response) ? response[0] : response;
-
+        return post(REST.shippingOptions, {address: JSON.stringify(address)}).then(function (data) {
           if (data.result !== 'success') {
             // Rejecting here makes the wallet refuse the address, rather than
             // showing a total the server will not honour.
@@ -163,9 +163,7 @@ define(['jquery', 'moneijs', 'mage/url', 'Magento_Ui/js/model/messageList', 'mag
       };
 
       props.onShippingOptionChange = function (option) {
-        return post(REST.selectOption, {address: {}, optionId: option.id}).then(function (response) {
-          var data = Array.isArray(response) ? response[0] : response;
-
+        return post(REST.selectOption, {address: '{}', optionId: option.id}).then(function (data) {
           return {amount: data.amount};
         });
       };

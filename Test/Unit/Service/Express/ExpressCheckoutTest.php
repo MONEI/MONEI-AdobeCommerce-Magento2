@@ -138,7 +138,7 @@ class ExpressCheckoutTest extends TestCase
         );
         $this->_sessionMock->method('getQuote')->willReturn($quote);
 
-        $result = $this->_service->getShippingOptions(['country' => 'ES', 'postalCode' => '28013']);
+        $result = json_decode($this->_service->getShippingOptions(json_encode(['country' => 'ES', 'postalCode' => '28013'])), true);
 
         $this->assertSame(ExpressCheckout::RESULT_SUCCESS, $result['result']);
         $this->assertCount(2, $result['shippingOptions']);
@@ -158,7 +158,7 @@ class ExpressCheckoutTest extends TestCase
         $quote = $this->makeQuote([['code' => 'flatrate_flatrate', 'price' => 5.0]], 30.00);
         $this->_sessionMock->method('getQuote')->willReturn($quote);
 
-        $result = $this->_service->getShippingOptions(['country' => 'ES']);
+        $result = json_decode($this->_service->getShippingOptions(json_encode(['country' => 'ES'])), true);
 
         $this->assertSame('flatrate_flatrate', $result['shippingOptions'][0]['id']);
         $this->assertSame(500, $result['shippingOptions'][0]['amount']);
@@ -175,7 +175,7 @@ class ExpressCheckoutTest extends TestCase
         $quote = $this->makeQuote([], 25.00);
         $this->_sessionMock->method('getQuote')->willReturn($quote);
 
-        $result = $this->_service->getShippingOptions(['country' => 'AQ']);
+        $result = json_decode($this->_service->getShippingOptions(json_encode(['country' => 'AQ'])), true);
 
         $this->assertSame(ExpressCheckout::RESULT_INVALID_SHIPPING_ADDRESS, $result['result']);
         $this->assertSame([], $result['shippingOptions']);
@@ -193,7 +193,7 @@ class ExpressCheckoutTest extends TestCase
         $quote = $this->makeQuote([], 12.34, true);
         $this->_sessionMock->method('getQuote')->willReturn($quote);
 
-        $result = $this->_service->getShippingOptions(['country' => 'ES']);
+        $result = json_decode($this->_service->getShippingOptions(json_encode(['country' => 'ES'])), true);
 
         $this->assertSame(ExpressCheckout::RESULT_SUCCESS, $result['result']);
         $this->assertSame([], $result['shippingOptions']);
@@ -210,7 +210,7 @@ class ExpressCheckoutTest extends TestCase
         $quote = $this->makeQuote([['code' => 'flatrate_flatrate', 'price' => 5.0]], 30.00);
         $this->_sessionMock->method('getQuote')->willReturn($quote);
 
-        $result = $this->_service->selectShippingOption(['country' => 'ES'], 'flatrate_flatrate');
+        $result = json_decode($this->_service->selectShippingOption(json_encode(['country' => 'ES']), 'flatrate_flatrate'), true);
 
         $this->assertSame(ExpressCheckout::RESULT_SUCCESS, $result['result']);
         $this->assertSame(3000, $result['amount']);
@@ -236,7 +236,7 @@ class ExpressCheckoutTest extends TestCase
         $this->expectException(LocalizedException::class);
         $this->expectExceptionMessage('Your cart is empty.');
 
-        $this->_service->getShippingOptions(['country' => 'ES']);
+        $this->_service->getShippingOptions(json_encode(['country' => 'ES']));
     }
 
     /**
@@ -251,7 +251,7 @@ class ExpressCheckoutTest extends TestCase
         $this->expectException(LocalizedException::class);
         $this->expectExceptionMessage('Your session has expired. Please reload the page.');
 
-        $this->_service->getShippingOptions(['country' => 'ES']);
+        $this->_service->getShippingOptions(json_encode(['country' => 'ES']));
     }
 
     /**
@@ -268,7 +268,7 @@ class ExpressCheckoutTest extends TestCase
         $this->expectException(LocalizedException::class);
         $this->expectExceptionMessage('The wallet did not return a payment token.');
 
-        $this->_service->placeOrder(['billingDetails' => ['email' => 'a@b.com']]);
+        $this->_service->placeOrder(json_encode(['billingDetails' => ['email' => 'a@b.com']]));
     }
 
     /**
@@ -286,7 +286,7 @@ class ExpressCheckoutTest extends TestCase
         $this->expectException(LocalizedException::class);
         $this->expectExceptionMessage('did not return an email address');
 
-        $this->_service->placeOrder(['token' => 'tok_123', 'billingDetails' => []]);
+        $this->_service->placeOrder(json_encode(['token' => 'tok_123', 'billingDetails' => []]));
     }
 
     /**
@@ -304,14 +304,14 @@ class ExpressCheckoutTest extends TestCase
         $this->expectException(LocalizedException::class);
         $this->expectExceptionMessage('The order total changed while you were paying.');
 
-        $this->_service->placeOrder([
+        $this->_service->placeOrder(json_encode([
             'token' => 'tok_123',
             'billingDetails' => ['email' => 'a@b.com'],
             'shippingDetails' => ['email' => 'a@b.com'],
             'shippingOption' => ['id' => 'flatrate_flatrate'],
             // Quote recomputes to 3000; the wallet claims something else.
             'finalAmount' => 2500,
-        ]);
+        ]));
     }
 
     /**
@@ -328,9 +328,9 @@ class ExpressCheckoutTest extends TestCase
         $this->expectException(LocalizedException::class);
         $this->expectExceptionMessage('Please select a shipping method.');
 
-        $this->_service->placeOrder([
+        $this->_service->placeOrder(json_encode([
             'token' => 'tok_123',
             'billingDetails' => ['email' => 'a@b.com'],
-        ]);
+        ]));
     }
 }

@@ -123,12 +123,23 @@ class ExpressCheckout implements ExpressCheckoutInterface
     /**
      * Shipping options for an address the shopper picked in the wallet sheet.
      *
-     * @param mixed[] $address Partial address from the wallet
+     * @param string $address JSON-encoded partial address from the wallet
      *
      * @return mixed[]
      */
-    public function getShippingOptions(array $address): array
+    public function getShippingOptions(string $address): string
     {
+        return $this->encode($this->buildShippingOptions($address));
+    }
+
+    /**
+     * @param string $address
+     *
+     * @return mixed[]
+     */
+    private function buildShippingOptions(string $address): array
+    {
+        $address = $this->decode($address);
         $quote = $this->loadQuote();
 
         if ($quote->isVirtual()) {
@@ -173,13 +184,25 @@ class ExpressCheckout implements ExpressCheckoutInterface
     /**
      * Apply the shipping option the shopper chose and return the new total.
      *
-     * @param mixed[] $address
-     * @param string  $optionId
+     * @param string $address  JSON-encoded partial address from the wallet
+     * @param string $optionId
      *
      * @return mixed[]
      */
-    public function selectShippingOption(array $address, string $optionId): array
+    public function selectShippingOption(string $address, string $optionId): string
     {
+        return $this->encode($this->buildSelectShippingOption($address, $optionId));
+    }
+
+    /**
+     * @param string $address
+     * @param string $optionId
+     *
+     * @return mixed[]
+     */
+    private function buildSelectShippingOption(string $address, string $optionId): array
+    {
+        $address = $this->decode($address);
         $quote = $this->loadQuote();
 
         if (!$quote->isVirtual()) {
@@ -197,12 +220,23 @@ class ExpressCheckout implements ExpressCheckoutInterface
     /**
      * Place the order for an approved wallet payment.
      *
-     * @param mixed[] $payload
+     * @param string $payload JSON-encoded wallet payload
      *
      * @return mixed[]
      */
-    public function placeOrder(array $payload): array
+    public function placeOrder(string $payload): string
     {
+        return $this->encode($this->buildPlaceOrder($payload));
+    }
+
+    /**
+     * @param string $payload
+     *
+     * @return mixed[]
+     */
+    private function buildPlaceOrder(string $payload): array
+    {
+        $payload = $this->decode($payload);
         $quote = $this->loadQuote();
 
         $token = (string) ($payload['token'] ?? '');
@@ -522,6 +556,44 @@ class ExpressCheckout implements ExpressCheckoutInterface
         $shippingAddress->setShippingMethod($optionId);
 
         $this->recollectTotals($quote);
+    }
+
+    /**
+     * Decode a JSON payload from the client.
+     *
+     * Payloads arrive as strings because Magento's webapi TypeProcessor cannot
+     * describe a nested array parameter: it resolves one to anyType and then calls
+     * settype() with that, which throws.
+     *
+     * @param string $json
+     *
+     * @return mixed[]
+     *
+     * @throws LocalizedException
+     */
+    private function decode(string $json): array
+    {
+        $decoded = json_decode($json, true);
+
+        if (!is_array($decoded)) {
+            throw new LocalizedException(__('The payment details could not be read. Please try again.'));
+        }
+
+        return $decoded;
+    }
+
+    /**
+     * Encode a result for the wire.
+     *
+     * Returned as a string for the same reason payloads arrive as one: an untyped
+     * array return is serialised positionally by the webapi layer, which drops the
+     * keys the client reads.
+     *
+     * @param mixed[] $result
+     */
+    private function encode(array $result): string
+    {
+        return (string) json_encode($result);
     }
 
     /**

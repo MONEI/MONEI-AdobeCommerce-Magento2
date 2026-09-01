@@ -20,6 +20,11 @@ namespace Monei\MoneiPayment\Api\Service\Express;
  * The quote comes from the session rather than a request parameter. These routes
  * are anonymous - express runs before a shopper identifies themselves - so taking
  * a cart id from the caller would let anyone address someone else's cart.
+ *
+ * Payloads arrive JSON-encoded. Magento's webapi TypeProcessor resolves an untyped
+ * array parameter to anyType and then calls settype() with it, which throws, so a
+ * nested wallet payload cannot be declared as a plain array. Results are returned
+ * the same way: an untyped array return is serialised positionally, losing the keys.
  */
 interface ExpressCheckoutInterface
 {
@@ -29,28 +34,28 @@ interface ExpressCheckoutInterface
      * Returns the options plus the recalculated total with the first option
      * already applied, because the wallet auto-selects it.
      *
-     * @param mixed[] $address Partial address from the wallet
+     * @param string $address JSON-encoded partial address from the wallet
      *
-     * @return mixed[]
+     * @return string JSON-encoded result
      */
-    public function getShippingOptions(array $address): array;
+    public function getShippingOptions(string $address): string;
 
     /**
      * Apply the shipping option the shopper chose and return the new total.
      *
-     * @param mixed[] $address
-     * @param string  $optionId
+     * @param string $address  JSON-encoded partial address from the wallet
+     * @param string $optionId
      *
-     * @return mixed[]
+     * @return string JSON-encoded result
      */
-    public function selectShippingOption(array $address, string $optionId): array;
+    public function selectShippingOption(string $address, string $optionId): string;
 
     /**
      * Place the order for an approved wallet payment.
      *
-     * @param mixed[] $payload The wallet SubmitResult plus the originating surface
+     * @param string $payload JSON-encoded wallet SubmitResult plus the originating surface
      *
-     * @return mixed[]
+     * @return string JSON-encoded result
      */
-    public function placeOrder(array $payload): array;
+    public function placeOrder(string $payload): string;
 }
