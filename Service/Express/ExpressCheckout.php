@@ -123,14 +123,13 @@ class ExpressCheckout implements ExpressCheckoutInterface
     /**
      * Shipping options for an address the shopper picked in the wallet sheet.
      *
-     * @param string  $cartId
      * @param mixed[] $address Partial address from the wallet
      *
      * @return mixed[]
      */
-    public function getShippingOptions(string $cartId, array $address): array
+    public function getShippingOptions(array $address): array
     {
-        $quote = $this->loadQuote($cartId);
+        $quote = $this->loadQuote();
 
         if ($quote->isVirtual()) {
             // Nothing to ship, so there is nothing to price. Returning the current
@@ -174,15 +173,14 @@ class ExpressCheckout implements ExpressCheckoutInterface
     /**
      * Apply the shipping option the shopper chose and return the new total.
      *
-     * @param string  $cartId
      * @param mixed[] $address
      * @param string  $optionId
      *
      * @return mixed[]
      */
-    public function selectShippingOption(string $cartId, array $address, string $optionId): array
+    public function selectShippingOption(array $address, string $optionId): array
     {
-        $quote = $this->loadQuote($cartId);
+        $quote = $this->loadQuote();
 
         if (!$quote->isVirtual()) {
             $this->applyPartialAddress($quote, $address);
@@ -199,14 +197,13 @@ class ExpressCheckout implements ExpressCheckoutInterface
     /**
      * Place the order for an approved wallet payment.
      *
-     * @param string  $cartId
      * @param mixed[] $payload
      *
      * @return mixed[]
      */
-    public function placeOrder(string $cartId, array $payload): array
+    public function placeOrder(array $payload): array
     {
-        $quote = $this->loadQuote($cartId);
+        $quote = $this->loadQuote();
 
         $token = (string) ($payload['token'] ?? '');
         if ('' === $token) {
@@ -528,19 +525,20 @@ class ExpressCheckout implements ExpressCheckoutInterface
     }
 
     /**
-     * Load the quote for a cart id.
+     * Load the shopper's own quote from the session.
      *
-     * @param string $cartId
+     * Never from a request parameter: these routes are anonymous, so accepting a
+     * cart id would let a caller address any cart in the store.
      *
      * @throws LocalizedException
      */
-    private function loadQuote(string $cartId): Quote
+    private function loadQuote(): Quote
     {
         try {
             /** @var Quote $quote */
-            $quote = $this->quoteRepository->get((int) $cartId);
+            $quote = $this->checkoutSession->getQuote();
         } catch (\Exception $e) {
-            $this->logger->error('[Express] Quote not found: ' . $e->getMessage(), ['cartId' => $cartId]);
+            $this->logger->error('[Express] Quote not available: ' . $e->getMessage());
 
             throw new LocalizedException(__('Your session has expired. Please reload the page.'));
         }

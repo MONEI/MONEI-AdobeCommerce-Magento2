@@ -17,6 +17,7 @@
   <head>
     <css src="Monei_MoneiPayment::css/monei-payment.css" />
     <css src="Monei_MoneiPayment::css/card-input.css" />
+    <css src="Monei_MoneiPayment::css/express.css" />
     <css src="Monei_MoneiPayment::css/mbway.css" />
     <css src="Monei_MoneiPayment::css/multibanco.css" />
     <css src="Monei_MoneiPayment::css/bizum.css" />

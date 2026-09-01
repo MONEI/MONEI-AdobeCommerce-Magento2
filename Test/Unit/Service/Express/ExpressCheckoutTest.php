@@ -42,9 +42,15 @@ class ExpressCheckoutTest extends TestCase
      */
     private $_quoteRepositoryMock;
 
+    /**
+     * @var Session
+     */
+    private $_sessionMock;
+
     protected function setUp(): void
     {
         $this->_quoteRepositoryMock = $this->createMock(CartRepositoryInterface::class);
+        $this->_sessionMock = $this->createMock(Session::class);
         $this->_service = new ExpressCheckout(
             $this->_quoteRepositoryMock,
             $this->createMock(Logger::class),
@@ -53,7 +59,7 @@ class ExpressCheckoutTest extends TestCase
             $this->createMock(CreatePaymentInterface::class),
             $this->createMock(ConfirmPaymentInterface::class),
             $this->createMock(CartManagementInterface::class),
-            $this->createMock(Session::class),
+            $this->_sessionMock,
             $this->createMock(EventManager::class)
         );
     }
@@ -130,9 +136,9 @@ class ExpressCheckoutTest extends TestCase
             [['code' => 'flatrate_flatrate', 'price' => 5.0], ['code' => 'freeshipping_freeshipping', 'price' => 0.0]],
             25.00
         );
-        $this->_quoteRepositoryMock->method('get')->willReturn($quote);
+        $this->_sessionMock->method('getQuote')->willReturn($quote);
 
-        $result = $this->_service->getShippingOptions('1', ['country' => 'ES', 'postalCode' => '28013']);
+        $result = $this->_service->getShippingOptions(['country' => 'ES', 'postalCode' => '28013']);
 
         $this->assertSame(ExpressCheckout::RESULT_SUCCESS, $result['result']);
         $this->assertCount(2, $result['shippingOptions']);
@@ -150,9 +156,9 @@ class ExpressCheckoutTest extends TestCase
     public function testShippingOptionIdIsTheCarrierRateCode(): void
     {
         $quote = $this->makeQuote([['code' => 'flatrate_flatrate', 'price' => 5.0]], 30.00);
-        $this->_quoteRepositoryMock->method('get')->willReturn($quote);
+        $this->_sessionMock->method('getQuote')->willReturn($quote);
 
-        $result = $this->_service->getShippingOptions('1', ['country' => 'ES']);
+        $result = $this->_service->getShippingOptions(['country' => 'ES']);
 
         $this->assertSame('flatrate_flatrate', $result['shippingOptions'][0]['id']);
         $this->assertSame(500, $result['shippingOptions'][0]['amount']);
@@ -167,9 +173,9 @@ class ExpressCheckoutTest extends TestCase
     public function testGetShippingOptionsRejectsAnUnservedAddress(): void
     {
         $quote = $this->makeQuote([], 25.00);
-        $this->_quoteRepositoryMock->method('get')->willReturn($quote);
+        $this->_sessionMock->method('getQuote')->willReturn($quote);
 
-        $result = $this->_service->getShippingOptions('1', ['country' => 'AQ']);
+        $result = $this->_service->getShippingOptions(['country' => 'AQ']);
 
         $this->assertSame(ExpressCheckout::RESULT_INVALID_SHIPPING_ADDRESS, $result['result']);
         $this->assertSame([], $result['shippingOptions']);
@@ -185,9 +191,9 @@ class ExpressCheckoutTest extends TestCase
     public function testVirtualCartReturnsNoOptionsButKeepsTheTotalCurrent(): void
     {
         $quote = $this->makeQuote([], 12.34, true);
-        $this->_quoteRepositoryMock->method('get')->willReturn($quote);
+        $this->_sessionMock->method('getQuote')->willReturn($quote);
 
-        $result = $this->_service->getShippingOptions('1', ['country' => 'ES']);
+        $result = $this->_service->getShippingOptions(['country' => 'ES']);
 
         $this->assertSame(ExpressCheckout::RESULT_SUCCESS, $result['result']);
         $this->assertSame([], $result['shippingOptions']);
@@ -202,9 +208,9 @@ class ExpressCheckoutTest extends TestCase
     public function testSelectShippingOptionReturnsRecalculatedAmount(): void
     {
         $quote = $this->makeQuote([['code' => 'flatrate_flatrate', 'price' => 5.0]], 30.00);
-        $this->_quoteRepositoryMock->method('get')->willReturn($quote);
+        $this->_sessionMock->method('getQuote')->willReturn($quote);
 
-        $result = $this->_service->selectShippingOption('1', ['country' => 'ES'], 'flatrate_flatrate');
+        $result = $this->_service->selectShippingOption(['country' => 'ES'], 'flatrate_flatrate');
 
         $this->assertSame(ExpressCheckout::RESULT_SUCCESS, $result['result']);
         $this->assertSame(3000, $result['amount']);
@@ -225,12 +231,12 @@ class ExpressCheckoutTest extends TestCase
             ->getMock();
         $quote->method('getId')->willReturn(1);
         $quote->method('hasItems')->willReturn(false);
-        $this->_quoteRepositoryMock->method('get')->willReturn($quote);
+        $this->_sessionMock->method('getQuote')->willReturn($quote);
 
         $this->expectException(LocalizedException::class);
         $this->expectExceptionMessage('Your cart is empty.');
 
-        $this->_service->getShippingOptions('1', ['country' => 'ES']);
+        $this->_service->getShippingOptions(['country' => 'ES']);
     }
 
     /**
@@ -240,12 +246,12 @@ class ExpressCheckoutTest extends TestCase
      */
     public function testMissingQuoteIsReportedAsAnExpiredSession(): void
     {
-        $this->_quoteRepositoryMock->method('get')->willThrowException(new \Exception('no such entity'));
+        $this->_sessionMock->method('getQuote')->willThrowException(new \Exception('no session'));
 
         $this->expectException(LocalizedException::class);
         $this->expectExceptionMessage('Your session has expired. Please reload the page.');
 
-        $this->_service->getShippingOptions('999', ['country' => 'ES']);
+        $this->_service->getShippingOptions(['country' => 'ES']);
     }
 
     /**
@@ -257,12 +263,12 @@ class ExpressCheckoutTest extends TestCase
     public function testPlaceOrderRequiresAToken(): void
     {
         $quote = $this->makeQuote([['code' => 'flatrate_flatrate', 'price' => 5.0]], 30.00);
-        $this->_quoteRepositoryMock->method('get')->willReturn($quote);
+        $this->_sessionMock->method('getQuote')->willReturn($quote);
 
         $this->expectException(LocalizedException::class);
         $this->expectExceptionMessage('The wallet did not return a payment token.');
 
-        $this->_service->placeOrder('1', ['billingDetails' => ['email' => 'a@b.com']]);
+        $this->_service->placeOrder(['billingDetails' => ['email' => 'a@b.com']]);
     }
 
     /**
@@ -275,12 +281,12 @@ class ExpressCheckoutTest extends TestCase
     public function testPlaceOrderRequiresAnEmailFromTheWallet(): void
     {
         $quote = $this->makeQuote([['code' => 'flatrate_flatrate', 'price' => 5.0]], 30.00);
-        $this->_quoteRepositoryMock->method('get')->willReturn($quote);
+        $this->_sessionMock->method('getQuote')->willReturn($quote);
 
         $this->expectException(LocalizedException::class);
         $this->expectExceptionMessage('did not return an email address');
 
-        $this->_service->placeOrder('1', ['token' => 'tok_123', 'billingDetails' => []]);
+        $this->_service->placeOrder(['token' => 'tok_123', 'billingDetails' => []]);
     }
 
     /**
@@ -293,12 +299,12 @@ class ExpressCheckoutTest extends TestCase
     public function testPlaceOrderRefusesWhenTheWalletTotalDisagrees(): void
     {
         $quote = $this->makeQuote([['code' => 'flatrate_flatrate', 'price' => 5.0]], 30.00);
-        $this->_quoteRepositoryMock->method('get')->willReturn($quote);
+        $this->_sessionMock->method('getQuote')->willReturn($quote);
 
         $this->expectException(LocalizedException::class);
         $this->expectExceptionMessage('The order total changed while you were paying.');
 
-        $this->_service->placeOrder('1', [
+        $this->_service->placeOrder([
             'token' => 'tok_123',
             'billingDetails' => ['email' => 'a@b.com'],
             'shippingDetails' => ['email' => 'a@b.com'],
@@ -317,12 +323,12 @@ class ExpressCheckoutTest extends TestCase
     public function testPlaceOrderRequiresAShippingOptionOnAPhysicalCart(): void
     {
         $quote = $this->makeQuote([['code' => 'flatrate_flatrate', 'price' => 5.0]], 30.00);
-        $this->_quoteRepositoryMock->method('get')->willReturn($quote);
+        $this->_sessionMock->method('getQuote')->willReturn($quote);
 
         $this->expectException(LocalizedException::class);
         $this->expectExceptionMessage('Please select a shipping method.');
 
-        $this->_service->placeOrder('1', [
+        $this->_service->placeOrder([
             'token' => 'tok_123',
             'billingDetails' => ['email' => 'a@b.com'],
         ]);

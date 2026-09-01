@@ -1,0 +1,26 @@
+/**
+ * Express checkout button.
+ *
+ * Heights are px, never em: this button mounts on the product page, the cart, the
+ * mini cart and checkout, and the parent font size differs on each, so em would
+ * give a different height on every surface.
+ */
+.monei-express-shortcut {
+  margin: 10px 0;
+  width: 100%;
+}
+
+/*
+ * Not display:flex on the container. PayPal sizes its own button inside, and a
+ * flex parent collapses its width.
+ */
+.monei-express-button {
+  display: block;
+  min-height: 45px;
+  width: 100%;
+}
+
+.monei-express-error {
+  display: none;
+  margin-top: 8px;
+}
