@@ -59,6 +59,8 @@ class Monei
 
     public const PAYPAL_CODE = 'monei_paypal';
 
+    public const EXPRESS_CODE = 'monei_express';
+
     public const PAYMENT_METHODS_MONEI = [
         self::REDIRECT_CODE,
         self::CARD_CODE,
@@ -68,6 +70,7 @@ class Monei
         self::MULTIBANCO_REDIRECT_CODE,
         self::MBWAY_REDIRECT_CODE,
         self::PAYPAL_CODE,
+        self::EXPRESS_CODE,
     ];
 
     public const MONEI_GOOGLE_CODE = PaymentMethods::PAYMENT_METHODS_GOOGLE_PAY;
@@ -75,6 +78,9 @@ class Monei
     public const MONEI_APPLE_CODE = PaymentMethods::PAYMENT_METHODS_APPLE_PAY;
 
     public const PAYMENT_METHOD_MAP = [
+        // Express is wallet-only: the token always comes from an Apple Pay or
+        // Google Pay sheet, so the payment is restricted to those two.
+        self::EXPRESS_CODE => [self::MONEI_GOOGLE_CODE, self::MONEI_APPLE_CODE],
         self::BIZUM_CODE => [PaymentMethods::PAYMENT_METHODS_BIZUM],
         self::GOOGLE_APPLE_CODE => [self::MONEI_GOOGLE_CODE, self::MONEI_APPLE_CODE],
         self::CARD_CODE => [PaymentMethods::PAYMENT_METHODS_CARD],

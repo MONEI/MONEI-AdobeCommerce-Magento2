@@ -56,6 +56,7 @@ class MoneiTest extends TestCase
             Monei::MULTIBANCO_REDIRECT_CODE,
             Monei::MBWAY_REDIRECT_CODE,
             Monei::PAYPAL_CODE,
+            Monei::EXPRESS_CODE,
         ];
 
         $this->assertEquals($expectedMethods, Monei::PAYMENT_METHODS_MONEI);
@@ -76,6 +77,7 @@ class MoneiTest extends TestCase
     public function testPaymentMethodMap(): void
     {
         $expectedMap = [
+            Monei::EXPRESS_CODE => [Monei::MONEI_GOOGLE_CODE, Monei::MONEI_APPLE_CODE],
             Monei::BIZUM_CODE => [PaymentMethods::PAYMENT_METHODS_BIZUM],
             Monei::GOOGLE_APPLE_CODE => [Monei::MONEI_GOOGLE_CODE, Monei::MONEI_APPLE_CODE],
             Monei::CARD_CODE => [PaymentMethods::PAYMENT_METHODS_CARD],
@@ -98,5 +100,28 @@ class MoneiTest extends TestCase
         ];
 
         $this->assertEquals($expectedMap, Monei::REDIRECT_PAYMENT_MAP);
+    }
+
+    /**
+     * Express must be in PAYMENT_METHODS_MONEI, which gates five live behaviours:
+     * the observer that suppresses the order email until payment confirms, and the
+     * plugins for cancel, refund status, invoice email and shipping information.
+     * Omitting it fails silently in all five.
+     */
+    public function testExpressIsRecognisedAsAMoneiMethod(): void
+    {
+        $this->assertContains(Monei::EXPRESS_CODE, Monei::PAYMENT_METHODS_MONEI);
+    }
+
+    /**
+     * Express is wallet-only, so the created payment must be restricted to Google
+     * Pay and Apple Pay rather than accepting any method.
+     */
+    public function testExpressIsRestrictedToWalletMethods(): void
+    {
+        $this->assertSame(
+            [Monei::MONEI_GOOGLE_CODE, Monei::MONEI_APPLE_CODE],
+            Monei::PAYMENT_METHOD_MAP[Monei::EXPRESS_CODE]
+        );
     }
 }

@@ -11,11 +11,21 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Service\Express;
 
+use Magento\Checkout\Model\Session;
+use Magento\Checkout\Model\Type\Onepage;
+use Magento\Customer\Api\Data\GroupInterface;
+use Magento\Framework\Event\ManagerInterface as EventManager;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
+use Monei\MoneiPayment\Api\Service\ConfirmPaymentInterface;
+use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
 use Monei\MoneiPayment\Api\Service\Express\ExpressCheckoutInterface;
+use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Service\Logger;
+use Monei\MoneiPayment\Service\Quote\GetAddressDetailsByQuoteAddress;
+use Monei\MoneiPayment\Service\Quote\SetExpressAddressesOnQuote;
 
 /**
  * Express checkout server-side operations.
@@ -43,15 +53,71 @@ class ExpressCheckout implements ExpressCheckoutInterface
     private Logger $logger;
 
     /**
-     * @param CartRepositoryInterface $quoteRepository Repository for accessing quotes
-     * @param Logger                  $logger          Logger for tracking operations
+     * @var SetExpressAddressesOnQuote
+     */
+    private SetExpressAddressesOnQuote $setAddresses;
+
+    /**
+     * @var GetAddressDetailsByQuoteAddress
+     */
+    private GetAddressDetailsByQuoteAddress $getAddressDetails;
+
+    /**
+     * @var CreatePaymentInterface
+     */
+    private CreatePaymentInterface $createPayment;
+
+    /**
+     * @var ConfirmPaymentInterface
+     */
+    private ConfirmPaymentInterface $confirmPayment;
+
+    /**
+     * @var CartManagementInterface
+     */
+    private CartManagementInterface $cartManagement;
+
+    /**
+     * @var Session
+     */
+    private Session $checkoutSession;
+
+    /**
+     * @var EventManager
+     */
+    private EventManager $eventManager;
+
+    /**
+     * @param CartRepositoryInterface         $quoteRepository   Repository for accessing quotes
+     * @param Logger                          $logger            Logger for tracking operations
+     * @param SetExpressAddressesOnQuote      $setAddresses      Maps wallet addresses onto the quote
+     * @param GetAddressDetailsByQuoteAddress $getAddressDetails Maps quote addresses to MONEI shape
+     * @param CreatePaymentInterface          $createPayment     Creates the MONEI payment
+     * @param ConfirmPaymentInterface         $confirmPayment    Confirms the MONEI payment
+     * @param CartManagementInterface         $cartManagement    Places the order from the quote
+     * @param Session                         $checkoutSession   Checkout session
+     * @param EventManager                    $eventManager      Event dispatcher
      */
     public function __construct(
         CartRepositoryInterface $quoteRepository,
-        Logger $logger
+        Logger $logger,
+        SetExpressAddressesOnQuote $setAddresses,
+        GetAddressDetailsByQuoteAddress $getAddressDetails,
+        CreatePaymentInterface $createPayment,
+        ConfirmPaymentInterface $confirmPayment,
+        CartManagementInterface $cartManagement,
+        Session $checkoutSession,
+        EventManager $eventManager
     ) {
         $this->quoteRepository = $quoteRepository;
         $this->logger = $logger;
+        $this->setAddresses = $setAddresses;
+        $this->getAddressDetails = $getAddressDetails;
+        $this->createPayment = $createPayment;
+        $this->confirmPayment = $confirmPayment;
+        $this->cartManagement = $cartManagement;
+        $this->checkoutSession = $checkoutSession;
+        $this->eventManager = $eventManager;
     }
 
     /**
@@ -140,7 +206,214 @@ class ExpressCheckout implements ExpressCheckoutInterface
      */
     public function placeOrder(string $cartId, array $payload): array
     {
-        throw new LocalizedException(__('Express order placement is not available yet.'));
+        $quote = $this->loadQuote($cartId);
+
+        $token = (string) ($payload['token'] ?? '');
+        if ('' === $token) {
+            throw new LocalizedException(__('The wallet did not return a payment token.'));
+        }
+
+        $billing = (array) ($payload['billingDetails'] ?? []);
+        $shipping = (array) ($payload['shippingDetails'] ?? []);
+
+        // Express has no form for a guest to type an email into, so the wallet is the
+        // only source of one. Without this the failure surfaces from the MONEI API as
+        // an invalid customer email, which reads as a MONEI fault rather than a
+        // missing field.
+        $email = (string) ($billing['email'] ?? ($shipping['email'] ?? ''));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            throw new LocalizedException(
+                __('The wallet did not return an email address, which is required to place the order.')
+            );
+        }
+
+        $this->setAddresses->execute($quote, $billing, $shipping);
+        $quote->setCustomerEmail($email);
+
+        if (!$quote->isVirtual()) {
+            $optionId = (string) ($payload['shippingOption']['id'] ?? '');
+            if ('' === $optionId) {
+                throw new LocalizedException(__('Please select a shipping method.'));
+            }
+            $this->applyShippingMethod($quote, $optionId);
+        }
+
+        $this->recollectTotals($quote);
+        $amount = (int) round((float) $quote->getBaseGrandTotal() * 100);
+
+        // finalAmount is never the charged amount, but a mismatch means the shopper
+        // approved a different figure than we are about to take.
+        $this->assertAmountMatchesWhatTheWalletShowed($payload, $amount);
+
+        // Validate the address before anything is created. A country with extra
+        // required fields would otherwise leave a reserved order id and a created
+        // payment to unwind.
+        $this->assertAddressesAreSubmittable($quote);
+
+        $quote->reserveOrderId();
+
+        $shippingDetails = $this->getAddressDetails->execute(
+            $quote->isVirtual() ? $quote->getBillingAddress() : $quote->getShippingAddress(),
+            $email
+        );
+
+        $payment = $this->createPayment->execute([
+            'amount' => $amount,
+            'currency' => (string) $quote->getBaseCurrencyCode(),
+            'order_id' => (string) $quote->getReservedOrderId(),
+            'shipping_details' => $shippingDetails,
+        ]);
+
+        $paymentId = (string) $payment->getId();
+        $quote->setData('monei_payment_id', $paymentId);
+
+        $this->prepareCheckoutMethod($quote, $email);
+
+        $quote->getPayment()->importData([
+            'method' => Monei::EXPRESS_CODE,
+            'additional_data' => ['monei_payment_id' => $paymentId],
+        ]);
+
+        $this->quoteRepository->save($quote);
+
+        $order = $this->cartManagement->submit($quote);
+
+        if (!$order) {
+            throw new LocalizedException(__('Could not place the order. Please try again.'));
+        }
+
+        // fieldset.xml does not copy the payment id, and the webhook that normally
+        // writes it never fires for a payment that was never confirmed. Without this
+        // a confirm failure leaves an order nothing can reconcile.
+        $order->setData('monei_payment_id', $paymentId);
+        $order->getPayment()->setAdditionalInformation('monei_payment_id', $paymentId);
+
+        $this->eventManager->dispatch(
+            'checkout_type_onepage_save_order_after',
+            ['order' => $order, 'quote' => $quote]
+        );
+        $this->eventManager->dispatch(
+            'checkout_submit_all_after',
+            ['order' => $order, 'quote' => $quote]
+        );
+
+        $confirmed = $this->confirmPayment->execute([
+            'payment_id' => $paymentId,
+            'payment_token' => $token,
+            'billing_details' => $this->getAddressDetails->execute($quote->getBillingAddress(), $email),
+            'shipping_details' => $shippingDetails,
+        ]);
+
+        // Only now is the order paid for. Setting these earlier would let a shopper
+        // reach a success page for an order whose confirm failed.
+        $this
+            ->checkoutSession
+            ->setLastQuoteId($quote->getId())
+            ->setLastSuccessQuoteId($quote->getId())
+            ->setLastOrderId($order->getId())
+            ->setLastRealOrderId($order->getIncrementId())
+            ->setLastOrderStatus($order->getStatus());
+
+        $nextAction = $confirmed->getNextAction();
+
+        return [
+            'result' => self::RESULT_SUCCESS,
+            'orderId' => $order->getIncrementId(),
+            'paymentId' => $paymentId,
+            'redirectUrl' => $nextAction ? (string) $nextAction->getRedirectUrl() : null,
+        ];
+    }
+
+    /**
+     * Refuse the order when the wallet's figure and the recomputed total disagree.
+     *
+     * @param mixed[] $payload
+     * @param int     $amount
+     *
+     * @throws LocalizedException
+     */
+    private function assertAmountMatchesWhatTheWalletShowed(array $payload, int $amount): void
+    {
+        $walletAmount = $payload['finalAmount'] ?? null;
+
+        if (null === $walletAmount) {
+            return;
+        }
+
+        if ((int) $walletAmount !== $amount) {
+            $this->logger->error(
+                '[Express] Refused an order: the wallet reported a different total.',
+                ['walletAmount' => (int) $walletAmount, 'recomputedAmount' => $amount]
+            );
+
+            throw new LocalizedException(
+                __('The order total changed while you were paying. Please try again.')
+            );
+        }
+    }
+
+    /**
+     * Check the addresses will survive Magento's own validation.
+     *
+     * Runs before the payment is created so a store with extra required fields for
+     * a country fails with nothing to unwind. PrestaShop hit this with Spain, whose
+     * national ID no wallet supplies.
+     *
+     * @param Quote $quote
+     *
+     * @throws LocalizedException
+     */
+    private function assertAddressesAreSubmittable(Quote $quote): void
+    {
+        $addresses = [$quote->getBillingAddress()];
+
+        if (!$quote->isVirtual()) {
+            $addresses[] = $quote->getShippingAddress();
+        }
+
+        foreach ($addresses as $address) {
+            $errors = $address->validate();
+
+            if (true !== $errors) {
+                $messages = is_array($errors) ? array_map('strval', $errors) : [(string) $errors];
+                $this->logger->error(
+                    '[Express] Address rejected before payment creation.',
+                    ['errors' => $messages]
+                );
+
+                throw new LocalizedException(
+                    __(
+                        'This address cannot be used for express checkout: %1',
+                        implode(' ', $messages)
+                    )
+                );
+            }
+        }
+    }
+
+    /**
+     * Set the checkout method and, for a guest, everything submit() needs.
+     *
+     * setCheckoutMethod alone is not enough: it is only read by placeOrder(), which
+     * express bypasses by calling submit() directly.
+     *
+     * @param Quote  $quote
+     * @param string $email
+     */
+    private function prepareCheckoutMethod(Quote $quote, string $email): void
+    {
+        if ($quote->getCustomerId()) {
+            $quote->setCheckoutMethod(Onepage::METHOD_CUSTOMER);
+
+            return;
+        }
+
+        $quote
+            ->setCheckoutMethod(Onepage::METHOD_GUEST)
+            ->setCustomerId(null)
+            ->setCustomerEmail($email)
+            ->setCustomerIsGuest(true)
+            ->setCustomerGroupId(GroupInterface::NOT_LOGGED_IN_ID);
     }
 
     /**

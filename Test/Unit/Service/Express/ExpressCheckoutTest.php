@@ -11,13 +11,20 @@ declare(strict_types=1);
 
 namespace Monei\MoneiPayment\Test\Unit\Service\Express;
 
+use Magento\Checkout\Model\Session;
+use Magento\Framework\Event\ManagerInterface as EventManager;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\Quote\Address;
 use Magento\Quote\Model\Quote\Address\Rate;
+use Monei\MoneiPayment\Api\Service\ConfirmPaymentInterface;
+use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
 use Monei\MoneiPayment\Service\Express\ExpressCheckout;
 use Monei\MoneiPayment\Service\Logger;
+use Monei\MoneiPayment\Service\Quote\GetAddressDetailsByQuoteAddress;
+use Monei\MoneiPayment\Service\Quote\SetExpressAddressesOnQuote;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -40,7 +47,14 @@ class ExpressCheckoutTest extends TestCase
         $this->_quoteRepositoryMock = $this->createMock(CartRepositoryInterface::class);
         $this->_service = new ExpressCheckout(
             $this->_quoteRepositoryMock,
-            $this->createMock(Logger::class)
+            $this->createMock(Logger::class),
+            $this->createMock(SetExpressAddressesOnQuote::class),
+            $this->createMock(GetAddressDetailsByQuoteAddress::class),
+            $this->createMock(CreatePaymentInterface::class),
+            $this->createMock(ConfirmPaymentInterface::class),
+            $this->createMock(CartManagementInterface::class),
+            $this->createMock(Session::class),
+            $this->createMock(EventManager::class)
         );
     }
 
@@ -232,5 +246,85 @@ class ExpressCheckoutTest extends TestCase
         $this->expectExceptionMessage('Your session has expired. Please reload the page.');
 
         $this->_service->getShippingOptions('999', ['country' => 'ES']);
+    }
+
+    /**
+     * A payload with no token cannot pay for anything, and must say so rather than
+     * failing later inside the MONEI API.
+     *
+     * @return void
+     */
+    public function testPlaceOrderRequiresAToken(): void
+    {
+        $quote = $this->makeQuote([['code' => 'flatrate_flatrate', 'price' => 5.0]], 30.00);
+        $this->_quoteRepositoryMock->method('get')->willReturn($quote);
+
+        $this->expectException(LocalizedException::class);
+        $this->expectExceptionMessage('The wallet did not return a payment token.');
+
+        $this->_service->placeOrder('1', ['billingDetails' => ['email' => 'a@b.com']]);
+    }
+
+    /**
+     * Express has no form for a guest to type an email into, so the wallet is the
+     * only source. Missing it must name the field rather than surfacing MONEI's
+     * "Invalid email address" as though the fault were theirs.
+     *
+     * @return void
+     */
+    public function testPlaceOrderRequiresAnEmailFromTheWallet(): void
+    {
+        $quote = $this->makeQuote([['code' => 'flatrate_flatrate', 'price' => 5.0]], 30.00);
+        $this->_quoteRepositoryMock->method('get')->willReturn($quote);
+
+        $this->expectException(LocalizedException::class);
+        $this->expectExceptionMessage('did not return an email address');
+
+        $this->_service->placeOrder('1', ['token' => 'tok_123', 'billingDetails' => []]);
+    }
+
+    /**
+     * The wallet's own figure is never charged, but if it disagrees with the
+     * recomputed total the shopper approved something else - so refuse rather than
+     * silently taking the different amount.
+     *
+     * @return void
+     */
+    public function testPlaceOrderRefusesWhenTheWalletTotalDisagrees(): void
+    {
+        $quote = $this->makeQuote([['code' => 'flatrate_flatrate', 'price' => 5.0]], 30.00);
+        $this->_quoteRepositoryMock->method('get')->willReturn($quote);
+
+        $this->expectException(LocalizedException::class);
+        $this->expectExceptionMessage('The order total changed while you were paying.');
+
+        $this->_service->placeOrder('1', [
+            'token' => 'tok_123',
+            'billingDetails' => ['email' => 'a@b.com'],
+            'shippingDetails' => ['email' => 'a@b.com'],
+            'shippingOption' => ['id' => 'flatrate_flatrate'],
+            // Quote recomputes to 3000; the wallet claims something else.
+            'finalAmount' => 2500,
+        ]);
+    }
+
+    /**
+     * A physical cart with no chosen shipping option would otherwise be submitted
+     * without a shipping method and fail deep inside Magento.
+     *
+     * @return void
+     */
+    public function testPlaceOrderRequiresAShippingOptionOnAPhysicalCart(): void
+    {
+        $quote = $this->makeQuote([['code' => 'flatrate_flatrate', 'price' => 5.0]], 30.00);
+        $this->_quoteRepositoryMock->method('get')->willReturn($quote);
+
+        $this->expectException(LocalizedException::class);
+        $this->expectExceptionMessage('Please select a shipping method.');
+
+        $this->_service->placeOrder('1', [
+            'token' => 'tok_123',
+            'billingDetails' => ['email' => 'a@b.com'],
+        ]);
     }
 }
