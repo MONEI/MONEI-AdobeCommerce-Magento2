@@ -105,6 +105,7 @@ class Shortcut extends Template implements ShortcutInterface
             'amount' => (int) round((float) $quote->getBaseGrandTotal() * 100),
             'currency' => (string) $quote->getBaseCurrencyCode(),
             'requestShipping' => !$quote->isVirtual(),
+            'paypal' => $this->expressConfig->isPayPalEnabled(),
         ];
     }
 

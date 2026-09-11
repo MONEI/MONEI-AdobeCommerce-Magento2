@@ -1,18 +1,51 @@
 /**
- * Express checkout button.
+ * Express checkout buttons.
  *
- * Heights are px, never em: this button mounts on the product page, the cart, the
+ * Heights are px, never em: the buttons mount on the product page, the cart, the
  * mini cart and checkout, and the parent font size differs on each, so em would
  * give a different height on every surface.
  */
 .monei-express-shortcut {
-  margin: 10px 0;
+  margin: 0;
   width: 100%;
 }
 
+/* Cart and product surfaces: Luma leaves 25px under the button above the
+   shortcut, so the same goes under the OR line to centre it between the two. */
+.monei-express-shortcut:not(.monei-express-checkout) .monei-express-separator {
+  margin: 0 0 25px;
+}
+
+/* Nothing shows until a wallet reports itself usable: a heading over a button
+   that never appears reads as a broken checkout. */
+.monei-express-shortcut.is-loading,
+.monei-express-shortcut.is-unavailable {
+  display: none;
+}
+
+/* Stacked, one per line, on the cart and product surfaces. */
+.monei-express-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Side by side in the checkout box. */
+.monei-express-buttons--row {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 639px) {
+  .monei-express-buttons--row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /*
- * Not display:flex on the container. PayPal sizes its own button inside, and a
- * flex parent collapses its width.
+ * Not display:flex on a slot. PayPal sizes its own button inside, and a flex
+ * parent collapses its width.
  */
 .monei-express-button {
   display: block;
@@ -20,20 +53,62 @@
   width: 100%;
 }
 
+/* A slot this device cannot use, or one no wallet was mounted into. */
+.monei-express-button.is-unavailable,
+.monei-express-button:empty {
+  display: none;
+}
+
 .monei-express-error {
   display: none;
   margin-top: 8px;
 }
 
-/* Checkout-page express: separated from the payment methods below it. */
+/* Checkout: a bordered box with the title sitting on its top edge. A real
+   fieldset, so the legend breaks the border on any page background. */
 .monei-express-checkout {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
-.monei-express-separator {
-  border-top: 1px solid #e0e0e0;
-  color: #666;
-  margin-top: 16px;
-  padding-top: 12px;
+.monei-express-box {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin: 0;
+  min-width: 0;
+  padding: 24px 16px;
+}
+
+.monei-express-title {
+  float: none;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  margin: 0 auto;
+  padding: 0 8px;
   text-align: center;
+  width: auto;
+}
+
+/* A rule either side of the text, as MONEI's own payment page draws it. No
+   background behind the text, so it sits on grey and white surfaces alike. */
+.monei-express-separator {
+  align-items: center;
+  color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  font-size: 14px;
+  gap: 8px;
+  line-height: 20px;
+  margin: 16px 0;
+}
+
+.monei-express-separator::before,
+.monei-express-separator::after {
+  background: rgba(0, 0, 0, 0.1);
+  content: '';
+  flex: 1 1 0;
+  height: 1px;
+}
+
+.monei-express-separator span {
+  white-space: nowrap;
 }

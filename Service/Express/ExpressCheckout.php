@@ -19,6 +19,7 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
+use Monei\MoneiPayment\Api\Config\MoneiExpressCheckoutConfigInterface;
 use Monei\MoneiPayment\Api\Service\ConfirmPaymentInterface;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
 use Monei\MoneiPayment\Api\Service\Express\ExpressCheckoutInterface;
@@ -88,6 +89,11 @@ class ExpressCheckout implements ExpressCheckoutInterface
     private EventManager $eventManager;
 
     /**
+     * @var MoneiExpressCheckoutConfigInterface
+     */
+    private MoneiExpressCheckoutConfigInterface $expressConfig;
+
+    /**
      * @param CartRepositoryInterface         $quoteRepository   Repository for accessing quotes
      * @param Logger                          $logger            Logger for tracking operations
      * @param SetExpressAddressesOnQuote      $setAddresses      Maps wallet addresses onto the quote
@@ -97,6 +103,7 @@ class ExpressCheckout implements ExpressCheckoutInterface
      * @param CartManagementInterface         $cartManagement    Places the order from the quote
      * @param Session                         $checkoutSession   Checkout session
      * @param EventManager                    $eventManager      Event dispatcher
+     * @param MoneiExpressCheckoutConfigInterface $expressConfig Express checkout configuration
      */
     public function __construct(
         CartRepositoryInterface $quoteRepository,
@@ -107,7 +114,8 @@ class ExpressCheckout implements ExpressCheckoutInterface
         ConfirmPaymentInterface $confirmPayment,
         CartManagementInterface $cartManagement,
         Session $checkoutSession,
-        EventManager $eventManager
+        EventManager $eventManager,
+        MoneiExpressCheckoutConfigInterface $expressConfig
     ) {
         $this->quoteRepository = $quoteRepository;
         $this->logger = $logger;
@@ -118,6 +126,7 @@ class ExpressCheckout implements ExpressCheckoutInterface
         $this->cartManagement = $cartManagement;
         $this->checkoutSession = $checkoutSession;
         $this->eventManager = $eventManager;
+        $this->expressConfig = $expressConfig;
     }
 
     /**
@@ -249,6 +258,8 @@ class ExpressCheckout implements ExpressCheckoutInterface
             throw new LocalizedException(__('The wallet did not return a payment token.'));
         }
 
+        $methodCode = $this->resolveMethodCode($payload);
+
         $billing = (array) ($payload['billingDetails'] ?? []);
         $shipping = (array) ($payload['shippingDetails'] ?? []);
 
@@ -298,6 +309,9 @@ class ExpressCheckout implements ExpressCheckoutInterface
             'currency' => (string) $quote->getBaseCurrencyCode(),
             'order_id' => (string) $quote->getReservedOrderId(),
             'shipping_details' => $shippingDetails,
+            // The MONEI payment only completes with the method the order is
+            // placed under, so a token from another source cannot confirm it.
+            'allowed_payment_methods' => Monei::PAYMENT_METHOD_MAP[$methodCode],
         ]);
 
         $paymentId = (string) $payment->getId();
@@ -306,7 +320,7 @@ class ExpressCheckout implements ExpressCheckoutInterface
         $this->prepareCheckoutMethod($quote, $email);
 
         $quote->getPayment()->importData([
-            'method' => Monei::EXPRESS_CODE,
+            'method' => $methodCode,
             'additional_data' => ['monei_payment_id' => $paymentId],
         ]);
 
@@ -358,6 +372,30 @@ class ExpressCheckout implements ExpressCheckoutInterface
             'paymentId' => $paymentId,
             'redirectUrl' => $nextAction ? (string) $nextAction->getRedirectUrl() : null,
         ];
+    }
+
+    /**
+     * The Magento payment method an express token places its order with.
+     *
+     * A PayPal token places a PayPal order, so it shows and reconciles as one; a
+     * wallet token places an express order. The client names the source; a PayPal
+     * token is refused unless PayPal express is switched on server side.
+     *
+     * @param mixed[] $payload
+     */
+    private function resolveMethodCode(array $payload): string
+    {
+        if ('paypal' !== (string) ($payload['paymentMethod'] ?? '')) {
+            return Monei::EXPRESS_CODE;
+        }
+
+        if (!$this->expressConfig->isPayPalEnabled()) {
+            $this->logger->error('[Express] PayPal token refused: PayPal express checkout is disabled.');
+
+            throw new LocalizedException(__('PayPal express checkout is not enabled.'));
+        }
+
+        return Monei::PAYPAL_CODE;
     }
 
     /**
@@ -504,6 +542,9 @@ class ExpressCheckout implements ExpressCheckoutInterface
             'postcode' => $address['postalCode'] ?? ($address['zip'] ?? null),
             'city' => $address['city'] ?? null,
             'region' => $address['state'] ?? ($address['region'] ?? null),
+            // Cleared on purpose: a region id left over from an earlier address is
+            // returned as-is, and against a new country it fails validation.
+            'region_id' => null,
             'firstname' => null,
             'lastname' => null,
             'street' => null,

@@ -1056,6 +1056,24 @@
           </depends>
         </field>
         <field
+          id="express_paypal"
+          translate="label comment"
+          sortOrder="955"
+          type="select"
+          showInDefault="1"
+          showInWebsite="1"
+          showInStore="1"
+        >
+          <label>PayPal Express Checkout</label>
+          <comment
+          ><![CDATA[Show a PayPal button next to the wallet button. Requires the PayPal payment method to be enabled.]]></comment>
+          <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+          <config_path>payment/monei_express/paypal_enabled</config_path>
+          <depends>
+            <field id="active_express">1</field>
+          </depends>
+        </field>
+        <field
           id="express_json_style"
           translate="label comment"
           sortOrder="960"

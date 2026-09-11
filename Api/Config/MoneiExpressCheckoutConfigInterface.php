@@ -28,6 +28,8 @@ interface MoneiExpressCheckoutConfigInterface
 
     public const JSON_STYLE = 'payment/monei_express/json_style';
 
+    public const PAYPAL_ENABLED = 'payment/monei_express/paypal_enabled';
+
     /**
      * Surface identifiers, matching the values passed from the frontend.
      */
@@ -56,6 +58,16 @@ interface MoneiExpressCheckoutConfigInterface
      * @param ?int   $storeId
      */
     public function isEnabledAt(string $location, ?int $storeId = null): bool;
+
+    /**
+     * Whether a PayPal button joins the wallet button in the express block.
+     *
+     * Requires express itself and the PayPal payment method to be enabled: the
+     * order it places is a PayPal order.
+     *
+     * @param ?int $storeId
+     */
+    public function isPayPalEnabled(?int $storeId = null): bool;
 
     /**
      * Style object passed to the wallet button.

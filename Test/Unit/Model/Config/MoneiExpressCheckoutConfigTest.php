@@ -14,6 +14,7 @@ namespace Monei\MoneiPayment\Test\Unit\Model\Config;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\ScopeInterface;
 use Monei\MoneiPayment\Api\Config\MoneiExpressCheckoutConfigInterface;
+use Monei\MoneiPayment\Api\Config\MoneiPaypalPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Model\Config\MoneiExpressCheckoutConfig;
 use PHPUnit\Framework\TestCase;
 
@@ -32,10 +33,41 @@ class MoneiExpressCheckoutConfigTest extends TestCase
      */
     private $_scopeConfigMock;
 
+    /**
+     * @var MoneiPaypalPaymentModuleConfigInterface
+     */
+    private $_paypalConfigMock;
+
     protected function setUp(): void
     {
         $this->_scopeConfigMock = $this->createMock(ScopeConfigInterface::class);
-        $this->_config = new MoneiExpressCheckoutConfig($this->_scopeConfigMock);
+        $this->_paypalConfigMock = $this->createMock(MoneiPaypalPaymentModuleConfigInterface::class);
+        $this->_config = new MoneiExpressCheckoutConfig($this->_scopeConfigMock, $this->_paypalConfigMock);
+    }
+
+    /**
+     * PayPal express places a PayPal order, so it needs the PayPal method itself
+     * enabled, not only its own switch.
+     *
+     * @return void
+     */
+    public function testPayPalExpressNeedsThePayPalMethodEnabled(): void
+    {
+        $this->_scopeConfigMock->method('isSetFlag')->willReturn(true);
+        $this->_paypalConfigMock->method('isEnabled')->willReturn(false);
+
+        $this->assertFalse($this->_config->isPayPalEnabled(1));
+    }
+
+    /**
+     * @return void
+     */
+    public function testPayPalExpressIsOnWhenEverySwitchIsOn(): void
+    {
+        $this->_scopeConfigMock->method('isSetFlag')->willReturn(true);
+        $this->_paypalConfigMock->method('isEnabled')->willReturn(true);
+
+        $this->assertTrue($this->_config->isPayPalEnabled(1));
     }
 
     /**

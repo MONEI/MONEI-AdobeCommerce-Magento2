@@ -41,7 +41,8 @@ define(['jquery', 'moneijs', 'mage/url', 'Magento_Ui/js/model/messageList', 'mag
 
   return function (config, element) {
     var container = element,
-      location = config.location;
+      location = config.location,
+      components = [];
 
     // No amount means an empty cart. The SDK throws on a zero amount, and the
     // mini cart mounts from HTML that customer-data cached while the cart was
@@ -85,7 +86,18 @@ define(['jquery', 'moneijs', 'mage/url', 'Magento_Ui/js/model/messageList', 'mag
      */
     function messageFrom(xhr) {
       try {
-        return JSON.parse(xhr.responseText).message;
+        var body = JSON.parse(xhr.responseText),
+          message = body.message || '';
+
+        // The webapi sends a phrase and its parameters apart; %1 or %name in
+        // the text is filled in here.
+        $.each(body.parameters || {}, function (key, value) {
+          var placeholder = typeof key === 'number' ? '%' + (key + 1) : '%' + key;
+
+          message = message.split(placeholder).join(String(value));
+        });
+
+        return message;
       } catch (e) {
         return '';
       }
@@ -119,6 +131,7 @@ define(['jquery', 'moneijs', 'mage/url', 'Magento_Ui/js/model/messageList', 'mag
         post(REST.placeOrder, {
           payload: JSON.stringify({
             token: result.token,
+            paymentMethod: result.paymentMethod,
             billingDetails: result.billingDetails,
             shippingDetails: result.shippingDetails,
             shippingOption: result.shippingOption,
@@ -176,10 +189,61 @@ define(['jquery', 'moneijs', 'mage/url', 'Magento_Ui/js/model/messageList', 'mag
       };
     }
 
-    var paymentRequest = monei.PaymentRequest(props);
+    /**
+     * Mount one wallet into its own slot. A wallet this device cannot use hides
+     * its slot, so the others close the gap.
+     *
+     * @param {String} slotClass
+     * @param {Function} factory
+     */
+    function mount(slotClass, factory) {
+      var slot = container.querySelector('.' + slotClass);
 
-    paymentRequest.render(container);
+      if (!slot || typeof factory !== 'function') {
+        return;
+      }
 
-    return paymentRequest;
+      var instance = factory(
+        $.extend({}, props, {
+          onLoad: function (isSupported) {
+            var shortcut = $(container).closest('.monei-express-shortcut');
+
+            slot.classList.toggle('is-unavailable', isSupported === false);
+            shortcut.removeClass('is-loading');
+            // No usable wallet at all leaves nothing worth a title or a divider.
+            shortcut.toggleClass(
+              'is-unavailable',
+              !$(container).find('.monei-express-button').not('.is-unavailable, :empty').length
+            );
+          }
+        })
+      );
+
+      instance.render(slot);
+      components.push(instance);
+    }
+
+    mount('monei-express-wallet', monei.PaymentRequest);
+
+    if (config.paypal) {
+      // PayPal takes the same shipping callbacks and returns the same result
+      // shape; its token places a PayPal order server side.
+      mount('monei-express-paypal', monei.PayPal);
+    }
+
+    return {
+      destroy: function () {
+        components.forEach(function (instance) {
+          if (instance && instance.destroy) {
+            try {
+              instance.destroy();
+            } catch (e) {
+              // Already gone with its container.
+            }
+          }
+        });
+        components = [];
+      }
+    };
   };
 });

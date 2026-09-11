@@ -10,8 +10,12 @@
  */
 $containerId = 'monei-express-' . $block->getExpressLocation();
 ?>
-<div class="monei-express-shortcut" data-monei-express-location="<?= $escaper->escapeHtmlAttr($block->getExpressLocation()) ?>">
-    <div id="<?= $escaper->escapeHtmlAttr($containerId) ?>" class="monei-express-button"></div>
+<div class="monei-express-shortcut is-loading" data-monei-express-location="<?= $escaper->escapeHtmlAttr($block->getExpressLocation()) ?>">
+    <div class="monei-express-separator"><span><?= $escaper->escapeHtml(__('OR')) ?></span></div>
+    <div id="<?= $escaper->escapeHtmlAttr($containerId) ?>" class="monei-express-buttons">
+        <div class="monei-express-button monei-express-wallet"></div>
+        <div class="monei-express-button monei-express-paypal"></div>
+    </div>
 </div>
 <script type="text/x-magento-init">
 {
