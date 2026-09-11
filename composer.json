@@ -76,7 +76,8 @@
       "@analyze"
     ],
     "test:standalone": "phpunit -c phpunit.xml.dist",
-    "cs:standalone": "phpcs --standard=Magento2 --warning-severity=0 --ignore='*/vendor/*,*/node_modules/*' ."
+    "cs:standalone": "phpcs --standard=Magento2 --warning-severity=0 --ignore='*/vendor/*,*/node_modules/*' .",
+    "analyze:standalone": "phpstan analyse -c phpstan.neon.dist --no-progress --memory-limit 1G"
   },
   "repositories": {
     "magento": {
@@ -85,7 +86,10 @@
     }
   },
   "require-dev": {
+    "bitexpert/phpstan-magento": "^0.32",
     "magento/magento-coding-standard": "^41",
+    "phpstan/extension-installer": "^1.4",
+    "phpstan/phpstan": "^1.12",
     "phpunit/phpunit": "^9.5"
   }
 }

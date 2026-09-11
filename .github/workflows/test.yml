@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   unit:
     name: PHPUnit (PHP ${{ matrix.php }})
@@ -17,6 +20,9 @@ jobs:
         php: ['8.3', '8.4']
     steps:
       - uses: actions/checkout@v4
+        with:
+          # composer install runs plugins; keep the token out of their reach.
+          persist-credentials: false
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -41,10 +47,13 @@ jobs:
         run: composer test:standalone
 
   lint:
-    name: phpcs (Magento2)
+    name: phpcs + PHPStan
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # composer install runs plugins; keep the token out of their reach.
+          persist-credentials: false
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -59,3 +68,6 @@ jobs:
 
       - name: Coding standard
         run: composer cs:standalone
+
+      - name: Static analysis
+        run: composer analyze:standalone
