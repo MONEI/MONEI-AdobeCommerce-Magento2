@@ -14,36 +14,8 @@ jobs:
         with:
           type: 'zip'
           filename: 'monei-module-monei-payment.zip'
-          exclusions: |
-            *.git*
-            *.github*
-            *Test*
-            tests/*
-            docs/*
-            playwright.config.ts
-            phpunit.xml.dist
-            phpstan.neon.dist
-            .husky/*
-            .yarn/*
-            .vscode/*
-            .cursor/*
-            vendor/*
-            scripts/*
-            reports/*
-            node_modules/*
-            composer.lock
-            package.json
-            yarn.lock
-            .yarnrc.yml
-            .nvmrc
-            .prettierrc
-            .prettierignore
-            prettyphp.json
-            pretty-php.phar*
-            .cursorignore
-            release-it.json
-            commitlint.config.js
-            bin
+          # One line: the action splits on spaces; a block scalar reached it as its first entry only.
+          exclusions: '*.git* *.github* *Test* tests/* docs/* playwright.config.ts phpunit.xml.dist phpstan.neon.dist .husky/* .yarn/* .vscode/* .cursor/* vendor/* scripts/* reports/* node_modules/* composer.lock package.json yarn.lock .yarnrc.yml .nvmrc .prettierrc .prettierignore prettyphp.json pretty-php.phar* .cursorignore commitlint.config.js bin .release-it.json'
 
       - name: Upload Release
         uses: ncipollo/release-action@v1.12.0
