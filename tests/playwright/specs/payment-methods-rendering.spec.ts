@@ -77,14 +77,6 @@ test('bizum renders a sized button', async ({page}) => {
 });
 
 test('paypal renders a sized button', async ({page}) => {
-  // Known defect, found by this suite on its first run: the PayPal button
-  // frame loads from sandbox.paypal.com and reports eligibility, but MONEI's
-  // inner-paypal frame logs a BraintreeError and never sizes, so the mounted
-  // iframe stays at 0px and the button is invisible. Forcing a height reveals an
-  // empty frame, so it is not a CSS problem like CardGroup was. Width is not
-  // the cause either (0px at 300px). Needs the monei-js side.
-  test.fixme(true, 'PayPal inner frame never renders: BraintreeError in js.monei.com/v3/inner-paypal');
-
   const block = await selectMethod(page, 'monei_paypal');
 
   await expectRenderedField(page.locator('#monei_paypal_insite_container'), 'paypal');

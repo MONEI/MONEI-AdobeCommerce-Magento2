@@ -20,15 +20,20 @@ export const MIN_FIELD_WIDTH = 150;
 export async function expectRenderedField(mount: Locator, label: string): Promise<void> {
   await expect(mount, `${label}: mount element`).toBeVisible({timeout: 30_000});
 
-  const iframe = mount.locator('iframe').first();
-  await expect(iframe, `${label}: iframe present`).toHaveAttribute('src', /js\.monei\.com/, {
+  // Never the first iframe. A PayPal mount holds three: monei's inner-paypal
+  // bridge frame at 0px by design, the zoid frame carrying the button the
+  // shopper sees, and a hidden close-detector. Asserting on the first one
+  // reported PayPal as unrendered when it was fine. Card and Bizum mounts hold
+  // one frame, so the visible one is the only one either way.
+  await expect(mount.locator('iframe').first(), `${label}: an iframe mounted`).toBeAttached({
     timeout: 30_000
   });
+  const iframe = mount.locator('iframe:visible').first();
 
-  // The SDK sizes the iframe asynchronously after mount; poll rather than sleep.
+  // The SDK sizes the frame asynchronously after mount; poll rather than sleep.
   await expect
     .poll(async () => (await iframe.boundingBox())?.height ?? 0, {
-      message: `${label}: iframe height`,
+      message: `${label}: visible iframe height`,
       timeout: 30_000
     })
     .toBeGreaterThanOrEqual(MIN_FIELD_HEIGHT);
