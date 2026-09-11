@@ -5,6 +5,13 @@ config({path: ['tests/playwright/.env', 'tests/playwright/.env.local'], quiet: t
 
 // The store is external - a running Magento behind an HTTPS tunnel - so there
 // is no webServer block. See tests/playwright/.env.example.
+//
+// Baselines are only valid for the pinned render environment: Magento 2.4.8-p1
+// with the bundled Luma theme, as installed by monei-magento-dev-env. A plugin's
+// render depends on platform and theme versions, so an unpinned store turns
+// every upstream release into a baseline break with no attributable cause.
+// Regenerate baselines only from that environment, and bump this note when it
+// changes.
 const baseURL = process.env.MONEI_E2E_BASE_URL ?? 'https://magento.monei-dev-tunnel.com';
 
 export default defineConfig({
