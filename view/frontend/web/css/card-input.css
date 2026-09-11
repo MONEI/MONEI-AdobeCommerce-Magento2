@@ -65,13 +65,9 @@
 
 /*
  * Each part is boxed like the cardholder-name input above it, so the split
- * layout reads as three ordinary Magento fields.
- *
- * The part frame lays itself out at a fixed 45px with 12px side padding and
- * ignores any height or padding in the style option; only its <input> takes
- * style. To fit Magento's 32px field the mount clips the frame and the wrapper
- * monei.js inserts is pulled up and out so the frame's own centre and text
- * inset land on the Magento ones.
+ * layout reads as three ordinary Magento fields. The frame inside sizes
+ * itself to the mount's inner height and carries the text inset (see
+ * themeTypography in the renderer), so the mount has no padding of its own.
  *
  * The SDK toggles monei-component--focus / --invalid on these containers; the
  * module sets is-focused / is-invalid itself only for the single CardInput.
@@ -90,7 +86,6 @@
   padding: 0;
   width: 100%;
   box-sizing: border-box;
-  overflow: hidden;
 }
 #monei-insite-card-number.monei-component--focus,
 #monei-insite-card-expiry.monei-component--focus,
@@ -101,10 +96,4 @@
 #monei-insite-card-expiry.monei-component--invalid,
 #monei-insite-card-cvc.monei-component--invalid {
   border-color: #ed8380;
-}
-
-#monei-insite-card-number > *,
-#monei-insite-card-expiry > *,
-#monei-insite-card-cvc > * {
-  margin: -7px -3px 0;
 }

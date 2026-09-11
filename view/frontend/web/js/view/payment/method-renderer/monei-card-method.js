@@ -272,8 +272,11 @@ define([
     },
 
     /**
-     * Style and fonts that make each part frame type like the cardholder-name
-     * input beside it. The admin's json_style keeps precedence over the theme.
+     * Style and fonts that make each part frame look like the cardholder-name
+     * input beside it. Typography defaults come from the theme and the admin's
+     * json_style keeps precedence over them. The frame's box does not: the
+     * mount element is the visible field, so the frame inside it takes the
+     * mount's inner height and the theme's text inset regardless of json_style.
      *
      * The frame is a document on another origin and cannot see the theme's
      * stylesheet, so the face the theme declares for its font is collected
@@ -296,7 +299,21 @@ define([
         fontSize: computed.fontSize,
         color: computed.color
       };
-      style.base = $.extend({}, typography, style.base);
+      // From computed style, not layout: the method block is still hidden
+      // when the parts render, and a hidden element measures 0px.
+      var box = {padding: computed.padding};
+      var height = parseFloat(computed.height);
+      if (computed.boxSizing === 'border-box') {
+        height -=
+          parseFloat(computed.borderTopWidth) +
+          parseFloat(computed.borderBottomWidth) +
+          parseFloat(computed.paddingTop) +
+          parseFloat(computed.paddingBottom);
+      }
+      if (height > 0) {
+        box.height = height + 'px';
+      }
+      style.base = $.extend({}, typography, style.base, box);
       style.input = $.extend({}, typography, style.input);
 
       return {
