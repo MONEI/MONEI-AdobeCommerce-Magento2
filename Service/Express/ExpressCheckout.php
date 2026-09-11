@@ -309,6 +309,9 @@ class ExpressCheckout implements ExpressCheckoutInterface
             'currency' => (string) $quote->getBaseCurrencyCode(),
             'order_id' => (string) $quote->getReservedOrderId(),
             'shipping_details' => $shippingDetails,
+            // The MONEI payment only completes with the method the order is
+            // placed under, so a token from another source cannot confirm it.
+            'allowed_payment_methods' => Monei::PAYMENT_METHOD_MAP[$methodCode],
         ]);
 
         $paymentId = (string) $payment->getId();
@@ -387,6 +390,8 @@ class ExpressCheckout implements ExpressCheckoutInterface
         }
 
         if (!$this->expressConfig->isPayPalEnabled()) {
+            $this->logger->error('[Express] PayPal token refused: PayPal express checkout is disabled.');
+
             throw new LocalizedException(__('PayPal express checkout is not enabled.'));
         }
 
