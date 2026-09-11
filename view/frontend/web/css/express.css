@@ -10,10 +10,15 @@
   width: 100%;
 }
 
-/* Cart and product surfaces: Luma leaves 25px under the button above the
-   shortcut, so the same goes under the OR line to centre it between the two. */
-.monei-express-shortcut:not(.monei-express-checkout) .monei-express-separator {
+/* Cart: Luma leaves 25px under the button above the shortcut, so the same
+   goes under the OR line to centre it between the two. */
+.monei-express-separator {
   margin: 0 0 25px;
+}
+
+/* Mini cart: Luma leaves only 15px there; 10px more makes the same 25. */
+.monei-express-shortcut[data-monei-express-location='minicart'] .monei-express-separator {
+  margin-top: 10px;
 }
 
 /* Nothing shows until a wallet reports itself usable: a heading over a button
@@ -28,19 +33,6 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-/* Side by side in the checkout box. */
-.monei-express-buttons--row {
-  display: grid;
-  gap: 16px;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-@media (max-width: 639px) {
-  .monei-express-buttons--row {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 /*
@@ -64,31 +56,6 @@
   margin-top: 8px;
 }
 
-/* Checkout: a bordered box with the title sitting on its top edge. A real
-   fieldset, so the legend breaks the border on any page background. */
-.monei-express-checkout {
-  margin-bottom: 24px;
-}
-
-.monei-express-box {
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  margin: 0;
-  min-width: 0;
-  padding: 24px 16px;
-}
-
-.monei-express-title {
-  float: none;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1;
-  margin: 0 auto;
-  padding: 0 8px;
-  text-align: center;
-  width: auto;
-}
-
 /* A rule either side of the text, as MONEI's own payment page draws it. No
    background behind the text, so it sits on grey and white surfaces alike. */
 .monei-express-separator {
@@ -98,7 +65,6 @@
   font-size: 14px;
   gap: 8px;
   line-height: 20px;
-  margin: 16px 0;
 }
 
 .monei-express-separator::before,

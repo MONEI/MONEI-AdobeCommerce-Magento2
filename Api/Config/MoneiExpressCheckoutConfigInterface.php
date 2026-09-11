@@ -24,8 +24,6 @@ interface MoneiExpressCheckoutConfigInterface
 
     public const ENABLED_ON_MINICART = 'payment/monei_express/enabled_on_minicart';
 
-    public const ENABLED_ON_CHECKOUT = 'payment/monei_express/enabled_on_checkout';
-
     public const JSON_STYLE = 'payment/monei_express/json_style';
 
     public const PAYPAL_ENABLED = 'payment/monei_express/paypal_enabled';
@@ -38,8 +36,6 @@ interface MoneiExpressCheckoutConfigInterface
     public const LOCATION_CART = 'cart';
 
     public const LOCATION_MINICART = 'minicart';
-
-    public const LOCATION_CHECKOUT = 'checkout';
 
     /**
      * Whether express checkout is enabled at all.
