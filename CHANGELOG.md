@@ -1,5 +1,11 @@
 # Changelog
 
+## <small>2.3.1 (2026-09-11)</small>
+
+- fix: express payment allows only the method its order is placed under ([cb86f81](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/cb86f81))
+- feat: PayPal in express checkout, express styled after WooCommerce ([62f5b3e](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/62f5b3e))
+- ci: pass release zip exclusions on one line so they all apply ([c4bd884](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/c4bd884))
+
 ## 2.3.0 (2026-09-11)
 
 - ci: authenticate to repo.magento.com ([5c086bb](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/5c086bb))
