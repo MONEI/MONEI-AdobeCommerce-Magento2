@@ -69,6 +69,30 @@
       </div>
       <div class="checkout-monei-card-input-card">
         <fieldset class="fieldset">
+          <!-- ko if: isSplitCardInput() -->
+          <div class="field _required card-field monei-card-number-field">
+            <label for="monei-insite-card-number" class="label">
+              <span data-bind="i18n: 'Card number'"></span>
+            </label>
+            <div id="monei-insite-card-number"></div>
+          </div>
+          <div class="monei-card-split-row">
+            <div class="field _required card-field monei-card-expiry-field">
+              <label for="monei-insite-card-expiry" class="label">
+                <span data-bind="i18n: 'Expiry date'"></span>
+              </label>
+              <div id="monei-insite-card-expiry"></div>
+            </div>
+            <div class="field _required card-field monei-card-cvc-field">
+              <label for="monei-insite-card-cvc" class="label">
+                <span data-bind="i18n: 'Security code'"></span>
+              </label>
+              <div id="monei-insite-card-cvc"></div>
+            </div>
+          </div>
+          <div id="monei-insite-card-error"></div>
+          <!-- /ko -->
+          <!-- ko ifnot: isSplitCardInput() -->
           <div class="field _required card-field">
             <label for="monei-insite-card-input" class="label">
               <span data-bind="i18n: 'Card number'"></span>
@@ -76,6 +100,7 @@
             <div id="monei-insite-card-input"></div>
             <div id="monei-insite-card-error"></div>
           </div>
+          <!-- /ko -->
         </fieldset>
       </div>
 

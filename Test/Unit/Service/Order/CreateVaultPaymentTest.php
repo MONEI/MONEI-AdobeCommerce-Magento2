@@ -64,8 +64,17 @@ class CreateVaultPaymentTest extends TestCase
         $orderPaymentMock = $this->createMock(OrderPaymentInterface::class);
         $orderPaymentMock->method('getMethod')->willReturn(Monei::CARD_CODE);
 
-        // Create extension attributes mock
-        $extensionAttributesMock = $this->createMock(OrderPaymentExtensionInterface::class);
+        // setVaultPaymentToken comes from Magento_Vault's extension_attributes.xml,
+        // so it exists on the interface only after setup:di:compile. The unit-test
+        // autoloader synthesises the interface without it, and addMethods() rejects
+        // a method that already exists, so the mock is built either way.
+        $builder = $this
+            ->getMockBuilder(OrderPaymentExtensionInterface::class)
+            ->disableOriginalConstructor();
+        if (!method_exists(OrderPaymentExtensionInterface::class, 'setVaultPaymentToken')) {
+            $builder->addMethods(['setVaultPaymentToken']);
+        }
+        $extensionAttributesMock = $builder->getMock();
         $orderPaymentMock->method('getExtensionAttributes')->willReturn($extensionAttributesMock);
 
         // Setup expectations for extension attributes

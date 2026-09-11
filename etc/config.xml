@@ -55,7 +55,28 @@
         <order_place_redirect_url>1</order_place_redirect_url>
         <json_style
         ><![CDATA[{"base":{"height":"30px","padding":"0","font-size":"14px"},"input":{"height":"30px"}}]]></json_style>
+        <card_input_layout>split</card_input_layout>
       </monei_card>
+      <monei_express>
+        <active>0</active>
+        <model>MoneiExpressPaymentFacade</model>
+        <title>Express Checkout (MONEI)</title>
+        <!-- Express is a shortcut button, not a choice in the payment list. -->
+        <can_use_checkout>0</can_use_checkout>
+        <can_use_internal>0</can_use_internal>
+        <is_gateway>1</is_gateway>
+        <can_authorize>1</can_authorize>
+        <can_capture>1</can_capture>
+        <can_capture_partial>1</can_capture_partial>
+        <can_refund>1</can_refund>
+        <can_refund_partial_per_invoice>1</can_refund_partial_per_invoice>
+        <order_place_redirect_url>1</order_place_redirect_url>
+        <enabled_on_product>1</enabled_on_product>
+        <enabled_on_cart>1</enabled_on_cart>
+        <enabled_on_minicart>1</enabled_on_minicart>
+        <enabled_on_checkout>1</enabled_on_checkout>
+        <json_style><![CDATA[{"height":"45px"}]]></json_style>
+      </monei_express>
       <monei_cc_vault>
         <active>1</active>
         <model>MoneiCardVaultFacade</model>

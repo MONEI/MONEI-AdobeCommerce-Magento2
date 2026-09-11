@@ -9,6 +9,7 @@ define([
   'jquery',
   'Monei_MoneiPayment/js/view/payment/method-renderer/monei-insite',
   'Magento_Checkout/js/model/payment/additional-validators',
+  'Magento_Checkout/js/model/quote',
   'moneijs',
   'Magento_Checkout/js/action/redirect-on-success',
   'Magento_Ui/js/model/messageList',
@@ -20,6 +21,7 @@ define([
   $,
   MoneiInsiteComponent,
   additionalValidators,
+  quote,
   monei,
   redirectOnSuccessAction,
   globalMessageList,
@@ -82,6 +84,25 @@ define([
       }
     },
 
+    /**
+     * Amount in minor units, in the store's base currency.
+     *
+     * Must match Service/Checkout/AbstractCheckoutService.php, which creates the
+     * payment from getBaseGrandTotal()/getBaseCurrencyCode().
+     *
+     * @returns {Number}
+     */
+    getAmount: function () {
+      return Math.round(quote.totals()['base_grand_total'] * 100);
+    },
+
+    /**
+     * @returns {String}
+     */
+    getCurrencyCode: function () {
+      return quote.totals()['base_currency_code'];
+    },
+
     /** Render the bizum */
     renderBizum: function () {
       var self = this;
@@ -90,6 +111,9 @@ define([
       // Create an instance of the Bizum using payment_id.
       this.bizumContainer = monei.Bizum({
         accountId: this.accountId,
+        // monei.js v3 rejects accountId without amount and currency, rendering no iframe.
+        amount: this.getAmount(),
+        currency: this.getCurrencyCode(),
         language: this.language,
         style: this.jsonStyle,
         onLoad: function () {

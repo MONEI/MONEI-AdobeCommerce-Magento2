@@ -1,0 +1,46 @@
+import {expect, type Locator} from '@playwright/test';
+
+/**
+ * Minimum plausible size for a rendered MONEI field. Anything under this is
+ * a field the shopper cannot see.
+ */
+export const MIN_FIELD_HEIGHT = 30;
+export const MIN_FIELD_WIDTH = 150;
+
+/**
+ * Assert a MONEI component actually rendered into its mount element.
+ *
+ * Geometry, not DOM presence. The regression this guards against was three
+ * CardGroup parts mounted as correct iframes from js.monei.com - every DOM
+ * check passed - at 0px height, so the fields were invisible. Only a bounding
+ * box catches that, and it fails with a number rather than "image differs".
+ *
+ * Nothing inside the iframe is inspected: it is cross-origin.
+ */
+export async function expectRenderedField(mount: Locator, label: string): Promise<void> {
+  await expect(mount, `${label}: mount element`).toBeVisible({timeout: 30_000});
+
+  // Never the first iframe. A PayPal mount holds three: monei's inner-paypal
+  // bridge frame at 0px by design, the zoid frame carrying the button the
+  // shopper sees, and a hidden close-detector. Asserting on the first one
+  // reported PayPal as unrendered when it was fine. Card and Bizum mounts hold
+  // one frame, so the visible one is the only one either way.
+  await expect(mount.locator('iframe').first(), `${label}: an iframe mounted`).toBeAttached({
+    timeout: 30_000
+  });
+  const iframe = mount.locator('iframe:visible').first();
+
+  // The SDK sizes the frame asynchronously after mount; poll rather than sleep.
+  await expect
+    .poll(async () => (await iframe.boundingBox())?.height ?? 0, {
+      message: `${label}: visible iframe height`,
+      timeout: 30_000
+    })
+    .toBeGreaterThanOrEqual(MIN_FIELD_HEIGHT);
+
+  const box = (await iframe.boundingBox())!;
+  expect(box.width, `${label}: iframe width`).toBeGreaterThanOrEqual(MIN_FIELD_WIDTH);
+
+  const mountBox = (await mount.boundingBox())!;
+  expect(mountBox.height, `${label}: mount height`).toBeGreaterThanOrEqual(MIN_FIELD_HEIGHT);
+}

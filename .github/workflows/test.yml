@@ -1,0 +1,73 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    name: PHPUnit (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The resolved Magento 2.4.x packages require PHP 8.3+, whatever the
+        # module's own constraint says.
+        php: ['8.3', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # composer install runs plugins; keep the token out of their reach.
+          persist-credentials: false
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: bcmath, gd, intl, mbstring, pdo_mysql, soap, sockets, xsl, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        # Magento modules resolve only from repo.magento.com, which needs auth.
+        # The repository's COMPOSER_AUTH secret carries it; composer reads the
+        # variable directly, so nothing is written to disk. composer.lock is
+        # gitignored, so this resolves fresh each run.
+        env:
+          COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Unit tests
+        # tests/unit/bootstrap.php synthesises the generated classes the tests
+        # mock (OrderFactory, TransactionFactory, extension interfaces), so no
+        # Magento installation or setup:di:compile is needed.
+        run: composer test:standalone
+
+  lint:
+    name: phpcs + PHPStan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # composer install runs plugins; keep the token out of their reach.
+          persist-credentials: false
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        env:
+          COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: Coding standard
+        run: composer cs:standalone
+
+      - name: Static analysis
+        run: composer analyze:standalone

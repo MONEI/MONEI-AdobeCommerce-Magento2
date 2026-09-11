@@ -13,16 +13,38 @@
     <policy id="frame-src">
       <values>
         <value id="monei" type="host">js.monei.com</value>
+        <!-- Express: the wallet sheet and PayPal render in their own frames. -->
+        <value id="monei_paypal" type="host">*.paypal.com</value>
+        <value id="monei_google_pay" type="host">pay.google.com</value>
+        <value id="monei_apple_pay" type="host">applepay.cdn-apple.com</value>
       </values>
     </policy>
     <policy id="script-src">
       <values>
         <value id="monei" type="host">js.monei.com</value>
+        <value id="monei_paypal" type="host">*.paypal.com</value>
+        <value id="monei_google_pay" type="host">pay.google.com</value>
+        <value id="monei_apple_pay" type="host">applepay.cdn-apple.com</value>
       </values>
     </policy>
     <policy id="connect-src">
       <values>
         <value id="monei" type="host">api.monei.com</value>
+        <value id="monei_js" type="host">js.monei.com</value>
+        <value id="monei_paypal" type="host">*.paypal.com</value>
+        <value id="monei_google_pay" type="host">pay.google.com</value>
+      </values>
+    </policy>
+    <policy id="img-src">
+      <values>
+        <value id="monei" type="host">js.monei.com</value>
+        <value id="monei_paypal" type="host">*.paypal.com</value>
+        <value id="monei_google_pay" type="host">*.gstatic.com</value>
+      </values>
+    </policy>
+    <policy id="style-src">
+      <values>
+        <value id="monei" type="host">js.monei.com</value>
       </values>
     </policy>
   </policies>

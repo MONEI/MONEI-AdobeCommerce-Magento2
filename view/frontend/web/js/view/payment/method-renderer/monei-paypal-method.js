@@ -64,7 +64,11 @@ define([
      * @returns {Number}
      */
     getAmount: function () {
-      return quote.totals()['grand_total'];
+      // Base currency, to match Service/Checkout/AbstractCheckoutService, which
+      // creates the payment from getBaseGrandTotal(). Using the quote currency
+      // here showed the shopper one figure while the server charged another on a
+      // store whose display currency differs from its base.
+      return quote.totals()['base_grand_total'];
     },
 
     /**
@@ -72,7 +76,7 @@ define([
      * @returns {String}
      */
     getCurrencyCode: function () {
-      return quote.totals()['quote_currency_code'];
+      return quote.totals()['base_currency_code'];
     },
 
     /**

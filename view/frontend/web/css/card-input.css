@@ -40,3 +40,60 @@
   margin-top: 7px;
   font-size: 1.2rem;
 }
+
+/*
+ * Split card layout: number on its own row, expiry and CVC sharing the next.
+ *
+ * Heights are px on purpose. The mount points inherit the surrounding font
+ * size, which differs between checkout surfaces, so em would resolve to a
+ * different height on each.
+ */
+.monei-card-split-row {
+  display: flex;
+  gap: 12px;
+}
+
+.monei-card-split-row .monei-card-expiry-field,
+.monei-card-split-row .monei-card-cvc-field {
+  flex: 1 1 50%;
+  min-width: 0;
+}
+
+.monei-card-number-field {
+  margin-bottom: 12px;
+}
+
+/*
+ * Each part is boxed like the cardholder-name input above it, so the split
+ * layout reads as three ordinary Magento fields. The frame inside sizes
+ * itself to the mount's inner height and carries the text inset (see
+ * themeTypography in the renderer), so the mount has no padding of its own.
+ *
+ * The SDK toggles monei-component--focus / --invalid on these containers; the
+ * module sets is-focused / is-invalid itself only for the single CardInput.
+ */
+#monei-insite-card-number,
+#monei-insite-card-expiry,
+#monei-insite-card-cvc {
+  background: #fff;
+  background-clip: padding-box;
+  border: 1px solid #c2c2c2;
+  border-radius: 1px;
+  font-size: 14px;
+  height: 32px;
+  line-height: 1.42857143;
+  vertical-align: baseline;
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+#monei-insite-card-number.monei-component--focus,
+#monei-insite-card-expiry.monei-component--focus,
+#monei-insite-card-cvc.monei-component--focus {
+  box-shadow: 0 0 3px 1px #00699d;
+}
+#monei-insite-card-number.monei-component--invalid,
+#monei-insite-card-expiry.monei-component--invalid,
+#monei-insite-card-cvc.monei-component--invalid {
+  border-color: #ed8380;
+}

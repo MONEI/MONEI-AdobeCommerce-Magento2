@@ -127,6 +127,16 @@ class CheckoutConfigProviderTest extends TestCase
     private $_getPaymentMethodsMock;
 
     /**
+     * @var \Monei\MoneiPayment\Api\Config\MoneiExpressCheckoutConfigInterface
+     */
+    private $_moneiExpressConfigMock;
+
+    /**
+     * @var \Magento\Checkout\Model\Session
+     */
+    private $_expressSessionMock;
+
+    /**
      * Set up test environment
      *
      * @return void
@@ -145,6 +155,20 @@ class CheckoutConfigProviderTest extends TestCase
         $this->_storeManagerMock = $this->createMock(StoreManagerInterface::class);
         $this->_paymentMethodHelperMock = $this->createMock(PaymentMethod::class);
         $this->_getPaymentMethodsMock = $this->createMock(GetPaymentMethodsInterface::class);
+        $this->_moneiExpressConfigMock = $this->createMock(
+            \Monei\MoneiPayment\Api\Config\MoneiExpressCheckoutConfigInterface::class
+        );
+        $expressQuote = $this
+            ->getMockBuilder(\Magento\Quote\Model\Quote::class)
+            ->disableOriginalConstructor()
+            ->addMethods(['getBaseGrandTotal', 'getBaseCurrencyCode'])
+            ->onlyMethods(['isVirtual'])
+            ->getMock();
+        $expressQuote->method('getBaseGrandTotal')->willReturn(10.00);
+        $expressQuote->method('getBaseCurrencyCode')->willReturn('EUR');
+        $expressQuote->method('isVirtual')->willReturn(false);
+        $this->_expressSessionMock = $this->createMock(\Magento\Checkout\Model\Session::class);
+        $this->_expressSessionMock->method('getQuote')->willReturn($expressQuote);
 
         $this->_checkoutConfigProvider = new CheckoutConfigProvider(
             $this->_urlBuilderMock,
@@ -158,7 +182,9 @@ class CheckoutConfigProviderTest extends TestCase
             $this->_applePayAvailabilityMock,
             $this->_storeManagerMock,
             $this->_paymentMethodHelperMock,
-            $this->_getPaymentMethodsMock
+            $this->_getPaymentMethodsMock,
+            $this->_moneiExpressConfigMock,
+            $this->_expressSessionMock
         );
     }
 
@@ -301,8 +327,16 @@ class CheckoutConfigProviderTest extends TestCase
         // Check account ID
         $this->assertEquals('account_123', $config['payment']['monei_card']['accountId']);
 
-        // Check API key
-        $this->assertEquals('api_key_test_123', $config['moneiApiKey']);
+        // The checkout config is serialized into window.checkoutConfig and served to every
+        // shopper. The secret API key must never appear in it - at any depth, under any key
+        // name - only a boolean "is it configured" flag.
+        $this->assertArrayNotHasKey('moneiApiKey', $config);
+        $this->assertTrue($config['moneiApiKeyIsSet']);
+        $this->assertStringNotContainsString(
+            'api_key_test_123',
+            json_encode($config),
+            'The MONEI API key leaked into the checkout config sent to the browser.'
+        );
 
         // Check redirect URLs
         $this->assertEquals('https://example.com/monei/payment/action', $config['payment']['monei']['redirectUrl']);

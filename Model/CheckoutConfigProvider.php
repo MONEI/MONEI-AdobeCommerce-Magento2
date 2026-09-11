@@ -19,6 +19,7 @@ use Monei\Model\PaymentMethods;
 use Monei\MoneiPayment\Api\Config\AllMoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Config\MoneiBizumPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Config\MoneiCardPaymentModuleConfigInterface;
+use Monei\MoneiPayment\Api\Config\MoneiExpressCheckoutConfigInterface;
 use Monei\MoneiPayment\Api\Config\MoneiGoogleApplePaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Config\MoneiPaypalPaymentModuleConfigInterface;
@@ -155,6 +156,16 @@ class CheckoutConfigProvider implements ConfigProviderInterface
      * @param PaymentMethod $paymentMethodHelper
      * @param GetPaymentMethodsInterface $getPaymentMethods
      */
+    /**
+     * @var MoneiExpressCheckoutConfigInterface
+     */
+    private MoneiExpressCheckoutConfigInterface $moneiExpressConfig;
+
+    /**
+     * @var \Magento\Checkout\Model\Session
+     */
+    private \Magento\Checkout\Model\Session $checkoutSession;
+
     public function __construct(
         UrlInterface $urlBuilder,
         AllMoneiPaymentModuleConfigInterface $allMoneiPaymentModuleConfig,
@@ -167,7 +178,9 @@ class CheckoutConfigProvider implements ConfigProviderInterface
         ApplePayAvailability $applePayAvailability,
         StoreManagerInterface $storeManager,
         PaymentMethod $paymentMethodHelper,
-        GetPaymentMethodsInterface $getPaymentMethods
+        GetPaymentMethodsInterface $getPaymentMethods,
+        MoneiExpressCheckoutConfigInterface $moneiExpressConfig,
+        \Magento\Checkout\Model\Session $checkoutSession
     ) {
         $this->allMoneiPaymentModuleConfig = $allMoneiPaymentModuleConfig;
         $this->moneiGoogleApplePaymentConfig = $moneiGoogleApplePaymentConfig;
@@ -181,13 +194,18 @@ class CheckoutConfigProvider implements ConfigProviderInterface
         $this->storeManager = $storeManager;
         $this->paymentMethodHelper = $paymentMethodHelper;
         $this->getPaymentMethods = $getPaymentMethods;
+        $this->moneiExpressConfig = $moneiExpressConfig;
+        $this->checkoutSession = $checkoutSession;
     }
 
     /**
      * Get configuration for checkout.
      *
      * Provides configuration data needed for the checkout process.
-     * Includes account ID, API key, mode settings, and payment method configurations.
+     * Includes account ID, mode settings, and payment method configurations.
+     *
+     * Never place the API key here. This array is serialized into window.checkoutConfig
+     * and served to every shopper. Only a boolean "is it configured" flag is exposed.
      *
      * @return array Configuration data for checkout
      */
@@ -197,7 +215,8 @@ class CheckoutConfigProvider implements ConfigProviderInterface
 
         $config = [
             'moneiAccountId' => $this->moneiPaymentConfig->getAccountId($storeId),
-            'moneiApiKey' => $this->moneiPaymentConfig->getApiKey($storeId),
+            'moneiApiKeyIsSet' => '' !== trim($this->moneiPaymentConfig->getApiKey($storeId)),
+            'moneiExpress' => $this->getExpressConfig($storeId),
             'moneiPaymentIsEnabled' => $this->allMoneiPaymentModuleConfig->isAnyPaymentEnabled($storeId),
             'isMoneiTestMode' => Mode::MODE_TEST === $this->moneiPaymentConfig->getMode($storeId),
             'moneiLanguage' => $this->moneiPaymentConfig->getLanguage($storeId),
@@ -248,6 +267,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
                     'isEnabledTokenization' => $this->moneiCardPaymentConfig->isEnabledTokenization($storeId),
                     'ccVaultCode' => Monei::CC_VAULT_CODE,
                     'jsonStyle' => $this->moneiCardPaymentConfig->getJsonStyle($storeId),
+                    'cardInputLayout' => $this->moneiCardPaymentConfig->getCardInputLayout($storeId),
                     'icon' => $this->paymentMethodHelper->getIconFromPaymentType('card'),
                     'icons' => $this->getCardIcons(),
                 ],
@@ -441,41 +461,32 @@ class CheckoutConfigProvider implements ConfigProviderInterface
     }
 
     /**
-     * Get payment method configuration with icon information
+     * Express checkout configuration for the checkout page.
      *
-     * @param string $methodCode
-     * @param string|null $appendIcon
+     * The account id only. The API key must never reach this array - it is
+     * serialised into window.checkoutConfig and served to every shopper.
+     *
+     * @param int|null $storeId
+     *
      * @return array
      */
-    private function getMethodConfig(string $methodCode, ?string $appendIcon = null): array
+    private function getExpressConfig(?int $storeId = null): array
     {
-        $paymentConfig = [];
-        $paymentActionUrl = $this->urlBuilder->getUrl('monei/action');
-        $completeUrl = $this->urlBuilder->getUrl('monei/payment/complete');
-        $cancelOrderUrl = $this->urlBuilder->getUrl('monei/payment/cancel');
-        $failOrderStatus = Status::FAILED;
+        $quote = $this->checkoutSession->getQuote();
 
-        // Basic configuration
-        $paymentConfig['completeUrl'] = $completeUrl;
-        $paymentConfig['cancelOrderUrl'] = $cancelOrderUrl;
-        $paymentConfig['failOrderStatus'] = $failOrderStatus;
-        $paymentConfig['accountId'] = $this->moneiPaymentConfig->getApiKey();
-
-        // Add payment icon
-        $paymentType = str_replace('monei_', '', $methodCode);
-        if ($appendIcon) {
-            $paymentType = $appendIcon;
-        }
-
-        // Get icon URL
-        $paymentConfig['icon'] = $this->paymentMethodHelper->getIconFromPaymentType($paymentType);
-
-        // Get icon dimensions
-        $dimensions = $this->paymentMethodHelper->getPaymentMethodDimensions($paymentType);
-        $paymentConfig['iconWidth'] = (int) str_replace('px', '', $dimensions['width']);
-        $paymentConfig['iconHeight'] = (int) str_replace('px', '', $dimensions['height']);
-
-        return $paymentConfig;
+        return [
+            'enabledOnCheckout' => $this->moneiExpressConfig->isEnabledAt(
+                MoneiExpressCheckoutConfigInterface::LOCATION_CHECKOUT,
+                $storeId
+            ),
+            'accountId' => $this->moneiPaymentConfig->getAccountId($storeId),
+            'language' => $this->moneiPaymentConfig->getLanguage($storeId),
+            'style' => $this->moneiExpressConfig->getJsonStyle($storeId) ?: (object) [],
+            // Computed here, never in the browser.
+            'amount' => (int) round((float) $quote->getBaseGrandTotal() * 100),
+            'currency' => (string) $quote->getBaseCurrencyCode(),
+            'requestShipping' => !$quote->isVirtual(),
+        ];
     }
 
     /**

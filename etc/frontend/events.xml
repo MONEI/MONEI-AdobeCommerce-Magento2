@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<!--
+  ~ @author Monei Team
+  ~ @copyright Copyright © Monei (https://monei.com)
+  -->
+<config
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd"
+>
+  <!--
+    Magento's own express-button extension point, the same one PayPal Express uses.
+    One observer covers the product page, the cart and the mini cart; the surfaces
+    are told apart by the flags on the event.
+  -->
+  <event name="shortcut_buttons_container">
+    <observer name="monei_express_shortcut_buttons" instance="Monei\MoneiPayment\Observer\AddExpressButton" />
+  </event>
+</config>

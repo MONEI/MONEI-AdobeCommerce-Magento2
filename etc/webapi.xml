@@ -34,6 +34,29 @@
       <parameter name="cartId" force="true">%cart_id%</parameter>
     </data>
   </route>
+  <!--
+    Express checkout. Anonymous because express runs before a shopper identifies
+    themselves. No cart id in the path: the quote is taken from the session, so a
+    caller cannot address someone else's cart.
+  -->
+  <route url="/V1/monei-express/shipping-options" method="POST">
+    <service class="Monei\MoneiPayment\Api\Service\Express\ExpressCheckoutInterface" method="getShippingOptions" />
+    <resources>
+      <resource ref="anonymous" />
+    </resources>
+  </route>
+  <route url="/V1/monei-express/select-shipping-option" method="POST">
+    <service class="Monei\MoneiPayment\Api\Service\Express\ExpressCheckoutInterface" method="selectShippingOption" />
+    <resources>
+      <resource ref="anonymous" />
+    </resources>
+  </route>
+  <route url="/V1/monei-express/place-order" method="POST">
+    <service class="Monei\MoneiPayment\Api\Service\Express\ExpressCheckoutInterface" method="placeOrder" />
+    <resources>
+      <resource ref="anonymous" />
+    </resources>
+  </route>
   <!-- Logged User -->
   <route url="/V1/checkout/savemoneitokenization" method="POST">
     <service class="Monei\MoneiPayment\Api\Service\Checkout\SaveTokenizationInterface" method="execute" />

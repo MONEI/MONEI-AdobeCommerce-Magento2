@@ -17,6 +17,7 @@
   <head>
     <css src="Monei_MoneiPayment::css/monei-payment.css" />
     <css src="Monei_MoneiPayment::css/card-input.css" />
+    <css src="Monei_MoneiPayment::css/express.css" />
     <css src="Monei_MoneiPayment::css/mbway.css" />
     <css src="Monei_MoneiPayment::css/multibanco.css" />
     <css src="Monei_MoneiPayment::css/bizum.css" />
@@ -37,6 +38,18 @@
                       <item name="children" xsi:type="array">
                         <item name="payment" xsi:type="array">
                           <item name="children" xsi:type="array">
+                            <!--
+                              Express sits above the payment methods, not among
+                              them: it is a shortcut past the form rather than a
+                              choice within it.
+                            -->
+                            <item name="monei-express-checkout" xsi:type="array">
+                              <item name="component" xsi:type="string">
+                                Monei_MoneiPayment/js/view/express/monei-express-checkout
+                              </item>
+                              <item name="sortOrder" xsi:type="string">0</item>
+                              <item name="displayArea" xsi:type="string">beforeMethods</item>
+                            </item>
                             <item name="renders" xsi:type="array">
                               <item name="children" xsi:type="array">
                                 <item name="monei-payments" xsi:type="array">

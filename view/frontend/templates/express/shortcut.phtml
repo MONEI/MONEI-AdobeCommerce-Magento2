@@ -1,0 +1,22 @@
+<?php
+/**
+ * php version 8.1
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
+ * @link      https://monei.com/
+ *
+ * @var \Monei\MoneiPayment\Block\Express\Shortcut $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+$containerId = 'monei-express-' . $block->getExpressLocation();
+?>
+<div class="monei-express-shortcut" data-monei-express-location="<?= $escaper->escapeHtmlAttr($block->getExpressLocation()) ?>">
+    <div id="<?= $escaper->escapeHtmlAttr($containerId) ?>" class="monei-express-button"></div>
+</div>
+<script type="text/x-magento-init">
+{
+    "#<?= $escaper->escapeJs($containerId) ?>": {
+        "Monei_MoneiPayment/js/view/express/monei-express": <?= /* @noEscape */ $block->getJsonExpressConfig() ?>
+    }
+}
+</script>

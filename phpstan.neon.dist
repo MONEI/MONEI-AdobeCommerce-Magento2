@@ -1,0 +1,22 @@
+# Standalone static analysis, mirroring what `bin analyse` runs inside a
+# Magento installation: level 0 with bitexpert/phpstan-magento, whose
+# autoloaders synthesise the factories, proxies and extension attributes that
+# only exist after setup:di:compile.
+parameters:
+  level: 0
+  paths:
+    - Api
+    - Block
+    - Controller
+    - Cron
+    - Gateway
+    - Helper
+    - Model
+    - Observer
+    - Plugin
+    - Registry
+    - Service
+    - Setup
+    - ViewModel
+    - Test
+    - registration.php

@@ -247,4 +247,86 @@ class MoneiCardPaymentModuleConfigTest extends TestCase
         $result = $this->_config->getJsonStyle($storeId);
         $this->assertEquals([], $result);
     }
+
+    /**
+     * Split fields are the default layout.
+     *
+     * A store upgrading from before this setting existed has no saved value, and
+     * must land on the split layout - that is the deliberate behaviour change, so
+     * it is asserted rather than left implicit.
+     *
+     * @return void
+     */
+    public function testGetCardInputLayoutDefaultsToSplitWhenUnset(): void
+    {
+        $this
+            ->_scopeConfigMock
+            ->expects($this->once())
+            ->method('getValue')
+            ->with(
+                MoneiCardPaymentModuleConfigInterface::CARD_INPUT_LAYOUT,
+                ScopeInterface::SCOPE_STORE,
+                1
+            )
+            ->willReturn(null);
+
+        $this->assertSame(
+            MoneiCardPaymentModuleConfigInterface::LAYOUT_SPLIT,
+            $this->_config->getCardInputLayout(1)
+        );
+    }
+
+    /**
+     * A merchant who opts out gets the single combined field.
+     *
+     * @return void
+     */
+    public function testGetCardInputLayoutReturnsSingleWhenConfigured(): void
+    {
+        $this
+            ->_scopeConfigMock
+            ->expects($this->once())
+            ->method('getValue')
+            ->willReturn(MoneiCardPaymentModuleConfigInterface::LAYOUT_SINGLE);
+
+        $this->assertSame(
+            MoneiCardPaymentModuleConfigInterface::LAYOUT_SINGLE,
+            $this->_config->getCardInputLayout(1)
+        );
+    }
+
+    /**
+     * An unrecognised stored value must not disable the card form; it falls back
+     * to the default rather than rendering neither layout.
+     *
+     * @return void
+     */
+    public function testGetCardInputLayoutFallsBackToSplitOnUnknownValue(): void
+    {
+        $this
+            ->_scopeConfigMock
+            ->expects($this->once())
+            ->method('getValue')
+            ->willReturn('something-else');
+
+        $this->assertSame(
+            MoneiCardPaymentModuleConfigInterface::LAYOUT_SPLIT,
+            $this->_config->getCardInputLayout(1)
+        );
+    }
+
+    /**
+     * Test isSplitCardInput reflects the configured layout
+     *
+     * @return void
+     */
+    public function testIsSplitCardInput(): void
+    {
+        $this
+            ->_scopeConfigMock
+            ->method('getValue')
+            ->willReturn(MoneiCardPaymentModuleConfigInterface::LAYOUT_SINGLE);
+
+        $this->assertFalse($this->_config->isSplitCardInput(1));
+    }
 }
