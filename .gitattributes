@@ -8,6 +8,9 @@
 /build export-ignore
 /vendor export-ignore
 /Test export-ignore
+/tests export-ignore
+/docs export-ignore
+/scripts export-ignore
 
 # Files
 /.gitignore export-ignore
@@ -22,5 +25,9 @@
 /prettyphp.json export-ignore
 /pretty-php.phar* export-ignore
 /commitlint.config.js export-ignore
-/release-it.json export-ignore
+/.release-it.json export-ignore
+/.gitattributes export-ignore
+/playwright.config.ts export-ignore
+/phpunit.xml.dist export-ignore
+/phpstan.neon.dist export-ignore
 /bin export-ignore
