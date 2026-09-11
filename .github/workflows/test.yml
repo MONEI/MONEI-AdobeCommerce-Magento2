@@ -26,8 +26,12 @@ jobs:
           tools: composer:v2
 
       - name: Install dependencies
-        # Magento's open-source modules resolve from Packagist; no repo.magento.com
-        # keys are needed. composer.lock is gitignored, so this resolves fresh.
+        # Magento modules resolve only from repo.magento.com, which needs auth.
+        # The repository's COMPOSER_AUTH secret carries it; composer reads the
+        # variable directly, so nothing is written to disk. composer.lock is
+        # gitignored, so this resolves fresh each run.
+        env:
+          COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
         run: composer install --no-interaction --no-progress --prefer-dist
 
       - name: Unit tests
@@ -49,6 +53,8 @@ jobs:
           tools: composer:v2
 
       - name: Install dependencies
+        env:
+          COMPOSER_AUTH: ${{ secrets.COMPOSER_AUTH }}
         run: composer install --no-interaction --no-progress --prefer-dist
 
       - name: Coding standard
