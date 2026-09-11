@@ -25,3 +25,9 @@ var
 reports
 
 .playwright-mcp
+
+# Playwright
+tests/playwright/.env
+tests/playwright/.env.local
+test-results/
+playwright-report/

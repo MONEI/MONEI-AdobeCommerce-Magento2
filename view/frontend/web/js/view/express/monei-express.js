@@ -43,6 +43,13 @@ define(['jquery', 'moneijs', 'mage/url', 'Magento_Ui/js/model/messageList', 'mag
     var container = element,
       location = config.location;
 
+    // No amount means an empty cart. The SDK throws on a zero amount, and the
+    // mini cart mounts from HTML that customer-data cached while the cart was
+    // empty; it re-initialises with the real amount once the section refreshes.
+    if (!config.amount || !config.currency) {
+      return;
+    }
+
     /**
      * Show a failure on the surface that started this payment.
      *
