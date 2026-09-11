@@ -211,12 +211,14 @@ define([
       this.errorText = document.getElementById(this.idCardError);
       this.container = document.getElementById(this.idCardNumber);
 
+      var theme = this.themeTypography();
+
       var group = monei.CardGroup({
         accountId: this.accountId,
         amount: this.getAmount(),
         currency: this.getCurrencyCode(),
         language: this.language,
-        style: this.jsonStyle,
+        style: theme.style,
         onChange: function (event) {
           if (event.isTouched && event.error) {
             self.errorText.innerText = event.error;
@@ -259,7 +261,139 @@ define([
         this.destroyCardGroup();
         this.isPlaceOrderActionAllowed(false);
         console.error('Card fields failed to render', e);
+        return;
       }
+
+      this.inlineFonts(theme.fonts).then(function (fonts) {
+        if (fonts.length && self.cardGroup === group) {
+          group.updateProps({fonts: fonts});
+        }
+      });
+    },
+
+    /**
+     * Style and fonts that make each part frame type like the cardholder-name
+     * input beside it. The admin's json_style keeps precedence over the theme.
+     *
+     * The frame is a document on another origin and cannot see the theme's
+     * stylesheet, so the face the theme declares for its font is collected
+     * from the page's @font-face rules and handed over as an explicit source.
+     * Without it the frame falls back to whatever the family list offers.
+     *
+     * @returns {{style: Object, fonts: Array}}
+     */
+    themeTypography: function () {
+      var reference = document.getElementById(this.idCardHolderInput);
+      var style = $.extend(true, {}, this.jsonStyle);
+
+      if (!reference) {
+        return {style: style, fonts: []};
+      }
+
+      var computed = window.getComputedStyle(reference);
+      var typography = {
+        fontFamily: computed.fontFamily,
+        fontSize: computed.fontSize,
+        color: computed.color
+      };
+      style.base = $.extend({}, typography, style.base);
+      style.input = $.extend({}, typography, style.input);
+
+      return {
+        style: style,
+        fonts: this.fontFacesFor(computed.fontFamily, computed.fontWeight)
+      };
+    },
+
+    /**
+     * Replace each face's URL with the file itself as a data: URL. The frame
+     * would fetch the URL cross-origin, and a store does not normally send
+     * CORS headers on its fonts. The page already holds the file, so this is
+     * a cache hit. A face that cannot be read is dropped.
+     *
+     * @param {Array<{family: string, src: string, weight: string}>} faces
+     * @returns {Promise<Array>}
+     */
+    inlineFonts: function (faces) {
+      return Promise.all(
+        faces.map(function (face) {
+          return fetch(face.src)
+            .then(function (response) {
+              if (!response.ok) {
+                throw new Error(response.status);
+              }
+              return response.blob();
+            })
+            .then(function (blob) {
+              return new Promise(function (resolve, reject) {
+                var reader = new FileReader();
+                reader.onload = function () {
+                  resolve($.extend({}, face, {src: reader.result}));
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+              });
+            })
+            .catch(function () {
+              return null;
+            });
+        })
+      ).then(function (results) {
+        return results.filter(Boolean);
+      });
+    },
+
+    /**
+     * The @font-face sources declared on this page for the first family in a
+     * font-family list, at one weight. Cross-origin stylesheets cannot be read
+     * and are skipped.
+     *
+     * @param {string} fontFamily - a CSS font-family list
+     * @param {string} fontWeight - computed weight, e.g. "400"
+     * @returns {Array<{family: string, src: string, weight: string}>}
+     */
+    fontFacesFor: function (fontFamily, fontWeight) {
+      var family = fontFamily
+        .split(',')[0]
+        .trim()
+        .replace(/^["']|["']$/g, '');
+      var faces = [];
+
+      Array.prototype.forEach.call(document.styleSheets, function (sheet) {
+        var rules;
+
+        try {
+          rules = sheet.cssRules;
+        } catch (e) {
+          return;
+        }
+
+        Array.prototype.forEach.call(rules || [], function (rule) {
+          if (!(rule instanceof CSSFontFaceRule)) {
+            return;
+          }
+          var ruleFamily = rule.style
+            .getPropertyValue('font-family')
+            .trim()
+            .replace(/^["']|["']$/g, '');
+          var ruleWeight = rule.style.getPropertyValue('font-weight').trim() || '400';
+          var ruleStyle = rule.style.getPropertyValue('font-style').trim() || 'normal';
+          if (ruleFamily !== family || ruleWeight !== fontWeight || ruleStyle !== 'normal') {
+            return;
+          }
+          var match = /url\((["']?)([^"')]+)\1\)\s*format\((["']?)woff2\3\)/.exec(rule.style.getPropertyValue('src'));
+          if (!match) {
+            return;
+          }
+          faces.push({
+            family: family,
+            src: new URL(match[2], sheet.href || window.location.href).href,
+            weight: ruleWeight
+          });
+        });
+      });
+
+      return faces;
     },
 
     /** Tear down the split layout. The SDK requires the parts to go before the group. */

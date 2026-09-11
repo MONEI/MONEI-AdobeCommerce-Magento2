@@ -1,4 +1,4 @@
-import {expect, type Page} from '@playwright/test';
+import {expect, type Locator, type Page} from '@playwright/test';
 
 /**
  * A Spanish address on purpose: Spain is MONEI's primary market and the one
@@ -43,7 +43,7 @@ export async function bustStaticCache(page: Page): Promise<void> {
   const runId = process.env.MONEI_E2E_RUN_ID ?? String(Date.now());
   // Stylesheets only. RequireJS resolves script URLs itself and rewriting them
   // broke module loading, which collapsed the checkout's two-column layout.
-  await page.route('**/static/**/*.css', route => {
+  await page.route('**/static/**/*.css', (route) => {
     const url = new URL(route.request().url());
     url.searchParams.set('cb', runId);
     return route.continue({url: url.toString()});
@@ -93,6 +93,28 @@ export async function selectMethod(page: Page, code: string) {
   await radio.check();
   const block = page.locator(`.payment-method#${code}, .payment-method:has(#${code})`).first();
   await expect(block).toHaveClass(/_active/, {timeout: 20_000});
+  await settleBillingAddress(block);
 
   return block;
+}
+
+/**
+ * Magento's billing-address component starts with "same as shipping" off and
+ * only turns it on from a quote.billingAddress subscription. When the address
+ * resolves before the component subscribes, the box stays off and the block
+ * grows an Edit button. That race is Magento's, so the helper forces the
+ * settled state rather than letting it decide the screenshot's height.
+ */
+async function settleBillingAddress(block: Locator): Promise<void> {
+  const sameAsShipping = block.locator('input[name="billing-address-same-as-shipping"]');
+  if ((await sameAsShipping.count()) === 0) {
+    return;
+  }
+  if (!(await sameAsShipping.isChecked())) {
+    await sameAsShipping.check();
+  }
+  await expect(sameAsShipping).toBeChecked();
+  await expect(block.locator('.action-edit-address')).toBeHidden();
+  // Ticking the box re-saves the billing address behind a spinner.
+  await expect(block.locator('.loading-mask:visible, .loader:visible')).toHaveCount(0, {timeout: 20_000});
 }
