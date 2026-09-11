@@ -16,7 +16,7 @@ define([
     defaults: {
       template: 'Monei_MoneiPayment/express/checkout'
     },
-    paymentRequest: null,
+    express: null,
     currentAmount: 0,
 
     /**
@@ -31,7 +31,7 @@ define([
     },
 
     /**
-     * Mount the wallet button once knockout has produced its container.
+     * Mount the express buttons once knockout has produced their container.
      *
      * The same component the shortcut surfaces use, so the shipping callbacks and
      * failure handling behave identically here.
@@ -62,7 +62,7 @@ define([
     },
 
     /**
-     * Mount the wallet button for an amount, tearing down any previous mount.
+     * Mount the express buttons for an amount, tearing down any previous mount.
      *
      * @param {HTMLElement} element
      * @param {Number} amount
@@ -70,16 +70,12 @@ define([
     mount: function (element, amount) {
       var config = window.checkoutConfig.moneiExpress;
 
-      if (this.paymentRequest && this.paymentRequest.destroy) {
-        try {
-          this.paymentRequest.destroy();
-        } catch (e) {
-          // Already gone with its container.
-        }
+      if (this.express) {
+        this.express.destroy();
       }
 
       this.currentAmount = amount;
-      this.paymentRequest = expressFactory(
+      this.express = expressFactory(
         {
           accountId: config.accountId,
           language: config.language,
@@ -87,7 +83,8 @@ define([
           location: 'checkout',
           amount: amount,
           currency: config.currency,
-          requestShipping: config.requestShipping
+          requestShipping: config.requestShipping,
+          paypal: config.paypal
         },
         element
       );

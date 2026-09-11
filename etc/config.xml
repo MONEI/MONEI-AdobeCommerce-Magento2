@@ -75,6 +75,7 @@
         <enabled_on_cart>1</enabled_on_cart>
         <enabled_on_minicart>1</enabled_on_minicart>
         <enabled_on_checkout>1</enabled_on_checkout>
+        <paypal_enabled>1</paypal_enabled>
         <json_style><![CDATA[{"height":"45px"}]]></json_style>
       </monei_express>
       <monei_cc_vault>

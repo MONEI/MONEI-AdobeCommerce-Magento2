@@ -14,6 +14,7 @@ namespace Monei\MoneiPayment\Model\Config;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\ScopeInterface;
 use Monei\MoneiPayment\Api\Config\MoneiExpressCheckoutConfigInterface;
+use Monei\MoneiPayment\Api\Config\MoneiPaypalPaymentModuleConfigInterface;
 
 /**
  * Express checkout configuration.
@@ -26,6 +27,11 @@ class MoneiExpressCheckoutConfig implements MoneiExpressCheckoutConfigInterface
      * @var ScopeConfigInterface
      */
     private ScopeConfigInterface $scopeConfig;
+
+    /**
+     * @var MoneiPaypalPaymentModuleConfigInterface
+     */
+    private MoneiPaypalPaymentModuleConfigInterface $paypalConfig;
 
     /**
      * Per-surface configuration paths.
@@ -43,10 +49,14 @@ class MoneiExpressCheckoutConfig implements MoneiExpressCheckoutConfigInterface
      * Constructor for MoneiExpressCheckoutConfig.
      *
      * @param ScopeConfigInterface $scopeConfig The configuration interface for accessing store configuration values
+     * @param MoneiPaypalPaymentModuleConfigInterface $paypalConfig PayPal payment method configuration
      */
-    public function __construct(ScopeConfigInterface $scopeConfig)
-    {
+    public function __construct(
+        ScopeConfigInterface $scopeConfig,
+        MoneiPaypalPaymentModuleConfigInterface $paypalConfig
+    ) {
         $this->scopeConfig = $scopeConfig;
+        $this->paypalConfig = $paypalConfig;
     }
 
     /**
@@ -87,6 +97,20 @@ class MoneiExpressCheckoutConfig implements MoneiExpressCheckoutConfigInterface
             ScopeInterface::SCOPE_STORE,
             $storeId
         );
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function isPayPalEnabled(?int $storeId = null): bool
+    {
+        return $this->isEnabled($storeId)
+            && $this->paypalConfig->isEnabled($storeId)
+            && $this->scopeConfig->isSetFlag(
+                self::PAYPAL_ENABLED,
+                ScopeInterface::SCOPE_STORE,
+                $storeId
+            );
     }
 
     /**

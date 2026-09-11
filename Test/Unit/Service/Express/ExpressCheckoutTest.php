@@ -13,6 +13,7 @@ namespace Monei\MoneiPayment\Test\Unit\Service\Express;
 
 use Magento\Checkout\Model\Session;
 use Magento\Framework\Event\ManagerInterface as EventManager;
+use Monei\MoneiPayment\Api\Config\MoneiExpressCheckoutConfigInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
@@ -47,10 +48,16 @@ class ExpressCheckoutTest extends TestCase
      */
     private $_sessionMock;
 
+    /**
+     * @var MoneiExpressCheckoutConfigInterface
+     */
+    private $_expressConfigMock;
+
     protected function setUp(): void
     {
         $this->_quoteRepositoryMock = $this->createMock(CartRepositoryInterface::class);
         $this->_sessionMock = $this->createMock(Session::class);
+        $this->_expressConfigMock = $this->createMock(MoneiExpressCheckoutConfigInterface::class);
         $this->_service = new ExpressCheckout(
             $this->_quoteRepositoryMock,
             $this->createMock(Logger::class),
@@ -60,7 +67,8 @@ class ExpressCheckoutTest extends TestCase
             $this->createMock(ConfirmPaymentInterface::class),
             $this->createMock(CartManagementInterface::class),
             $this->_sessionMock,
-            $this->createMock(EventManager::class)
+            $this->createMock(EventManager::class),
+            $this->_expressConfigMock
         );
     }
 
@@ -269,6 +277,29 @@ class ExpressCheckoutTest extends TestCase
         $this->expectExceptionMessage('The wallet did not return a payment token.');
 
         $this->_service->placeOrder(json_encode(['billingDetails' => ['email' => 'a@b.com']]));
+    }
+
+    /**
+     * A PayPal token places a PayPal order, which the merchant may not have
+     * switched on for express. The client's word is not enough; the server
+     * refuses before it touches the quote.
+     *
+     * @return void
+     */
+    public function testPlaceOrderRefusesAPayPalTokenWhenPayPalExpressIsOff(): void
+    {
+        $quote = $this->makeQuote([['code' => 'flatrate_flatrate', 'price' => 5.0]], 30.00);
+        $this->_sessionMock->method('getQuote')->willReturn($quote);
+        $this->_expressConfigMock->method('isPayPalEnabled')->willReturn(false);
+
+        $this->expectException(LocalizedException::class);
+        $this->expectExceptionMessage('PayPal express checkout is not enabled.');
+
+        $this->_service->placeOrder(json_encode([
+            'token' => 'tok_123',
+            'paymentMethod' => 'paypal',
+            'billingDetails' => ['email' => 'a@b.com'],
+        ]));
     }
 
     /**

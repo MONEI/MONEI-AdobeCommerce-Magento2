@@ -22,9 +22,7 @@ import {expectRenderedField} from '../helpers/render';
 type CardLayout = 'split' | 'single';
 
 async function activeCardLayout(page: Page): Promise<CardLayout> {
-  return page.evaluate(
-    () => (window as any).checkoutConfig?.payment?.monei_card?.cardInputLayout ?? 'split'
-  );
+  return page.evaluate(() => (window as any).checkoutConfig?.payment?.monei_card?.cardInputLayout ?? 'split');
 }
 
 test.beforeEach(async ({page}) => {
@@ -84,11 +82,21 @@ test('paypal renders a sized button', async ({page}) => {
   await expect(block).toHaveScreenshot('checkout-paypal.png');
 });
 
-test('express button renders above the payment methods', async ({page}) => {
+test('express buttons render above the payment methods', async ({page}) => {
   const express = page.locator('.monei-express-checkout');
   await expect(express, 'express block').toBeVisible({timeout: 30_000});
 
-  await expectRenderedField(express.locator('.monei-express-button'), 'express button');
+  // Both wallets, side by side: the PayPal button is part of express, not only
+  // a method in the list below.
+  await expectRenderedField(express.locator('.monei-express-wallet'), 'wallet button');
+  await expectRenderedField(express.locator('.monei-express-paypal'), 'PayPal express button');
+  const walletBox = (await express.locator('.monei-express-wallet').boundingBox())!;
+  const paypalBox = (await express.locator('.monei-express-paypal').boundingBox())!;
+  if (page.viewportSize()!.width >= 640) {
+    expect(Math.abs(walletBox.y - paypalBox.y), 'buttons share a row').toBeLessThan(2);
+  } else {
+    expect(paypalBox.y, 'buttons stack on a phone').toBeGreaterThan(walletBox.y + walletBox.height - 1);
+  }
 
   // Above, not among: it is a shortcut past the form, not a choice within it.
   // The list renders asynchronously after the step opens, so wait for it - the

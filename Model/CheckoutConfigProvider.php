@@ -486,6 +486,7 @@ class CheckoutConfigProvider implements ConfigProviderInterface
             'amount' => (int) round((float) $quote->getBaseGrandTotal() * 100),
             'currency' => (string) $quote->getBaseCurrencyCode(),
             'requestShipping' => !$quote->isVirtual(),
+            'paypal' => $this->moneiExpressConfig->isPayPalEnabled($storeId),
         ];
     }
 

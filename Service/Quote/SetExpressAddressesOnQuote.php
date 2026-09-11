@@ -98,6 +98,9 @@ class SetExpressAddressesOnQuote
             'city' => $address['city'] ?? '',
             'postcode' => $address['zip'] ?? '',
             'region' => $address['state'] ?? null,
+            // Re-resolved from the name: a region id already on the quote address
+            // would otherwise survive a change of country and fail validation.
+            'region_id' => null,
             'country_id' => $address['country'] ?? null,
         ];
     }

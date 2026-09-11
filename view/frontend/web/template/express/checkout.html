@@ -7,10 +7,16 @@
  */
 -->
 <!-- ko if: isAvailable() -->
-<div class="monei-express-shortcut monei-express-checkout" data-monei-express-location="checkout">
-  <div class="monei-express-button" afterRender="mountExpressButton"></div>
+<div class="monei-express-shortcut monei-express-checkout is-loading" data-monei-express-location="checkout">
+  <fieldset class="monei-express-box">
+    <legend class="monei-express-title"><span data-bind="i18n: 'Express Checkout'"></span></legend>
+    <div class="monei-express-buttons monei-express-buttons--row" afterRender="mountExpressButton">
+      <div class="monei-express-button monei-express-wallet"></div>
+      <div class="monei-express-button monei-express-paypal"></div>
+    </div>
+  </fieldset>
   <div class="monei-express-separator">
-    <span data-bind="i18n: 'Or pay another way'"></span>
+    <span data-bind="i18n: 'Or continue below'"></span>
   </div>
 </div>
 <!-- /ko -->
