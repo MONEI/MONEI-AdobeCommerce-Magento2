@@ -1,5 +1,32 @@
 # Changelog
 
+## 2.3.0 (2026-09-11)
+
+- ci: authenticate to repo.magento.com ([5c086bb](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/5c086bb))
+- ci: keep tests, docs and analysis config out of the release zip ([3a727ae](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/3a727ae))
+- ci: run PHPStan; read-only token, no persisted checkout credentials ([ad3b855](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/ad3b855))
+- ci: run PHPUnit and phpcs on every PR without a Magento installation ([0541cd5](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/0541cd5))
+- refactor: size the split card frames from style.base, drop the clip ([6163dee](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/6163dee)), closes [MONEI/monei-js#782](https://github.com/MONEI/monei-js/issues/782)
+- fix: address review findings on express and CardGroup ([7dbb9b8](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/7dbb9b8))
+- fix: express endpoints exchange JSON strings, not arrays ([49a1cd4](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/49a1cd4))
+- fix: give CardGroup fields a height ([ba6eab7](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/ba6eab7))
+- fix: split card fields match the theme's input; deterministic screenshots ([7efa3f1](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/7efa3f1)), closes [MONEI/monei-js#781](https://github.com/MONEI/monei-js/issues/781)
+- fix: stop publishing MONEI API key to the browser ([8058351](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/8058351))
+- test: PayPal renders; the suite measured the wrong iframe ([729e2a9](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/729e2a9))
+- test: record the pinned render environment for screenshot baselines ([74f8e14](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/74f8e14))
+- test: visual regression for checkout payment-method rendering ([7996c92](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/7996c92))
+- feat: express checkout configuration ([1cbd92b](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/1cbd92b))
+- feat: express on checkout, and server-consistent amounts everywhere ([c8930a3](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/c8930a3))
+- feat: express order placement ([5200996](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/5200996))
+- feat: express shipping options for the wallet sheet ([d0733c8](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/d0733c8))
+- feat: mount express checkout on product, cart and mini cart ([211bf6f](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/211bf6f))
+- feat: split card fields as the default layout ([0a532d6](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/0a532d6))
+- feat: upgrade to monei.js v3 ([e455910](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/e455910))
+- docs: add express checkout, CardGroup and monei.js v3 plan ([4aed128](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/4aed128))
+- docs: add express guards and amount cross-check from WooCommerce parity ([e141618](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/e141618))
+- docs: record wallet first-option and virtual-cart behaviour in plan ([e7a2e50](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/e7a2e50))
+- docs: validate address before CreatePayment, and cover the address scenario in e2e ([b32e7e7](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/b32e7e7))
+
 ## <small>2.2.4 (2026-01-23)</small>
 
 - fix: handle race condition when order cancelled but payment succeeds ([7f28ee8](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/7f28ee8))
