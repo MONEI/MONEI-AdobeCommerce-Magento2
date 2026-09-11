@@ -238,18 +238,28 @@ define([
         }
       });
 
-      this.cardGroupParts = [
-        [monei.CardNumber, this.idCardNumber],
-        [monei.CardExpiry, this.idCardExpiry],
-        [monei.CardCvc, this.idCardCvc]
-      ].map(function (part) {
-        var instance = part[0]({group: group});
-        instance.render(document.getElementById(part[1]));
-
-        return instance;
-      });
-
+      // Record the group and each part before rendering it. If a later part
+      // throws, everything already mounted is tracked and torn down; otherwise
+      // the number container stays populated, the re-render guard skips, and
+      // submit() runs against a null group.
       this.cardGroup = group;
+      this.cardGroupParts = [];
+
+      try {
+        [
+          [monei.CardNumber, this.idCardNumber],
+          [monei.CardExpiry, this.idCardExpiry],
+          [monei.CardCvc, this.idCardCvc]
+        ].forEach(function (part) {
+          var instance = part[0]({group: group});
+          self.cardGroupParts.push(instance);
+          instance.render(document.getElementById(part[1]));
+        });
+      } catch (e) {
+        this.destroyCardGroup();
+        this.isPlaceOrderActionAllowed(false);
+        console.error('Card fields failed to render', e);
+      }
     },
 
     /** Tear down the split layout. The SDK requires the parts to go before the group. */

@@ -333,4 +333,22 @@ class ExpressCheckoutTest extends TestCase
             'billingDetails' => ['email' => 'a@b.com'],
         ]));
     }
+
+    /**
+     * An option change carries no address. Applying an empty one would null the
+     * country and postcode already on the quote, and rates collected against
+     * that reject the very option the shopper chose.
+     *
+     * @return void
+     */
+    public function testSelectShippingOptionWithNoAddressLeavesTheQuoteAddressAlone(): void
+    {
+        $quote = $this->makeQuote([['code' => 'flatrate_flatrate', 'price' => 5.0]], 30.00);
+        $this->_sessionMock->method('getQuote')->willReturn($quote);
+        $quote->getShippingAddress()->expects($this->never())->method('addData');
+
+        $result = json_decode($this->_service->selectShippingOption('{}', 'flatrate_flatrate'), true);
+
+        $this->assertSame(ExpressCheckout::RESULT_SUCCESS, $result['result']);
+    }
 }

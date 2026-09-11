@@ -179,5 +179,7 @@ define(['jquery', 'moneijs', 'mage/url', 'Magento_Ui/js/model/messageList', 'mag
     var paymentRequest = monei.PaymentRequest(props);
 
     paymentRequest.render(container);
+
+    return paymentRequest;
   };
 });

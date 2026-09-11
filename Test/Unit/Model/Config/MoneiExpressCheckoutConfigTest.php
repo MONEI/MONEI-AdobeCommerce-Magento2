@@ -149,4 +149,20 @@ class MoneiExpressCheckoutConfigTest extends TestCase
 
         $this->assertSame([], $this->_config->getJsonStyle(1));
     }
+
+    /**
+     * "45" is valid JSON but not a style object. Returning it would violate the
+     * array return type and fatal while Magento builds the checkout config.
+     *
+     * @return void
+     */
+    public function testGetJsonStyleRejectsAScalarJsonValue(): void
+    {
+        $this
+            ->_scopeConfigMock
+            ->method('getValue')
+            ->willReturn('"45"');
+
+        $this->assertSame([], $this->_config->getJsonStyle(1));
+    }
 }

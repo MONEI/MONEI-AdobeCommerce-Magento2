@@ -102,6 +102,15 @@ class MoneiExpressCheckoutConfig implements MoneiExpressCheckoutConfigInterface
             $storeId
         );
 
-        return $result ? (json_decode($result, true) ?: []) : [];
+        if (!$result) {
+            return [];
+        }
+
+        // A stored scalar such as "45" is valid JSON but not a style object, and
+        // returning it would violate the array return type while Magento builds
+        // the checkout config.
+        $decoded = json_decode($result, true);
+
+        return is_array($decoded) ? $decoded : [];
     }
 }

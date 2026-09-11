@@ -206,7 +206,12 @@ class ExpressCheckout implements ExpressCheckoutInterface
         $quote = $this->loadQuote();
 
         if (!$quote->isVirtual()) {
-            $this->applyPartialAddress($quote, $address);
+            // An option change arrives without an address. Applying an empty one
+            // would null the country and postcode already on the quote, and the
+            // rates collected against that reject the option the shopper chose.
+            if (!empty($address)) {
+                $this->applyPartialAddress($quote, $address);
+            }
             $this->applyShippingMethod($quote, $optionId);
         }
 
