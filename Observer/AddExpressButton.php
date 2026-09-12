@@ -55,14 +55,6 @@ class AddExpressButton implements ObserverInterface
             (bool) $event->getIsShoppingCart()
         );
 
-        // The product page has no quote for the displayed product yet: the checkout
-        // session total is the existing cart, not the intended purchase. Until the
-        // product-page quote endpoints exist, mounting here would open the wallet
-        // with the wrong amount, so the surface is withheld regardless of config.
-        if (MoneiExpressCheckoutConfigInterface::LOCATION_PRODUCT === $location) {
-            return;
-        }
-
         if (!$this->config->isEnabledAt($location)) {
             return;
         }

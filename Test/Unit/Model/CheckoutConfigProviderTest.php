@@ -126,15 +126,7 @@ class CheckoutConfigProviderTest extends TestCase
      */
     private $_getPaymentMethodsMock;
 
-    /**
-     * @var \Monei\MoneiPayment\Api\Config\MoneiExpressCheckoutConfigInterface
-     */
-    private $_moneiExpressConfigMock;
 
-    /**
-     * @var \Magento\Checkout\Model\Session
-     */
-    private $_expressSessionMock;
 
     /**
      * Set up test environment
@@ -155,20 +147,6 @@ class CheckoutConfigProviderTest extends TestCase
         $this->_storeManagerMock = $this->createMock(StoreManagerInterface::class);
         $this->_paymentMethodHelperMock = $this->createMock(PaymentMethod::class);
         $this->_getPaymentMethodsMock = $this->createMock(GetPaymentMethodsInterface::class);
-        $this->_moneiExpressConfigMock = $this->createMock(
-            \Monei\MoneiPayment\Api\Config\MoneiExpressCheckoutConfigInterface::class
-        );
-        $expressQuote = $this
-            ->getMockBuilder(\Magento\Quote\Model\Quote::class)
-            ->disableOriginalConstructor()
-            ->addMethods(['getBaseGrandTotal', 'getBaseCurrencyCode'])
-            ->onlyMethods(['isVirtual'])
-            ->getMock();
-        $expressQuote->method('getBaseGrandTotal')->willReturn(10.00);
-        $expressQuote->method('getBaseCurrencyCode')->willReturn('EUR');
-        $expressQuote->method('isVirtual')->willReturn(false);
-        $this->_expressSessionMock = $this->createMock(\Magento\Checkout\Model\Session::class);
-        $this->_expressSessionMock->method('getQuote')->willReturn($expressQuote);
 
         $this->_checkoutConfigProvider = new CheckoutConfigProvider(
             $this->_urlBuilderMock,
@@ -182,9 +160,7 @@ class CheckoutConfigProviderTest extends TestCase
             $this->_applePayAvailabilityMock,
             $this->_storeManagerMock,
             $this->_paymentMethodHelperMock,
-            $this->_getPaymentMethodsMock,
-            $this->_moneiExpressConfigMock,
-            $this->_expressSessionMock
+            $this->_getPaymentMethodsMock
         );
     }
 

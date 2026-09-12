@@ -985,8 +985,9 @@
         >
           <label>Enable Express Checkout</label>
           <comment>
-            Shows an Apple Pay or Google Pay button that skips the checkout form. The shopper
-            approves in the wallet sheet, which supplies the shipping address.
+            Shows Apple Pay / Google Pay and PayPal buttons on the cart, mini cart and product
+            page that skip the checkout form. The shopper approves in the wallet sheet, which
+            supplies the shipping address.
           </comment>
           <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
           <config_path>payment/monei_express/active</config_path>
@@ -1035,22 +1036,6 @@
           <label>Show in Mini Cart</label>
           <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
           <config_path>payment/monei_express/enabled_on_minicart</config_path>
-          <depends>
-            <field id="active_express">1</field>
-          </depends>
-        </field>
-        <field
-          id="express_on_checkout"
-          translate="label"
-          sortOrder="950"
-          type="select"
-          showInDefault="1"
-          showInWebsite="1"
-          showInStore="1"
-        >
-          <label>Show on Checkout Page</label>
-          <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-          <config_path>payment/monei_express/enabled_on_checkout</config_path>
           <depends>
             <field id="active_express">1</field>
           </depends>

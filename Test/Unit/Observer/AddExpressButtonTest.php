@@ -100,22 +100,6 @@ class AddExpressButtonTest extends TestCase
     }
 
     /**
-     * The product page has no quote for the displayed product, so mounting there
-     * would open the wallet with the existing cart's total. It is withheld even
-     * when its config flag is on, until the product-page endpoints exist.
-     *
-     * @return void
-     */
-    public function testProductSurfaceIsWithheldRegardlessOfConfig(): void
-    {
-        $this->_configMock->method('isEnabled')->willReturn(true);
-        $this->_configMock->expects($this->never())->method('isEnabledAt');
-        $this->_containerMock->expects($this->never())->method('addShortcut');
-
-        $this->_observer->execute($this->makeObserver(true, false));
-    }
-
-    /**
      * The surfaces are told apart by the event's two flags. Neither flag set
      * means the mini cart, which is the case most easily got wrong.
      *
@@ -150,6 +134,7 @@ class AddExpressButtonTest extends TestCase
     public function surfaceProvider(): array
     {
         return [
+            'product page' => [true, false, MoneiExpressCheckoutConfigInterface::LOCATION_PRODUCT],
             'cart page' => [false, true, MoneiExpressCheckoutConfigInterface::LOCATION_CART],
             'mini cart' => [false, false, MoneiExpressCheckoutConfigInterface::LOCATION_MINICART],
         ];

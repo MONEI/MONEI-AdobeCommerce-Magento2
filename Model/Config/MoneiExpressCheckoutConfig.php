@@ -42,7 +42,6 @@ class MoneiExpressCheckoutConfig implements MoneiExpressCheckoutConfigInterface
         self::LOCATION_PRODUCT => self::ENABLED_ON_PRODUCT,
         self::LOCATION_CART => self::ENABLED_ON_CART,
         self::LOCATION_MINICART => self::ENABLED_ON_MINICART,
-        self::LOCATION_CHECKOUT => self::ENABLED_ON_CHECKOUT,
     ];
 
     /**

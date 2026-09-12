@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Block\Express;
 
 use Magento\Catalog\Block\ShortcutInterface;
+use Magento\Catalog\Helper\Data;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
@@ -49,10 +50,16 @@ class Shortcut extends Template implements ShortcutInterface
     private Session $checkoutSession;
 
     /**
+     * @var Data
+     */
+    private Data $catalogHelper;
+
+    /**
      * @param Context                             $context
      * @param MoneiExpressCheckoutConfigInterface $expressConfig Express checkout configuration
      * @param MoneiPaymentModuleConfigInterface   $moduleConfig    Module configuration
      * @param Session                             $checkoutSession Checkout session
+     * @param Data                                $catalogHelper   Gives the product on a product page
      * @param mixed[]                             $data
      */
     public function __construct(
@@ -60,12 +67,14 @@ class Shortcut extends Template implements ShortcutInterface
         MoneiExpressCheckoutConfigInterface $expressConfig,
         MoneiPaymentModuleConfigInterface $moduleConfig,
         Session $checkoutSession,
+        Data $catalogHelper,
         array $data = []
     ) {
         parent::__construct($context, $data);
         $this->expressConfig = $expressConfig;
         $this->moduleConfig = $moduleConfig;
         $this->checkoutSession = $checkoutSession;
+        $this->catalogHelper = $catalogHelper;
     }
 
     /**
@@ -94,19 +103,44 @@ class Shortcut extends Template implements ShortcutInterface
     public function getExpressConfig(): array
     {
         $quote = $this->checkoutSession->getQuote();
+        $product = $this->isProductSurface() ? $this->catalogHelper->getProduct() : null;
+        $cartAmount = (int) round((float) $quote->getBaseGrandTotal() * 100);
+        // An empty quote reports itself as not virtual, so it must not count.
+        $cartIsPhysical = $quote->getItemsCount() > 0 && !$quote->isVirtual();
 
-        return [
+        // The opening figure for the sheet, computed here. The client never
+        // derives an amount from prices - on the product page it only scales the
+        // product's unit price by the quantity typed, and adds the cart already
+        // held, since the product joins that cart when the sheet opens.
+        $config = [
             'accountId' => $this->moduleConfig->getAccountId(),
             'language' => $this->moduleConfig->getLanguage(),
             'location' => $this->getExpressLocation(),
             'style' => $this->expressConfig->getJsonStyle() ?: (object) [],
-            // The opening figure for the sheet, computed here. The client never
-            // derives an amount - it only ever names an address or an option.
-            'amount' => (int) round((float) $quote->getBaseGrandTotal() * 100),
-            'currency' => (string) $quote->getBaseCurrencyCode(),
-            'requestShipping' => !$quote->isVirtual(),
+            'amount' => $cartAmount,
+            // The store's base currency, not the quote's: a shopper who has not
+            // added anything yet has a quote with no currency on it.
+            'currency' => (string) $this->_storeManager->getStore()->getBaseCurrencyCode(),
+            'requestShipping' => $cartIsPhysical,
             'paypal' => $this->expressConfig->isPayPalEnabled(),
         ];
+
+        if ($product) {
+            $unitAmount = (int) round((float) $product->getFinalPrice() * 100);
+            $config['amount'] = $cartAmount + $unitAmount;
+            $config['productAmount'] = $unitAmount;
+            $config['requestShipping'] = $cartIsPhysical || !$product->isVirtual();
+        }
+
+        return $config;
+    }
+
+    /**
+     * Whether this shortcut sits on a product page.
+     */
+    private function isProductSurface(): bool
+    {
+        return MoneiExpressCheckoutConfigInterface::LOCATION_PRODUCT === $this->getExpressLocation();
     }
 
     /**

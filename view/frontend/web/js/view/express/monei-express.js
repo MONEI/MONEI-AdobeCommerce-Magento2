@@ -4,13 +4,15 @@
  * @copyright 2023 Monei
  * @link      https://monei.com/
  */
-define(['jquery', 'moneijs', 'mage/url', 'Magento_Ui/js/model/messageList', 'mage/translate'], function (
-  $,
-  monei,
-  urlBuilder,
-  globalMessageList,
-  $t
-) {
+define([
+  'jquery',
+  'moneijs',
+  'mage/url',
+  'Magento_Ui/js/model/messageList',
+  'Magento_Customer/js/customer-data',
+  'mage/translate',
+  'mage/validation'
+], function ($, monei, urlBuilder, globalMessageList, customerData, $t) {
   'use strict';
 
   var REST = {
@@ -103,6 +105,91 @@ define(['jquery', 'moneijs', 'mage/url', 'Magento_Ui/js/model/messageList', 'mag
       }
     }
 
+    /**
+     * The product page's add-to-cart form, or null on the other surfaces.
+     *
+     * @returns {jQuery|null}
+     */
+    function productForm() {
+      var form = location === 'product' ? $('#product_addtocart_form') : null;
+
+      return form && form.length ? form : null;
+    }
+
+    // On the product page the product is not in the cart when the sheet opens.
+    // It is added once for the selection on the form, and every server call
+    // waits for that, so the shipping options and the order are computed for
+    // the cart the shopper meant. Reopening the sheet with the same selection
+    // must not add it again.
+    var cartReady = null,
+      addedSelection = null;
+
+    /**
+     * Add the displayed product to the cart, once per form selection.
+     *
+     * @returns {Promise}
+     */
+    function ensureProductInCart() {
+      var form = productForm(),
+        selection = form ? form.serialize() : null;
+
+      if (!form) {
+        return $.Deferred().resolve().promise();
+      }
+
+      if (cartReady && selection !== addedSelection) {
+        cartReady = null;
+      }
+
+      if (!cartReady) {
+        addedSelection = selection;
+        cartReady = $.ajax({
+          url: form.attr('action'),
+          type: 'POST',
+          data: form.serialize(),
+          dataType: 'json',
+          headers: {'X-Requested-With': 'XMLHttpRequest'}
+        }).then(function (response) {
+          // A failed add (out of stock, an option Magento rejects) answers with
+          // this page as the place to go back to and the reason in the page's
+          // message list. A back URL elsewhere is the "redirect to cart after
+          // adding" setting, which is a success here.
+          var backUrl = response && response.backUrl ? String(response.backUrl).replace(/\/$/, '') : '',
+            here = window.location.href.split('#')[0].replace(/\/$/, ''),
+            failed = (response && response.product) || (backUrl && backUrl === here);
+
+          if (failed) {
+            return $.Deferred()
+              .reject(new Error($t('The product could not be added to the cart.')))
+              .promise();
+          }
+
+          customerData.reload(['cart'], false);
+        });
+
+        // A failed add left nothing in the cart, so the next opening tries again.
+        cartReady.fail(function () {
+          cartReady = null;
+        });
+      }
+
+      return cartReady;
+    }
+
+    /**
+     * The amount the sheet opens with on the product page: the cart already held
+     * plus the product at the quantity typed. Options that change the price are
+     * not known here; the shipping callback repaints the total for those.
+     *
+     * @returns {Number}
+     */
+    function productAmount() {
+      var form = productForm(),
+        qty = form ? parseInt(form.find('[name="qty"]').val(), 10) : 1;
+
+      return config.amount - config.productAmount + config.productAmount * (qty > 0 ? qty : 1);
+    }
+
     var props = {
       // accountId, never paymentId: monei.js refuses requestShipping on the
       // paymentId flow, and express has no payment yet - it is created server
@@ -114,7 +201,23 @@ define(['jquery', 'moneijs', 'mage/url', 'Magento_Ui/js/model/messageList', 'mag
       style: config.style,
 
       onBeforeOpen: function () {
+        var form = productForm();
+
         $(container).closest('.monei-express-shortcut').find('.monei-express-error').hide();
+
+        // A product with options left unchosen cannot be added; the form's own
+        // validation shows which, and the sheet stays closed.
+        if (form && !form.validation('isValid')) {
+          return false;
+        }
+
+        // Started here, not awaited: the wallet button lives in an iframe and
+        // this is the only signal that the sheet is opening, and it cannot wait.
+        // Every later server call awaits the same promise, and a failed add
+        // rejects them, so the sheet cannot complete without the product.
+        ensureProductInCart().fail(function (error) {
+          fail(error && error.message);
+        });
 
         return true;
       },
@@ -126,37 +229,53 @@ define(['jquery', 'moneijs', 'mage/url', 'Magento_Ui/js/model/messageList', 'mag
           return;
         }
 
-        // No amount is sent. The server recomputes it and refuses the order if
-        // the wallet's own figure disagrees.
-        post(REST.placeOrder, {
-          payload: JSON.stringify({
-            token: result.token,
-            paymentMethod: result.paymentMethod,
-            billingDetails: result.billingDetails,
-            shippingDetails: result.shippingDetails,
-            shippingOption: result.shippingOption,
-            finalAmount: result.finalAmount,
-            location: location
-          })
-        })
-          .done(function (data) {
-            if (data && data.redirectUrl) {
-              window.location.replace(data.redirectUrl);
-
-              return;
-            }
-
-            window.location.href = urlBuilder.build('checkout/onepage/success');
-          })
-          .fail(function (xhr) {
-            fail(messageFrom(xhr));
-          });
+        ensureProductInCart().then(
+          function () {
+            placeOrder(result);
+          },
+          function (error) {
+            fail(error && error.message);
+          }
+        );
       },
 
       onError: function (error) {
         fail(error && error.message ? error.message : '');
       }
     };
+
+    /**
+     * Hand the wallet's result to the server and follow its redirect.
+     *
+     * @param {Object} result
+     */
+    function placeOrder(result) {
+      // No amount is sent. The server recomputes it and refuses the order if
+      // the wallet's own figure disagrees.
+      post(REST.placeOrder, {
+        payload: JSON.stringify({
+          token: result.token,
+          paymentMethod: result.paymentMethod,
+          billingDetails: result.billingDetails,
+          shippingDetails: result.shippingDetails,
+          shippingOption: result.shippingOption,
+          finalAmount: result.finalAmount,
+          location: location
+        })
+      })
+        .done(function (data) {
+          if (data && data.redirectUrl) {
+            window.location.replace(data.redirectUrl);
+
+            return;
+          }
+
+          window.location.href = urlBuilder.build('checkout/onepage/success');
+        })
+        .fail(function (xhr) {
+          fail(messageFrom(xhr));
+        });
+    }
 
     if (config.requestShipping) {
       props.requestShipping = true;
@@ -168,18 +287,22 @@ define(['jquery', 'moneijs', 'mage/url', 'Magento_Ui/js/model/messageList', 'mag
        * charged - the server applies the first option before answering.
        */
       props.onShippingAddressChange = function (address) {
-        return post(REST.shippingOptions, {address: JSON.stringify(address)}).then(function (data) {
-          if (data.result !== 'success') {
-            // Rejecting here makes the wallet refuse the address, rather than
-            // showing a total the server will not honour.
-            return Promise.reject(new Error(data.message));
-          }
+        return ensureProductInCart()
+          .then(function () {
+            return post(REST.shippingOptions, {address: JSON.stringify(address)});
+          })
+          .then(function (data) {
+            if (data.result !== 'success') {
+              // Rejecting here makes the wallet refuse the address, rather than
+              // showing a total the server will not honour.
+              return Promise.reject(new Error(data.message));
+            }
 
-          return {
-            shippingOptions: data.shippingOptions,
-            amount: data.amount
-          };
-        });
+            return {
+              shippingOptions: data.shippingOptions,
+              amount: data.amount
+            };
+          });
       };
 
       props.onShippingOptionChange = function (option) {
@@ -224,6 +347,19 @@ define(['jquery', 'moneijs', 'mage/url', 'Magento_Ui/js/model/messageList', 'mag
     }
 
     mount('monei-express-wallet', monei.PaymentRequest);
+
+    // The quantity typed changes what the sheet opens with.
+    if (productForm() && config.productAmount) {
+      productForm().on('change', '[name="qty"]', function () {
+        var amount = productAmount();
+
+        components.forEach(function (instance) {
+          if (instance && instance.updateProps) {
+            instance.updateProps({amount: amount}).catch(function () {});
+          }
+        });
+      });
+    }
 
     if (config.paypal) {
       // PayPal takes the same shipping callbacks and returns the same result
