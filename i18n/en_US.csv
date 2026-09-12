@@ -268,3 +268,4 @@ Description,Description
 "PayPal Express Checkout","PayPal Express Checkout"
 "Show a PayPal button next to the wallet button. Requires the PayPal payment method to be enabled.","Show a PayPal button next to the wallet button. Requires the PayPal payment method to be enabled."
 "PayPal express checkout is not enabled.","PayPal express checkout is not enabled."
+"The product could not be added to the cart.","The product could not be added to the cart."

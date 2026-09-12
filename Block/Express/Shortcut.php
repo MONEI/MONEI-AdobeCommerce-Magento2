@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Block\Express;
 
 use Magento\Catalog\Block\ShortcutInterface;
+use Magento\Catalog\Helper\Data as CatalogHelper;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
@@ -49,10 +50,16 @@ class Shortcut extends Template implements ShortcutInterface
     private Session $checkoutSession;
 
     /**
+     * @var CatalogHelper
+     */
+    private CatalogHelper $catalogHelper;
+
+    /**
      * @param Context                             $context
      * @param MoneiExpressCheckoutConfigInterface $expressConfig Express checkout configuration
      * @param MoneiPaymentModuleConfigInterface   $moduleConfig    Module configuration
      * @param Session                             $checkoutSession Checkout session
+     * @param CatalogHelper                       $catalogHelper   Gives the product on a product page
      * @param mixed[]                             $data
      */
     public function __construct(
@@ -60,12 +67,14 @@ class Shortcut extends Template implements ShortcutInterface
         MoneiExpressCheckoutConfigInterface $expressConfig,
         MoneiPaymentModuleConfigInterface $moduleConfig,
         Session $checkoutSession,
+        CatalogHelper $catalogHelper,
         array $data = []
     ) {
         parent::__construct($context, $data);
         $this->expressConfig = $expressConfig;
         $this->moduleConfig = $moduleConfig;
         $this->checkoutSession = $checkoutSession;
+        $this->catalogHelper = $catalogHelper;
     }
 
     /**
@@ -94,19 +103,36 @@ class Shortcut extends Template implements ShortcutInterface
     public function getExpressConfig(): array
     {
         $quote = $this->checkoutSession->getQuote();
+        $product = $this->isProductSurface() ? $this->catalogHelper->getProduct() : null;
+
+        // The opening figure for the sheet, computed here. The client never
+        // derives an amount - it only ever names an address or an option. On the
+        // product page the product is not in the cart yet, so its own price
+        // opens the sheet; the server repaints the total once it is added.
+        $amount = $product
+            ? (float) $product->getFinalPrice()
+            : (float) $quote->getBaseGrandTotal();
 
         return [
             'accountId' => $this->moduleConfig->getAccountId(),
             'language' => $this->moduleConfig->getLanguage(),
             'location' => $this->getExpressLocation(),
             'style' => $this->expressConfig->getJsonStyle() ?: (object) [],
-            // The opening figure for the sheet, computed here. The client never
-            // derives an amount - it only ever names an address or an option.
-            'amount' => (int) round((float) $quote->getBaseGrandTotal() * 100),
-            'currency' => (string) $quote->getBaseCurrencyCode(),
-            'requestShipping' => !$quote->isVirtual(),
+            'amount' => (int) round($amount * 100),
+            // The store's base currency, not the quote's: a shopper who has not
+            // added anything yet has a quote with no currency on it.
+            'currency' => (string) $this->_storeManager->getStore()->getBaseCurrencyCode(),
+            'requestShipping' => $product ? !$product->isVirtual() || !$quote->isVirtual() : !$quote->isVirtual(),
             'paypal' => $this->expressConfig->isPayPalEnabled(),
         ];
+    }
+
+    /**
+     * Whether this shortcut sits on a product page.
+     */
+    private function isProductSurface(): bool
+    {
+        return MoneiExpressCheckoutConfigInterface::LOCATION_PRODUCT === $this->getExpressLocation();
     }
 
     /**

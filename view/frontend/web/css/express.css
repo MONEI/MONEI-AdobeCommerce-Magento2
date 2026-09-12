@@ -21,6 +21,11 @@
   margin-top: 10px;
 }
 
+/* Product page: Luma leaves 35px under Add to Cart; 10px less makes 25. */
+.monei-express-shortcut[data-monei-express-location='product'] .monei-express-separator {
+  margin-top: -10px;
+}
+
 /* Nothing shows until a wallet reports itself usable: a heading over a button
    that never appears reads as a broken checkout. */
 .monei-express-shortcut.is-loading,

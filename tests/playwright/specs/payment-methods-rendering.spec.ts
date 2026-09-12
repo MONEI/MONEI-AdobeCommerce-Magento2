@@ -57,6 +57,27 @@ test('express buttons render under the cart summary', async ({page}) => {
   await expect(express).toHaveScreenshot('cart-express.png');
 });
 
+/**
+ * On the product page the product is not in the cart yet. The buttons render
+ * from the product's own price, and opening a sheet adds the product first.
+ */
+test('express buttons render under add to cart on the product page', async ({page}) => {
+  await page.goto(process.env.MONEI_E2E_PRODUCT_PATH ?? '/joust-duffle-bag.html');
+  const addToCart = page.locator('#product-addtocart-button');
+  await expect(addToCart).toBeVisible({timeout: 60_000});
+
+  const express = page.locator('.product-info-main .monei-express-shortcut');
+  await expect(express, 'express block').toBeVisible({timeout: 30_000});
+  await expectRenderedField(express.locator('.monei-express-wallet'), 'wallet button');
+  await expectRenderedField(express.locator('.monei-express-paypal'), 'PayPal express button');
+
+  const buttonBox = (await addToCart.boundingBox())!;
+  const walletBox = (await express.locator('.monei-express-wallet').boundingBox())!;
+  expect(walletBox.y, 'wallet below add to cart').toBeGreaterThan(buttonBox.y + buttonBox.height);
+
+  await expect(express).toHaveScreenshot('product-express.png');
+});
+
 test.describe('payment step', () => {
   test.beforeEach(async ({page}) => {
     await reachPaymentStep(page);
