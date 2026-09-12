@@ -117,23 +117,32 @@ define([
     }
 
     // On the product page the product is not in the cart when the sheet opens.
-    // It is added once per opening, and every server call waits for that, so the
-    // shipping options and the order are computed for the cart the shopper meant.
-    var cartReady = null;
+    // It is added once for the selection on the form, and every server call
+    // waits for that, so the shipping options and the order are computed for
+    // the cart the shopper meant. Reopening the sheet with the same selection
+    // must not add it again.
+    var cartReady = null,
+      addedSelection = null;
 
     /**
-     * Add the displayed product to the cart, once per sheet opening.
+     * Add the displayed product to the cart, once per form selection.
      *
      * @returns {Promise}
      */
     function ensureProductInCart() {
-      var form = productForm();
+      var form = productForm(),
+        selection = form ? form.serialize() : null;
 
       if (!form) {
         return $.Deferred().resolve().promise();
       }
 
+      if (cartReady && selection !== addedSelection) {
+        cartReady = null;
+      }
+
       if (!cartReady) {
+        addedSelection = selection;
         cartReady = $.ajax({
           url: form.attr('action'),
           type: 'POST',
@@ -157,9 +166,28 @@ define([
 
           customerData.reload(['cart'], false);
         });
+
+        // A failed add left nothing in the cart, so the next opening tries again.
+        cartReady.fail(function () {
+          cartReady = null;
+        });
       }
 
       return cartReady;
+    }
+
+    /**
+     * The amount the sheet opens with on the product page: the cart already held
+     * plus the product at the quantity typed. Options that change the price are
+     * not known here; the shipping callback repaints the total for those.
+     *
+     * @returns {Number}
+     */
+    function productAmount() {
+      var form = productForm(),
+        qty = form ? parseInt(form.find('[name="qty"]').val(), 10) : 1;
+
+      return config.amount - config.productAmount + config.productAmount * (qty > 0 ? qty : 1);
     }
 
     var props = {
@@ -185,8 +213,8 @@ define([
 
         // Started here, not awaited: the wallet button lives in an iframe and
         // this is the only signal that the sheet is opening, and it cannot wait.
-        // Every later server call awaits the same promise.
-        cartReady = null;
+        // Every later server call awaits the same promise, and a failed add
+        // rejects them, so the sheet cannot complete without the product.
         ensureProductInCart().fail(function (error) {
           fail(error && error.message);
         });
@@ -212,7 +240,6 @@ define([
       },
 
       onError: function (error) {
-        cartReady = null;
         fail(error && error.message ? error.message : '');
       }
     };
@@ -320,6 +347,19 @@ define([
     }
 
     mount('monei-express-wallet', monei.PaymentRequest);
+
+    // The quantity typed changes what the sheet opens with.
+    if (productForm() && config.productAmount) {
+      productForm().on('change', '[name="qty"]', function () {
+        var amount = productAmount();
+
+        components.forEach(function (instance) {
+          if (instance && instance.updateProps) {
+            instance.updateProps({amount: amount}).catch(function () {});
+          }
+        });
+      });
+    }
 
     if (config.paypal) {
       // PayPal takes the same shipping callbacks and returns the same result

@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Block\Express;
 
 use Magento\Catalog\Block\ShortcutInterface;
-use Magento\Catalog\Helper\Data as CatalogHelper;
+use Magento\Catalog\Helper\Data;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
@@ -50,16 +50,16 @@ class Shortcut extends Template implements ShortcutInterface
     private Session $checkoutSession;
 
     /**
-     * @var CatalogHelper
+     * @var Data
      */
-    private CatalogHelper $catalogHelper;
+    private Data $catalogHelper;
 
     /**
      * @param Context                             $context
      * @param MoneiExpressCheckoutConfigInterface $expressConfig Express checkout configuration
      * @param MoneiPaymentModuleConfigInterface   $moduleConfig    Module configuration
      * @param Session                             $checkoutSession Checkout session
-     * @param CatalogHelper                       $catalogHelper   Gives the product on a product page
+     * @param Data                                $catalogHelper   Gives the product on a product page
      * @param mixed[]                             $data
      */
     public function __construct(
@@ -67,7 +67,7 @@ class Shortcut extends Template implements ShortcutInterface
         MoneiExpressCheckoutConfigInterface $expressConfig,
         MoneiPaymentModuleConfigInterface $moduleConfig,
         Session $checkoutSession,
-        CatalogHelper $catalogHelper,
+        Data $catalogHelper,
         array $data = []
     ) {
         parent::__construct($context, $data);
@@ -104,27 +104,35 @@ class Shortcut extends Template implements ShortcutInterface
     {
         $quote = $this->checkoutSession->getQuote();
         $product = $this->isProductSurface() ? $this->catalogHelper->getProduct() : null;
+        $cartAmount = (int) round((float) $quote->getBaseGrandTotal() * 100);
+        // An empty quote reports itself as not virtual, so it must not count.
+        $cartIsPhysical = $quote->getItemsCount() > 0 && !$quote->isVirtual();
 
         // The opening figure for the sheet, computed here. The client never
-        // derives an amount - it only ever names an address or an option. On the
-        // product page the product is not in the cart yet, so its own price
-        // opens the sheet; the server repaints the total once it is added.
-        $amount = $product
-            ? (float) $product->getFinalPrice()
-            : (float) $quote->getBaseGrandTotal();
-
-        return [
+        // derives an amount from prices - on the product page it only scales the
+        // product's unit price by the quantity typed, and adds the cart already
+        // held, since the product joins that cart when the sheet opens.
+        $config = [
             'accountId' => $this->moduleConfig->getAccountId(),
             'language' => $this->moduleConfig->getLanguage(),
             'location' => $this->getExpressLocation(),
             'style' => $this->expressConfig->getJsonStyle() ?: (object) [],
-            'amount' => (int) round($amount * 100),
+            'amount' => $cartAmount,
             // The store's base currency, not the quote's: a shopper who has not
             // added anything yet has a quote with no currency on it.
             'currency' => (string) $this->_storeManager->getStore()->getBaseCurrencyCode(),
-            'requestShipping' => $product ? !$product->isVirtual() || !$quote->isVirtual() : !$quote->isVirtual(),
+            'requestShipping' => $cartIsPhysical,
             'paypal' => $this->expressConfig->isPayPalEnabled(),
         ];
+
+        if ($product) {
+            $unitAmount = (int) round((float) $product->getFinalPrice() * 100);
+            $config['amount'] = $cartAmount + $unitAmount;
+            $config['productAmount'] = $unitAmount;
+            $config['requestShipping'] = $cartIsPhysical || !$product->isVirtual();
+        }
+
+        return $config;
     }
 
     /**
