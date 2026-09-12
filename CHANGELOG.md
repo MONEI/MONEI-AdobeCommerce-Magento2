@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.4.0 (2026-09-12)
+
+- fix: product-page express adds once per selection and opens with the cart's total ([4a260a0](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/4a260a0))
+- feat: express checkout on the product page ([0184871](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/0184871))
+- feat!: express checkout on the cart, mini cart and product page only ([7e302bc](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/7e302bc))
+- ci: build the release zip with git archive and export-ignore ([70f3f57](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/70f3f57))
+
 ## <small>2.3.1 (2026-09-11)</small>
 
 - fix: express payment allows only the method its order is placed under ([cb86f81](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/cb86f81))
