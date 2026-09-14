@@ -1,5 +1,9 @@
 # Changelog
 
+## <small>2.4.1 (2026-09-14)</small>
+
+- fix: skip the express shortcut in the MSRP popup ([becc1d2](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/becc1d2))
+
 ## 2.4.0 (2026-09-12)
 
 - fix: product-page express adds once per selection and opens with the cart's total ([4a260a0](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/4a260a0))
