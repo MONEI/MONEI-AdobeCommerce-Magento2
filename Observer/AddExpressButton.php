@@ -26,6 +26,14 @@ use Monei\MoneiPayment\Block\Express\Shortcut;
 class AddExpressButton implements ObserverInterface
 {
     /**
+     * Magento_Msrp's "click for price" popup container. The popup renders its children
+     * inside a <script type="text/x-magento-template">, so the shortcut's own inline
+     * <script> would close that tag early and break the rest of the page. It also has
+     * no product amount to charge.
+     */
+    private const MSRP_POPUP_CONTAINER = 'map.shortcut.buttons';
+
+    /**
      * @var MoneiExpressCheckoutConfigInterface
      */
     private MoneiExpressCheckoutConfigInterface $config;
@@ -50,6 +58,14 @@ class AddExpressButton implements ObserverInterface
         }
 
         $event = $observer->getEvent();
+
+        /** @var \Magento\Catalog\Block\ShortcutButtons $shortcutButtons */
+        $shortcutButtons = $event->getContainer();
+
+        if ($shortcutButtons->getNameInLayout() === self::MSRP_POPUP_CONTAINER) {
+            return;
+        }
+
         $location = $this->resolveLocation(
             (bool) $event->getIsCatalogProduct(),
             (bool) $event->getIsShoppingCart()
@@ -58,9 +74,6 @@ class AddExpressButton implements ObserverInterface
         if (!$this->config->isEnabledAt($location)) {
             return;
         }
-
-        /** @var \Magento\Catalog\Block\ShortcutButtons $shortcutButtons */
-        $shortcutButtons = $event->getContainer();
 
         /** @var Shortcut $shortcut */
         $shortcut = $shortcutButtons->getLayout()->createBlock(Shortcut::class);
