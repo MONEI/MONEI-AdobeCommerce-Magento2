@@ -1,5 +1,9 @@
 # Changelog
 
+## <small>2.4.2 (2026-09-14)</small>
+
+- fix: centre the express OR line in the mini cart ([72e4ed0](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/72e4ed0))
+
 ## <small>2.4.1 (2026-09-14)</small>
 
 - fix: skip the express shortcut in the MSRP popup ([becc1d2](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/becc1d2))
