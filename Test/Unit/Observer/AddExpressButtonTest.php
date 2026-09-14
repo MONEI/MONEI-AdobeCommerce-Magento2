@@ -100,6 +100,23 @@ class AddExpressButtonTest extends TestCase
     }
 
     /**
+     * The MSRP popup is flagged as a catalog product container, like the product
+     * page, but renders inside a script template that the shortcut's inline
+     * script would close early, breaking every page that lists a product.
+     *
+     * @return void
+     */
+    public function testAddsNothingToTheMsrpPopup(): void
+    {
+        $this->_configMock->method('isEnabled')->willReturn(true);
+        $this->_configMock->method('isEnabledAt')->willReturn(true);
+        $this->_containerMock->method('getNameInLayout')->willReturn('map.shortcut.buttons');
+        $this->_containerMock->expects($this->never())->method('addShortcut');
+
+        $this->_observer->execute($this->makeObserver(true, false));
+    }
+
+    /**
      * The surfaces are told apart by the event's two flags. Neither flag set
      * means the mini cart, which is the case most easily got wrong.
      *
