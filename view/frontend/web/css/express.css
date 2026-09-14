@@ -16,9 +16,10 @@
   margin: 0 0 25px;
 }
 
-/* Mini cart: Luma leaves only 15px there; 10px more makes the same 25. */
+/* Mini cart: Luma's 15px sits under the whole actions block, not between the
+   button and the shortcut, so the full 25 goes here. */
 .monei-express-shortcut[data-monei-express-location='minicart'] .monei-express-separator {
-  margin-top: 10px;
+  margin-top: 25px;
 }
 
 /* Product page: Luma leaves 35px under Add to Cart; 10px less makes 25. */
