@@ -1,5 +1,9 @@
 # Changelog
 
+## <small>2.4.3 (2026-10-21)</small>
+
+- fix: verify payment amount and currency before settling orders (#95) ([de3bb16](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/de3bb16)), closes [#95](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/95)
+
 ## <small>2.4.2 (2026-09-14)</small>
 
 - fix: centre the express OR line in the mini cart ([72e4ed0](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/72e4ed0))
