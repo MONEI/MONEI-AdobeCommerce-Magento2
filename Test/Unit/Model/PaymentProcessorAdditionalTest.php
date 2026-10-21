@@ -31,6 +31,7 @@ use Monei\MoneiPayment\Model\Data\PaymentDTOFactory;
 use Monei\MoneiPayment\Model\Data\PaymentProcessingResult;
 use Monei\MoneiPayment\Model\Payment\Status;
 use Monei\MoneiPayment\Model\PaymentProcessor;
+use Monei\MoneiPayment\Model\Service\PaymentAmountMatcher;
 use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 use Monei\MoneiPayment\Service\InvoiceService;
 use Monei\MoneiPayment\Service\Logger;
@@ -159,7 +160,8 @@ class PaymentProcessorAdditionalTest extends TestCase
             $this->getPaymentInterface,
             $this->orderFactory,
             $this->createVaultPayment,
-            $this->paymentDtoFactory
+            $this->paymentDtoFactory,
+            new PaymentAmountMatcher()
         );
     }
 
@@ -250,7 +252,8 @@ class PaymentProcessorAdditionalTest extends TestCase
             $this->getPaymentInterface,
             $this->orderFactory,
             $this->createVaultPayment,
-            $this->paymentDtoFactory
+            $this->paymentDtoFactory,
+            new PaymentAmountMatcher()
         );
 
         // Access the private method
@@ -439,7 +442,8 @@ class PaymentProcessorAdditionalTest extends TestCase
             $this->getPaymentInterface,
             $this->orderFactory,
             $this->createVaultPayment,
-            $customDtoFactory
+            $customDtoFactory,
+            new PaymentAmountMatcher()
         );
 
         $this->expectException(LocalizedException::class);

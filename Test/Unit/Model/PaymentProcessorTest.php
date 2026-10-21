@@ -33,6 +33,7 @@ use Monei\MoneiPayment\Model\Data\PaymentDTOFactory;
 use Monei\MoneiPayment\Model\Data\PaymentProcessingResult;
 use Monei\MoneiPayment\Model\Payment\Status;
 use Monei\MoneiPayment\Model\PaymentProcessor;
+use Monei\MoneiPayment\Model\Service\PaymentAmountMatcher;
 use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 use Monei\MoneiPayment\Service\InvoiceService;
 use Monei\MoneiPayment\Service\Logger;
@@ -165,7 +166,8 @@ class PaymentProcessorTest extends TestCase
             $this->getPaymentInterface,
             $this->orderFactory,
             $this->createVaultPayment,
-            $this->paymentDtoFactory
+            $this->paymentDtoFactory,
+            new PaymentAmountMatcher()
         );
 
         $this
@@ -284,6 +286,10 @@ class PaymentProcessorTest extends TestCase
         $paymentDto->method('isFailed')->willReturn(false);
         $paymentDto->method('isCanceled')->willReturn(false);
         $paymentDto->method('isExpired')->willReturn(false);
+        $paymentDto->method('getAmountInCents')->willReturn(1999);
+        $paymentDto->method('getCurrency')->willReturn('EUR');
+        $this->order->method('getBaseGrandTotal')->willReturn(19.99);
+        $this->order->method('getBaseCurrencyCode')->willReturn('EUR');
 
         // Mock the order payment
         $orderPayment = $this->createMock(\Magento\Sales\Api\Data\OrderPaymentInterface::class);
@@ -790,5 +796,131 @@ class PaymentProcessorTest extends TestCase
 
         // We only check if the process method runs successfully without exceptions
         $this->assertInstanceOf(PaymentProcessingResultInterface::class, $result);
+    }
+
+    /**
+     * A payment created for a smaller cart must not settle the order placed later for more.
+     *
+     * @dataProvider settlingStatusProvider
+     */
+    public function testMismatchedAmountHoldsOrderWithoutSettling(string $status): void
+    {
+        $this->givenLockedOrder('000000001', 50.00, 'EUR');
+        $this->order->method('canHold')->willReturn(true);
+        $this->order->expects($this->once())->method('hold');
+        $this->order->expects($this->never())->method('setState');
+        $this->order
+            ->expects($this->once())
+            ->method('addCommentToStatusHistory')
+            ->with($this->callback(function ($comment): bool {
+                $text = (string) $comment;
+
+                return str_contains($text, '10.00 EUR') && str_contains($text, '50.00 EUR');
+            }));
+        $this->invoiceService->expects($this->never())->method('processInvoice');
+        $this->orderRepository->expects($this->once())->method('save')->with($this->order);
+
+        $result = $this->processPaymentDto($this->createPaymentDto('pay_small', $status, 1000, 'EUR'));
+
+        $this->assertTrue($result->isSuccessful());
+    }
+
+    public static function settlingStatusProvider(): array
+    {
+        return [
+            'succeeded' => [Status::SUCCEEDED],
+            'authorized' => [Status::AUTHORIZED],
+            'pending' => [Status::PENDING],
+        ];
+    }
+
+    /**
+     * The payment is created in the base currency, so the order's display currency must not count.
+     */
+    public function testPaymentInOrderDisplayCurrencyHoldsOrder(): void
+    {
+        $this->givenLockedOrder('000000001', 10.00, 'EUR');
+        $this->order->method('getOrderCurrencyCode')->willReturn('USD');
+        $this->order->method('canHold')->willReturn(true);
+        $this->order->expects($this->once())->method('hold');
+        $this->invoiceService->expects($this->never())->method('processInvoice');
+
+        $this->processPaymentDto($this->createPaymentDto('pay_usd', Status::SUCCEEDED, 1000, 'USD'));
+    }
+
+    /**
+     * A failed sibling payment with the same order id must not cancel a settled order.
+     *
+     * @dataProvider settledOrderProvider
+     */
+    public function testFailedSiblingPaymentDoesNotCancelSettledOrder(bool $hasInvoices, string $storedPaymentId): void
+    {
+        $this->givenLockedOrder('000000001', 10.00, 'EUR', Order::STATE_PROCESSING);
+        $this->order->method('hasInvoices')->willReturn($hasInvoices);
+        $this->order->method('getData')->willReturnMap([['monei_payment_id', null, $storedPaymentId]]);
+        $this->order->expects($this->never())->method('setState');
+        $this->order->expects($this->never())->method('setData');
+        $this->orderRepository->expects($this->never())->method('save');
+
+        $result = $this->processPaymentDto($this->createPaymentDto('pay_old', Status::FAILED, 1000, 'EUR'));
+
+        $this->assertTrue($result->isSuccessful());
+    }
+
+    public static function settledOrderProvider(): array
+    {
+        return [
+            'invoiced' => [true, 'pay_old'],
+            'authorized by another payment' => [false, 'pay_paid'],
+        ];
+    }
+
+    public function testFailedStoredPaymentCancelsOrder(): void
+    {
+        $this->givenLockedOrder('000000001', 10.00, 'EUR', Order::STATE_PROCESSING);
+        $this->order->method('hasInvoices')->willReturn(false);
+        $this->order->method('getData')->willReturnMap([['monei_payment_id', null, 'pay_auth']]);
+        $this->order->expects($this->once())->method('setState')->with(Order::STATE_CANCELED);
+
+        $this->processPaymentDto($this->createPaymentDto('pay_auth', Status::EXPIRED, 1000, 'EUR'));
+    }
+
+    private function givenLockedOrder(
+        string $incrementId,
+        float $baseGrandTotal,
+        string $baseCurrency,
+        string $state = Order::STATE_NEW
+    ): void {
+        $this->order->method('loadByIncrementId')->with($incrementId)->willReturn($this->order);
+        $this->order->method('getId')->willReturn(1);
+        $this->order->method('getIncrementId')->willReturn($incrementId);
+        $this->order->method('getState')->willReturn($state);
+        $this->order->method('getBaseGrandTotal')->willReturn($baseGrandTotal);
+        $this->order->method('getBaseCurrencyCode')->willReturn($baseCurrency);
+        $this->order->method('getPayment')->willReturn($this->createMock(OrderPaymentInterface::class));
+        $this->lockManager->method('lockOrder')->willReturn(true);
+    }
+
+    private function createPaymentDto(string $id, string $status, int $amountInCents, string $currency): PaymentDTO
+    {
+        $payment = $this->createMock(PaymentDTO::class);
+        $payment->method('getId')->willReturn($id);
+        $payment->method('getStatus')->willReturn($status);
+        $payment->method('getAmountInCents')->willReturn($amountInCents);
+        $payment->method('getCurrency')->willReturn($currency);
+        $payment->method('isSucceeded')->willReturn($status === Status::SUCCEEDED);
+        $payment->method('isAuthorized')->willReturn($status === Status::AUTHORIZED);
+        $payment->method('isPending')->willReturn($status === Status::PENDING);
+        $payment->method('isFailed')->willReturn($status === Status::FAILED);
+        $payment->method('isExpired')->willReturn($status === Status::EXPIRED);
+
+        return $payment;
+    }
+
+    private function processPaymentDto(PaymentDTO $payment): PaymentProcessingResultInterface
+    {
+        $this->paymentDtoFactory->method('createFromArray')->willReturn($payment);
+
+        return $this->paymentProcessor->process('000000001', $payment->getId(), ['id' => $payment->getId()]);
     }
 }

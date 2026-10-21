@@ -31,6 +31,7 @@ use Monei\MoneiPayment\Model\Data\PaymentDTO;
 use Monei\MoneiPayment\Model\Data\PaymentDTOFactory;
 use Monei\MoneiPayment\Model\Data\PaymentProcessingResult;
 use Monei\MoneiPayment\Model\Payment\Status;
+use Monei\MoneiPayment\Model\Service\PaymentAmountMatcher;
 use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 use Monei\MoneiPayment\Service\InvoiceService;
 use Monei\MoneiPayment\Service\Logger;
@@ -102,6 +103,11 @@ class PaymentProcessor implements PaymentProcessorInterface
     private PaymentDTOFactory $paymentDtoFactory;
 
     /**
+     * @var PaymentAmountMatcher
+     */
+    private PaymentAmountMatcher $paymentAmountMatcher;
+
+    /**
      * @param OrderRepositoryInterface $orderRepository
      * @param InvoiceService $invoiceService
      * @param LockManagerInterface $lockManager
@@ -114,6 +120,7 @@ class PaymentProcessor implements PaymentProcessorInterface
      * @param OrderFactory $orderFactory
      * @param CreateVaultPayment $createVaultPayment
      * @param PaymentDTOFactory $paymentDtoFactory
+     * @param PaymentAmountMatcher $paymentAmountMatcher
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
@@ -127,7 +134,8 @@ class PaymentProcessor implements PaymentProcessorInterface
         GetPaymentInterface $getPaymentInterface,
         OrderFactory $orderFactory,
         CreateVaultPayment $createVaultPayment,
-        PaymentDTOFactory $paymentDtoFactory
+        PaymentDTOFactory $paymentDtoFactory,
+        PaymentAmountMatcher $paymentAmountMatcher
     ) {
         $this->orderRepository = $orderRepository;
         $this->invoiceService = $invoiceService;
@@ -141,6 +149,7 @@ class PaymentProcessor implements PaymentProcessorInterface
         $this->orderFactory = $orderFactory;
         $this->createVaultPayment = $createVaultPayment;
         $this->paymentDtoFactory = $paymentDtoFactory;
+        $this->paymentAmountMatcher = $paymentAmountMatcher;
     }
 
     /**
@@ -408,6 +417,10 @@ class PaymentProcessor implements PaymentProcessorInterface
                 return true;
             }
 
+            if (!$this->verifyPaymentAmount($order, $payment)) {
+                return true;
+            }
+
             // Check if order was cancelled but payment succeeded - restore it
             if ($order->getState() === Order::STATE_CANCELED) {
                 $this->logger->warning(sprintf(
@@ -584,6 +597,10 @@ class PaymentProcessor implements PaymentProcessorInterface
                 return true;
             }
 
+            if (!$this->verifyPaymentAmount($order, $payment)) {
+                return true;
+            }
+
             // Update payment information
             $this->updatePaymentInformation($order, $payment);
 
@@ -662,8 +679,18 @@ class PaymentProcessor implements PaymentProcessorInterface
                 return true;
             }
 
-            // Update payment information
-            $this->updatePaymentInformation($order, $payment);
+            // A failed sibling payment for the same order id must not undo a settled one
+            $storedPaymentId = $order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID);
+            if ($order->hasInvoices() || ($storedPaymentId && $storedPaymentId !== $paymentId)) {
+                $this->logger->warning(sprintf(
+                    '[Payment] Order %s not canceled: payment %s failed, but the order is invoiced or uses payment %s',
+                    $incrementId,
+                    $paymentId,
+                    $storedPaymentId ?: 'n/a'
+                ));
+
+                return true;
+            }
 
             // Build cancellation comment with error details if available
             $comment = __('Payment error');
@@ -683,6 +710,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             ];
 
             if (in_array($state, $allowedStatesToCancel)) {
+                $this->updatePaymentInformation($order, $payment);
                 $order->setState(Order::STATE_CANCELED);
                 $order->setStatus(Order::STATE_CANCELED);
                 $order->addCommentToStatusHistory($comment);
@@ -742,6 +770,10 @@ class PaymentProcessor implements PaymentProcessorInterface
                 return true;
             }
 
+            if (!$this->verifyPaymentAmount($order, $payment)) {
+                return true;
+            }
+
             // Update payment information
             $this->updatePaymentInformation($order, $payment);
 
@@ -789,6 +821,50 @@ class PaymentProcessor implements PaymentProcessorInterface
 
             return false;
         }
+    }
+
+    /**
+     * Hold the order when the payment amount or currency differs from the order's base grand total
+     *
+     * @param OrderInterface $order
+     * @param PaymentDTO $payment
+     * @return bool True when the payment matches the order
+     */
+    private function verifyPaymentAmount(OrderInterface $order, PaymentDTO $payment): bool
+    {
+        $orderTotal = (float) $order->getBaseGrandTotal();
+        $orderCurrency = (string) $order->getBaseCurrencyCode();
+        $paymentAmount = $payment->getAmountInCents();
+        $paymentCurrency = $payment->getCurrency();
+
+        if ($this->paymentAmountMatcher->matches($paymentAmount, $paymentCurrency, $orderTotal, $orderCurrency)) {
+            return true;
+        }
+
+        $this->logger->error(sprintf(
+            '[Payment] Amount mismatch for order %s, payment %s: payment %.2f %s, order total %.2f %s',
+            $order->getIncrementId(),
+            $payment->getId(),
+            $paymentAmount / 100,
+            $paymentCurrency,
+            $orderTotal,
+            $orderCurrency
+        ));
+
+        if ($order->canHold()) {
+            $order->hold();
+            $order->addCommentToStatusHistory(__(
+                'MONEI payment %1 amount (%2 %3) does not match the order total (%4 %5). Order put on hold for review.',
+                $payment->getId(),
+                sprintf('%.2f', $paymentAmount / 100),
+                $paymentCurrency,
+                sprintf('%.2f', $orderTotal),
+                $orderCurrency
+            ));
+            $this->orderRepository->save($order);
+        }
+
+        return false;
     }
 
     /**
