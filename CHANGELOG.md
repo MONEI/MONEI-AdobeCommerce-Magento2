@@ -1,5 +1,9 @@
 # Changelog
 
+## <small>2.4.4 (2026-10-22)</small>
+
+* fix(deps): require monei-php-sdk 2.13 for bundled Guzzle security fixes (#96) ([54ec319](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/54ec319)), closes [#96](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/96)
+
 ## <small>2.4.3 (2026-10-21)</small>
 
 - fix: verify payment amount and currency before settling orders (#95) ([de3bb16](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/de3bb16)), closes [#95](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/95)
