@@ -24,9 +24,12 @@ use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Model\Order\Address;
 use Magento\Sales\Model\Order\Payment;
 use Magento\Sales\Model\Order;
+use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\StoreManagerInterface;
 use Monei\Model\Payment as MoneiPayment;
 use Monei\Model\PaymentNextAction;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
+use Monei\MoneiPayment\Api\Service\Customer\CustomerServiceInterface;
 use Monei\MoneiPayment\Controller\Payment\Redirect as RedirectController;
 use Monei\MoneiPayment\Service\Shared\PaymentMethodCodeMapper;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -118,6 +121,13 @@ class RedirectTest extends TestCase
     private $_nextActionMock;
 
     /**
+     * Customer service mock
+     *
+     * @var CustomerServiceInterface|MockObject
+     */
+    private $_customerServiceMock;
+
+    /**
      * Set up test environment
      *
      * @return void
@@ -135,6 +145,12 @@ class RedirectTest extends TestCase
         $this->_paymentMethodMock = $this->createMock(MethodInterface::class);
         $this->_moneiPaymentMock = $this->createMock(MoneiPayment::class);
         $this->_nextActionMock = $this->createMock(PaymentNextAction::class);
+        $this->_customerServiceMock = $this->createMock(CustomerServiceInterface::class);
+
+        $storeMock = $this->createMock(StoreInterface::class);
+        $storeMock->method('getId')->willReturn(2);
+        $storeManagerMock = $this->createMock(StoreManagerInterface::class);
+        $storeManagerMock->method('getStore')->willReturn($storeMock);
 
         // Configure session mock
         $this->_checkoutSessionMock->method('getLastRealOrder')->willReturn($this->_orderMock);
@@ -166,8 +182,79 @@ class RedirectTest extends TestCase
             $this->_checkoutSessionMock,
             $this->_createPaymentMock,
             $this->_resultRedirectMock,
-            $this->_paymentMethodCodeMapperMock
+            $this->_paymentMethodCodeMapperMock,
+            $this->_customerServiceMock,
+            $storeManagerMock
         );
+    }
+
+    /**
+     * Contract test 1: guest payments must not create orphan MONEI customers.
+     *
+     * @return void
+     */
+    public function testGuestOrderIsNotLinkedToAMoneiCustomer(): void
+    {
+        $this->_customerServiceMock->expects($this->never())->method('getOrCreateCustomerId');
+        $this->_moneiPaymentMock->method('getNextAction')->willReturn(null);
+        $this->_resultRedirectMock->method('setPath')->willReturnSelf();
+
+        $this->_createPaymentMock
+            ->expects($this->once())
+            ->method('execute')
+            ->with($this->callback(fn (array $data) => !array_key_exists('customer_id', $data)))
+            ->willReturn($this->_moneiPaymentMock);
+
+        $this->_controller->execute();
+    }
+
+    /**
+     * Contract test 3: a customer API outage must not block checkout.
+     *
+     * @return void
+     */
+    public function testLoggedInOrderIsPaidWithoutCustomerIdWhenLinkFails(): void
+    {
+        $this->_orderMock->method('getCustomerId')->willReturn(42);
+        $this->_customerServiceMock->method('getOrCreateCustomerId')->willReturn(null);
+        $this->_moneiPaymentMock->method('getNextAction')->willReturn(null);
+        $this->_resultRedirectMock->method('setPath')->willReturnSelf();
+
+        $this->_createPaymentMock
+            ->expects($this->once())
+            ->method('execute')
+            ->with($this->callback(fn (array $data) => !array_key_exists('customer_id', $data)))
+            ->willReturn($this->_moneiPaymentMock);
+
+        $this->_controller->execute();
+    }
+
+    /**
+     * The MONEI customer of the current store's account is linked to the payment.
+     *
+     * @return void
+     */
+    public function testLoggedInOrderSendsTheLinkedCustomerId(): void
+    {
+        $this->_orderMock->method('getCustomerId')->willReturn(42);
+        $this->_orderMock->method('getCustomerEmail')->willReturn('buyer@example.com');
+        $this->_orderMock->method('getCustomerFirstname')->willReturn('Jane');
+        $this->_orderMock->method('getCustomerLastname')->willReturn('Roe');
+        $this->_customerServiceMock
+            ->expects($this->once())
+            ->method('getOrCreateCustomerId')
+            ->with(42, 2, 'buyer@example.com', 'Jane Roe', '123456789')
+            ->willReturn('cus_123');
+        $this->_moneiPaymentMock->method('getNextAction')->willReturn(null);
+        $this->_resultRedirectMock->method('setPath')->willReturnSelf();
+
+        $this->_createPaymentMock
+            ->expects($this->once())
+            ->method('execute')
+            ->with($this->callback(fn (array $data) => ($data['customer_id'] ?? null) === 'cus_123'))
+            ->willReturn($this->_moneiPaymentMock);
+
+        $this->_controller->execute();
     }
 
     /**

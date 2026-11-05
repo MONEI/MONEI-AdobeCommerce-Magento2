@@ -20,8 +20,10 @@ use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\Quote\Address;
 use Magento\Quote\Model\Quote\Address\Rate;
+use Magento\Store\Model\StoreManagerInterface;
 use Monei\MoneiPayment\Api\Service\ConfirmPaymentInterface;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
+use Monei\MoneiPayment\Api\Service\Customer\CustomerServiceInterface;
 use Monei\MoneiPayment\Service\Express\ExpressCheckout;
 use Monei\MoneiPayment\Service\Logger;
 use Monei\MoneiPayment\Service\Quote\GetAddressDetailsByQuoteAddress;
@@ -68,7 +70,9 @@ class ExpressCheckoutTest extends TestCase
             $this->createMock(CartManagementInterface::class),
             $this->_sessionMock,
             $this->createMock(EventManager::class),
-            $this->_expressConfigMock
+            $this->_expressConfigMock,
+            $this->createMock(CustomerServiceInterface::class),
+            $this->createMock(StoreManagerInterface::class)
         );
     }
 

@@ -182,14 +182,14 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - Modify: `Test/Unit/Controller/Payment/RedirectTest.php`
 - Modify: the constructor wiring of the matching existing tests, if they break
 
-- [ ] each entry point calls `getOrCreateCustomerId(customerId, current store ID, email, name, billing telephone)` and adds `customer_id` only when the result is not `null`
-- [ ] `Redirect`: only when `$order->getCustomerId()` is set; email and name from the order
-- [ ] `CreateLoggedMoneiPaymentInSite`: from the quote
-- [ ] `ExpressCheckout`: only when `$quote->getCustomerId()` is set; email from `$quote->getCustomer()->getEmail()`
-- [ ] contract test 1 in `RedirectTest`: an order with no customer ID makes no service call and sends no `customer_id`. Bug: orphan MONEI customers for guests.
-- [ ] contract test 3 (payload part) in `RedirectTest`: a logged-in order where the service returns `null` sends a payment with no `customer_id` key. Bug: a customer API outage blocks checkout.
-- [ ] wiring test in `RedirectTest`: a logged-in order sends the returned `customer_id`. Bug: the entry point never passes the ID.
-- [ ] run `composer test:unit` and `composer analyze` - must pass before Task 7
+- [x] each entry point calls `getOrCreateCustomerId(customerId, current store ID, email, name, billing telephone)` and adds `customer_id` only when the result is not `null`
+- [x] `Redirect`: only when `$order->getCustomerId()` is set; email and name from the order
+- [x] `CreateLoggedMoneiPaymentInSite`: from the quote
+- [x] `ExpressCheckout`: only when `$quote->getCustomerId()` is set; email from `$quote->getCustomer()->getEmail()`
+- [x] contract test 1 in `RedirectTest`: an order with no customer ID makes no service call and sends no `customer_id`. Bug: orphan MONEI customers for guests.
+- [x] contract test 3 (payload part) in `RedirectTest`: a logged-in order where the service returns `null` sends a payment with no `customer_id` key. Bug: a customer API outage blocks checkout.
+- [x] wiring test in `RedirectTest`: a logged-in order sends the returned `customer_id`. Bug: the entry point never passes the ID.
+- [x] run `composer test:unit` and `composer analyze` - must pass before Task 7
 
 ### Task 7: Delete the MONEI customer when the Magento customer is deleted
 

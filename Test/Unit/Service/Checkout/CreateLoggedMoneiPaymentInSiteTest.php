@@ -6,6 +6,7 @@ use Magento\Checkout\Model\Session;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
+use Magento\Store\Model\StoreManagerInterface;
 use Monei\Model\Payment;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Data\QuoteInterface;
@@ -13,6 +14,7 @@ use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentInSiteInterf
 use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
+use Monei\MoneiPayment\Api\Service\Customer\CustomerServiceInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
@@ -116,7 +118,9 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
             $this->getAddressDetailsByQuoteAddressMock,
             $this->moduleConfigMock,
             $this->createPaymentMock,
-            $this->getPaymentMock
+            $this->getPaymentMock,
+            $this->createMock(CustomerServiceInterface::class),
+            $this->createMock(StoreManagerInterface::class)
         );
     }
 
@@ -145,7 +149,9 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
                 $this->getAddressDetailsByQuoteAddressMock,
                 $this->moduleConfigMock,
                 $this->createPaymentMock,
-                $this->getPaymentMock
+                $this->getPaymentMock,
+                $this->createMock(CustomerServiceInterface::class),
+                $this->createMock(StoreManagerInterface::class)
             ])
             ->onlyMethods(['resolveQuote', 'checkExistingPayment', 'executeApiCall'])
             ->getMock();
@@ -243,7 +249,9 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
                 $this->getAddressDetailsByQuoteAddressMock,
                 $this->moduleConfigMock,
                 $this->createPaymentMock,
-                $this->getPaymentMock
+                $this->getPaymentMock,
+                $this->createMock(CustomerServiceInterface::class),
+                $this->createMock(StoreManagerInterface::class)
             ])
             ->onlyMethods(['resolveQuote', 'checkExistingPayment'])
             ->getMock();
@@ -297,7 +305,9 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
                 $this->getAddressDetailsByQuoteAddressMock,
                 $this->moduleConfigMock,
                 $this->createPaymentMock,
-                $this->getPaymentMock
+                $this->getPaymentMock,
+                $this->createMock(CustomerServiceInterface::class),
+                $this->createMock(StoreManagerInterface::class)
             ])
             ->onlyMethods(['resolveQuote', 'checkExistingPayment', 'executeApiCall'])
             ->getMock();
@@ -392,7 +402,9 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
                 $this->getAddressDetailsByQuoteAddressMock,
                 $this->moduleConfigMock,
                 $this->createPaymentMock,
-                $this->getPaymentMock
+                $this->getPaymentMock,
+                $this->createMock(CustomerServiceInterface::class),
+                $this->createMock(StoreManagerInterface::class)
             ])
             ->onlyMethods(['executeApiCall'])
             ->getMock();

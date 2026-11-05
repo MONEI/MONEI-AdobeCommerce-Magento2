@@ -15,11 +15,13 @@ use Magento\Checkout\Model\Session;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
+use Magento\Store\Model\StoreManagerInterface;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentInSiteInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterface;
 use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
+use Monei\MoneiPayment\Api\Service\Customer\CustomerServiceInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
@@ -62,6 +64,16 @@ class CreateLoggedMoneiPaymentInSite extends AbstractCheckoutService implements 
     private MoneiPaymentModuleConfigInterface $moduleConfig;
 
     /**
+     * @var CustomerServiceInterface
+     */
+    private CustomerServiceInterface $customerService;
+
+    /**
+     * @var StoreManagerInterface
+     */
+    private StoreManagerInterface $storeManager;
+
+    /**
      * Constructor for CreateLoggedMoneiPaymentInSite service.
      *
      * @param Logger $logger Logger instance
@@ -74,6 +86,8 @@ class CreateLoggedMoneiPaymentInSite extends AbstractCheckoutService implements 
      * @param MoneiPaymentModuleConfigInterface $moduleConfig Module configuration
      * @param CreatePaymentInterface $createPayment Payment creation service
      * @param GetPaymentInterface $getPaymentService Service to retrieve payment details
+     * @param CustomerServiceInterface $customerService MONEI customer link service
+     * @param StoreManagerInterface $storeManager Store manager
      */
     public function __construct(
         Logger $logger,
@@ -85,7 +99,9 @@ class CreateLoggedMoneiPaymentInSite extends AbstractCheckoutService implements 
         GetAddressDetailsByQuoteAddressInterface $getAddressDetailsByQuoteAddress,
         MoneiPaymentModuleConfigInterface $moduleConfig,
         CreatePaymentInterface $createPayment,
-        GetPaymentInterface $getPaymentService
+        GetPaymentInterface $getPaymentService,
+        CustomerServiceInterface $customerService,
+        StoreManagerInterface $storeManager
     ) {
         parent::__construct(
             $logger,
@@ -99,6 +115,8 @@ class CreateLoggedMoneiPaymentInSite extends AbstractCheckoutService implements 
         $this->getAddressDetailsByQuoteAddress = $getAddressDetailsByQuoteAddress;
         $this->moduleConfig = $moduleConfig;
         $this->createPayment = $createPayment;
+        $this->customerService = $customerService;
+        $this->storeManager = $storeManager;
     }
 
     /**
@@ -166,6 +184,18 @@ class CreateLoggedMoneiPaymentInSite extends AbstractCheckoutService implements 
         $paymentData['customer'] = $this->getCustomerDetailsByQuote->execute($quote, $email);
         $paymentData['billing_details'] = $this->getAddressDetailsByQuoteAddress->executeBilling($quote->getBillingAddress());
         $paymentData['shipping_details'] = $this->getAddressDetailsByQuoteAddress->executeShipping($shippingAddress);
+
+        $customer = $quote->getCustomer();
+        $moneiCustomerId = $this->customerService->getOrCreateCustomerId(
+            (int) $quote->getCustomerId(),
+            (int) $this->storeManager->getStore()->getId(),
+            (string) $customer->getEmail(),
+            $customer->getFirstname() . ' ' . $customer->getLastname(),
+            (string) $quote->getBillingAddress()?->getTelephone()
+        );
+        if ($moneiCustomerId !== null) {
+            $paymentData['customer_id'] = $moneiCustomerId;
+        }
 
         return $paymentData;
     }
