@@ -12,7 +12,10 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Test\Unit\Service\Customer;
 
 use Magento\Framework\DB\Adapter\DuplicateException;
+use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\StoreManagerInterface;
 use Monei\Api\CustomersApi;
+use Monei\ApiException;
 use Monei\Model\CreateCustomerRequest;
 use Monei\Model\Customer;
 use Monei\MoneiClient;
@@ -51,6 +54,25 @@ class CustomerServiceTest extends TestCase
     private int $mode = Mode::MODE_TEST;
 
     /**
+     * @var Logger|MockObject
+     */
+    private $loggerMock;
+
+    /**
+     * Delete calls made through key clients, as [apiKey, moneiCustomerId].
+     *
+     * @var array<int, array{0: string, 1: string}>
+     */
+    private array $deletes = [];
+
+    /**
+     * Exception thrown by a key client delete, by MONEI customer ID.
+     *
+     * @var array<string, \Throwable>
+     */
+    private array $deleteErrors = [];
+
+    /**
      * @var CustomerService
      */
     private CustomerService $service;
@@ -64,16 +86,42 @@ class CustomerServiceTest extends TestCase
         $moneiClientMock->customers = $this->customersApiMock;
         $apiClientMock = $this->createMock(MoneiApiClient::class);
         $apiClientMock->method('getMoneiSdk')->with(self::STORE_ID)->willReturn($moneiClientMock);
+        $apiClientMock->method('createSdkForApiKey')->willReturnCallback(function (string $apiKey) {
+            $customersApi = $this->createMock(CustomersApi::class);
+            $customersApi->method('delete')->willReturnCallback(function (string $id) use ($apiKey) {
+                $this->deletes[] = [$apiKey, $id];
+                if (isset($this->deleteErrors[$id])) {
+                    throw $this->deleteErrors[$id];
+                }
+                return null;
+            });
+            $client = $this->createMock(MoneiClient::class);
+            $client->customers = $customersApi;
+            return $client;
+        });
 
         $moduleConfigMock = $this->createMock(MoneiPaymentModuleConfigInterface::class);
         $moduleConfigMock->method('getAccountId')->willReturnCallback(fn () => $this->accountId);
         $moduleConfigMock->method('getMode')->willReturnCallback(fn () => $this->mode);
+        // Test and live share one account ID, as they often do in a real store.
+        $moduleConfigMock->method('getTestAccountId')->willReturn('acc_1');
+        $moduleConfigMock->method('getTestApiKey')->willReturn('pk_test');
+        $moduleConfigMock->method('getProductionAccountId')->willReturn('acc_1');
+        $moduleConfigMock->method('getProductionApiKey')->willReturn('pk_live');
+
+        $storeMock = $this->createMock(StoreInterface::class);
+        $storeMock->method('getId')->willReturn(0);
+        $storeManagerMock = $this->createMock(StoreManagerInterface::class);
+        $storeManagerMock->method('getStores')->with(true)->willReturn([$storeMock]);
+
+        $this->loggerMock = $this->createMock(Logger::class);
 
         $this->service = new CustomerService(
             $this->resourceMock,
             $apiClientMock,
             $moduleConfigMock,
-            $this->createMock(Logger::class)
+            $this->loggerMock,
+            $storeManagerMock
         );
     }
 
@@ -166,6 +214,60 @@ class CustomerServiceTest extends TestCase
         $this->customersApiMock->expects($this->once())->method('delete')->with('cus_new');
 
         $this->assertSame('cus_stored', $this->getOrCreate(5));
+    }
+
+    /**
+     * Contract test 5. Bug: old unlinked customers log errors; an outage drops the mapping
+     * and leaves the customer at MONEI.
+     */
+    public function testDeleteNotFoundRemovesRowAndOtherErrorKeepsRow(): void
+    {
+        $this->resourceMock->method('getRowsByCustomer')->with(5)->willReturn([
+            ['account_id' => 'acc_1', 'mode' => 'test', 'monei_customer_id' => 'cus_gone'],
+            ['account_id' => 'acc_1', 'mode' => 'live', 'monei_customer_id' => 'cus_down'],
+        ]);
+        $this->deleteErrors = [
+            'cus_gone' => new ApiException('[404] Not Found', 404),
+            'cus_down' => new ApiException('[500] Internal Server Error', 500),
+        ];
+
+        $this->resourceMock->expects($this->once())->method('deleteRow')->with(5, 'acc_1', 'test');
+        $this->loggerMock->expects($this->once())->method('debug')->with(
+            $this->stringContains('[MONEI Customers]'),
+            $this->callback(fn (array $context) => $context['monei_customer_id'] === 'cus_gone')
+        );
+        $this->loggerMock->expects($this->once())->method('error')->with(
+            $this->stringContains('[MONEI Customers]'),
+            $this->callback(fn (array $context) => $context['monei_customer_id'] === 'cus_down'
+                && $context['account_id'] === 'acc_1'
+                && $context['mode'] === 'live')
+        );
+
+        $this->service->deleteCustomer(5);
+    }
+
+    /**
+     * Contract test 7. Bug: a live row deleted with the test key gets 404, the row is removed,
+     * and the live customer stays at MONEI.
+     */
+    public function testDeleteUsesKeyOfEachRowModeAndKeepsUnmatchedRow(): void
+    {
+        $this->resourceMock->method('getRowsByCustomer')->with(5)->willReturn([
+            ['account_id' => 'acc_1', 'mode' => 'test', 'monei_customer_id' => 'cus_test'],
+            ['account_id' => 'acc_1', 'mode' => 'live', 'monei_customer_id' => 'cus_live'],
+            ['account_id' => 'acc_old', 'mode' => 'live', 'monei_customer_id' => 'cus_old'],
+        ]);
+        $removedRows = [];
+        $this->resourceMock->method('deleteRow')->willReturnCallback(
+            function (int $customerId, string $accountId, string $mode) use (&$removedRows) {
+                $removedRows[] = [$customerId, $accountId, $mode];
+            }
+        );
+
+        $this->service->deleteCustomer(5);
+
+        $this->assertSame([['pk_test', 'cus_test'], ['pk_live', 'cus_live']], $this->deletes);
+        $this->assertSame([[5, 'acc_1', 'test'], [5, 'acc_1', 'live']], $removedRows);
     }
 
     private function getOrCreate(int $customerId): ?string

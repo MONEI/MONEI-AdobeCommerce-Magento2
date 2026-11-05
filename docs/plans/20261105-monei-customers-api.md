@@ -155,13 +155,13 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - Modify: `Service/Customer/CustomerService.php`
 - Modify: `Test/Unit/Service/Customer/CustomerServiceTest.php`
 
-- [ ] add `deleteCustomer` to the interface
-- [ ] implement the key matching from Technical Details (all stores, test and production pairs), with a client from `createSdkForApiKey()` per row
-- [ ] for each row: no key → warning, keep; success or `ApiException` 404 → remove the row; 409 → warning, keep; any other `\Throwable` → error, keep. Every delete log line holds the MONEI customer ID, account ID and mode.
-- [ ] ➕ `forgetCustomerId` catches `\Throwable` and logs it with `[MONEI Customers]` (contract v5: every customer code path)
-- [ ] contract test 5: delete 404 is logged at debug level and the row is removed; a 500 keeps the row and logs at error level with the MONEI customer ID, account ID and mode
-- [ ] contract test 7: test and live use the SAME account ID; a test row and a live row give 2 deletes, each with the key of the row's own mode, and remove both rows; a row whose account matches no key is kept
-- [ ] run `composer test:unit` - must pass before Task 5
+- [x] add `deleteCustomer` to the interface
+- [x] implement the key matching from Technical Details (all stores, test and production pairs), with a client from `createSdkForApiKey()` per row
+- [x] for each row: no key → warning, keep; success or `ApiException` 404 → remove the row; 409 → warning, keep; any other `\Throwable` → error, keep. Every delete log line holds the MONEI customer ID, account ID and mode.
+- [x] ➕ `forgetCustomerId` catches `\Throwable` and logs it with `[MONEI Customers]` (contract v5: every customer code path)
+- [x] contract test 5: delete 404 is logged at debug level and the row is removed; a 500 keeps the row and logs at error level with the MONEI customer ID, account ID and mode
+- [x] contract test 7: test and live use the SAME account ID; a test row and a live row give 2 deletes, each with the key of the row's own mode, and remove both rows; a row whose account matches no key is kept
+- [x] run `composer test:unit` - must pass before Task 5
 
 ### Task 5: Send `customerId` from `CreatePayment`
 

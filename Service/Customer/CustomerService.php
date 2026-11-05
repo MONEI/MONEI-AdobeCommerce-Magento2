@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Service\Customer;
 
 use Magento\Framework\DB\Adapter\DuplicateException;
+use Magento\Store\Model\StoreManagerInterface;
+use Monei\ApiException;
 use Monei\Model\CreateCustomerRequest;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\Customer\CustomerServiceInterface;
@@ -48,21 +50,29 @@ class CustomerService implements CustomerServiceInterface
     private Logger $logger;
 
     /**
+     * @var StoreManagerInterface
+     */
+    private StoreManagerInterface $storeManager;
+
+    /**
      * @param MoneiCustomer $resource
      * @param MoneiApiClient $apiClient
      * @param MoneiPaymentModuleConfigInterface $moduleConfig
      * @param Logger $logger
+     * @param StoreManagerInterface $storeManager
      */
     public function __construct(
         MoneiCustomer $resource,
         MoneiApiClient $apiClient,
         MoneiPaymentModuleConfigInterface $moduleConfig,
-        Logger $logger
+        Logger $logger,
+        StoreManagerInterface $storeManager
     ) {
         $this->resource = $resource;
         $this->apiClient = $apiClient;
         $this->moduleConfig = $moduleConfig;
         $this->logger = $logger;
+        $this->storeManager = $storeManager;
     }
 
     /**
@@ -114,11 +124,124 @@ class CustomerService implements CustomerServiceInterface
      */
     public function forgetCustomerId(int $customerId, int $storeId): void
     {
-        $scope = $this->resolveScope($customerId, $storeId);
-        if ($scope === null) {
+        try {
+            $scope = $this->resolveScope($customerId, $storeId);
+            if ($scope === null) {
+                return;
+            }
+            [$accountId, $mode] = $scope;
+
+            $this->resource->deleteRow($customerId, $accountId, $mode);
+        } catch (\Throwable $e) {
+            $this->logger->error(self::LOG_PREFIX . 'Forget customer failed', [
+                'customer_id' => $customerId,
+                'store_id' => $storeId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function deleteCustomer(int $customerId): void
+    {
+        try {
+            $rows = $this->resource->getRowsByCustomer($customerId);
+            if ($rows === []) {
+                return;
+            }
+            $keyPairs = $this->getConfiguredKeyPairs();
+
+            foreach ($rows as $row) {
+                $this->deleteMappedCustomer($customerId, $row, $keyPairs);
+            }
+        } catch (\Throwable $e) {
+            $this->logger->error(self::LOG_PREFIX . 'Customer delete failed', [
+                'customer_id' => $customerId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Collect the configured (account ID, mode, API key) of every scope, admin store included.
+     *
+     * @return array<int, array{0: string, 1: string, 2: string}>
+     */
+    private function getConfiguredKeyPairs(): array
+    {
+        $pairs = [];
+        foreach ($this->storeManager->getStores(true) as $store) {
+            $storeId = (int) $store->getId();
+            $pairs[] = [
+                $this->moduleConfig->getTestAccountId($storeId),
+                'test',
+                $this->moduleConfig->getTestApiKey($storeId),
+            ];
+            $pairs[] = [
+                $this->moduleConfig->getProductionAccountId($storeId),
+                'live',
+                $this->moduleConfig->getProductionApiKey($storeId),
+            ];
+        }
+
+        return array_values(array_filter(
+            $pairs,
+            static fn (array $pair): bool => $pair[0] !== '' && $pair[2] !== ''
+        ));
+    }
+
+    /**
+     * Delete one mapped MONEI customer with the key of the row's own mode; remove the row on success or 404.
+     *
+     * @param int $customerId
+     * @param array $row
+     * @param array $keyPairs List of [account ID, mode, API key]
+     * @return void
+     */
+    private function deleteMappedCustomer(int $customerId, array $row, array $keyPairs): void
+    {
+        $accountId = (string) $row['account_id'];
+        $mode = (string) $row['mode'];
+        $context = [
+            'customer_id' => $customerId,
+            'monei_customer_id' => (string) $row['monei_customer_id'],
+            'account_id' => $accountId,
+            'mode' => $mode,
+        ];
+
+        // Test and live can share one account ID, so the mode must match too.
+        $apiKey = null;
+        foreach ($keyPairs as [$pairAccountId, $pairMode, $pairApiKey]) {
+            if ($pairAccountId === $accountId && $pairMode === $mode) {
+                $apiKey = $pairApiKey;
+                break;
+            }
+        }
+        if ($apiKey === null) {
+            $this->logger->warning(self::LOG_PREFIX . 'No API key for mapped customer, row kept', $context);
+
             return;
         }
-        [$accountId, $mode] = $scope;
+
+        try {
+            $this->apiClient->createSdkForApiKey($apiKey)->customers->delete($context['monei_customer_id']);
+        } catch (\Throwable $e) {
+            $status = $e instanceof ApiException ? $e->getCode() : 0;
+            $context['error'] = $e->getMessage();
+            if ($status === 409) {
+                $this->logger->warning(self::LOG_PREFIX . 'Customer delete conflict, row kept', $context);
+
+                return;
+            }
+            if ($status !== 404) {
+                $this->logger->error(self::LOG_PREFIX . 'Customer delete failed, row kept', $context);
+
+                return;
+            }
+            $this->logger->debug(self::LOG_PREFIX . 'Customer already deleted at MONEI', $context);
+        }
 
         $this->resource->deleteRow($customerId, $accountId, $mode);
     }

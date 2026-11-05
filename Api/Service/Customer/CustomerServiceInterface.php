@@ -42,4 +42,12 @@ interface CustomerServiceInterface
      * @return void
      */
     public function forgetCustomerId(int $customerId, int $storeId): void;
+
+    /**
+     * Delete every MONEI customer mapped to a Magento customer, for all accounts and modes.
+     *
+     * @param int $customerId Magento customer ID
+     * @return void Never throws
+     */
+    public function deleteCustomer(int $customerId): void;
 }
