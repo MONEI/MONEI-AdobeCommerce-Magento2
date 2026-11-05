@@ -4,9 +4,9 @@
 - Link the MONEI payments of logged-in buyers to a MONEI customer (`customerId`).
 - Delete at MONEI when a buyer deletes a saved card, or when the Magento customer is deleted (this is also the GDPR erasure path).
 - Magento Vault stays the source of truth for saved cards.
-- Behavior is set by the cross-platform contract `docs/plans/20261105-monei-customers-api-contract.md` (v5). That file is a copy of the WooCommerce thread's file. Do not edit it. Contract changes come from the WooCommerce thread as a new version.
+- Behavior is set by the cross-platform contract `docs/plans/20261105-monei-customers-api-contract.md` (v6). That file is a copy of the WooCommerce thread's file. Do not edit it. Contract changes come from the WooCommerce thread as a new version.
 - Out of scope: list saved methods from MONEI, `useDefaultPaymentMethod`, attaching tokens saved before this change, MONEI Subscriptions, updating the MONEI customer on profile edits. Magento has no zero-amount add-card payment and no renewals, so sandbox check e does not apply.
-- Tasks 9–11 are blocked until contract v6 (sandbox results). Do not run `/planning:exec` on this plan before v6: it would start the blocked tasks. Until then, implement Tasks 1–8 interactively.
+- Tasks 9–11 are blocked until contract v7 (sandbox results). Do not run `/planning:exec` on this plan before v7: it would start the blocked tasks. Until then, implement Tasks 1–8 interactively.
 
 ## Context (from discovery)
 - SDK `monei/monei-php-sdk` 2.13.0 is in `composer.lock` and `vendor/`. `$client->customers` has `create`, `delete`, `deletePaymentMethod`, `listPaymentMethods`. `CreatePaymentRequest` has `customer_id`. No dependency change.
@@ -45,7 +45,7 @@
 - One `CustomerService` (contract "Service") owns the mapping and every Customers API call. It is fail-open: a customer error is logged with the prefix `[MONEI Customers]` and never blocks checkout, a card delete or a customer delete.
 - Entry points for logged-in buyers call `getOrCreateCustomerId()` with the **current store ID**, which is the store whose key `CreatePayment` uses. They pass the result as `customer_id` to `CreatePayment`, and only when the result is not `null`.
 - The mapping lives in a new table, keyed by (Magento customer, account ID, mode).
-- Cleanup triggers: a plugin on the Vault token repository (card delete, blocked on v6) and an observer on `customer_delete_commit_after` (customer delete / GDPR).
+- Cleanup triggers: a plugin on the Vault token repository (card delete, blocked on v7) and an observer on `customer_delete_commit_after` (customer delete / GDPR).
 
 ## Technical Details
 
@@ -63,7 +63,7 @@ Unique: (`customer_id`, `account_id`, `mode`).
 
 ### `CustomerServiceInterface` (contract signatures plus `storeId`, contract "scope parameter")
 - `getOrCreateCustomerId(int $customerId, int $storeId, string $email, string $name, string $phone): ?string`
-- `forgetCustomerId(int $customerId, int $storeId): void`
+- `forgetCustomerId(int $customerId, int $storeId, string $staleCustomerId): void` — removes the row only while it still holds `$staleCustomerId` (`DELETE … WHERE monei_customer_id = :stale`).
 - `deleteCustomer(int $customerId): void` — every row, all accounts and modes.
 - `deletePaymentMethod(int $customerId, int $storeId, string $paymentToken): void` — added in Task 9.
 
@@ -86,13 +86,16 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 
 ### Errors (contract table)
 - Create fails: error log, return `null`, no retry.
-- Concurrent create (unique-key conflict on insert: another request saved the mapping first): read the stored row, delete the MONEI customer just created (best effort; warning log on failure), return the stored ID.
+- Concurrent create (unique-key conflict on insert: another request saved the mapping first): read the stored row, delete the MONEI customer just created (best effort; **error** log with its ID on failure), return the stored ID. The winning row is kept.
+- Mapping save fails (nothing stored: another insert error, or the re-read after a conflict is empty): delete the MONEI customer just created (best effort; **error** log with its ID on failure), return `null`.
 - Delete 404: debug log; `deleteCustomer` removes the row.
-- Delete 409: warning log, keep the row. Other error: error log, keep the row.
+- `deleteCustomer` 409 or any other error: **error** log, keep the row, go on with the next row (each row in its own `\Throwable` catch).
+- `deletePaymentMethod` 409: warning log; other error: error log. It never removes the mapping, not even on 404.
+- Every case that can leave a MONEI customer with PII and no mapping logs at **error**: the module logs only errors by default.
 - Every delete error log line holds the MONEI customer ID, the account ID and the mode. `monei_customer` has no FK, so a kept row survives the customer delete; the log line is the record for manual cleanup.
 - Every customer code path catches `\Throwable` (not only `ApiException`).
-- `deleteCustomer` row with no matching key: warning log, keep the row.
-- Stale customer on create-payment: `forgetCustomerId`, `offsetSet('customer_id', null)` (never `offsetUnset`: the serializer calls every getter and warns on a missing key), retry once (⚠️ v6, check c). Any other create-payment error is rethrown unchanged.
+- `deleteCustomer` row with no matching key: **error** log, keep the row, go on with the next row.
+- Stale customer on create-payment: `forgetCustomerId(…, staleId)`, `offsetSet('customer_id', null)` (never `offsetUnset`: the serializer calls every getter and warns on a missing key), retry once (⚠️ v7, check c). Any other create-payment error is rethrown unchanged.
 
 ### Known limits (not fixed here)
 - The existing `MoneiApiClient::getMoneiSdk()` builds every store client on the shared default `Configuration`. Two stores with different keys in one request share the last key. This is a bug that exists today and is out of scope.
@@ -125,6 +128,7 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 
 - [x] add `createSdkForApiKey(string $apiKey): MoneiClient` = `new MoneiClient($apiKey, new \Monei\Configuration())`, then `setUserAgent($this->getUserAgent())`. No cache, no change to `getMoneiSdk()`.
 - [x] contract test 9: build the main client with key A, then a key client with key B; the main client's `getConfig()->getApiKey('Authorization')` is still A
+- [ ] ➕ contract v6 test 9: get the main client, then the other-mode client, then the main client AGAIN (`getMoneiSdk()` second call); the main client still holds key A and the other client key B
 - [x] run `composer test:unit` - must pass before Task 3
 
 ### Task 3: `CustomerService` — `getOrCreateCustomerId` and `forgetCustomerId`
@@ -146,6 +150,10 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - [x] extra test: `$customerId = 0` makes no create call. Bug: all Express guests are mapped to one MONEI customer with `platformCustomerId "0"`.
 - [x] extra test: an empty account ID makes no create call. Bug: payments are rejected for a `customerId` that belongs to no configured account.
 - [x] contract test 10: a concurrent create (unique-key conflict on save) returns the stored ID and deletes the new MONEI customer
+- [ ] ➕ v6: `forgetCustomerId(int $customerId, int $storeId, string $staleCustomerId)` removes the row only while it holds the stale ID; change `MoneiCustomer::deleteRow` (or add a method) to `DELETE … WHERE customer_id, account_id, mode AND monei_customer_id = :stale`; update the interface
+- [ ] ➕ v6: mapping save fails (any insert error other than the unique key, or an empty re-read after a conflict) → best-effort delete of the new MONEI customer, return `null`; a failed cleanup delete (both cases) logs at **error** with the new MONEI customer ID
+- [ ] ➕ v6 contract test 3: the create throws an `\Error` (not an `\Exception`); the result is `null` and no row is saved
+- [ ] ➕ v6 contract test 10: the concurrent create also keeps the winning row (no delete of the stored row); a mapping save that stores nothing returns `null` and deletes the new MONEI customer
 - [x] run `composer test:unit` - must pass before Task 4
 
 ### Task 4: `CustomerService::deleteCustomer`
@@ -161,6 +169,9 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - [x] ➕ `forgetCustomerId` catches `\Throwable` and logs it with `[MONEI Customers]` (contract v5: every customer code path)
 - [x] contract test 5: delete 404 is logged at debug level and the row is removed; a 500 keeps the row and logs at error level with the MONEI customer ID, account ID and mode
 - [x] contract test 7: test and live use the SAME account ID; a test row and a live row give 2 deletes, each with the key of the row's own mode, and remove both rows; a row whose account matches no key is kept
+- [ ] ➕ v6: each row gets its own `\Throwable` catch, so a failing row (API, `\Error` or database) never stops the next rows; drop the outer catch that stops the loop
+- [ ] ➕ v6: `deleteCustomer` 409, other errors and a row with no matching key log at **error** (not warning), with the MONEI customer ID, account ID and mode
+- [ ] ➕ v6 contract test 7: when the first row throws an `\Error`, the next row is still deleted
 - [x] run `composer test:unit` - must pass before Task 5
 
 ### Task 5: Send `customerId` from `CreatePayment`
@@ -209,7 +220,7 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - [ ] run the full suite: `composer test:unit`
 - [ ] run `composer analyze` and `composer cs:lint`
 
-### Task 9: Delete the MONEI payment method when a saved card is deleted (⚠️ blocked on contract v6, check a)
+### Task 9: Delete the MONEI payment method when a saved card is deleted (⚠️ blocked on contract v7, check a)
 
 **Files:**
 - Create: `Plugin/DeleteMoneiPaymentMethod.php`
@@ -219,40 +230,40 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - Modify: `Test/Unit/Service/Customer/CustomerServiceTest.php`
 - Create: `Test/Unit/Plugin/DeleteMoneiPaymentMethodTest.php`
 
-- [ ] ⚠️ do not start before contract v6 states whether `CustomerPaymentMethod.id` equals the vault `gateway_token`
-- [ ] add `deletePaymentMethod` to the interface. Implement it for the current scope: no mapping → nothing; else `customers->deletePaymentMethod(moneiCustomerId, token)`. If check a says the IDs differ, look the ID up via `listPaymentMethods` first. 404 → debug, 409 → warning, other → error.
+- [ ] ⚠️ do not start before contract v7 states whether `CustomerPaymentMethod.id` equals the vault `gateway_token`
+- [ ] add `deletePaymentMethod` to the interface. Implement it for the current scope: no mapping → nothing; else `customers->deletePaymentMethod(moneiCustomerId, token)`. If check a says the IDs differ, look the ID up via `listPaymentMethods` first. 404 → debug, 409 → warning, other → error. It never removes the mapping, whatever the result (v6).
 - [ ] plugin `afterDelete` on `Magento\Vault\Api\PaymentTokenRepositoryInterface`: only tokens with `payment_method_code` = `Monei::CARD_CODE` and a customer ID; current store ID; never throws
 - [ ] contract test 11: `deletePaymentMethod` with no mapping makes no API call
 - [ ] one test: a non-MONEI token makes no service call. Bug: deleting a card of another payment provider calls MONEI.
-- [ ] add the v6 test for check a, if v6 sets one
+- [ ] add the v7 test for check a, if v7 sets one
 - [ ] run `composer test:unit` - must pass before Task 10
 
-### Task 10: Retry once without a stale `customerId` (⚠️ blocked on contract v6, check c)
+### Task 10: Retry once without a stale `customerId` (⚠️ blocked on contract v7, check c)
 
 **Files:**
 - Modify: `Service/Api/CreatePayment.php`
 - Modify: the Task 6 entry points (pass `platform_customer_id`)
 - Modify: `Test/Unit/Service/Api/CreatePaymentTest.php`
 
-- [ ] ⚠️ do not start before contract v6 gives the exact error (status, code, message) for a deleted `customerId`
+- [ ] ⚠️ do not start before contract v7 gives the exact error (status, code, message) for a deleted `customerId`
 - [ ] entry points also pass `platform_customer_id` (the Magento ID). `buildPaymentRequest()` does not map it, so it is never sent.
-- [ ] inside the `$sdkCall` closure (where the raw `ApiException` is visible): on that error, when `customer_id` and `platform_customer_id` are set → `forgetCustomerId(platform_customer_id, current store)`, `offsetSet('customer_id', null)`, retry the create once. Never a second retry. Any other error is rethrown unchanged.
+- [ ] inside the `$sdkCall` closure (where the raw `ApiException` is visible): on that error, when `customer_id` and `platform_customer_id` are set → `forgetCustomerId(platform_customer_id, current store, staleId)`, `offsetSet('customer_id', null)`, retry the create once. Never a second retry. A failure of the retry is rethrown. Any other error is rethrown unchanged. If v7 says MONEI rejects a deleted customer only at confirm, not at create, this task is reopened per v7.
 - [ ] contract test 6: a stale customer gives exactly one retry, the second request has no `customerId`, and the mapping is cleared; an unrelated error with the SAME HTTP status is rethrown and not retried; a payload without `customerId` is never retried
 - [ ] run `composer test:unit` - must pass before Task 11
 
-### Task 11: Link saved-card payments (⚠️ blocked on contract v6, check d)
+### Task 11: Link saved-card payments (⚠️ blocked on contract v7, check d)
 
 **Files:**
 - Modify: `Service/Checkout/CreateLoggedMoneiPaymentVault.php`
-- Modify: `Test/Unit/Service/Checkout/CreateLoggedMoneiPaymentVaultTest.php` (only if v6 adds a test)
+- Modify: `Test/Unit/Service/Checkout/CreateLoggedMoneiPaymentVaultTest.php` (only if v7 adds a test)
 
-- [ ] ⚠️ do not start before contract v6 states whether MONEI accepts `customerId` with a token saved before the link
+- [ ] ⚠️ do not start before contract v7 states whether MONEI accepts `customerId` with a token saved before the link
 - [ ] if accepted: pass `customer_id` (and `platform_customer_id`) as in Tasks 6 and 10
-- [ ] if rejected: follow the v6 rule (no `customerId` with an unlinked token) and add the v6 test
+- [ ] if rejected: follow the v7 rule (no `customerId` with an unlinked token) and add the v7 test
 - [ ] run `composer test:unit` - must pass before Task 12
 
 ### Task 12: Verify acceptance criteria
-- [ ] verify every contract item maps to code, including tests 1–12 and the v6 additions
+- [ ] verify every contract item maps to code, including tests 1–12 and the v7 additions
 - [ ] run the full suite: `composer test:unit`
 - [ ] run `composer analyze` and `composer cs:lint`
 
@@ -263,8 +274,9 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 *Items requiring manual intervention or external systems - no checkboxes, informational only*
 
 **Contract**
-- Sandbox checks a and c–h are owned by the WooCommerce thread. Results arrive as contract v6. Copy v6 over `docs/plans/20261105-monei-customers-api-contract.md` unchanged, then do Tasks 9–11.
-- v6 check f (does a customer delete remove its tokens) may add per-method deletes to `deleteCustomer` (Task 4). Check h (local vs E.164 phone) may change the phone rule (Task 3). Reopen those tasks with ➕ items if v6 says so. Check g does not apply: Magento has no zero-amount add-card payment.
+- Sandbox checks a and c–i are owned by the WooCommerce thread. Results arrive as contract v7. Copy v7 over `docs/plans/20261105-monei-customers-api-contract.md` unchanged, then do Tasks 9–11.
+- v7 check f (does a customer delete remove its tokens) may add per-method deletes to `deleteCustomer` (Task 4). Check h (local vs E.164 phone) may change the phone rule (Task 3). Reopen those tasks with ➕ items if v7 says so. Check g does not apply: Magento has no zero-amount add-card payment.
+- v7 check i (does every payment method accept `customerId` at create) may require Task 6 to leave `customer_id` out for some methods. `Redirect` serves every redirect method; `ExpressCheckout` serves Apple Pay / Google Pay. Reopen Task 6 with ➕ items if v7 says so.
 - A Magento item that cannot follow the contract goes to the WooCommerce thread, not a local change.
 
 **Manual verification**
