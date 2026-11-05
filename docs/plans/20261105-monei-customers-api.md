@@ -209,10 +209,10 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - Modify: `etc/events.xml`
 - Create: `Test/Unit/Observer/DeleteMoneiCustomerTest.php`
 
-- [ ] observer on `customer_delete_commit_after` calls `deleteCustomer((int) $customer->getId())`. It catches every throwable and logs it with `[MONEI Customers]`.
-- [ ] register it in `etc/events.xml` (global area, so admin, REST and storefront deletes run it)
-- [ ] one wiring test: the observer passes the deleted customer's ID, and an exception from the service does not escape. Bug: a MONEI failure blocks a customer delete in the admin.
-- [ ] run `composer test:unit` - must pass before Task 8
+- [x] observer on `customer_delete_commit_after` calls `deleteCustomer((int) $customer->getId())`. It catches every throwable and logs it with `[MONEI Customers]`.
+- [x] register it in `etc/events.xml` (global area, so admin, REST and storefront deletes run it)
+- [x] one wiring test: the observer passes the deleted customer's ID, and an exception from the service does not escape. Bug: a MONEI failure blocks a customer delete in the admin.
+- [x] run `composer test:unit` - must pass before Task 8
 
 ### Task 8: Verify Tasks 1–7
 - [ ] verify the unblocked contract items map to code: Service (3 methods), Mapping, SDK rules, Create request, `customerId` on checkout and Express payments, Errors (except the stale retry), concurrent create, customer-delete trigger, tests 1–5, 7–10 and 12
