@@ -109,11 +109,11 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - Modify: `etc/db_schema_whitelist.json`
 - Create: `Model/ResourceModel/MoneiCustomer.php`
 
-- [ ] add table `monei_customer` with the columns and unique key from Technical Details to `etc/db_schema.xml`
-- [ ] add the matching entries to `etc/db_schema_whitelist.json`
-- [ ] create `Model/ResourceModel/MoneiCustomer.php` (extends `AbstractDb`) with `getMoneiCustomerId(customerId, accountId, mode): ?string`, `saveRow(...)` (lets the duplicate-key exception go up), `deleteRow(customerId, accountId, mode)`, `getRowsByCustomer(customerId): array`
-- [ ] no unit test: the SQL is not unit-tested (a mock does not run it). It is checked in the manual store test (Post-Completion).
-- [ ] run `composer test:unit` and `composer analyze` - must pass before Task 2
+- [x] add table `monei_customer` with the columns and unique key from Technical Details to `etc/db_schema.xml`
+- [x] add the matching entries to `etc/db_schema_whitelist.json`
+- [x] create `Model/ResourceModel/MoneiCustomer.php` (extends `AbstractDb`) with `getMoneiCustomerId(customerId, accountId, mode): ?string`, `saveRow(...)` (lets the duplicate-key exception go up), `deleteRow(customerId, accountId, mode)`, `getRowsByCustomer(customerId): array`
+- [x] no unit test: the SQL is not unit-tested (a mock does not run it). It is checked in the manual store test (Post-Completion).
+- [x] run `composer test:unit` and `composer analyze` - must pass before Task 2
 
 ### Task 2: Add `MoneiApiClient::createSdkForApiKey()`
 

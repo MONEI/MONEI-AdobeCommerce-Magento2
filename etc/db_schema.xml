@@ -51,4 +51,27 @@
       comment="Save MONEI tokenization?"
     />
   </table>
+  <table name="monei_customer" resource="default" engine="innodb" comment="MONEI Customer Mapping">
+    <column xsi:type="int" name="entity_id" unsigned="true" nullable="false" identity="true" comment="ID" />
+    <column xsi:type="int" name="customer_id" unsigned="true" nullable="false" identity="false" comment="Customer ID" />
+    <column xsi:type="varchar" name="account_id" nullable="false" length="255" comment="MONEI Account ID" />
+    <column xsi:type="varchar" name="mode" nullable="false" length="4" comment="Mode (test or live)" />
+    <column xsi:type="varchar" name="monei_customer_id" nullable="false" length="255" comment="MONEI Customer ID" />
+    <column
+      xsi:type="timestamp"
+      name="created_at"
+      on_update="false"
+      nullable="false"
+      default="CURRENT_TIMESTAMP"
+      comment="Created At"
+    />
+    <constraint xsi:type="primary" referenceId="PRIMARY">
+      <column name="entity_id" />
+    </constraint>
+    <constraint xsi:type="unique" referenceId="MONEI_CUSTOMER_CUSTOMER_ID_ACCOUNT_ID_MODE">
+      <column name="customer_id" />
+      <column name="account_id" />
+      <column name="mode" />
+    </constraint>
+  </table>
 </schema>
