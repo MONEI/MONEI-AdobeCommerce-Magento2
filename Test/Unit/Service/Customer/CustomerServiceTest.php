@@ -13,7 +13,6 @@ namespace Monei\MoneiPayment\Test\Unit\Service\Customer;
 
 use Magento\Framework\DB\Adapter\DuplicateException;
 use Monei\Api\CustomersApi;
-use Monei\ApiException;
 use Monei\Model\CreateCustomerRequest;
 use Monei\Model\Customer;
 use Monei\MoneiClient;
@@ -94,7 +93,8 @@ class CustomerServiceTest extends TestCase
      */
     public function testCreateErrorReturnsNull(): void
     {
-        $this->customersApiMock->method('create')->willThrowException(new ApiException('Server error', 500));
+        $this->customersApiMock->method('create')->willThrowException(new \Exception('Network error'));
+        $this->resourceMock->expects($this->never())->method('saveRow');
 
         $this->assertNull($this->getOrCreate(5));
     }
@@ -144,12 +144,13 @@ class CustomerServiceTest extends TestCase
     }
 
     /**
-     * Bug: payments are rejected for a customerId that belongs to no configured account.
+     * Contract test 12. Bug: a mapping stored under an empty account that no delete can resolve.
      */
     public function testEmptyAccountIdMakesNoCreateCall(): void
     {
         $this->accountId = '';
         $this->customersApiMock->expects($this->never())->method('create');
+        $this->resourceMock->expects($this->never())->method('saveRow');
 
         $this->assertNull($this->getOrCreate(5));
     }
