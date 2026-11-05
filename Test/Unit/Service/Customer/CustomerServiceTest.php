@@ -217,7 +217,9 @@ class CustomerServiceTest extends TestCase
             ->willThrowException(new ApiException('[500] Internal Server Error', 500));
         $this->loggerMock->expects($this->once())->method('error')->with(
             $this->stringContains('[MONEI Customers]'),
-            $this->callback(fn (array $context) => $context['monei_customer_id'] === 'cus_new')
+            $this->callback(fn (array $context) => $context['monei_customer_id'] === 'cus_new'
+                && $context['account_id'] === 'acc_1'
+                && $context['mode'] === 'test')
         );
 
         $this->assertSame('cus_stored', $this->getOrCreate(5));

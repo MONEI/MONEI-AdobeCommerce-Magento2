@@ -215,10 +215,12 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - [x] run `composer test:unit` - must pass before Task 8
 
 ### Task 8: Verify Tasks 1–7
-- [ ] verify the unblocked contract items map to code: Service (3 methods), Mapping, SDK rules, Create request, `customerId` on checkout and Express payments, Errors (except the stale retry), concurrent create, customer-delete trigger, tests 1–5, 7–10 and 12
-- [ ] verify a guest checkout, the vault checkout and the express checkout still build their payloads (existing tests)
-- [ ] run the full suite: `composer test:unit`
-- [ ] run `composer analyze` and `composer cs:lint`
+- [x] verify the unblocked contract items map to code: Service (3 methods), Mapping, SDK rules, Create request, `customerId` on checkout and Express payments, Errors (except the stale retry), concurrent create, customer-delete trigger, tests 1–5, 7–10 and 12
+- [x] verify a guest checkout, the vault checkout and the express checkout still build their payloads (existing tests)
+- [x] run the full suite: `composer test:unit`
+- [x] run `composer analyze` and `composer cs:lint`
+- [x] ➕ the failed delete of an unmapped MONEI customer (concurrent create / mapping save fails) logs the account ID and mode too; contract test 10 asserts them
+- [x] ➕ `deleteCustomer` resolves the configured keys inside the per-row catch, so a config failure logs each row's MONEI customer ID, account ID and mode
 
 ### Task 9: Delete the MONEI payment method when a saved card is deleted (⚠️ blocked on contract v7, check a)
 

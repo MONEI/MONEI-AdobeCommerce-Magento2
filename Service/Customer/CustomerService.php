@@ -112,7 +112,7 @@ class CustomerService implements CustomerServiceInterface
                 $storedId = null;
             }
             if ($storedId !== $moneiCustomerId) {
-                $this->deleteUnmappedCustomer($customerId, $storeId, $moneiCustomerId);
+                $this->deleteUnmappedCustomer($customerId, $storeId, $accountId, $mode, $moneiCustomerId);
             }
 
             return $storedId;
@@ -157,10 +157,6 @@ class CustomerService implements CustomerServiceInterface
     {
         try {
             $rows = $this->resource->getRowsByCustomer($customerId);
-            if ($rows === []) {
-                return;
-            }
-            $keyPairs = $this->getConfiguredKeyPairs();
         } catch (\Throwable $e) {
             $this->logger->error(self::LOG_PREFIX . 'Customer delete failed', [
                 'customer_id' => $customerId,
@@ -170,8 +166,11 @@ class CustomerService implements CustomerServiceInterface
             return;
         }
 
+        // Resolved inside the row catch, so a config failure is logged with each row's IDs.
+        $keyPairs = null;
         foreach ($rows as $row) {
             try {
+                $keyPairs ??= $this->getConfiguredKeyPairs();
                 $this->deleteMappedCustomer($customerId, $row, $keyPairs);
             } catch (\Throwable $e) {
                 $this->logger->error(self::LOG_PREFIX . 'Customer delete failed, row kept', [
@@ -347,17 +346,26 @@ class CustomerService implements CustomerServiceInterface
      *
      * @param int $customerId
      * @param int $storeId
+     * @param string $accountId
+     * @param string $mode
      * @param string $moneiCustomerId
      * @return void
      */
-    private function deleteUnmappedCustomer(int $customerId, int $storeId, string $moneiCustomerId): void
-    {
+    private function deleteUnmappedCustomer(
+        int $customerId,
+        int $storeId,
+        string $accountId,
+        string $mode,
+        string $moneiCustomerId
+    ): void {
         try {
             $this->apiClient->getMoneiSdk($storeId)->customers->delete($moneiCustomerId);
         } catch (\Throwable $e) {
             $this->logger->error(self::LOG_PREFIX . 'Delete of unmapped customer failed', [
                 'customer_id' => $customerId,
                 'monei_customer_id' => $moneiCustomerId,
+                'account_id' => $accountId,
+                'mode' => $mode,
                 'error' => $e->getMessage(),
             ]);
         }
