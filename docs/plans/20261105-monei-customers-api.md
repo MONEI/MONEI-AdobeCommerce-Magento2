@@ -4,7 +4,7 @@
 - Link the MONEI payments of logged-in buyers to a MONEI customer (`customerId`).
 - Delete at MONEI when a buyer deletes a saved card, or when the Magento customer is deleted (this is also the GDPR erasure path).
 - Magento Vault stays the source of truth for saved cards.
-- Behavior is set by the cross-platform contract `docs/plans/20261105-monei-customers-api-contract.md` (v6). That file is a copy of the WooCommerce thread's file. Do not edit it. Contract changes come from the WooCommerce thread as a new version.
+- Behavior is set by the cross-platform contract `docs/plans/20261105-monei-customers-api-contract.md` (v6.1). That file is a copy of the WooCommerce thread's file. Do not edit it. Contract changes come from the WooCommerce thread as a new version.
 - Out of scope: list saved methods from MONEI, `useDefaultPaymentMethod`, attaching tokens saved before this change, MONEI Subscriptions, updating the MONEI customer on profile edits. Magento has no zero-amount add-card payment and no renewals, so sandbox check e does not apply.
 - Tasks 9–11 are blocked until contract v7 (sandbox results). Do not run `/planning:exec` on this plan before v7: it would start the blocked tasks. Until then, implement Tasks 1–8 interactively.
 
@@ -86,7 +86,7 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 
 ### Errors (contract table)
 - Create fails: error log, return `null`, no retry.
-- Concurrent create (unique-key conflict on insert: another request saved the mapping first): read the stored row, delete the MONEI customer just created (best effort; **error** log with its ID on failure), return the stored ID. The winning row is kept.
+- Concurrent create (unique-key conflict on insert: another request saved the mapping first): read the stored row with a fresh SQL select (no repository or entity cache, no open transaction; contract v6.1), delete the MONEI customer just created (best effort; **error** log with its ID on failure), return the stored ID. The winning row is kept.
 - Mapping save fails (nothing stored: another insert error, or the re-read after a conflict is empty): delete the MONEI customer just created (best effort; **error** log with its ID on failure), return `null`.
 - Delete 404: debug log; `deleteCustomer` removes the row.
 - `deleteCustomer` 409 or any other error: **error** log, keep the row, go on with the next row (each row in its own `\Throwable` catch).
@@ -141,7 +141,7 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 
 - [x] create the interface with `getOrCreateCustomerId` and `forgetCustomerId` only, and the DI preference in `etc/di.xml` (same pattern as the other `Api/Service` interfaces)
 - [x] implement scope resolution: mode → `test`|`live`, account ID; an empty account ID or `$customerId < 1` → debug log and `null`
-- [x] implement `getOrCreateCustomerId`: mapping hit → return it. On a miss → `getMoneiSdk($storeId)->customers->create()` with the payload from Technical Details (empty fields left out), save the row, return the ID. Catch `\Throwable` → error log with `[MONEI Customers]`, return `null`. On a unique-key conflict on save → read the stored row, best-effort delete of the new MONEI customer (warning log on failure), return the stored ID.
+- [x] implement `getOrCreateCustomerId`: mapping hit → return it. On a miss → `getMoneiSdk($storeId)->customers->create()` with the payload from Technical Details (empty fields left out), save the row, return the ID. Catch `\Throwable` → error log with `[MONEI Customers]`, return `null`. On a unique-key conflict on save → read the stored row, best-effort delete of the new MONEI customer (error log on failure, v6), return the stored ID.
 - [x] implement `forgetCustomerId`: delete the row for the scope's account + mode
 - [x] contract test 2: an existing mapping is reused, with no create call
 - [x] contract test 3 (service part): a create error returns `null` and does not throw
@@ -165,7 +165,7 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 
 - [x] add `deleteCustomer` to the interface
 - [x] implement the key matching from Technical Details (all stores, test and production pairs), with a client from `createSdkForApiKey()` per row
-- [x] for each row: no key → warning, keep; success or `ApiException` 404 → remove the row; 409 → warning, keep; any other `\Throwable` → error, keep. Every delete log line holds the MONEI customer ID, account ID and mode.
+- [x] for each row: no key → error (v6), keep; success or `ApiException` 404 → remove the row; 409 → error (v6), keep; any other `\Throwable` → error, keep. Every delete log line holds the MONEI customer ID, account ID and mode.
 - [x] ➕ `forgetCustomerId` catches `\Throwable` and logs it with `[MONEI Customers]` (contract v5: every customer code path)
 - [x] contract test 5: delete 404 is logged at debug level and the row is removed; a 500 keeps the row and logs at error level with the MONEI customer ID, account ID and mode
 - [x] contract test 7: test and live use the SAME account ID; a test row and a live row give 2 deletes, each with the key of the row's own mode, and remove both rows; a row whose account matches no key is kept

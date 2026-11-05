@@ -1,4 +1,4 @@
-# MONEI Customers API: cross-platform contract (v6)
+# MONEI Customers API: cross-platform contract (v6.1)
 
 One behavior for the WooCommerce, Magento 2 and PrestaShop plugins. Each plugin
 plan copies this file without changes. A change to the contract goes through
@@ -9,6 +9,7 @@ SDK: `monei/monei-php-sdk` 2.13.0, `$client->customers`.
 
 ## Changelog
 
+- v6.1: `deleteCustomer` step 1 logs a row with no match at error level (it said warning, against the Errors table). The re-read after a lost mapping race must bypass any cache.
 - v6:
   - Log levels: a case that can leave a MONEI customer with PII and no mapping logs at **error** (the plugins drop warnings by default).
   - `forgetCustomerId` removes the mapping only while it still holds the stale ID.
@@ -72,7 +73,7 @@ not change.
 
 `deleteCustomer`, for each mapping row of the customer:
 
-1. Take the mode from the row. The row matches when the account ID configured for that mode equals the row's account ID and the API key of that mode is not empty. Never find a mode by account ID alone: test and live often share one account ID. With no match: warning log, keep the row, go to the next row.
+1. Take the mode from the row. The row matches when the account ID configured for that mode equals the row's account ID and the API key of that mode is not empty. Never find a mode by account ID alone: test and live often share one account ID. With no match: error log, keep the row, go to the next row.
 2. Call `delete(moneiCustomerId)` with a client for that mode's key, built with its own `Configuration` (see SDK rules).
 3. Success or 404: remove the row. 409 or other error: as in the Errors table.
 
@@ -94,8 +95,8 @@ not link: no create call, no `customerId`. It writes one debug log line.
 Saving a new mapping must detect a mapping that another request stored first
 (two first payments of the same buyer at the same time):
 
-- Magento, PrestaShop: insert; a unique-key conflict means another request won. Read the stored row.
-- WooCommerce: `add_user_meta( …, $unique = true )`, then read the key again with `get_user_meta( …, true )`. If the value read is not the new ID, another request won. Remove a duplicate row with the new ID if one was written (`delete_user_meta( $user_id, $key, $newId )`).
+- Magento, PrestaShop: insert; a unique-key conflict means another request won. Read the stored row with a fresh query that bypasses any repository or entity cache, which can still hold the empty result from the first read.
+- WooCommerce: `add_user_meta( …, $unique = true )`, then `wp_cache_delete( $user_id, 'user_meta' )`, then read the key again with `get_user_meta( …, true )`. Clear the cache first: a failed unique add does not clear it, so the re-read would return this request's stale value. If the value read is not the new ID, another request won. Remove a duplicate row with the new ID if one was written (`delete_user_meta( $user_id, $key, $newId )`).
 
 When another request won, follow the "Concurrent create" row in the Errors table. When the save failed and nothing is stored (the re-read is empty, or the insert failed for a reason other than the unique key), follow the "Mapping save fails" row.
 
