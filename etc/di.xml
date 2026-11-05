@@ -92,6 +92,10 @@
     type="Monei\MoneiPayment\Service\Checkout\CreateGuestMoneiPaymentInSite"
   />
   <preference
+    for="Monei\MoneiPayment\Api\Service\Customer\CustomerServiceInterface"
+    type="Monei\MoneiPayment\Service\Customer\CustomerService"
+  />
+  <preference
     for="Magento\Sales\Controller\Adminhtml\Order\Creditmemo\Save"
     type="Monei\MoneiPayment\Controller\Adminhtml\Order\Creditmemo\Save"
   />

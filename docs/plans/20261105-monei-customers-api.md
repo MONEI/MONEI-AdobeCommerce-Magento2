@@ -133,18 +133,18 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - Modify: `etc/di.xml`
 - Create: `Test/Unit/Service/Customer/CustomerServiceTest.php`
 
-- [ ] create the interface with `getOrCreateCustomerId` and `forgetCustomerId` only, and the DI preference in `etc/di.xml` (same pattern as the other `Api/Service` interfaces)
-- [ ] implement scope resolution: mode → `test`|`live`, account ID; an empty account ID or `$customerId < 1` → debug log and `null`
-- [ ] implement `getOrCreateCustomerId`: mapping hit → return it. On a miss → `getMoneiSdk($storeId)->customers->create()` with the payload from Technical Details (empty fields left out), save the row, return the ID. Catch `\Throwable` → error log with `[MONEI Customers]`, return `null`. On a unique-key conflict on save → read the stored row, best-effort delete of the new MONEI customer (warning log on failure), return the stored ID.
-- [ ] implement `forgetCustomerId`: delete the row for the scope's account + mode
-- [ ] contract test 2: an existing mapping is reused, with no create call
-- [ ] contract test 3 (service part): a create error returns `null` and does not throw
-- [ ] contract test 4: a store in live mode never returns the test-mode ID of the same customer
-- [ ] contract test 8: an empty phone gives a create request with no `phone` key, and the ID is returned
-- [ ] extra test: `$customerId = 0` makes no create call. Bug: all Express guests are mapped to one MONEI customer with `platformCustomerId "0"`.
-- [ ] extra test: an empty account ID makes no create call. Bug: payments are rejected for a `customerId` that belongs to no configured account.
-- [ ] contract test 10: a concurrent create (unique-key conflict on save) returns the stored ID and deletes the new MONEI customer
-- [ ] run `composer test:unit` - must pass before Task 4
+- [x] create the interface with `getOrCreateCustomerId` and `forgetCustomerId` only, and the DI preference in `etc/di.xml` (same pattern as the other `Api/Service` interfaces)
+- [x] implement scope resolution: mode → `test`|`live`, account ID; an empty account ID or `$customerId < 1` → debug log and `null`
+- [x] implement `getOrCreateCustomerId`: mapping hit → return it. On a miss → `getMoneiSdk($storeId)->customers->create()` with the payload from Technical Details (empty fields left out), save the row, return the ID. Catch `\Throwable` → error log with `[MONEI Customers]`, return `null`. On a unique-key conflict on save → read the stored row, best-effort delete of the new MONEI customer (warning log on failure), return the stored ID.
+- [x] implement `forgetCustomerId`: delete the row for the scope's account + mode
+- [x] contract test 2: an existing mapping is reused, with no create call
+- [x] contract test 3 (service part): a create error returns `null` and does not throw
+- [x] contract test 4: a store in live mode never returns the test-mode ID of the same customer
+- [x] contract test 8: an empty phone gives a create request with no `phone` key, and the ID is returned
+- [x] extra test: `$customerId = 0` makes no create call. Bug: all Express guests are mapped to one MONEI customer with `platformCustomerId "0"`.
+- [x] extra test: an empty account ID makes no create call. Bug: payments are rejected for a `customerId` that belongs to no configured account.
+- [x] contract test 10: a concurrent create (unique-key conflict on save) returns the stored ID and deletes the new MONEI customer
+- [x] run `composer test:unit` - must pass before Task 4
 
 ### Task 4: `CustomerService::deleteCustomer`
 
