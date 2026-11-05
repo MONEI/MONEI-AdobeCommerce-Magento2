@@ -112,6 +112,21 @@ class MoneiApiClientTest extends TestCase
         $method->invokeArgs($this->moneiApiClient, [1]);
     }
 
+    /**
+     * Contract test 9: a key client must not change the key of the main client.
+     */
+    public function testCreateSdkForApiKeyKeepsMainClientKey(): void
+    {
+        $this->moduleConfigMock->method('getMode')->willReturn(1);
+        $this->moduleConfigMock->method('getTestApiKey')->willReturn('key_a');
+
+        $main = $this->moneiApiClient->getMoneiSdk(1);
+        $keyClient = $this->moneiApiClient->createSdkForApiKey('key_b');
+
+        $this->assertSame('key_a', $main->getConfig()->getApiKey('Authorization'));
+        $this->assertSame('key_b', $keyClient->getConfig()->getApiKey('Authorization'));
+    }
+
     public function testConvertResponseToArray(): void
     {
         // Test with array

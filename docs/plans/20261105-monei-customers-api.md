@@ -121,9 +121,9 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - Modify: `Service/Api/MoneiApiClient.php`
 - Modify: `Test/Unit/Service/Api/MoneiApiClientTest.php`
 
-- [ ] add `createSdkForApiKey(string $apiKey): MoneiClient` = `new MoneiClient($apiKey, new \Monei\Configuration())`, then `setUserAgent($this->getUserAgent())`. No cache, no change to `getMoneiSdk()`.
-- [ ] contract test 9: build the main client with key A, then a key client with key B; the main client's `getConfig()->getApiKey('Authorization')` is still A
-- [ ] run `composer test:unit` - must pass before Task 3
+- [x] add `createSdkForApiKey(string $apiKey): MoneiClient` = `new MoneiClient($apiKey, new \Monei\Configuration())`, then `setUserAgent($this->getUserAgent())`. No cache, no change to `getMoneiSdk()`.
+- [x] contract test 9: build the main client with key A, then a key client with key B; the main client's `getConfig()->getApiKey('Authorization')` is still A
+- [x] run `composer test:unit` - must pass before Task 3
 
 ### Task 3: `CustomerService` — `getOrCreateCustomerId` and `forgetCustomerId`
 

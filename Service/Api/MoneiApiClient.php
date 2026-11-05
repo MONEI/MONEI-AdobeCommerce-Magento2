@@ -241,6 +241,23 @@ class MoneiApiClient
     }
 
     /**
+     * Create an uncached SDK client for an API key other than the current store's
+     *
+     * Uses its own Configuration: the SDK default one is shared, so a client built
+     * on it would change the key of the main client.
+     *
+     * @param string $apiKey API key for the new client
+     * @return MoneiClient SDK client for the given API key
+     */
+    public function createSdkForApiKey(string $apiKey): MoneiClient
+    {
+        $monei = new MoneiClient($apiKey, new \Monei\Configuration());
+        $monei->setUserAgent($this->getUserAgent());
+
+        return $monei;
+    }
+
+    /**
      * Remove a SDK instance by its key
      *
      * @param string $key The key for the instance to remove
