@@ -262,6 +262,31 @@ class CreatePaymentTest extends TestCase
     }
 
     /**
+     * Without this, no payment is linked to its MONEI customer and every other test still passes.
+     *
+     * @return void
+     */
+    public function testExecuteSendsCustomerId(): void
+    {
+        $this
+            ->_paymentsApiMock
+            ->expects($this->once())
+            ->method('create')
+            ->with($this->callback(
+                fn (CreatePaymentRequest $request) => $request->getCustomerId() === 'cus_123'
+            ))
+            ->willReturn($this->createMock(MoneiPayment::class));
+
+        $this->_createPaymentService->execute([
+            'amount' => 1000,
+            'currency' => 'EUR',
+            'order_id' => '123456',
+            'customer_id' => 'cus_123',
+            'shipping_details' => ['address' => ['country' => 'ES']]
+        ]);
+    }
+
+    /**
      * Test parameter validation
      *
      * @return void

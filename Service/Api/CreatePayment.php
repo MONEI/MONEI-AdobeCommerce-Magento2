@@ -166,6 +166,11 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
             $paymentRequest->setCustomer($customer);
         }
 
+        // Set MONEI customer ID if available
+        if (!empty($data['customer_id']) && is_string($data['customer_id'])) {
+            $paymentRequest->setCustomerId($data['customer_id']);
+        }
+
         // Set billing details if available
         if (isset($data['billing_details']) && isset($data['billing_details']['address'])) {
             $billingAddress = new Address($data['billing_details']['address']);

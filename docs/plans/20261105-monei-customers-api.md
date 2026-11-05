@@ -169,9 +169,9 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - Modify: `Service/Api/CreatePayment.php`
 - Modify: `Test/Unit/Service/Api/CreatePaymentTest.php`
 
-- [ ] in `buildPaymentRequest()`, call `setCustomerId()` only when `customer_id` is a non-empty string. Keep the inline `customer` block.
-- [ ] extra test: data with `customer_id` gives `CreatePaymentRequest::getCustomerId()` equal to it. Bug: the key is never read, so no payment is linked and every other test still passes.
-- [ ] run `composer test:unit` - must pass before Task 6
+- [x] in `buildPaymentRequest()`, call `setCustomerId()` only when `customer_id` is a non-empty string. Keep the inline `customer` block.
+- [x] extra test: data with `customer_id` gives `CreatePaymentRequest::getCustomerId()` equal to it. Bug: the key is never read, so no payment is linked and every other test still passes.
+- [x] run `composer test:unit` - must pass before Task 6
 
 ### Task 6: Link logged-in buyers at the entry points (not saved-card payments)
 
