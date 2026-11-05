@@ -128,7 +128,7 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 
 - [x] add `createSdkForApiKey(string $apiKey): MoneiClient` = `new MoneiClient($apiKey, new \Monei\Configuration())`, then `setUserAgent($this->getUserAgent())`. No cache, no change to `getMoneiSdk()`.
 - [x] contract test 9: build the main client with key A, then a key client with key B; the main client's `getConfig()->getApiKey('Authorization')` is still A
-- [ ] ➕ contract v6 test 9: get the main client, then the other-mode client, then the main client AGAIN (`getMoneiSdk()` second call); the main client still holds key A and the other client key B
+- [x] ➕ contract v6 test 9: get the main client, then the other-mode client, then the main client AGAIN (`getMoneiSdk()` second call); the main client still holds key A and the other client key B
 - [x] run `composer test:unit` - must pass before Task 3
 
 ### Task 3: `CustomerService` — `getOrCreateCustomerId` and `forgetCustomerId`
@@ -150,10 +150,10 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - [x] extra test: `$customerId = 0` makes no create call. Bug: all Express guests are mapped to one MONEI customer with `platformCustomerId "0"`.
 - [x] extra test: an empty account ID makes no create call. Bug: payments are rejected for a `customerId` that belongs to no configured account.
 - [x] contract test 10: a concurrent create (unique-key conflict on save) returns the stored ID and deletes the new MONEI customer
-- [ ] ➕ v6: `forgetCustomerId(int $customerId, int $storeId, string $staleCustomerId)` removes the row only while it holds the stale ID; change `MoneiCustomer::deleteRow` (or add a method) to `DELETE … WHERE customer_id, account_id, mode AND monei_customer_id = :stale`; update the interface
-- [ ] ➕ v6: mapping save fails (any insert error other than the unique key, or an empty re-read after a conflict) → best-effort delete of the new MONEI customer, return `null`; a failed cleanup delete (both cases) logs at **error** with the new MONEI customer ID
-- [ ] ➕ v6 contract test 3: the create throws an `\Error` (not an `\Exception`); the result is `null` and no row is saved
-- [ ] ➕ v6 contract test 10: the concurrent create also keeps the winning row (no delete of the stored row); a mapping save that stores nothing returns `null` and deletes the new MONEI customer
+- [x] ➕ v6: `forgetCustomerId(int $customerId, int $storeId, string $staleCustomerId)` removes the row only while it holds the stale ID; change `MoneiCustomer::deleteRow` (or add a method) to `DELETE … WHERE customer_id, account_id, mode AND monei_customer_id = :stale`; update the interface
+- [x] ➕ v6: mapping save fails (any insert error other than the unique key, or an empty re-read after a conflict) → best-effort delete of the new MONEI customer, return `null`; a failed cleanup delete (both cases) logs at **error** with the new MONEI customer ID
+- [x] ➕ v6 contract test 3: the create throws an `\Error` (not an `\Exception`); the result is `null` and no row is saved
+- [x] ➕ v6 contract test 10: the concurrent create also keeps the winning row (no delete of the stored row); a mapping save that stores nothing returns `null` and deletes the new MONEI customer
 - [x] run `composer test:unit` - must pass before Task 4
 
 ### Task 4: `CustomerService::deleteCustomer`
@@ -169,9 +169,9 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - [x] ➕ `forgetCustomerId` catches `\Throwable` and logs it with `[MONEI Customers]` (contract v5: every customer code path)
 - [x] contract test 5: delete 404 is logged at debug level and the row is removed; a 500 keeps the row and logs at error level with the MONEI customer ID, account ID and mode
 - [x] contract test 7: test and live use the SAME account ID; a test row and a live row give 2 deletes, each with the key of the row's own mode, and remove both rows; a row whose account matches no key is kept
-- [ ] ➕ v6: each row gets its own `\Throwable` catch, so a failing row (API, `\Error` or database) never stops the next rows; drop the outer catch that stops the loop
-- [ ] ➕ v6: `deleteCustomer` 409, other errors and a row with no matching key log at **error** (not warning), with the MONEI customer ID, account ID and mode
-- [ ] ➕ v6 contract test 7: when the first row throws an `\Error`, the next row is still deleted
+- [x] ➕ v6: each row gets its own `\Throwable` catch, so a failing row (API, `\Error` or database) never stops the next rows; drop the outer catch that stops the loop
+- [x] ➕ v6: `deleteCustomer` 409, other errors and a row with no matching key log at **error** (not warning), with the MONEI customer ID, account ID and mode
+- [x] ➕ v6 contract test 7: when the first row throws an `\Error`, the next row is still deleted
 - [x] run `composer test:unit` - must pass before Task 5
 
 ### Task 5: Send `customerId` from `CreatePayment`

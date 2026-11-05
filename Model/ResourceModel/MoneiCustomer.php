@@ -72,14 +72,15 @@ class MoneiCustomer extends AbstractDb
     }
 
     /**
-     * Delete the mapping row for a customer, account ID and mode.
+     * Delete the mapping row for a customer, account ID and mode, only while it holds the given MONEI customer ID.
      *
      * @param int $customerId
      * @param string $accountId
      * @param string $mode
+     * @param string $moneiCustomerId
      * @return void
      */
-    public function deleteRow(int $customerId, string $accountId, string $mode): void
+    public function deleteRow(int $customerId, string $accountId, string $mode, string $moneiCustomerId): void
     {
         $this->getConnection()->delete(
             $this->getMainTable(),
@@ -87,6 +88,7 @@ class MoneiCustomer extends AbstractDb
                 'customer_id = ?' => $customerId,
                 'account_id = ?' => $accountId,
                 'mode = ?' => $mode,
+                'monei_customer_id = ?' => $moneiCustomerId,
             ]
         );
     }

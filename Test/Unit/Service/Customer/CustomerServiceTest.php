@@ -137,11 +137,11 @@ class CustomerServiceTest extends TestCase
     }
 
     /**
-     * Contract test 3 (service part). Bug: a customer API outage blocks checkout.
+     * Contract test 3 (service part). Bug: a customer API outage blocks checkout, or an empty ID is stored.
      */
     public function testCreateErrorReturnsNull(): void
     {
-        $this->customersApiMock->method('create')->willThrowException(new \Exception('Network error'));
+        $this->customersApiMock->method('create')->willThrowException(new \Error('Bad response'));
         $this->resourceMock->expects($this->never())->method('saveRow');
 
         $this->assertNull($this->getOrCreate(5));
@@ -204,16 +204,46 @@ class CustomerServiceTest extends TestCase
     }
 
     /**
-     * Contract test 10. Bug: an unmapped MONEI customer with PII that erasure never reaches.
+     * Contract test 10. Bug: an unmapped MONEI customer with PII that erasure never reaches, its failed
+     * cleanup logged below the default error level, or a deleted winner row.
      */
     public function testConcurrentCreateReturnsStoredIdAndDeletesNewCustomer(): void
     {
         $this->resourceMock->method('getMoneiCustomerId')->willReturnOnConsecutiveCalls(null, 'cus_stored');
         $this->customersApiMock->method('create')->willReturn(new Customer(['id' => 'cus_new']));
         $this->resourceMock->method('saveRow')->willThrowException(new DuplicateException('Duplicate entry'));
-        $this->customersApiMock->expects($this->once())->method('delete')->with('cus_new');
+        $this->resourceMock->expects($this->never())->method('deleteRow');
+        $this->customersApiMock->expects($this->once())->method('delete')->with('cus_new')
+            ->willThrowException(new ApiException('[500] Internal Server Error', 500));
+        $this->loggerMock->expects($this->once())->method('error')->with(
+            $this->stringContains('[MONEI Customers]'),
+            $this->callback(fn (array $context) => $context['monei_customer_id'] === 'cus_new')
+        );
 
         $this->assertSame('cus_stored', $this->getOrCreate(5));
+    }
+
+    /**
+     * Contract test 10. Bug: an empty customerId sent on payments, or an unmapped MONEI customer with PII.
+     *
+     * @dataProvider saveStoresNothingProvider
+     */
+    public function testMappingSaveThatStoresNothingReturnsNullAndDeletesNewCustomer(\Throwable $saveError): void
+    {
+        $this->resourceMock->method('getMoneiCustomerId')->willReturn(null);
+        $this->customersApiMock->method('create')->willReturn(new Customer(['id' => 'cus_new']));
+        $this->resourceMock->method('saveRow')->willThrowException($saveError);
+        $this->customersApiMock->expects($this->once())->method('delete')->with('cus_new');
+
+        $this->assertNull($this->getOrCreate(5));
+    }
+
+    public function saveStoresNothingProvider(): array
+    {
+        return [
+            'empty re-read after a conflict' => [new DuplicateException('Duplicate entry')],
+            'other insert error' => [new \RuntimeException('Connection lost')],
+        ];
     }
 
     /**
@@ -231,7 +261,7 @@ class CustomerServiceTest extends TestCase
             'cus_down' => new ApiException('[500] Internal Server Error', 500),
         ];
 
-        $this->resourceMock->expects($this->once())->method('deleteRow')->with(5, 'acc_1', 'test');
+        $this->resourceMock->expects($this->once())->method('deleteRow')->with(5, 'acc_1', 'test', 'cus_gone');
         $this->loggerMock->expects($this->once())->method('debug')->with(
             $this->stringContains('[MONEI Customers]'),
             $this->callback(fn (array $context) => $context['monei_customer_id'] === 'cus_gone')
@@ -248,7 +278,8 @@ class CustomerServiceTest extends TestCase
 
     /**
      * Contract test 7. Bug: a live row deleted with the test key gets 404, the row is removed,
-     * and the live customer stays at MONEI.
+     * and the live customer stays at MONEI; or one failing row stops the loop and the other
+     * customers are lost with the platform delete.
      */
     public function testDeleteUsesKeyOfEachRowModeAndKeepsUnmatchedRow(): void
     {
@@ -259,15 +290,25 @@ class CustomerServiceTest extends TestCase
         ]);
         $removedRows = [];
         $this->resourceMock->method('deleteRow')->willReturnCallback(
-            function (int $customerId, string $accountId, string $mode) use (&$removedRows) {
-                $removedRows[] = [$customerId, $accountId, $mode];
+            function (int $customerId, string $accountId, string $mode, string $id) use (&$removedRows) {
+                if ($id === 'cus_test') {
+                    throw new \Error('Database gone away');
+                }
+                $removedRows[] = [$customerId, $accountId, $mode, $id];
+            }
+        );
+        $errorIds = [];
+        $this->loggerMock->method('error')->willReturnCallback(
+            function (string $message, array $context) use (&$errorIds) {
+                $errorIds[] = $context['monei_customer_id'];
             }
         );
 
         $this->service->deleteCustomer(5);
 
         $this->assertSame([['pk_test', 'cus_test'], ['pk_live', 'cus_live']], $this->deletes);
-        $this->assertSame([[5, 'acc_1', 'test'], [5, 'acc_1', 'live']], $removedRows);
+        $this->assertSame([[5, 'acc_1', 'live', 'cus_live']], $removedRows);
+        $this->assertSame(['cus_test', 'cus_old'], $errorIds);
     }
 
     private function getOrCreate(int $customerId): ?string

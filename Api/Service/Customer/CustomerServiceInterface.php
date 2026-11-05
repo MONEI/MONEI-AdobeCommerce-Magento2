@@ -35,13 +35,14 @@ interface CustomerServiceInterface
     ): ?string;
 
     /**
-     * Remove the mapping for the account and mode of a store.
+     * Remove the mapping for the account and mode of a store, only while it still holds the stale ID.
      *
      * @param int $customerId Magento customer ID
      * @param int $storeId Store whose MONEI account and mode apply
+     * @param string $staleCustomerId MONEI customer ID that no longer exists
      * @return void
      */
-    public function forgetCustomerId(int $customerId, int $storeId): void;
+    public function forgetCustomerId(int $customerId, int $storeId, string $staleCustomerId): void;
 
     /**
      * Delete every MONEI customer mapped to a Magento customer, for all accounts and modes.
