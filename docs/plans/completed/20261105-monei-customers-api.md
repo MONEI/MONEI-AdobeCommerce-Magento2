@@ -4,7 +4,7 @@
 - Link the MONEI payments of logged-in buyers to a MONEI customer (`customerId`).
 - Delete at MONEI when a buyer deletes a saved card, or when the Magento customer is deleted (this is also the GDPR erasure path).
 - Magento Vault stays the source of truth for saved cards.
-- Behavior is set by the cross-platform contract `docs/plans/20261105-monei-customers-api-contract.md` (v8.1). That file is a copy of the WooCommerce thread's file. Do not edit it. Contract changes come from the WooCommerce thread as a new version.
+- Behavior is set by the cross-platform contract `docs/plans/20261105-monei-customers-api-contract.md` (v8.2). That file is a copy of the WooCommerce thread's file. Do not edit it. Contract changes come from the WooCommerce thread as a new version.
 - Out of scope: list saved methods from MONEI, `useDefaultPaymentMethod`, attaching tokens saved before this change, MONEI Subscriptions, updating the MONEI customer on profile edits. Magento has no zero-amount add-card payment and no renewals, so sandbox check e does not apply.
 - Contract v7 has the sandbox results; Tasks 9–11 are unblocked.
 - Contract `deleteCustomer` step 0 (skip a customer with an active platform subscription that charges a MONEI sequence) and test 13: **n/a for Magento**. The module never sends `sequence` and has no subscriptions or renewals (grep of PHP/JS/XML/phtml, 2026-11-06), so no status list applies.

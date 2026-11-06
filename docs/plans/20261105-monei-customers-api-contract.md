@@ -1,4 +1,4 @@
-# MONEI Customers API: cross-platform contract (v8.1)
+# MONEI Customers API: cross-platform contract (v8.2)
 
 One behavior for the WooCommerce, Magento 2 and PrestaShop plugins. Each plugin
 plan copies this file without changes. A change to the contract goes through
@@ -9,6 +9,7 @@ SDK: `monei/monei-php-sdk` 2.13.0, `$client->customers`.
 
 ## Changelog
 
+- v8.2: no rule change. New "Known limits" section: multi-account stores (Magento multi-store, PrestaShop multishop, WordPress multisite with a MONEI account per store).
 - v8.1: the delete hook reads the mappings, and the create re-check reads the delete marker, from the database, not from a cache loaded earlier in the request (WooCommerce review: `wp_delete_user` loads the user meta cache before `delete_user`; `get_option` can answer from a cached absence).
 - v8: a mapping saved for a platform customer that is deleted meanwhile is cleaned up (Magento external review). New Errors row "Platform customer deleted during create", Mapping rule and test 14.
 - v7: sandbox results (WooCommerce and Magento threads, 2026-11-06). New rule: `deleteCustomer` skips a customer whose active platform subscription charges a MONEI sequence (check e). The stale-customer match is HTTP 404 and message `Customer not found` (check c). The add-card payment carries `customerId` (check g). No phone filter (check h). Every method accepts `customerId` (check i). New test 13.
@@ -169,6 +170,13 @@ at **error** level, never at warning.
 | `deleteCustomer` returns 409 or another error | **Error** log. Keep the row, and go on with the next row. |
 | `deleteCustomer` for a customer with an active platform subscription that charges a MONEI sequence | **Error** log per row. Keep all rows, no API call. |
 | `deleteCustomer` row with no matching configured key | **Error** log. Keep the row, and go on with the next row. |
+
+## Known limits (accepted)
+
+- A store setup where different scopes use different MONEI accounts:
+  - `deletePaymentMethod` uses the current scope's account and mode. A card saved in scope A and deleted while browsing scope B gets 404 (debug log), and the card stays live at A's account. The platform token does not record its origin scope.
+  - `deleteCustomer` can only match rows whose account has a key in the scope where the delete runs. Other rows are logged at error level with their MONEI customer ID.
+- Neither case is fixed in v8: it needs credentials for every scope, or the scope stored with each token, for a rare setup. A plugin may raise it again with a real merchant case.
 
 ## Triggers
 
