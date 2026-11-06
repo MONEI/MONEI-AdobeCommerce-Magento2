@@ -4,7 +4,7 @@
 - Link the MONEI payments of logged-in buyers to a MONEI customer (`customerId`).
 - Delete at MONEI when a buyer deletes a saved card, or when the Magento customer is deleted (this is also the GDPR erasure path).
 - Magento Vault stays the source of truth for saved cards.
-- Behavior is set by the cross-platform contract `docs/plans/20261105-monei-customers-api-contract.md` (v7). That file is a copy of the WooCommerce thread's file. Do not edit it. Contract changes come from the WooCommerce thread as a new version.
+- Behavior is set by the cross-platform contract `docs/plans/20261105-monei-customers-api-contract.md` (v8). That file is a copy of the WooCommerce thread's file. Do not edit it. Contract changes come from the WooCommerce thread as a new version.
 - Out of scope: list saved methods from MONEI, `useDefaultPaymentMethod`, attaching tokens saved before this change, MONEI Subscriptions, updating the MONEI customer on profile edits. Magento has no zero-amount add-card payment and no renewals, so sandbox check e does not apply.
 - Contract v7 has the sandbox results; Tasks 9–11 are unblocked.
 - Contract `deleteCustomer` step 0 (skip a customer with an active platform subscription that charges a MONEI sequence) and test 13: **n/a for Magento**. The module never sends `sequence` and has no subscriptions or renewals (grep of PHP/JS/XML/phtml, 2026-11-06), so no status list applies.
@@ -268,7 +268,7 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 
 ### Task 12: Verify acceptance criteria
 - [x] ➕ live test finding: the stale-customer retry in `CreatePayment` logs nothing. Log one line at error level (the default log level drops warnings) with `[MONEI Customers]`, the stale MONEI customer ID, the Magento customer ID and the store ID before the retry. Bug: support cannot see why a buyer got a new MONEI customer. Extend contract test 6's retry case to require that log call.
-- [x] verify every contract item maps to code, including tests 1–12 (13 is n/a)
+- [x] verify every contract item maps to code, including tests 1–12 and 14 (13 is n/a)
 - [x] ➕ contract test 6 part "a newer ID is kept" had no test: `MoneiCustomerTest` requires `deleteRow` to match `monei_customer_id`. Bug: a stale-customer retry deletes the newer ID another request stored, and the next payment creates a second MONEI customer. (Overrides the Task 1 "no SQL test" note for this one condition: the contract requires it.)
 - [x] run the full suite: `composer test:unit`
 - [x] run `composer analyze` and `composer cs:lint`

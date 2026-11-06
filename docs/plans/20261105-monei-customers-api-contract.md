@@ -1,4 +1,4 @@
-# MONEI Customers API: cross-platform contract (v7)
+# MONEI Customers API: cross-platform contract (v8)
 
 One behavior for the WooCommerce, Magento 2 and PrestaShop plugins. Each plugin
 plan copies this file without changes. A change to the contract goes through
@@ -9,6 +9,7 @@ SDK: `monei/monei-php-sdk` 2.13.0, `$client->customers`.
 
 ## Changelog
 
+- v8: a mapping saved for a platform customer that is deleted meanwhile is cleaned up (Magento external review). New Errors row "Platform customer deleted during create", Mapping rule and test 14.
 - v7: sandbox results (WooCommerce and Magento threads, 2026-11-06). New rule: `deleteCustomer` skips a customer whose active platform subscription charges a MONEI sequence (check e). The stale-customer match is HTTP 404 and message `Customer not found` (check c). The add-card payment carries `customerId` (check g). No phone filter (check h). Every method accepts `customerId` (check i). New test 13.
 - v6.1: `deleteCustomer` step 1 logs a row with no match at error level (it said warning, against the Errors table). The re-read after a lost mapping race must bypass any cache.
 - v6:
@@ -100,6 +101,13 @@ Saving a new mapping must detect a mapping that another request stored first
 - Magento, PrestaShop: insert; a unique-key conflict means another request won. Read the stored row with a fresh query that bypasses any repository or entity cache, which can still hold the empty result from the first read.
 - WooCommerce: `add_user_meta( …, $unique = true )`, then `wp_cache_delete( $user_id, 'user_meta' )`, then read the key again with `get_user_meta( …, true )`. Clear the cache first: a failed unique add does not clear it, so the re-read would return this request's stale value. If the value read is not the new ID, another request won. Remove a duplicate row with the new ID if one was written (`delete_user_meta( $user_id, $key, $newId )`).
 
+After a successful save, check that the platform customer is not being deleted. A delete that runs while the create waits for MONEI reads no mapping, so nothing else deletes the new customer, and its PII outlives the erasure.
+
+- Magento, PrestaShop: after the insert commits, read with a fresh query whether the platform customer still exists. This needs no open transaction around the insert.
+- WooCommerce: `wp_delete_user` fires `delete_user` before it deletes the user meta and the user row, so the user still exists while the hook runs. The delete hooks write a marker (option `monei_customer_deleting_{user_id}`, not autoloaded) **before** they read the meta. After the insert, the create path reads the marker and the user row, both without the request cache. A marker or a missing user means the delete is under way.
+
+Either the delete hook reads the new row and deletes the customer, or the row was written after that read, so the re-check sees the marker or the missing customer. If both act, one side gets 404, which is handled.
+
 When another request won, follow the "Concurrent create" row in the Errors table. When the save failed and nothing is stored (the re-read is empty, or the insert failed for a reason other than the unique key), follow the "Mapping save fails" row.
 
 ## Create request
@@ -150,6 +158,7 @@ at **error** level, never at warning.
 | Create fails | Log error. The payment goes ahead without `customerId`. No retry. |
 | Concurrent create (saving the mapping finds an ID stored by another request) | Delete the MONEI customer just created (best effort; **error** log with its ID on failure). Return the stored ID. |
 | Mapping save fails (nothing stored) | Delete the MONEI customer just created (best effort; **error** log with its ID on failure). Return `null`: the payment goes ahead without `customerId`. |
+| Platform customer deleted during create (the re-check after the mapping save) | Delete the new MONEI customer (best effort; **error** log with its ID on failure). Remove the new row. Return `null`: the payment goes ahead without `customerId`. |
 | Create-payment fails because the customer no longer exists: `ApiException` with HTTP 404 **and** response body `message` exactly `Customer not found` (check c). Status alone is not enough. | `forgetCustomerId(…, staleId)`, remove `customerId` from the request (see SDK rules), retry the create-payment once. Never a second retry. Any other create-payment error is rethrown unchanged. |
 | Delete returns 404 | Debug log. For `deleteCustomer`, remove the row. `deletePaymentMethod` keeps the mapping. |
 | `deletePaymentMethod` returns 409 | Warning log. |
@@ -185,6 +194,7 @@ Each plugin writes these unit tests, with a mocked SDK client. Each one names th
 11. `deletePaymentMethod` with no mapping makes no API call. Bug: every card delete of an unlinked buyer calls MONEI with an empty customer ID and logs an error.
 12. An empty account ID gives no create call, no `customerId` and no stored mapping. Bug: a mapping stored under an empty account that no delete can resolve.
 13. `deleteCustomer` for a customer with an active subscription that charges a MONEI sequence makes no delete call, keeps every row, and logs at error level with each MONEI customer ID. The same customer whose subscriptions are all cancelled or expired is deleted. Bug: deleting or erasing a subscriber kills their renewals at MONEI (the charge fails with E999).
+14. The platform customer is deleted while the create waits for MONEI (the `create` mock runs the delete hook before it returns). The result is `null`, the new MONEI customer is deleted, and no mapping row is left. Bug: a MONEI customer with PII outlives the platform delete, with no mapping and no log.
 
 ## Sandbox results (v7)
 
