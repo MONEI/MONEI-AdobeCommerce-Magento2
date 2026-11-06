@@ -153,6 +153,42 @@ class CustomerService implements CustomerServiceInterface
     /**
      * @inheritdoc
      */
+    public function deletePaymentMethod(int $customerId, int $storeId, string $paymentToken): void
+    {
+        $context = ['customer_id' => $customerId, 'store_id' => $storeId];
+        try {
+            $scope = $this->resolveScope($customerId, $storeId);
+            if ($scope === null) {
+                return;
+            }
+            [$accountId, $mode] = $scope;
+            $context['account_id'] = $accountId;
+            $context['mode'] = $mode;
+
+            $moneiCustomerId = $this->resource->getMoneiCustomerId($customerId, $accountId, $mode);
+            if ($moneiCustomerId === null) {
+                return;
+            }
+            $context['monei_customer_id'] = $moneiCustomerId;
+
+            $this->apiClient->getMoneiSdk($storeId)->customers->deletePaymentMethod($moneiCustomerId, $paymentToken);
+        } catch (\Throwable $e) {
+            $context['error'] = $e->getMessage();
+            $code = $e instanceof ApiException ? $e->getCode() : null;
+            if ($code === 404) {
+                // Tokens saved before the customer link are not attached to the customer.
+                $this->logger->debug(self::LOG_PREFIX . 'Payment method not found at MONEI', $context);
+            } elseif ($code === 409) {
+                $this->logger->warning(self::LOG_PREFIX . 'Payment method delete conflict', $context);
+            } else {
+                $this->logger->error(self::LOG_PREFIX . 'Payment method delete failed', $context);
+            }
+        }
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function deleteCustomer(int $customerId): void
     {
         try {

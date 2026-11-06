@@ -149,6 +149,10 @@
     <plugin name="monei_order_config" type="Monei\MoneiPayment\Plugin\SalesOrderConfig" />
   </type>
 
+  <type name="Magento\Vault\Api\PaymentTokenRepositoryInterface">
+    <plugin name="monei_delete_payment_method" type="Monei\MoneiPayment\Plugin\DeleteMoneiPaymentMethod" />
+  </type>
+
   <virtualType name="MoneiPaymentFacade" type="Magento\Payment\Model\Method\Adapter">
     <arguments>
       <argument name="code" xsi:type="const">Monei\MoneiPayment\Model\Payment\Monei::REDIRECT_CODE</argument>

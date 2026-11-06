@@ -45,6 +45,16 @@ interface CustomerServiceInterface
     public function forgetCustomerId(int $customerId, int $storeId, string $staleCustomerId): void;
 
     /**
+     * Delete a saved payment method of the MONEI customer mapped for the account and mode of a store.
+     *
+     * @param int $customerId Magento customer ID
+     * @param int $storeId Store whose MONEI account and mode apply
+     * @param string $paymentToken MONEI payment token of the saved card
+     * @return void Never throws; the mapping is always kept
+     */
+    public function deletePaymentMethod(int $customerId, int $storeId, string $paymentToken): void;
+
+    /**
      * Delete every MONEI customer mapped to a Magento customer, for all accounts and modes.
      *
      * @param int $customerId Magento customer ID

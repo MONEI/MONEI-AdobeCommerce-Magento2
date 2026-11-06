@@ -234,11 +234,12 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - Modify: `Test/Unit/Service/Customer/CustomerServiceTest.php`
 - Create: `Test/Unit/Plugin/DeleteMoneiPaymentMethodTest.php`
 
-- [ ] add `deletePaymentMethod` to the interface. Implement it for the current scope: no mapping → nothing; else `customers->deletePaymentMethod(moneiCustomerId, token)`. Pass the vault `gateway_token` directly: check a (v7) shows `CustomerPaymentMethod.id` equals `payment.paymentToken`; no lookup. 404 → debug, 409 → warning, other → error. It never removes the mapping, whatever the result (v6).
-- [ ] plugin `afterDelete` on `Magento\Vault\Api\PaymentTokenRepositoryInterface`: only tokens with `payment_method_code` = `Monei::CARD_CODE` and a customer ID; current store ID; never throws
-- [ ] contract test 11: `deletePaymentMethod` with no mapping makes no API call
-- [ ] one test: a non-MONEI token makes no service call. Bug: deleting a card of another payment provider calls MONEI.
-- [ ] run `composer test:unit` - must pass before Task 10
+- [x] add `deletePaymentMethod` to the interface. Implement it for the current scope: no mapping → nothing; else `customers->deletePaymentMethod(moneiCustomerId, token)`. Pass the vault `gateway_token` directly: check a (v7) shows `CustomerPaymentMethod.id` equals `payment.paymentToken`; no lookup. 404 → debug, 409 → warning, other → error. It never removes the mapping, whatever the result (v6).
+- [x] plugin `afterDelete` on `Magento\Vault\Api\PaymentTokenRepositoryInterface`: only tokens with `payment_method_code` = `Monei::CARD_CODE` and a customer ID; current store ID; never throws
+- [x] contract test 11: `deletePaymentMethod` with no mapping makes no API call
+- [x] one test: a non-MONEI token makes no service call. Bug: deleting a card of another payment provider calls MONEI.
+- [x] ➕ contract test 5 (`deletePaymentMethod` part): 404 logs at debug, not error, and keeps the mapping. Bug: deleting a card saved before the link logs an error or drops the mapping.
+- [x] run `composer test:unit` - must pass before Task 10
 
 ### Task 10: Retry once without a stale `customerId`
 

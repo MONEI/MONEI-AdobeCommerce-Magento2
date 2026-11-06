@@ -279,6 +279,35 @@ class CustomerServiceTest extends TestCase
     }
 
     /**
+     * Contract test 5 (deletePaymentMethod part). Bug: deleting a card saved before the link logs an error,
+     * or drops the mapping so the next payment creates a second MONEI customer.
+     */
+    public function testDeletePaymentMethodNotFoundLogsDebugAndKeepsMapping(): void
+    {
+        $this->resourceMock->method('getMoneiCustomerId')->with(5, 'acc_1', 'test')->willReturn('cus_stored');
+        $this->customersApiMock->expects($this->once())->method('deletePaymentMethod')
+            ->with('cus_stored', 'tok_1')
+            ->willThrowException(new ApiException('[404] Payment method not found', 404));
+        $this->resourceMock->expects($this->never())->method('deleteRow');
+        $this->loggerMock->expects($this->never())->method('error');
+        $this->loggerMock->expects($this->once())->method('debug')->with($this->stringContains('[MONEI Customers]'));
+
+        $this->service->deletePaymentMethod(5, self::STORE_ID, 'tok_1');
+    }
+
+    /**
+     * Contract test 11. Bug: every card delete of an unlinked buyer calls MONEI with an empty customer ID
+     * and logs an error.
+     */
+    public function testDeletePaymentMethodWithoutMappingMakesNoApiCall(): void
+    {
+        $this->resourceMock->method('getMoneiCustomerId')->willReturn(null);
+        $this->customersApiMock->expects($this->never())->method('deletePaymentMethod');
+
+        $this->service->deletePaymentMethod(5, self::STORE_ID, 'tok_1');
+    }
+
+    /**
      * Contract test 7. Bug: a live row deleted with the test key gets 404, the row is removed,
      * and the live customer stays at MONEI; or one failing row stops the loop and the other
      * customers are lost with the platform delete.
