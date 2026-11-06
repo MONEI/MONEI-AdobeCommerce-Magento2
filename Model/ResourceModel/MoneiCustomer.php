@@ -94,6 +94,23 @@ class MoneiCustomer extends AbstractDb
     }
 
     /**
+     * Check that the Magento customer still exists, with a fresh SQL read.
+     *
+     * @param int $customerId
+     * @return bool
+     */
+    public function customerExists(int $customerId): bool
+    {
+        $connection = $this->getConnection();
+        $select = $connection
+            ->select()
+            ->from($this->getTable('customer_entity'), ['entity_id'])
+            ->where('entity_id = ?', $customerId);
+
+        return $connection->fetchOne($select) !== false;
+    }
+
+    /**
      * Get all mapping rows of a customer.
      *
      * @param int $customerId

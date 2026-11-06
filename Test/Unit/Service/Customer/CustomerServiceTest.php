@@ -54,6 +54,11 @@ class CustomerServiceTest extends TestCase
     private int $mode = Mode::MODE_TEST;
 
     /**
+     * @var bool
+     */
+    private bool $customerExists = true;
+
+    /**
      * @var Logger|MockObject
      */
     private $loggerMock;
@@ -80,6 +85,7 @@ class CustomerServiceTest extends TestCase
     protected function setUp(): void
     {
         $this->resourceMock = $this->createMock(MoneiCustomer::class);
+        $this->resourceMock->method('customerExists')->willReturnCallback(fn () => $this->customerExists);
         $this->customersApiMock = $this->createMock(CustomersApi::class);
 
         $moneiClientMock = $this->createMock(MoneiClient::class);
@@ -258,6 +264,23 @@ class CustomerServiceTest extends TestCase
             'empty re-read after a conflict' => [new DuplicateException('Duplicate entry')],
             'other insert error' => [new \RuntimeException('Connection lost')],
         ];
+    }
+
+    /**
+     * Bug: a customer deleted while MONEI creates its customer keeps the new MONEI customer with PII,
+     * because the delete observer already ran and found no row.
+     */
+    public function testCustomerDeletedDuringCreateDeletesNewCustomerAndRow(): void
+    {
+        $this->customerExists = false;
+        $this->customersApiMock->method('create')->willReturn(new Customer(['id' => 'cus_new']));
+        $this->resourceMock->method('getRowsByCustomer')->with(5)->willReturn([
+            ['account_id' => 'acc_1', 'mode' => 'test', 'monei_customer_id' => 'cus_new'],
+        ]);
+        $this->resourceMock->expects($this->once())->method('deleteRow')->with(5, 'acc_1', 'test', 'cus_new');
+
+        $this->assertNull($this->getOrCreate(5));
+        $this->assertSame([['pk_test', 'cus_new']], $this->deletes);
     }
 
     /**
