@@ -19,6 +19,12 @@
       instance="Monei\MoneiPayment\Observer\SaveOrderBeforeSalesModelQuoteObserver"
     />
   </event>
+  <event name="customer_delete_commit_after">
+    <observer
+      name="monei_delete_monei_customer"
+      instance="Monei\MoneiPayment\Observer\DeleteMoneiCustomer"
+    />
+  </event>
   <!--  <event name="sales_model_service_quote_submit_success">-->
   <!--        <observer name="Monei\MoneiPayment\Observer\SaveQuoteSubmitSuccessObserver" instance="Monei\MoneiPayment\Observer\SaveQuoteSubmitSuccessObserver" />-->
   <!--    </event>-->

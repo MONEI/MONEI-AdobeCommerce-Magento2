@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Test\Unit\Service\Express;
 
 use Magento\Checkout\Model\Session;
+use Magento\Customer\Api\Data\CustomerInterface;
 use Magento\Framework\Event\ManagerInterface as EventManager;
 use Monei\MoneiPayment\Api\Config\MoneiExpressCheckoutConfigInterface;
 use Magento\Framework\Exception\LocalizedException;
@@ -20,8 +21,11 @@ use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\Quote\Address;
 use Magento\Quote\Model\Quote\Address\Rate;
+use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\StoreManagerInterface;
 use Monei\MoneiPayment\Api\Service\ConfirmPaymentInterface;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
+use Monei\MoneiPayment\Api\Service\Customer\CustomerServiceInterface;
 use Monei\MoneiPayment\Service\Express\ExpressCheckout;
 use Monei\MoneiPayment\Service\Logger;
 use Monei\MoneiPayment\Service\Quote\GetAddressDetailsByQuoteAddress;
@@ -53,22 +57,40 @@ class ExpressCheckoutTest extends TestCase
      */
     private $_expressConfigMock;
 
+    /**
+     * @var CreatePaymentInterface
+     */
+    private $_createPaymentMock;
+
+    /**
+     * @var CustomerServiceInterface
+     */
+    private $_customerServiceMock;
+
     protected function setUp(): void
     {
         $this->_quoteRepositoryMock = $this->createMock(CartRepositoryInterface::class);
         $this->_sessionMock = $this->createMock(Session::class);
         $this->_expressConfigMock = $this->createMock(MoneiExpressCheckoutConfigInterface::class);
+        $this->_createPaymentMock = $this->createMock(CreatePaymentInterface::class);
+        $this->_customerServiceMock = $this->createMock(CustomerServiceInterface::class);
+        $storeMock = $this->createMock(StoreInterface::class);
+        $storeMock->method('getId')->willReturn(2);
+        $storeManagerMock = $this->createMock(StoreManagerInterface::class);
+        $storeManagerMock->method('getStore')->willReturn($storeMock);
         $this->_service = new ExpressCheckout(
             $this->_quoteRepositoryMock,
             $this->createMock(Logger::class),
             $this->createMock(SetExpressAddressesOnQuote::class),
             $this->createMock(GetAddressDetailsByQuoteAddress::class),
-            $this->createMock(CreatePaymentInterface::class),
+            $this->_createPaymentMock,
             $this->createMock(ConfirmPaymentInterface::class),
             $this->createMock(CartManagementInterface::class),
             $this->_sessionMock,
             $this->createMock(EventManager::class),
-            $this->_expressConfigMock
+            $this->_expressConfigMock,
+            $this->_customerServiceMock,
+            $storeManagerMock
         );
     }
 
@@ -363,6 +385,90 @@ class ExpressCheckoutTest extends TestCase
             'token' => 'tok_123',
             'billingDetails' => ['email' => 'a@b.com'],
         ]));
+    }
+
+    /**
+     * The MONEI customer holds the account's email, not the wallet's, and the payment carries
+     * platform_customer_id so the stale-customer retry can clear the mapping. The address
+     * placeholder phone never reaches the MONEI customer.
+     *
+     * @dataProvider phoneProvider
+     * @return void
+     */
+    public function testLoggedInPlaceOrderSendsTheLinkedCustomerIdWithTheAccountEmail(
+        string $quotePhone,
+        string $sentPhone
+    ): void {
+        $billingAddress = $this
+            ->getMockBuilder(Address::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['validate', 'getTelephone'])
+            ->getMock();
+        $billingAddress->method('validate')->willReturn(true);
+        $billingAddress->method('getTelephone')->willReturn($quotePhone);
+
+        $customer = $this->createMock(CustomerInterface::class);
+        $customer->method('getEmail')->willReturn('account@example.com');
+        $customer->method('getFirstname')->willReturn('Jane');
+        $customer->method('getLastname')->willReturn('Roe');
+
+        $quote = $this
+            ->getMockBuilder(Quote::class)
+            ->disableOriginalConstructor()
+            ->addMethods(['setTotalsCollectedFlag', 'getBaseGrandTotal', 'getBaseCurrencyCode', 'getCustomerId'])
+            ->onlyMethods([
+                'getId',
+                'hasItems',
+                'isVirtual',
+                'getBillingAddress',
+                'collectTotals',
+                'reserveOrderId',
+                'getCustomer',
+            ])
+            ->getMock();
+        $quote->method('getId')->willReturn(1);
+        $quote->method('hasItems')->willReturn(true);
+        $quote->method('isVirtual')->willReturn(true);
+        $quote->method('getBillingAddress')->willReturn($billingAddress);
+        $quote->method('setTotalsCollectedFlag')->willReturnSelf();
+        $quote->method('collectTotals')->willReturnSelf();
+        $quote->method('getBaseGrandTotal')->willReturn(30.00);
+        $quote->method('getBaseCurrencyCode')->willReturn('EUR');
+        $quote->method('reserveOrderId')->willReturnSelf();
+        $quote->method('getCustomerId')->willReturn(42);
+        $quote->method('getCustomer')->willReturn($customer);
+        $this->_sessionMock->method('getQuote')->willReturn($quote);
+
+        $this->_customerServiceMock
+            ->expects($this->once())
+            ->method('getOrCreateCustomerId')
+            ->with(42, 2, 'account@example.com', 'Jane Roe', $sentPhone)
+            ->willReturn('cus_123');
+
+        $this->_createPaymentMock
+            ->expects($this->once())
+            ->method('execute')
+            ->with($this->callback(fn (array $data) => ($data['customer_id'] ?? null) === 'cus_123'
+                && ($data['platform_customer_id'] ?? null) === 42))
+            // Stops placeOrder here: the rest of the order flow is not under test.
+            ->willThrowException(new \DomainException('stop'));
+        $this->expectException(\DomainException::class);
+
+        $this->_service->placeOrder(json_encode([
+            'token' => 'tok_123',
+            'billingDetails' => ['email' => 'wallet@example.com'],
+        ]));
+    }
+
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function phoneProvider(): array
+    {
+        return [
+            'wallet phone' => ['600111222', '600111222'],
+            'placeholder phone' => [SetExpressAddressesOnQuote::PLACEHOLDER_TELEPHONE, ''],
+        ];
     }
 
     /**

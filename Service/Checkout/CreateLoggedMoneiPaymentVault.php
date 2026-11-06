@@ -16,6 +16,7 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
+use Magento\Store\Model\StoreManagerInterface;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Monei\MoneiPayment\Api\Service\Checkout\CreateLoggedMoneiPaymentVaultInterface;
@@ -23,6 +24,7 @@ use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterfac
 use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
 use Monei\MoneiPayment\Api\Service\ConfirmPaymentInterface;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
+use Monei\MoneiPayment\Api\Service\Customer\CustomerServiceInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
@@ -72,6 +74,16 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
     private ConfirmPaymentInterface $confirmPayment;
 
     /**
+     * @var CustomerServiceInterface
+     */
+    private CustomerServiceInterface $customerService;
+
+    /**
+     * @var StoreManagerInterface
+     */
+    private StoreManagerInterface $storeManager;
+
+    /**
      * Constructor for CreateLoggedMoneiPaymentVault.
      *
      * @param Logger $logger Logger for tracking operations
@@ -85,6 +97,8 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
      * @param CreatePaymentInterface $createPayment Service to create payment in Monei
      * @param GetPaymentInterface $getPaymentService Service to retrieve payment details
      * @param ConfirmPaymentInterface $confirmPayment Service to confirm payment in Monei
+     * @param CustomerServiceInterface $customerService MONEI customer link service
+     * @param StoreManagerInterface $storeManager Store manager
      */
     public function __construct(
         Logger $logger,
@@ -97,7 +111,9 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
         PaymentTokenManagementInterface $tokenManagement,
         CreatePaymentInterface $createPayment,
         GetPaymentInterface $getPaymentService,
-        ConfirmPaymentInterface $confirmPayment
+        ConfirmPaymentInterface $confirmPayment,
+        CustomerServiceInterface $customerService,
+        StoreManagerInterface $storeManager
     ) {
         parent::__construct(
             $logger,
@@ -112,6 +128,8 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
         $this->tokenManagement = $tokenManagement;
         $this->createPayment = $createPayment;
         $this->confirmPayment = $confirmPayment;
+        $this->customerService = $customerService;
+        $this->storeManager = $storeManager;
     }
 
     /**
@@ -147,6 +165,20 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
             // If we have a reserved order ID, use it
             if ($quote->getReservedOrderId()) {
                 $paymentData['order_id'] = $quote->getReservedOrderId();
+            }
+
+            // Only the create request: ConfirmPayment does not send a customer ID.
+            $customer = $quote->getCustomer();
+            $moneiCustomerId = $this->customerService->getOrCreateCustomerId(
+                (int) $quote->getCustomerId(),
+                (int) $this->storeManager->getStore()->getId(),
+                (string) $customer->getEmail(),
+                $customer->getFirstname() . ' ' . $customer->getLastname(),
+                (string) $quote->getBillingAddress()->getTelephone()
+            );
+            if ($moneiCustomerId !== null) {
+                $paymentData['customer_id'] = $moneiCustomerId;
+                $paymentData['platform_customer_id'] = (int) $quote->getCustomerId();
             }
 
             // Create payment

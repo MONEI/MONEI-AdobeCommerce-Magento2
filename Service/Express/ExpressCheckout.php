@@ -19,9 +19,11 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
+use Magento\Store\Model\StoreManagerInterface;
 use Monei\MoneiPayment\Api\Config\MoneiExpressCheckoutConfigInterface;
 use Monei\MoneiPayment\Api\Service\ConfirmPaymentInterface;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
+use Monei\MoneiPayment\Api\Service\Customer\CustomerServiceInterface;
 use Monei\MoneiPayment\Api\Service\Express\ExpressCheckoutInterface;
 use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Service\Logger;
@@ -94,6 +96,16 @@ class ExpressCheckout implements ExpressCheckoutInterface
     private MoneiExpressCheckoutConfigInterface $expressConfig;
 
     /**
+     * @var CustomerServiceInterface
+     */
+    private CustomerServiceInterface $customerService;
+
+    /**
+     * @var StoreManagerInterface
+     */
+    private StoreManagerInterface $storeManager;
+
+    /**
      * @param CartRepositoryInterface         $quoteRepository   Repository for accessing quotes
      * @param Logger                          $logger            Logger for tracking operations
      * @param SetExpressAddressesOnQuote      $setAddresses      Maps wallet addresses onto the quote
@@ -104,6 +116,8 @@ class ExpressCheckout implements ExpressCheckoutInterface
      * @param Session                         $checkoutSession   Checkout session
      * @param EventManager                    $eventManager      Event dispatcher
      * @param MoneiExpressCheckoutConfigInterface $expressConfig Express checkout configuration
+     * @param CustomerServiceInterface        $customerService   Links logged-in buyers to a MONEI customer
+     * @param StoreManagerInterface           $storeManager      Store manager
      */
     public function __construct(
         CartRepositoryInterface $quoteRepository,
@@ -115,7 +129,9 @@ class ExpressCheckout implements ExpressCheckoutInterface
         CartManagementInterface $cartManagement,
         Session $checkoutSession,
         EventManager $eventManager,
-        MoneiExpressCheckoutConfigInterface $expressConfig
+        MoneiExpressCheckoutConfigInterface $expressConfig,
+        CustomerServiceInterface $customerService,
+        StoreManagerInterface $storeManager
     ) {
         $this->quoteRepository = $quoteRepository;
         $this->logger = $logger;
@@ -127,6 +143,8 @@ class ExpressCheckout implements ExpressCheckoutInterface
         $this->checkoutSession = $checkoutSession;
         $this->eventManager = $eventManager;
         $this->expressConfig = $expressConfig;
+        $this->customerService = $customerService;
+        $this->storeManager = $storeManager;
     }
 
     /**
@@ -304,7 +322,7 @@ class ExpressCheckout implements ExpressCheckoutInterface
             $email
         );
 
-        $payment = $this->createPayment->execute([
+        $paymentData = [
             'amount' => $amount,
             'currency' => (string) $quote->getBaseCurrencyCode(),
             'order_id' => (string) $quote->getReservedOrderId(),
@@ -312,7 +330,26 @@ class ExpressCheckout implements ExpressCheckoutInterface
             // The MONEI payment only completes with the method the order is
             // placed under, so a token from another source cannot confirm it.
             'allowed_payment_methods' => Monei::PAYMENT_METHOD_MAP[$methodCode],
-        ]);
+        ];
+
+        if ($quote->getCustomerId()) {
+            // The quote email and name now hold the wallet's values, not the account's.
+            $customer = $quote->getCustomer();
+            $phone = (string) $quote->getBillingAddress()->getTelephone();
+            $moneiCustomerId = $this->customerService->getOrCreateCustomerId(
+                (int) $quote->getCustomerId(),
+                (int) $this->storeManager->getStore()->getId(),
+                (string) $customer->getEmail(),
+                $customer->getFirstname() . ' ' . $customer->getLastname(),
+                $phone === SetExpressAddressesOnQuote::PLACEHOLDER_TELEPHONE ? '' : $phone
+            );
+            if ($moneiCustomerId !== null) {
+                $paymentData['customer_id'] = $moneiCustomerId;
+                $paymentData['platform_customer_id'] = (int) $quote->getCustomerId();
+            }
+        }
+
+        $payment = $this->createPayment->execute($paymentData);
 
         $paymentId = (string) $payment->getId();
         $quote->setData('monei_payment_id', $paymentId);

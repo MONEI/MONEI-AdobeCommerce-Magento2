@@ -13,6 +13,8 @@ namespace Monei\MoneiPayment\Service\Api;
 
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Url;
+use Magento\Store\Model\StoreManagerInterface;
+use Monei\ApiException;
 use Monei\Model\Address;
 use Monei\Model\CreatePaymentRequest;
 use Monei\Model\Payment;
@@ -22,6 +24,7 @@ use Monei\Model\PaymentShippingDetails;
 use Monei\Model\PaymentTransactionType;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
+use Monei\MoneiPayment\Api\Service\Customer\CustomerServiceInterface;
 use Monei\MoneiPayment\Model\Config\Source\TypeOfPayment;
 use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Service\Logger;
@@ -63,22 +66,42 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
     private Url $urlBuilder;
 
     /**
+     * Links Magento customers to MONEI customers
+     *
+     * @var CustomerServiceInterface
+     */
+    private CustomerServiceInterface $customerService;
+
+    /**
+     * Resolves the current store
+     *
+     * @var StoreManagerInterface
+     */
+    private StoreManagerInterface $storeManager;
+
+    /**
      * @param Logger $logger Logger for tracking operations
      * @param ApiExceptionHandler $exceptionHandler Exception handler for MONEI API errors
      * @param MoneiApiClient $apiClient API client factory for MONEI SDK
      * @param MoneiPaymentModuleConfigInterface $moduleConfig Module configuration provider
      * @param Url $urlBuilder URL builder for creating frontend URLs
+     * @param CustomerServiceInterface $customerService Links Magento customers to MONEI customers
+     * @param StoreManagerInterface $storeManager Store manager to access current store
      */
     public function __construct(
         Logger $logger,
         ApiExceptionHandler $exceptionHandler,
         MoneiApiClient $apiClient,
         MoneiPaymentModuleConfigInterface $moduleConfig,
-        Url $urlBuilder
+        Url $urlBuilder,
+        CustomerServiceInterface $customerService,
+        StoreManagerInterface $storeManager
     ) {
         parent::__construct($logger, $exceptionHandler, $apiClient);
         $this->moduleConfig = $moduleConfig;
         $this->urlBuilder = $urlBuilder;
+        $this->customerService = $customerService;
+        $this->storeManager = $storeManager;
     }
 
     /**
@@ -106,8 +129,33 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
         // Execute the SDK call with the standardized pattern
         return $this->executeMoneiSdkCall(
             'createPayment',
-            function (MoneiClient $moneiSdk) use ($paymentRequest) {
-                return $moneiSdk->payments->create($paymentRequest);
+            function (MoneiClient $moneiSdk) use ($paymentRequest, $data) {
+                try {
+                    return $moneiSdk->payments->create($paymentRequest);
+                } catch (ApiException $e) {
+                    $staleCustomerId = $paymentRequest->getCustomerId();
+                    $body = json_decode((string) $e->getResponseBody(), true);
+                    // The status alone is not enough: other missing resources also give 404.
+                    if ($staleCustomerId === null
+                        || !isset($data['platform_customer_id'])
+                        || $e->getCode() !== 404
+                        || ($body['message'] ?? null) !== 'Customer not found'
+                    ) {
+                        throw $e;
+                    }
+                    $platformCustomerId = (int) $data['platform_customer_id'];
+                    $storeId = (int) $this->storeManager->getStore()->getId();
+                    $this->logger->error('[MONEI Customers] Stale customer, retrying payment without it', [
+                        'monei_customer_id' => $staleCustomerId,
+                        'customer_id' => $platformCustomerId,
+                        'store_id' => $storeId,
+                    ]);
+                    $this->customerService->forgetCustomerId($platformCustomerId, $storeId, $staleCustomerId);
+                    // setCustomerId(null) throws; offsetUnset makes the serializer warn.
+                    $paymentRequest->offsetSet('customer_id', null);
+
+                    return $moneiSdk->payments->create($paymentRequest);
+                }
             },
             $data
         );
@@ -164,6 +212,11 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
         if (isset($data['customer'])) {
             $customer = new PaymentCustomer($data['customer']);
             $paymentRequest->setCustomer($customer);
+        }
+
+        // Set MONEI customer ID if available
+        if (!empty($data['customer_id']) && is_string($data['customer_id'])) {
+            $paymentRequest->setCustomerId($data['customer_id']);
         }
 
         // Set billing details if available

@@ -3,10 +3,13 @@
 namespace Monei\MoneiPayment\Test\Unit\Service\Checkout;
 
 use Magento\Checkout\Model\Session;
+use Magento\Customer\Api\Data\CustomerInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Url;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
+use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\StoreManagerInterface;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Monei\Model\Payment;
@@ -15,6 +18,7 @@ use Monei\MoneiPayment\Api\Service\Quote\GetAddressDetailsByQuoteAddressInterfac
 use Monei\MoneiPayment\Api\Service\Quote\GetCustomerDetailsByQuoteInterface;
 use Monei\MoneiPayment\Api\Service\ConfirmPaymentInterface;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
+use Monei\MoneiPayment\Api\Service\Customer\CustomerServiceInterface;
 use Monei\MoneiPayment\Api\Service\GetPaymentInterface;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
@@ -101,6 +105,16 @@ class CreateLoggedMoneiPaymentVaultTest extends TestCase
     private PaymentTokenInterface $paymentTokenMock;
 
     /**
+     * @var CustomerServiceInterface|\PHPUnit\Framework\MockObject\MockObject
+     */
+    private CustomerServiceInterface $customerServiceMock;
+
+    /**
+     * @var StoreManagerInterface|\PHPUnit\Framework\MockObject\MockObject
+     */
+    private StoreManagerInterface $storeManagerMock;
+
+    /**
      * @var CreateLoggedMoneiPaymentVault
      */
     private CreateLoggedMoneiPaymentVault $createVaultPaymentService;
@@ -126,7 +140,19 @@ class CreateLoggedMoneiPaymentVaultTest extends TestCase
         $this->quoteAddressMock = $this->createMock(Quote\Address::class);
         $this->paymentTokenMock = $this->createMock(PaymentTokenInterface::class);
 
+        $customerMock = $this->createMock(CustomerInterface::class);
+        $customerMock->method('getEmail')->willReturn('buyer@example.com');
+        $customerMock->method('getFirstname')->willReturn('Jane');
+        $customerMock->method('getLastname')->willReturn('Roe');
+        $this->quoteMock->method('getCustomer')->willReturn($customerMock);
+
         $confirmPaymentMock = $this->createMock(ConfirmPaymentInterface::class);
+
+        $this->customerServiceMock = $this->createMock(CustomerServiceInterface::class);
+        $storeMock = $this->createMock(StoreInterface::class);
+        $storeMock->method('getId')->willReturn(2);
+        $this->storeManagerMock = $this->createMock(StoreManagerInterface::class);
+        $this->storeManagerMock->method('getStore')->willReturn($storeMock);
 
         $this->createVaultPaymentService = new CreateLoggedMoneiPaymentVault(
             $this->loggerMock,
@@ -139,7 +165,9 @@ class CreateLoggedMoneiPaymentVaultTest extends TestCase
             $this->tokenManagementMock,
             $this->createPaymentMock,
             $this->getPaymentServiceMock,
-            $confirmPaymentMock
+            $confirmPaymentMock,
+            $this->customerServiceMock,
+            $this->storeManagerMock
         );
     }
 
@@ -220,6 +248,35 @@ class CreateLoggedMoneiPaymentVaultTest extends TestCase
     }
 
     /**
+     * Saved-card payments are linked to the MONEI customer of the current store's account.
+     */
+    public function testLoggedInVaultPaymentSendsTheLinkedCustomerId(): void
+    {
+        $this->checkoutSessionMock->method('getQuote')->willReturn($this->quoteMock);
+        $this->quoteMock->method('getId')->willReturn('123456');
+        $this->quoteMock->method('getCustomerId')->willReturn(1);
+        $this->quoteMock->method('getBillingAddress')->willReturn($this->quoteAddressMock);
+        $this->quoteAddressMock->method('getTelephone')->willReturn('600111222');
+        $this->paymentTokenMock->method('getEntityId')->willReturn(1);
+        $this->tokenManagementMock->method('getByPublicHash')->willReturn($this->paymentTokenMock);
+
+        $this->customerServiceMock
+            ->expects($this->once())
+            ->method('getOrCreateCustomerId')
+            ->with(1, 2, 'buyer@example.com', 'Jane Roe', '600111222')
+            ->willReturn('cus_123');
+
+        $this->createPaymentMock
+            ->expects($this->once())
+            ->method('execute')
+            ->with($this->callback(fn (array $data) => ($data['customer_id'] ?? null) === 'cus_123'
+                && ($data['platform_customer_id'] ?? null) === 1))
+            ->willReturn($this->createMock(Payment::class));
+
+        $this->createVaultPaymentService->execute('123456', 'token_hash_123');
+    }
+
+    /**
      * Test execution with invalid public hash (no token found)
      */
     public function testExecuteWithInvalidPublicHash(): void
@@ -287,7 +344,9 @@ class CreateLoggedMoneiPaymentVaultTest extends TestCase
                 $this->tokenManagementMock,
                 $this->createPaymentMock,
                 $this->getPaymentServiceMock,
-                $this->createMock(ConfirmPaymentInterface::class)
+                $this->createMock(ConfirmPaymentInterface::class),
+                $this->customerServiceMock,
+                $this->storeManagerMock
             ])
             ->onlyMethods(['executeApiCall'])
             ->getMock();

@@ -92,6 +92,10 @@
     type="Monei\MoneiPayment\Service\Checkout\CreateGuestMoneiPaymentInSite"
   />
   <preference
+    for="Monei\MoneiPayment\Api\Service\Customer\CustomerServiceInterface"
+    type="Monei\MoneiPayment\Service\Customer\CustomerService"
+  />
+  <preference
     for="Magento\Sales\Controller\Adminhtml\Order\Creditmemo\Save"
     type="Monei\MoneiPayment\Controller\Adminhtml\Order\Creditmemo\Save"
   />
@@ -143,6 +147,10 @@
 
   <type name="Magento\Sales\Model\Order\Config">
     <plugin name="monei_order_config" type="Monei\MoneiPayment\Plugin\SalesOrderConfig" />
+  </type>
+
+  <type name="Magento\Vault\Api\PaymentTokenRepositoryInterface">
+    <plugin name="monei_delete_payment_method" type="Monei\MoneiPayment\Plugin\DeleteMoneiPaymentMethod" />
   </type>
 
   <virtualType name="MoneiPaymentFacade" type="Magento\Payment\Model\Method\Adapter">

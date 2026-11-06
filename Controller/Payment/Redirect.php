@@ -16,9 +16,11 @@ use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\Controller\Result\Redirect as MagentoRedirect;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Model\Order\Address;
+use Magento\Store\Model\StoreManagerInterface;
 use Monei\Model\Payment;
 use Monei\Model\PaymentNextAction;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
+use Monei\MoneiPayment\Api\Service\Customer\CustomerServiceInterface;
 use Monei\MoneiPayment\Service\Shared\PaymentMethodCodeMapper;
 
 /**
@@ -48,23 +50,39 @@ class Redirect implements HttpGetActionInterface
     private PaymentMethodCodeMapper $paymentMethodCodeMapper;
 
     /**
+     * @var CustomerServiceInterface
+     */
+    private CustomerServiceInterface $customerService;
+
+    /**
+     * @var StoreManagerInterface
+     */
+    private StoreManagerInterface $storeManager;
+
+    /**
      * Constructor.
      *
      * @param Session $checkoutSession
      * @param CreatePaymentInterface $createPayment
      * @param MagentoRedirect $resultRedirectFactory
      * @param PaymentMethodCodeMapper $paymentMethodCodeMapper
+     * @param CustomerServiceInterface $customerService
+     * @param StoreManagerInterface $storeManager
      */
     public function __construct(
         Session $checkoutSession,
         CreatePaymentInterface $createPayment,
         MagentoRedirect $resultRedirectFactory,
-        PaymentMethodCodeMapper $paymentMethodCodeMapper
+        PaymentMethodCodeMapper $paymentMethodCodeMapper,
+        CustomerServiceInterface $customerService,
+        StoreManagerInterface $storeManager
     ) {
         $this->checkoutSession = $checkoutSession;
         $this->createPayment = $createPayment;
         $this->resultRedirectFactory = $resultRedirectFactory;
         $this->paymentMethodCodeMapper = $paymentMethodCodeMapper;
+        $this->customerService = $customerService;
+        $this->storeManager = $storeManager;
     }
 
     /**
@@ -93,6 +111,20 @@ class Redirect implements HttpGetActionInterface
         $allowedPaymentMethods = $this->getAllowedPaymentMethods($order);
         if ($allowedPaymentMethods) {
             $data['allowedPaymentMethods'] = $allowedPaymentMethods;
+        }
+
+        if ($order->getCustomerId()) {
+            $moneiCustomerId = $this->customerService->getOrCreateCustomerId(
+                (int) $order->getCustomerId(),
+                (int) $this->storeManager->getStore()->getId(),
+                (string) $order->getCustomerEmail(),
+                $order->getCustomerFirstname() . ' ' . $order->getCustomerLastname(),
+                (string) $this->getCustomerPhone($order)
+            );
+            if ($moneiCustomerId !== null) {
+                $data['customerId'] = $moneiCustomerId;
+                $data['platformCustomerId'] = (int) $order->getCustomerId();
+            }
         }
 
         /** @var Payment $payment */

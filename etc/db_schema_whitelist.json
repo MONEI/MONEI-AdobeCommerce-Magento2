@@ -18,5 +18,19 @@
     "column": {
       "save_monei_tokenization": true
     }
+  },
+  "monei_customer": {
+    "column": {
+      "entity_id": true,
+      "customer_id": true,
+      "account_id": true,
+      "mode": true,
+      "monei_customer_id": true,
+      "created_at": true
+    },
+    "constraint": {
+      "PRIMARY": true,
+      "MONEI_CUSTOMER_CUSTOMER_ID_ACCOUNT_ID_MODE": true
+    }
   }
 }

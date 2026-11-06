@@ -33,13 +33,17 @@ MONEI Payments for Adobe Commerce (Magento 2) allows you to seamlessly integrate
 - Customizable payment experience to match your store's design
 - Integration with the official MONEI PHP SDK for reliable API communication
 - Automatic Apple Pay domain verification through configuration settings
+- Payments of logged-in customers link to a MONEI customer
+- Deleting a saved card in Magento also deletes it at MONEI (only cards saved after the customer link)
+- Deleting a Magento customer also deletes the linked MONEI customer and the cards saved under it
+- MONEI customer errors go to `var/log/monei.log` with the prefix `[MONEI Customers]`. If a MONEI customer delete fails, the log line gives the MONEI customer ID, account ID and mode. Delete that customer by hand in the MONEI Dashboard.
 
 ## Requirements
 
 - PHP: ^8.1.0
 - Magento: >=2.4.4 (Support for Magento 2.4.0-2.4.3 release line ended on November 28, 2022) ([Adobe Commerce Release Versions](https://experienceleague.adobe.com/en/docs/commerce-operations/release/versions))
 - MONEI Account ([Sign up here](https://monei.com/signup))
-- MONEI PHP SDK: ^2.8.3 (automatically installed with Composer)
+- MONEI PHP SDK: ^2.13 (automatically installed with Composer)
 
 ## Installation
 
@@ -77,7 +81,7 @@ Go to your Adobe Commerce (Magento 2) root directory.
 3. Install the MONEI PHP SDK:
 
 ```bash
-composer require monei/monei-php-sdk:^2.8.3
+composer require monei/monei-php-sdk:^2.13
 ```
 
 4. Go to your Adobe Commerce (Magento 2) root directory and run:

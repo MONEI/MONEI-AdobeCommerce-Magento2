@@ -19,6 +19,7 @@ use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Model\Config\Source\ModuleVersion;
 use Monei\MoneiPayment\Service\Logger;
 use Monei\ApiException;
+use Monei\Configuration;
 use Monei\MoneiClient;
 
 /**
@@ -109,11 +110,7 @@ class MoneiApiClient
             try {
                 $apiKey = $this->getApiKey((int) $currentStoreId);
 
-                // Initialize the MoneiClient from the SDK
-                $monei = new MoneiClient($apiKey);
-
-                // Set custom User-Agent header to identify the integration
-                $monei->setUserAgent($this->getUserAgent());
+                $monei = $this->createSdkForApiKey($apiKey);
 
                 // Store the SDK instance in cache
                 $this->instances[$cacheKey] = $monei;
@@ -201,11 +198,7 @@ class MoneiApiClient
             // Reset any existing instance
             $this->removeInstanceByKey($cacheKey);
 
-            // Initialize the MoneiClient from the SDK with the provided API key
-            $monei = new MoneiClient($apiKey);
-
-            // Set custom User-Agent header to identify the integration
-            $monei->setUserAgent($this->getUserAgent());
+            $monei = $this->createSdkForApiKey($apiKey);
 
             // Store the SDK instance in cache
             $this->instances[$cacheKey] = $monei;
@@ -238,6 +231,23 @@ class MoneiApiClient
                 __('Failed to reinitialize MONEI payment gateway: %1', $e->getMessage())
             );
         }
+    }
+
+    /**
+     * Create an uncached SDK client for an API key
+     *
+     * Uses its own Configuration: the SDK default one is shared, so a client built
+     * on it would change the key of every other client.
+     *
+     * @param string $apiKey API key for the new client
+     * @return MoneiClient SDK client for the given API key
+     */
+    public function createSdkForApiKey(string $apiKey): MoneiClient
+    {
+        $monei = new MoneiClient($apiKey, new Configuration());
+        $monei->setUserAgent($this->getUserAgent());
+
+        return $monei;
     }
 
     /**

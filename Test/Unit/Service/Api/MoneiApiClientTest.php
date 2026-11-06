@@ -112,6 +112,38 @@ class MoneiApiClientTest extends TestCase
         $method->invokeArgs($this->moneiApiClient, [1]);
     }
 
+    /**
+     * Contract test 9. Bug: the shared default Configuration sends later calls with the wrong key.
+     */
+    public function testCreateSdkForApiKeyKeepsMainClientKey(): void
+    {
+        $this->moduleConfigMock->method('getMode')->willReturn(1);
+        $this->moduleConfigMock->method('getTestApiKey')->willReturn('key_a');
+
+        $this->moneiApiClient->getMoneiSdk(1);
+        $keyClient = $this->moneiApiClient->createSdkForApiKey('key_b');
+        $main = $this->moneiApiClient->getMoneiSdk(1);
+
+        $this->assertSame('key_a', $main->getConfig()->getApiKey('Authorization'));
+        $this->assertSame('key_b', $keyClient->getConfig()->getApiKey('Authorization'));
+    }
+
+    /**
+     * Bug: with the shared SDK Configuration, the second store's key replaced the first
+     * store's key, so store 1 sent its payments with store 2's key.
+     */
+    public function testStoreClientsKeepTheirOwnKeys(): void
+    {
+        $this->moduleConfigMock->method('getMode')->willReturn(1);
+        $this->moduleConfigMock->method('getTestApiKey')->willReturnMap([[1, 'key_store_1'], [2, 'key_store_2']]);
+
+        $store1 = $this->moneiApiClient->getMoneiSdk(1);
+        $store2 = $this->moneiApiClient->getMoneiSdk(2);
+
+        $this->assertSame('key_store_1', $store1->getConfig()->getApiKey('Authorization'));
+        $this->assertSame('key_store_2', $store2->getConfig()->getApiKey('Authorization'));
+    }
+
     public function testConvertResponseToArray(): void
     {
         // Test with array

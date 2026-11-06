@@ -15,12 +15,15 @@ namespace Monei\MoneiPayment\Test\Unit\Service\Api;
 
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Url;
+use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\StoreManagerInterface;
 use Monei\Api\PaymentsApi;
 use Monei\Model\CreatePaymentRequest;
 use Monei\Model\Payment as MoneiPayment;
 use Monei\Model\PaymentNextAction;
 use Monei\Model\PaymentTransactionType;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use Monei\MoneiPayment\Api\Service\Customer\CustomerServiceInterface;
 use Monei\MoneiPayment\Model\Config\Source\TypeOfPayment;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
 use Monei\MoneiPayment\Service\Api\CreatePayment;
@@ -28,6 +31,7 @@ use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\Logger;
 use Monei\ApiException;
 use Monei\MoneiClient;
+use Monei\ObjectSerializer;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -97,6 +101,13 @@ class CreatePaymentTest extends TestCase
     private Url $_urlBuilderMock;
 
     /**
+     * Links Magento customers to MONEI customers
+     *
+     * @var CustomerServiceInterface|MockObject
+     */
+    private CustomerServiceInterface $_customerServiceMock;
+
+    /**
      * Set up the test environment
      *
      * @return void
@@ -120,13 +131,21 @@ class CreatePaymentTest extends TestCase
 
         $this->_moduleConfigMock = $this->createMock(MoneiPaymentModuleConfigInterface::class);
         $this->_urlBuilderMock = $this->createMock(Url::class);
+        $this->_customerServiceMock = $this->createMock(CustomerServiceInterface::class);
+
+        $storeMock = $this->createMock(StoreInterface::class);
+        $storeMock->method('getId')->willReturn(3);
+        $storeManagerMock = $this->createMock(StoreManagerInterface::class);
+        $storeManagerMock->method('getStore')->willReturn($storeMock);
 
         $this->_createPaymentService = new CreatePayment(
             $this->_loggerMock,
             $this->_exceptionHandlerMock,
             $this->_apiClientMock,
             $this->_moduleConfigMock,
-            $this->_urlBuilderMock
+            $this->_urlBuilderMock,
+            $this->_customerServiceMock,
+            $storeManagerMock
         );
     }
 
@@ -259,6 +278,154 @@ class CreatePaymentTest extends TestCase
         $this->assertEquals('pay_123456', $result->getId());
         $this->assertEquals('PENDING', $result->getStatus());
         $this->assertEquals($mockNextAction, $result->getNextAction());
+    }
+
+    /**
+     * A buyer deleted in the MONEI dashboard must still be able to pay: one retry without the stale customerId.
+     *
+     * The retry must never repeat, and its own failure must reach the caller.
+     *
+     * @dataProvider staleCustomerRetryProvider
+     * @param bool $retryFails
+     * @return void
+     */
+    public function testStaleCustomerIsForgottenAndRetriedOnce(bool $retryFails): void
+    {
+        $payment = $this->createMock(MoneiPayment::class);
+        $retryError = $this->staleCustomerError();
+        $calls = 0;
+        $this
+            ->_paymentsApiMock
+            ->expects($this->exactly(2))
+            ->method('create')
+            ->willReturnCallback(function (CreatePaymentRequest $request) use (
+                &$calls,
+                $retryFails,
+                $retryError,
+                $payment
+            ) {
+                if (++$calls === 1) {
+                    $this->assertSame('cus_stale', $request->getCustomerId());
+                    throw $this->staleCustomerError();
+                }
+                $this->assertNull($request->getCustomerId());
+                $this->assertFalse(property_exists(ObjectSerializer::sanitizeForSerialization($request), 'customerId'));
+                if ($retryFails) {
+                    throw $retryError;
+                }
+
+                return $payment;
+            });
+        $this
+            ->_customerServiceMock
+            ->expects($this->once())
+            ->method('forgetCustomerId')
+            ->with(42, 3, 'cus_stale');
+        $this
+            ->_loggerMock
+            ->expects($this->once())
+            ->method('error')
+            ->with(
+                $this->stringStartsWith('[MONEI Customers]'),
+                ['monei_customer_id' => 'cus_stale', 'customer_id' => 42, 'store_id' => 3]
+            );
+
+        if ($retryFails) {
+            $this
+                ->_exceptionHandlerMock
+                ->expects($this->once())
+                ->method('handle')
+                ->with($this->identicalTo($retryError))
+                ->willThrowException(new LocalizedException(__('Customer not found')));
+            $this->expectException(LocalizedException::class);
+        } else {
+            $this->_exceptionHandlerMock->expects($this->never())->method('handle');
+        }
+
+        $result = $this->_createPaymentService->execute($this->linkedPaymentData());
+
+        $this->assertSame($payment, $result);
+    }
+
+    /**
+     * @return array
+     */
+    public static function staleCustomerRetryProvider(): array
+    {
+        return [
+            'retry succeeds' => [false],
+            'retry fails' => [true],
+        ];
+    }
+
+    /**
+     * Only a stale customer is retried; any other error must reach the caller unchanged and untried.
+     *
+     * @dataProvider notRetriedProvider
+     * @param array $removeKeys
+     * @param int $code
+     * @param string $message
+     * @return void
+     */
+    public function testOtherErrorIsRethrownWithoutRetry(array $removeKeys, int $code, string $message): void
+    {
+        $error = new ApiException('error', $code, [], json_encode(['statusCode' => $code, 'message' => $message]));
+        $this
+            ->_paymentsApiMock
+            ->expects($this->once())
+            ->method('create')
+            ->willThrowException($error);
+        $this->_customerServiceMock->expects($this->never())->method('forgetCustomerId');
+        $this
+            ->_exceptionHandlerMock
+            ->expects($this->once())
+            ->method('handle')
+            ->with($this->identicalTo($error))
+            ->willThrowException(new LocalizedException(__('error')));
+
+        $this->expectException(LocalizedException::class);
+
+        $this->_createPaymentService->execute(array_diff_key($this->linkedPaymentData(), array_flip($removeKeys)));
+    }
+
+    /**
+     * @return array
+     */
+    public static function notRetriedProvider(): array
+    {
+        return [
+            'other 404' => [[], 404, 'Payment method not found'],
+            'other status' => [[], 400, 'Customer not found'],
+            'no customerId' => [['customer_id'], 404, 'Customer not found'],
+            'no platform customer' => [['platform_customer_id'], 404, 'Customer not found'],
+        ];
+    }
+
+    /**
+     * @return ApiException
+     */
+    private function staleCustomerError(): ApiException
+    {
+        return new ApiException('[404] Not Found', 404, [], json_encode([
+            'status' => 'NotFoundError',
+            'statusCode' => 404,
+            'message' => 'Customer not found',
+        ]));
+    }
+
+    /**
+     * @return array
+     */
+    private function linkedPaymentData(): array
+    {
+        return [
+            'amount' => 1000,
+            'currency' => 'EUR',
+            'order_id' => '123456',
+            'customer_id' => 'cus_stale',
+            'platform_customer_id' => 42,
+            'shipping_details' => ['address' => ['country' => 'ES']]
+        ];
     }
 
     /**
