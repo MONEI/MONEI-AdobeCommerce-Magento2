@@ -402,13 +402,18 @@ class CustomerService implements CustomerServiceInterface
         try {
             $this->apiClient->getMoneiSdk($storeId)->customers->delete($moneiCustomerId);
         } catch (\Throwable $e) {
-            $this->logger->error('[MONEI Customers] Delete of unmapped customer failed', [
+            $context = [
                 'customer_id' => $customerId,
                 'monei_customer_id' => $moneiCustomerId,
                 'account_id' => $accountId,
                 'mode' => $mode,
                 'error' => $e->getMessage(),
-            ]);
+            ];
+            if ($e instanceof ApiException && $e->getCode() === 404) {
+                $this->logger->debug('[MONEI Customers] Unmapped customer already deleted at MONEI', $context);
+            } else {
+                $this->logger->error('[MONEI Customers] Delete of unmapped customer failed', $context);
+            }
         }
     }
 }

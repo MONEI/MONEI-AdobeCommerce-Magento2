@@ -244,6 +244,21 @@ class CustomerServiceTest extends TestCase
     }
 
     /**
+     * Bug: a cleanup of an already deleted customer logged as failed, so it is counted for manual cleanup.
+     */
+    public function testConcurrentCreateCleanupNotFoundLogsDebug(): void
+    {
+        $this->resourceMock->method('getMoneiCustomerId')->willReturnOnConsecutiveCalls(null, 'cus_stored');
+        $this->customersApiMock->method('create')->willReturn(new Customer(['id' => 'cus_new']));
+        $this->resourceMock->method('saveRow')->willThrowException(new DuplicateException('Duplicate entry'));
+        $this->customersApiMock->method('delete')->willThrowException(new ApiException('[404] Not Found', 404));
+        $this->loggerMock->expects($this->never())->method('error');
+        $this->loggerMock->expects($this->once())->method('debug');
+
+        $this->assertSame('cus_stored', $this->getOrCreate(5));
+    }
+
+    /**
      * Contract test 10. Bug: an empty customerId sent on payments, or an unmapped MONEI customer with PII.
      *
      * @dataProvider saveStoresNothingProvider
