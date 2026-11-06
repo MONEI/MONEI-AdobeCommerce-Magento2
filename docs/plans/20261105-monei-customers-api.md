@@ -258,10 +258,12 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 **Files:**
 - Modify: `Service/Checkout/CreateLoggedMoneiPaymentVault.php`
 - Modify: `Test/Unit/Service/Checkout/CreateLoggedMoneiPaymentVaultTest.php` 
+- Modify: `Test/Unit/Controller/Payment/RedirectTest.php`
 
-- [ ] pass `customer_id` (and `platform_customer_id`) as in Tasks 6 and 10: check d (v7) shows MONEI accepts `customerId` with a token saved before the link (it does not attach that token to the customer)
-- [ ] one wiring test in `CreateLoggedMoneiPaymentVaultTest`: a logged-in vault payment sends the returned `customer_id`. Bug: saved-card payments are never linked.
-- [ ] run `composer test:unit` - must pass before Task 12
+- [x] pass `customer_id` (and `platform_customer_id`) as in Tasks 6 and 10: check d (v7) shows MONEI accepts `customerId` with a token saved before the link (it does not attach that token to the customer)
+- [x] one wiring test in `CreateLoggedMoneiPaymentVaultTest`: a logged-in vault payment sends the returned `customer_id`. Bug: saved-card payments are never linked.
+- [x] ➕ `RedirectTest` wiring test also requires `platform_customer_id` equal to the Magento customer ID. Bug: an entry point stops passing it and the stale-customer retry silently stops working for that flow.
+- [x] run `composer test:unit` - must pass before Task 12
 
 ### Task 12: Verify acceptance criteria
 - [ ] verify every contract item maps to code, including tests 1–12 (13 is n/a)
