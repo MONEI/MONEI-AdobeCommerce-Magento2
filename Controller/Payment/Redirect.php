@@ -123,6 +123,7 @@ class Redirect implements HttpGetActionInterface
             );
             if ($moneiCustomerId !== null) {
                 $data['customer_id'] = $moneiCustomerId;
+                $data['platform_customer_id'] = (int) $order->getCustomerId();
             }
         }
 

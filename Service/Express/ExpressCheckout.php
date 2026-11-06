@@ -344,6 +344,7 @@ class ExpressCheckout implements ExpressCheckoutInterface
             );
             if ($moneiCustomerId !== null) {
                 $paymentData['customer_id'] = $moneiCustomerId;
+                $paymentData['platform_customer_id'] = (int) $quote->getCustomerId();
             }
         }
 

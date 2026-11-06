@@ -248,10 +248,10 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - Modify: the Task 6 entry points (pass `platform_customer_id`)
 - Modify: `Test/Unit/Service/Api/CreatePaymentTest.php`
 
-- [ ] entry points also pass `platform_customer_id` (the Magento ID). `buildPaymentRequest()` does not map it, so it is never sent.
-- [ ] inside the `$sdkCall` closure (where the raw `ApiException` is visible): on the stale error (code 404 AND body `message` exactly `Customer not found`), when `customer_id` and `platform_customer_id` are set → `forgetCustomerId(platform_customer_id, current store, staleId)`, `offsetSet('customer_id', null)`, retry the create once. Never a second retry. A failure of the retry is rethrown. Any other error is rethrown unchanged.
-- [ ] contract test 6: a stale customer gives exactly one retry, the second request has no `customerId`, and the mapping is cleared; an unrelated error with the SAME HTTP status is rethrown and not retried; a payload without `customerId` is never retried
-- [ ] run `composer test:unit` - must pass before Task 11
+- [x] entry points also pass `platform_customer_id` (the Magento ID). `buildPaymentRequest()` does not map it, so it is never sent.
+- [x] inside the `$sdkCall` closure (where the raw `ApiException` is visible): on the stale error (code 404 AND body `message` exactly `Customer not found`), when `customer_id` and `platform_customer_id` are set → `forgetCustomerId(platform_customer_id, current store, staleId)`, `offsetSet('customer_id', null)`, retry the create once. Never a second retry. A failure of the retry is rethrown. Any other error is rethrown unchanged.
+- [x] contract test 6: a stale customer gives exactly one retry, the second request has no `customerId`, and the mapping is cleared; an unrelated error with the SAME HTTP status is rethrown and not retried; a payload without `customerId` is never retried
+- [x] run `composer test:unit` - must pass before Task 11
 
 ### Task 11: Link saved-card payments
 
