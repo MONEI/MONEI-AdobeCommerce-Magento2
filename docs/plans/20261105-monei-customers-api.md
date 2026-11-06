@@ -266,10 +266,11 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - [x] run `composer test:unit` - must pass before Task 12
 
 ### Task 12: Verify acceptance criteria
-- [ ] ➕ live test finding: the stale-customer retry in `CreatePayment` logs nothing. Log one warning with `[MONEI Customers]`, the stale MONEI customer ID, the Magento customer ID and the store ID before the retry. Bug: support cannot see why a buyer got a new MONEI customer. Extend contract test 6's retry case to require that log call.
-- [ ] verify every contract item maps to code, including tests 1–12 (13 is n/a)
-- [ ] run the full suite: `composer test:unit`
-- [ ] run `composer analyze` and `composer cs:lint`
+- [x] ➕ live test finding: the stale-customer retry in `CreatePayment` logs nothing. Log one warning with `[MONEI Customers]`, the stale MONEI customer ID, the Magento customer ID and the store ID before the retry. Bug: support cannot see why a buyer got a new MONEI customer. Extend contract test 6's retry case to require that log call.
+- [x] verify every contract item maps to code, including tests 1–12 (13 is n/a)
+- [x] ➕ contract test 6 part "a newer ID is kept" had no test: `MoneiCustomerTest` requires `deleteRow` to match `monei_customer_id`. Bug: a stale-customer retry deletes the newer ID another request stored, and the next payment creates a second MONEI customer. (Overrides the Task 1 "no SQL test" note for this one condition: the contract requires it.)
+- [x] run the full suite: `composer test:unit`
+- [x] run `composer analyze` and `composer cs:lint`
 
 ### Task 13: [Final] Update documentation
 - [ ] update `README.md` if it lists features: logged-in payments link to a MONEI customer; a customer delete deletes it at MONEI; a saved-card delete deletes it at MONEI (only with Task 9 done)

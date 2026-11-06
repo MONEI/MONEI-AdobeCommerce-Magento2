@@ -143,11 +143,14 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
                     ) {
                         throw $e;
                     }
-                    $this->customerService->forgetCustomerId(
-                        (int) $data['platform_customer_id'],
-                        (int) $this->storeManager->getStore()->getId(),
-                        $staleCustomerId
-                    );
+                    $platformCustomerId = (int) $data['platform_customer_id'];
+                    $storeId = (int) $this->storeManager->getStore()->getId();
+                    $this->logger->warning('[MONEI Customers] Stale customer, retrying payment without it', [
+                        'monei_customer_id' => $staleCustomerId,
+                        'platform_customer_id' => $platformCustomerId,
+                        'store_id' => $storeId,
+                    ]);
+                    $this->customerService->forgetCustomerId($platformCustomerId, $storeId, $staleCustomerId);
                     // setCustomerId(null) throws; offsetUnset makes the serializer warn.
                     $paymentRequest->offsetSet('customer_id', null);
 

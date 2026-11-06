@@ -346,6 +346,14 @@ class CreatePaymentTest extends TestCase
             ->expects($this->once())
             ->method('forgetCustomerId')
             ->with(42, 3, 'cus_stale');
+        $this
+            ->_loggerMock
+            ->expects($this->once())
+            ->method('warning')
+            ->with(
+                $this->stringStartsWith('[MONEI Customers]'),
+                ['monei_customer_id' => 'cus_stale', 'platform_customer_id' => 42, 'store_id' => 3]
+            );
 
         if ($retryFails) {
             $this
