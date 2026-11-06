@@ -1,4 +1,4 @@
-# MONEI Customers API: cross-platform contract (v6.1)
+# MONEI Customers API: cross-platform contract (v7)
 
 One behavior for the WooCommerce, Magento 2 and PrestaShop plugins. Each plugin
 plan copies this file without changes. A change to the contract goes through
@@ -9,6 +9,7 @@ SDK: `monei/monei-php-sdk` 2.13.0, `$client->customers`.
 
 ## Changelog
 
+- v7: sandbox results (WooCommerce and Magento threads, 2026-11-06). New rule: `deleteCustomer` skips a customer whose active platform subscription charges a MONEI sequence (check e). The stale-customer match is HTTP 404 and message `Customer not found` (check c). The add-card payment carries `customerId` (check g). No phone filter (check h). Every method accepts `customerId` (check i). New test 13.
 - v6.1: `deleteCustomer` step 1 logs a row with no match at error level (it said warning, against the Errors table). The re-read after a lost mapping race must bypass any cache.
 - v6:
   - Log levels: a case that can leave a MONEI customer with PII and no mapping logs at **error** (the plugins drop warnings by default).
@@ -73,6 +74,7 @@ not change.
 
 `deleteCustomer`, for each mapping row of the customer:
 
+0. If the platform customer has an active platform subscription that charges a MONEI sequence, make no API call for any row: **error** log with each row's MONEI customer ID, account ID and mode, keep the rows, and stop. A customer delete makes MONEI reject every later `recurring` charge on the customer's sequences (check e). "Active" means every status in which the platform will still charge a renewal; each plugin plan lists its statuses.
 1. Take the mode from the row. The row matches when the account ID configured for that mode equals the row's account ID and the API key of that mode is not empty. Never find a mode by account ID alone: test and live often share one account ID. With no match: error log, keep the row, go to the next row.
 2. Call `delete(moneiCustomerId)` with a client for that mode's key, built with its own `Configuration` (see SDK rules).
 3. Success or 404: remove the row. 409 or other error: as in the Errors table.
@@ -109,7 +111,7 @@ When another request won, follow the "Concurrent create" row in the Errors table
 - Leave an empty value out of the request (see SDK rules). A buyer with no phone is still linked.
 - `metadata`: `{"platform": "woocommerce"|"magento"|"prestashop", "platformCustomerId": "<id as string>"}`.
 
-No other fields. Check h decides whether a phone that is not E.164 can be sent as it is.
+No other fields. Send the phone as the platform stores it: MONEI accepts local and E.164 formats and stores them as sent (check h).
 
 ## When a payment carries `customerId`
 
@@ -117,16 +119,16 @@ On every create-payment call where the platform customer is known. Each item app
 
 - checkout payments (all MONEI methods, classic and block/one-page checkout),
 - logged-in express checkout,
-- the zero-amount "add card" payment (pending check g),
+- the zero-amount "add card" payment (check g: accepted, and the card is saved under the customer),
 - the first payment of a subscription.
 
 Never on: guest payments, automatic renewal and recurring charges (they already carry `sequenceId`). A buyer who pays a failed renewal order at checkout makes a normal buyer-present payment, so it carries `customerId`.
 
-Pending check i: every MONEI payment method the plugin offers must accept `customerId`. A method that rejects it is left out of this list in v7.
+Every MONEI payment method the plugins offer accepts `customerId` (check i).
 
 The payload keeps its current inline `customer` block (email, name, phone).
 
-Pending check d: a payment with a `paymentToken` saved before the link may need to go without `customerId`.
+A payment with a `paymentToken` saved before the link also carries `customerId`: MONEI accepts it (check d). The token is not attached to the customer, so a later `deletePaymentMethod` for it gets 404 (debug log) and the token stays live at MONEI. Attaching old tokens is out of scope.
 
 ## Errors
 
@@ -148,11 +150,12 @@ at **error** level, never at warning.
 | Create fails | Log error. The payment goes ahead without `customerId`. No retry. |
 | Concurrent create (saving the mapping finds an ID stored by another request) | Delete the MONEI customer just created (best effort; **error** log with its ID on failure). Return the stored ID. |
 | Mapping save fails (nothing stored) | Delete the MONEI customer just created (best effort; **error** log with its ID on failure). Return `null`: the payment goes ahead without `customerId`. |
-| Create-payment fails because the customer no longer exists (see check c) | `forgetCustomerId(…, staleId)`, remove `customerId` from the request (see SDK rules), retry the create-payment once. Never a second retry. Any other create-payment error is rethrown unchanged. |
+| Create-payment fails because the customer no longer exists: `ApiException` with HTTP 404 **and** response body `message` exactly `Customer not found` (check c). Status alone is not enough. | `forgetCustomerId(…, staleId)`, remove `customerId` from the request (see SDK rules), retry the create-payment once. Never a second retry. Any other create-payment error is rethrown unchanged. |
 | Delete returns 404 | Debug log. For `deleteCustomer`, remove the row. `deletePaymentMethod` keeps the mapping. |
 | `deletePaymentMethod` returns 409 | Warning log. |
 | `deletePaymentMethod`, other error | Error log. |
 | `deleteCustomer` returns 409 or another error | **Error** log. Keep the row, and go on with the next row. |
+| `deleteCustomer` for a customer with an active platform subscription that charges a MONEI sequence | **Error** log per row. Keep all rows, no API call. |
 | `deleteCustomer` row with no matching configured key | **Error** log. Keep the row, and go on with the next row. |
 
 ## Triggers
@@ -163,7 +166,7 @@ at **error** level, never at warning.
 | Platform deletes the customer | `deleteCustomer` |
 | GDPR erasure (Woo: `wp_privacy_personal_data_erasers`; PS: psgdpr `actionDeleteGDPRCustomer`; Magento: the customer delete) | `deleteCustomer` |
 
-Pending check e: a platform with renewals may need to skip these deletes while an active platform subscription uses the token.
+A card delete does not need a subscription check. A first payment with `sequence` stores two methods under the customer: the token (`sequence: false`) and a sequence method whose ID is the `sequenceId` (`sequence: true`). The platform token is the first one. Deleting it leaves `recurring` charges working (check e). A customer delete does break them, so `deleteCustomer` has step 0.
 
 ## Tests
 
@@ -181,19 +184,18 @@ Each plugin writes these unit tests, with a mocked SDK client. Each one names th
 10. A concurrent create returns the stored ID, deletes the new MONEI customer, and keeps the winning row. A mapping save that stores nothing returns `null` and deletes the new MONEI customer. Bug: an unmapped MONEI customer with PII that erasure never reaches, a deleted winner row, or an empty `customerId` sent on payments.
 11. `deletePaymentMethod` with no mapping makes no API call. Bug: every card delete of an unlinked buyer calls MONEI with an empty customer ID and logs an error.
 12. An empty account ID gives no create call, no `customerId` and no stored mapping. Bug: a mapping stored under an empty account that no delete can resolve.
+13. `deleteCustomer` for a customer with an active subscription that charges a MONEI sequence makes no delete call, keeps every row, and logs at error level with each MONEI customer ID. The same customer whose subscriptions are all cancelled or expired is deleted. Bug: deleting or erasing a subscriber kills their renewals at MONEI (the charge fails with E999).
 
-## Open sandbox checks (owner: WooCommerce thread)
+## Sandbox results (v7)
 
-Results go into v7 of this contract.
+Run on 2026-11-06 on MONEI test accounts with SDK 2.13.0: the WooCommerce thread (test card `4444444444444422`, Docker store) and the Magento thread (test card `4444444444444414`). Card payments were completed through the 3DS challenge simulator. The IDs below are test-mode IDs, so anyone can check them again.
 
-Method: each card payment is completed in a browser at its `nextAction.redirectUrl` with a MONEI test card (a server-side create alone stays pending, so it has no token and no sequence).
-
-- a. Is `CustomerPaymentMethod.id` the same string as `payment.paymentToken`? If not, `deletePaymentMethod` first finds the token through `listPaymentMethods`.
-- b. Dropped in v5: no decision depends on it. The inline `customer` block stays.
-- c. The exact error (HTTP status, code, message) for create-payment with a deleted `customerId`. Test 6 and the retry rule match on it. Record whether MONEI rejects the deleted customer at create, only at confirm (server-side confirm or monei.js), or not at all. If only at confirm, the retry rule is reopened in v7. Also record whether the retry succeeds when the first request carried a one-time monei.js `paymentToken`. If it fails, the retry helps only the flows without a one-time token, which is acceptable.
-- d. A payment sends `customerId` plus a `paymentToken` saved before the link (not under this customer). Does MONEI accept it? If it rejects it, the rule becomes: never send `customerId` with a token that is not linked, and v7 adds a test for it.
-- e. Start a sequence (`sequence` on the first payment) under a customer, delete the payment method, then charge `recurring` on the `sequenceId`. Repeat with a customer delete. If the charge fails, v7 adds a rule: do not delete at MONEI a token or customer that an active platform subscription uses.
-- f. After a customer delete, does a payment with one of its saved `paymentToken`s fail? The docs say a customer delete deletes its payment methods. If the token still works, `deleteCustomer` must also delete each method first.
-- g. A zero-amount `transactionType: VERIFY` payment with `customerId` and `generatePaymentToken`: is it accepted, and is the card saved under the customer?
-- h. `customers->create` with a local phone (`600 123 456`) and with `+34600123456`. If the local format is rejected, v7 adds a rule: send the phone only when it is E.164 (`^\+[1-9]\d{6,14}$`), else leave it out.
-- i. Create (no need to complete) one payment with `customerId` for each payment method the plugins offer: card, Bizum, PayPal, Apple Pay, Google Pay, MB WAY, Multibanco. Record which ones MONEI rejects. A rejected method must not carry `customerId`.
+- a. `CustomerPaymentMethod.id` is the same string as `payment.paymentToken` (Woo: payment `acd0a023…`, token `55a7ff48…`; Magento: payment `16c24176…`). `deletePaymentMethod(customerId, paymentToken)` succeeds and the list is then empty. A payment with that token then fails with 400 `Invalid payment method`. A second delete gives 404 `Payment method not found`. → Delete by the stored token; no lookup.
+- b. Dropped in v5.
+- c. A deleted or unknown `customerId` is rejected **at create**, with HTTP 404 and body `{"status":"NotFoundError","statusCode":404,"message":"Customer not found"}`. This happens with and without card data in the request. For comparison, an invalid `paymentToken` gives 400 `Invalid payment method`, and a `deletePaymentMethod` for an unknown token gives 404 `Payment method not found`. → The retry rule stands, and it matches on 404 plus the message. **Still open:** whether the retry works after a first request that carried a one-time monei.js or Apple/Google `paymentToken`. That needs a real checkout. If the token is consumed, the retry helps only the flows without a one-time token, which v6 already accepted.
+- d. MONEI accepts `customerId` plus a token saved before the link (Woo: payment `6312032a…` SUCCEEDED; Magento: payment `4c22659d…` SUCCEEDED). The token is not attached to the customer. → No new rule. See "When a payment carries `customerId`".
+- e. A first payment with `sequence` under a customer (`4f9a8920…`) lists two methods: the sequence method (`id` = `sequenceId`, `sequence: true`) and the token (`sequence: false`). After the token is deleted, `recurring` on the sequence still **succeeds** (`d9013196…`). After a **customer** delete, `recurring` on its sequence **fails** with `FAILED`, `E999`, "Service internal error" (`5bb2cbfc…`). → Rule: `deleteCustomer` step 0. The E999 is reported to MONEI as an API defect: the API should return a clear error instead.
+- f. After a customer delete, a payment with one of its saved tokens fails with 400 `Invalid payment method`. → A customer delete revokes its tokens; no extra step.
+- g. A zero-amount `transactionType: VERIF` payment with `customerId` and `generatePaymentToken` is accepted (status AUTHORIZED), and the card is listed under the customer. → The add-card payment carries `customerId`.
+- h. `600 123 456`, `600123456` and `+34600123456` are all accepted and stored as sent. → No phone filter.
+- i. Card, Bizum, PayPal, Apple Pay, Google Pay, MB WAY and Multibanco all accept `customerId` at create. MB WAY and Multibanco gave status FAILED with and without `customerId`, so `customerId` is not the cause. → No method is excluded.
