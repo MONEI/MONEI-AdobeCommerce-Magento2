@@ -64,9 +64,9 @@ class DeleteMoneiPaymentMethod
      */
     public function afterDelete(
         PaymentTokenRepositoryInterface $subject,
-        $result,
+        bool $result,
         PaymentTokenInterface $paymentToken
-    ) {
+    ): bool {
         if (!$result
             || $paymentToken->getPaymentMethodCode() !== Monei::CARD_CODE
             || !$paymentToken->getCustomerId()

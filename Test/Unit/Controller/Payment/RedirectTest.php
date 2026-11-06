@@ -202,7 +202,7 @@ class RedirectTest extends TestCase
         $this->_createPaymentMock
             ->expects($this->once())
             ->method('execute')
-            ->with($this->callback(fn (array $data) => !array_key_exists('customer_id', $data)))
+            ->with($this->callback(fn (array $data) => !array_key_exists('customerId', $data)))
             ->willReturn($this->_moneiPaymentMock);
 
         $this->_controller->execute();
@@ -223,7 +223,7 @@ class RedirectTest extends TestCase
         $this->_createPaymentMock
             ->expects($this->once())
             ->method('execute')
-            ->with($this->callback(fn (array $data) => !array_key_exists('customer_id', $data)))
+            ->with($this->callback(fn (array $data) => !array_key_exists('customerId', $data)))
             ->willReturn($this->_moneiPaymentMock);
 
         $this->_controller->execute();
@@ -251,8 +251,8 @@ class RedirectTest extends TestCase
         $this->_createPaymentMock
             ->expects($this->once())
             ->method('execute')
-            ->with($this->callback(fn (array $data) => ($data['customer_id'] ?? null) === 'cus_123'
-                && ($data['platform_customer_id'] ?? null) === 42))
+            ->with($this->callback(fn (array $data) => ($data['customerId'] ?? null) === 'cus_123'
+                && ($data['platformCustomerId'] ?? null) === 42))
             ->willReturn($this->_moneiPaymentMock);
 
         $this->_controller->execute();

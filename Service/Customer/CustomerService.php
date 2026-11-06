@@ -27,7 +27,8 @@ use Monei\MoneiPayment\Service\Logger;
  */
 class CustomerService implements CustomerServiceInterface
 {
-    private const LOG_PREFIX = '[MONEI Customers] ';
+    private const MODE_TEST = 'test';
+    private const MODE_LIVE = 'live';
 
     /**
      * @var MoneiCustomer
@@ -107,7 +108,7 @@ class CustomerService implements CustomerServiceInterface
             try {
                 $storedId = $this->saveMapping($customerId, $accountId, $mode, $moneiCustomerId);
             } catch (\Throwable $e) {
-                $this->logger->error(self::LOG_PREFIX . 'Mapping save failed', [
+                $this->logger->error('[MONEI Customers] Mapping save failed', [
                     'customer_id' => $customerId,
                     'monei_customer_id' => $moneiCustomerId,
                     'error' => $e->getMessage(),
@@ -120,7 +121,7 @@ class CustomerService implements CustomerServiceInterface
 
             return $storedId;
         } catch (\Throwable $e) {
-            $this->logger->error(self::LOG_PREFIX . 'Customer create failed', [
+            $this->logger->error('[MONEI Customers] Customer create failed', [
                 'customer_id' => $customerId,
                 'store_id' => $storeId,
                 'error' => $e->getMessage(),
@@ -144,7 +145,7 @@ class CustomerService implements CustomerServiceInterface
 
             $this->resource->deleteRow($customerId, $accountId, $mode, $staleCustomerId);
         } catch (\Throwable $e) {
-            $this->logger->error(self::LOG_PREFIX . 'Forget customer failed', [
+            $this->logger->error('[MONEI Customers] Forget customer failed', [
                 'customer_id' => $customerId,
                 'store_id' => $storeId,
                 'monei_customer_id' => $staleCustomerId,
@@ -180,11 +181,11 @@ class CustomerService implements CustomerServiceInterface
             $code = $e instanceof ApiException ? $e->getCode() : null;
             if ($code === 404) {
                 // Tokens saved before the customer link are not attached to the customer.
-                $this->logger->debug(self::LOG_PREFIX . 'Payment method not found at MONEI', $context);
+                $this->logger->debug('[MONEI Customers] Payment method not found at MONEI', $context);
             } elseif ($code === 409) {
-                $this->logger->warning(self::LOG_PREFIX . 'Payment method delete conflict', $context);
+                $this->logger->warning('[MONEI Customers] Payment method delete conflict', $context);
             } else {
-                $this->logger->error(self::LOG_PREFIX . 'Payment method delete failed', $context);
+                $this->logger->error('[MONEI Customers] Payment method delete failed', $context);
             }
         }
     }
@@ -197,7 +198,7 @@ class CustomerService implements CustomerServiceInterface
         try {
             $rows = $this->resource->getRowsByCustomer($customerId);
         } catch (\Throwable $e) {
-            $this->logger->error(self::LOG_PREFIX . 'Customer delete failed', [
+            $this->logger->error('[MONEI Customers] Customer delete failed', [
                 'customer_id' => $customerId,
                 'error' => $e->getMessage(),
             ]);
@@ -212,7 +213,7 @@ class CustomerService implements CustomerServiceInterface
                 $apiKeys ??= $this->getConfiguredApiKeys();
                 $this->deleteMappedCustomer($customerId, $row, $apiKeys);
             } catch (\Throwable $e) {
-                $this->logger->error(self::LOG_PREFIX . 'Customer delete failed, row kept', [
+                $this->logger->error('[MONEI Customers] Customer delete failed, row kept', [
                     'customer_id' => $customerId,
                     'monei_customer_id' => (string) ($row['monei_customer_id'] ?? ''),
                     'account_id' => (string) ($row['account_id'] ?? ''),
@@ -235,11 +236,11 @@ class CustomerService implements CustomerServiceInterface
             $storeId = (int) $store->getId();
             $testApiKey = $this->moduleConfig->getTestApiKey($storeId);
             if ($testApiKey !== '') {
-                $apiKeys[$this->moduleConfig->getTestAccountId($storeId)]['test'] ??= $testApiKey;
+                $apiKeys[$this->moduleConfig->getTestAccountId($storeId)][self::MODE_TEST] ??= $testApiKey;
             }
             $liveApiKey = $this->moduleConfig->getProductionApiKey($storeId);
             if ($liveApiKey !== '') {
-                $apiKeys[$this->moduleConfig->getProductionAccountId($storeId)]['live'] ??= $liveApiKey;
+                $apiKeys[$this->moduleConfig->getProductionAccountId($storeId)][self::MODE_LIVE] ??= $liveApiKey;
             }
         }
 
@@ -268,7 +269,7 @@ class CustomerService implements CustomerServiceInterface
         // Test and live can share one account ID, so the mode must match too.
         $apiKey = $apiKeys[$accountId][$mode] ?? null;
         if ($apiKey === null) {
-            $this->logger->error(self::LOG_PREFIX . 'No API key for mapped customer, row kept', $context);
+            $this->logger->error('[MONEI Customers] No API key for mapped customer, row kept', $context);
 
             return;
         }
@@ -280,7 +281,7 @@ class CustomerService implements CustomerServiceInterface
                 throw $e;
             }
             $this->logger->debug(
-                self::LOG_PREFIX . 'Customer already deleted at MONEI',
+                '[MONEI Customers] Customer already deleted at MONEI',
                 $context + ['error' => $e->getMessage()]
             );
         }
@@ -289,7 +290,7 @@ class CustomerService implements CustomerServiceInterface
             $this->resource->deleteRow($customerId, $accountId, $mode, $context['monei_customer_id']);
         } catch (\Throwable $e) {
             $this->logger->error(
-                self::LOG_PREFIX . 'MONEI customer deleted, row removal failed',
+                '[MONEI Customers] MONEI customer deleted, row removal failed',
                 $context + ['error' => $e->getMessage()]
             );
         }
@@ -306,14 +307,14 @@ class CustomerService implements CustomerServiceInterface
     {
         // (int) of a missing customer ID is 0: without this check, all such buyers share one MONEI customer.
         if ($customerId < 1) {
-            $this->logger->debug(self::LOG_PREFIX . 'No customer ID, not linked', ['store_id' => $storeId]);
+            $this->logger->debug('[MONEI Customers] No customer ID, not linked', ['store_id' => $storeId]);
 
             return null;
         }
 
         $accountId = $this->moduleConfig->getAccountId($storeId);
         if ($accountId === '') {
-            $this->logger->debug(self::LOG_PREFIX . 'No account ID configured, not linked', [
+            $this->logger->debug('[MONEI Customers] No account ID configured, not linked', [
                 'customer_id' => $customerId,
                 'store_id' => $storeId,
             ]);
@@ -321,7 +322,7 @@ class CustomerService implements CustomerServiceInterface
             return null;
         }
 
-        $mode = $this->moduleConfig->getMode($storeId) === Mode::MODE_TEST ? 'test' : 'live';
+        $mode = $this->moduleConfig->getMode($storeId) === Mode::MODE_TEST ? self::MODE_TEST : self::MODE_LIVE;
 
         return [$accountId, $mode];
     }
@@ -396,7 +397,7 @@ class CustomerService implements CustomerServiceInterface
         try {
             $this->apiClient->getMoneiSdk($storeId)->customers->delete($moneiCustomerId);
         } catch (\Throwable $e) {
-            $this->logger->error(self::LOG_PREFIX . 'Delete of unmapped customer failed', [
+            $this->logger->error('[MONEI Customers] Delete of unmapped customer failed', [
                 'customer_id' => $customerId,
                 'monei_customer_id' => $moneiCustomerId,
                 'account_id' => $accountId,

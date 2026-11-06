@@ -19,6 +19,7 @@ use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Model\Config\Source\ModuleVersion;
 use Monei\MoneiPayment\Service\Logger;
 use Monei\ApiException;
+use Monei\Configuration;
 use Monei\MoneiClient;
 
 /**
@@ -251,7 +252,7 @@ class MoneiApiClient
      */
     public function createSdkForApiKey(string $apiKey): MoneiClient
     {
-        $monei = new MoneiClient($apiKey, new \Monei\Configuration());
+        $monei = new MoneiClient($apiKey, new Configuration());
         $monei->setUserAgent($this->getUserAgent());
 
         return $monei;

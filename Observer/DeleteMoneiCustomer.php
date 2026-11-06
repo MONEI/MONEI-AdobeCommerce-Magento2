@@ -55,7 +55,7 @@ class DeleteMoneiCustomer implements ObserverInterface
             $customerId = (int) $observer->getEvent()->getCustomer()->getId();
             $this->customerService->deleteCustomer($customerId);
         } catch (\Throwable $e) {
-            $this->logger->error('[MONEI Customers] Customer delete failed', [
+            $this->logger->error('[MONEI Customers] Customer delete observer failed', [
                 'customer_id' => $customerId,
                 'error' => $e->getMessage(),
             ]);

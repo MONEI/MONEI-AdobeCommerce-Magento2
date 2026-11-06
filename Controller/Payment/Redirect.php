@@ -122,8 +122,8 @@ class Redirect implements HttpGetActionInterface
                 (string) $this->getCustomerPhone($order)
             );
             if ($moneiCustomerId !== null) {
-                $data['customer_id'] = $moneiCustomerId;
-                $data['platform_customer_id'] = (int) $order->getCustomerId();
+                $data['customerId'] = $moneiCustomerId;
+                $data['platformCustomerId'] = (int) $order->getCustomerId();
             }
         }
 

@@ -327,7 +327,7 @@ class CreatePaymentTest extends TestCase
             ->method('error')
             ->with(
                 $this->stringStartsWith('[MONEI Customers]'),
-                ['monei_customer_id' => 'cus_stale', 'platform_customer_id' => 42, 'store_id' => 3]
+                ['monei_customer_id' => 'cus_stale', 'customer_id' => 42, 'store_id' => 3]
             );
 
         if ($retryFails) {

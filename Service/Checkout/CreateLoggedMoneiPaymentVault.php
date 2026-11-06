@@ -174,7 +174,7 @@ class CreateLoggedMoneiPaymentVault extends AbstractCheckoutService implements C
                 (int) $this->storeManager->getStore()->getId(),
                 (string) $customer->getEmail(),
                 $customer->getFirstname() . ' ' . $customer->getLastname(),
-                (string) $quote->getBillingAddress()?->getTelephone()
+                (string) $quote->getBillingAddress()->getTelephone()
             );
             if ($moneiCustomerId !== null) {
                 $paymentData['customer_id'] = $moneiCustomerId;
