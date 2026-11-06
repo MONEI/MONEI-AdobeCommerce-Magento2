@@ -1,8 +1,12 @@
 # Changelog
 
+## 2.5.0 (2026-11-06)
+
+- feat: link buyers to MONEI customers and erase them with the Magento customer (#97) ([b42554e](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/b42554e)), closes [#97](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/97)
+
 ## <small>2.4.4 (2026-10-22)</small>
 
-* fix(deps): require monei-php-sdk 2.13 for bundled Guzzle security fixes (#96) ([54ec319](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/54ec319)), closes [#96](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/96)
+- fix(deps): require monei-php-sdk 2.13 for bundled Guzzle security fixes (#96) ([54ec319](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/54ec319)), closes [#96](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/96)
 
 ## <small>2.4.3 (2026-10-21)</small>
 
