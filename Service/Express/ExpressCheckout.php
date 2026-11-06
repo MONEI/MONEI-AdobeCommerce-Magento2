@@ -335,12 +335,13 @@ class ExpressCheckout implements ExpressCheckoutInterface
         if ($quote->getCustomerId()) {
             // The quote email and name now hold the wallet's values, not the account's.
             $customer = $quote->getCustomer();
+            $phone = (string) $quote->getBillingAddress()->getTelephone();
             $moneiCustomerId = $this->customerService->getOrCreateCustomerId(
                 (int) $quote->getCustomerId(),
                 (int) $this->storeManager->getStore()->getId(),
                 (string) $customer->getEmail(),
                 $customer->getFirstname() . ' ' . $customer->getLastname(),
-                (string) $quote->getBillingAddress()->getTelephone()
+                $phone === SetExpressAddressesOnQuote::PLACEHOLDER_TELEPHONE ? '' : $phone
             );
             if ($moneiCustomerId !== null) {
                 $paymentData['customer_id'] = $moneiCustomerId;

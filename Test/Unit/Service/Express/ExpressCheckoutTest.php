@@ -389,19 +389,23 @@ class ExpressCheckoutTest extends TestCase
 
     /**
      * The MONEI customer holds the account's email, not the wallet's, and the payment carries
-     * platform_customer_id so the stale-customer retry can clear the mapping.
+     * platform_customer_id so the stale-customer retry can clear the mapping. The address
+     * placeholder phone never reaches the MONEI customer.
      *
+     * @dataProvider phoneProvider
      * @return void
      */
-    public function testLoggedInPlaceOrderSendsTheLinkedCustomerIdWithTheAccountEmail(): void
-    {
+    public function testLoggedInPlaceOrderSendsTheLinkedCustomerIdWithTheAccountEmail(
+        string $quotePhone,
+        string $sentPhone
+    ): void {
         $billingAddress = $this
             ->getMockBuilder(Address::class)
             ->disableOriginalConstructor()
             ->onlyMethods(['validate', 'getTelephone'])
             ->getMock();
         $billingAddress->method('validate')->willReturn(true);
-        $billingAddress->method('getTelephone')->willReturn('600111222');
+        $billingAddress->method('getTelephone')->willReturn($quotePhone);
 
         $customer = $this->createMock(CustomerInterface::class);
         $customer->method('getEmail')->willReturn('account@example.com');
@@ -438,7 +442,7 @@ class ExpressCheckoutTest extends TestCase
         $this->_customerServiceMock
             ->expects($this->once())
             ->method('getOrCreateCustomerId')
-            ->with(42, 2, 'account@example.com', 'Jane Roe', '600111222')
+            ->with(42, 2, 'account@example.com', 'Jane Roe', $sentPhone)
             ->willReturn('cus_123');
 
         $this->_createPaymentMock
@@ -454,6 +458,17 @@ class ExpressCheckoutTest extends TestCase
             'token' => 'tok_123',
             'billingDetails' => ['email' => 'wallet@example.com'],
         ]));
+    }
+
+    /**
+     * @return array<string, array{string, string}>
+     */
+    public static function phoneProvider(): array
+    {
+        return [
+            'wallet phone' => ['600111222', '600111222'],
+            'placeholder phone' => [SetExpressAddressesOnQuote::PLACEHOLDER_TELEPHONE, ''],
+        ];
     }
 
     /**

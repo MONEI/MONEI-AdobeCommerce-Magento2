@@ -29,7 +29,7 @@ class SetExpressAddressesOnQuote
      * telephone at all, so placeholders are required rather than optional. They are
      * corrected from the confirm response once the payment succeeds.
      */
-    private const PLACEHOLDER_TELEPHONE = '000000000';
+    public const PLACEHOLDER_TELEPHONE = '000000000';
 
     /**
      * Apply the wallet's billing and shipping details to the quote.
