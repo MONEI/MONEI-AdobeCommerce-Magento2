@@ -282,20 +282,19 @@ class CustomerServiceTest extends TestCase
     }
 
     /**
-     * Bug: a customer deleted while MONEI creates its customer keeps the new MONEI customer with PII,
-     * because the delete observer already ran and found no row.
+     * Contract test 14. Bug: a customer deleted while MONEI creates its customer keeps the new MONEI
+     * customer with PII, because the delete observer already ran and found no row; or a failed MONEI
+     * delete keeps the row, which no observer reaches again and a reused customer ID inherits.
      */
     public function testCustomerDeletedDuringCreateDeletesNewCustomerAndRow(): void
     {
         $this->customerExists = false;
         $this->customersApiMock->method('create')->willReturn(new Customer(['id' => 'cus_new']));
-        $this->resourceMock->method('getRowsByCustomer')->with(5)->willReturn([
-            ['account_id' => 'acc_1', 'mode' => 'test', 'monei_customer_id' => 'cus_new'],
-        ]);
+        $this->customersApiMock->expects($this->once())->method('delete')->with('cus_new')
+            ->willThrowException(new ApiException('[500] Internal Server Error', 500));
         $this->resourceMock->expects($this->once())->method('deleteRow')->with(5, 'acc_1', 'test', 'cus_new');
 
         $this->assertNull($this->getOrCreate(5));
-        $this->assertSame([['pk_test', 'cus_new']], $this->deletes);
     }
 
     /**
@@ -398,21 +397,17 @@ class CustomerServiceTest extends TestCase
             ['account_id' => 'acc_1', 'mode' => 'live', 'monei_customer_id' => 'cus_live'],
             ['account_id' => 'acc_old', 'mode' => 'live', 'monei_customer_id' => 'cus_old'],
         ]);
+        $this->deleteErrors['cus_test'] = new \Error('Call to a member function on null');
         $removedRows = [];
         $this->resourceMock->method('deleteRow')->willReturnCallback(
             function (int $customerId, string $accountId, string $mode, string $id) use (&$removedRows) {
-                if ($id === 'cus_test') {
-                    throw new \Error('Database gone away');
-                }
                 $removedRows[] = [$customerId, $accountId, $mode, $id];
             }
         );
         $errorIds = [];
-        $errorMessages = [];
         $this->loggerMock->method('error')->willReturnCallback(
-            function (string $message, array $context) use (&$errorIds, &$errorMessages) {
+            function (string $message, array $context) use (&$errorIds) {
                 $errorIds[] = $context['monei_customer_id'];
-                $errorMessages[] = $message;
             }
         );
 
@@ -421,8 +416,24 @@ class CustomerServiceTest extends TestCase
         $this->assertSame([['pk_test', 'cus_test'], ['pk_live', 'cus_live']], $this->deletes);
         $this->assertSame([[5, 'acc_1', 'live', 'cus_live']], $removedRows);
         $this->assertSame(['cus_test', 'cus_old'], $errorIds);
-        // Support must not chase a MONEI customer that is already gone.
-        $this->assertStringContainsString('MONEI customer deleted', $errorMessages[0]);
+    }
+
+    /**
+     * Bug: a row removal failure after the MONEI delete is logged as a failed delete,
+     * so support chases a MONEI customer that is already gone.
+     */
+    public function testRowRemovalFailureLogsThatMoneiCustomerIsDeleted(): void
+    {
+        $this->resourceMock->method('getRowsByCustomer')->with(5)->willReturn([
+            ['account_id' => 'acc_1', 'mode' => 'test', 'monei_customer_id' => 'cus_test'],
+        ]);
+        $this->resourceMock->method('deleteRow')->willThrowException(new \Error('Database gone away'));
+        $this->loggerMock->expects($this->once())->method('error')->with(
+            $this->stringContains('MONEI customer deleted'),
+            $this->callback(fn (array $context) => $context['monei_customer_id'] === 'cus_test')
+        );
+
+        $this->service->deleteCustomer(5);
     }
 
     private function getOrCreate(int $customerId): ?string

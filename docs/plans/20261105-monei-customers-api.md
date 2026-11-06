@@ -90,7 +90,7 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - Create fails: error log, return `null`, no retry.
 - Concurrent create (unique-key conflict on insert: another request saved the mapping first): read the stored row with a fresh SQL select (no repository or entity cache, no open transaction; contract v6.1), delete the MONEI customer just created (best effort; **error** log with its ID on failure), return the stored ID. The winning row is kept.
 - Mapping save fails (nothing stored: another insert error, or the re-read after a conflict is empty): delete the MONEI customer just created (best effort; **error** log with its ID on failure), return `null`.
-- Customer deleted during create (its delete observer ran before the insert and found no row): after a successful insert, a fresh SQL read checks `customer_entity`; on a missing row, run `deleteCustomer` for the customer (delete at MONEI, 404 is debug, remove the row; failures **error** log with the IDs), return `null`.
+- Customer deleted during create (its delete observer ran before the insert and found no row): after a successful insert, a fresh SQL read checks `customer_entity`; on a missing row, delete the new MONEI customer with the unmapped-customer cleanup (404 is debug; other failures **error** log with the IDs), then always remove the new row, return `null`.
 - Delete 404: debug log; `deleteCustomer` removes the row.
 - `deleteCustomer` 409 or any other error: **error** log, keep the row, go on with the next row (each row in its own `\Throwable` catch).
 - `deletePaymentMethod` 409: warning log; other error: error log. It never removes the mapping, not even on 404.

@@ -119,7 +119,9 @@ class CustomerService implements CustomerServiceInterface
                 $this->deleteUnmappedCustomer($customerId, $storeId, $accountId, $mode, $moneiCustomerId);
             } elseif (!$this->resource->customerExists($customerId)) {
                 // Deleted during the create call: its delete observer ran before the insert and found no row.
-                $this->deleteCustomer($customerId);
+                // The row goes even when the MONEI delete fails: no observer runs for this customer again.
+                $this->deleteUnmappedCustomer($customerId, $storeId, $accountId, $mode, $moneiCustomerId);
+                $this->resource->deleteRow($customerId, $accountId, $mode, $moneiCustomerId);
 
                 return null;
             }
