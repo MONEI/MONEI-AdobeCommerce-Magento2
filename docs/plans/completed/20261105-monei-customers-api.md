@@ -101,7 +101,7 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - Stale customer on create-payment: one **error** log line (stale MONEI customer ID, Magento customer ID, store ID), `forgetCustomerId(…, staleId)`, `offsetSet('customer_id', null)` (never `offsetUnset`: the serializer calls every getter and warns on a missing key), retry once. Match (v7, check c): `ApiException` code 404 AND response body `message` exactly `Customer not found`. Any other create-payment error is rethrown unchanged.
 
 ### Known limits (not fixed here)
-- The existing `MoneiApiClient::getMoneiSdk()` builds every store client on the shared default `Configuration`. Two stores with different keys in one request share the last key. This is a bug that exists today and is out of scope.
+- ➕ Fixed after review, at the user's request: `getMoneiSdk()` and `reinitialize()` built every store client on the shared default `Configuration`, so two stores with different keys in one request shared the last key. Both now build through `createSdkForApiKey()` (own `Configuration`).
 - The SDK Guzzle client has no timeout. A MONEI outage that hangs the connection makes the admin customer delete wait.
 
 ## What Goes Where
@@ -292,5 +292,4 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - Delete a saved card in My Account: the method is gone at MONEI (after Task 9).
 
 **Follow-ups (not in this plan)**
-- `getMoneiSdk()` shares the default SDK `Configuration` across stores (see Known limits).
 - No HTTP timeout on the SDK client.
