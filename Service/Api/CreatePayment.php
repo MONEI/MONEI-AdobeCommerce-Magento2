@@ -145,7 +145,7 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
                     }
                     $platformCustomerId = (int) $data['platform_customer_id'];
                     $storeId = (int) $this->storeManager->getStore()->getId();
-                    $this->logger->warning('[MONEI Customers] Stale customer, retrying payment without it', [
+                    $this->logger->error('[MONEI Customers] Stale customer, retrying payment without it', [
                         'monei_customer_id' => $staleCustomerId,
                         'platform_customer_id' => $platformCustomerId,
                         'store_id' => $storeId,

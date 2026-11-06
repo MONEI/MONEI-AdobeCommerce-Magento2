@@ -34,8 +34,9 @@ MONEI Payments for Adobe Commerce (Magento 2) allows you to seamlessly integrate
 - Integration with the official MONEI PHP SDK for reliable API communication
 - Automatic Apple Pay domain verification through configuration settings
 - Payments of logged-in customers link to a MONEI customer
-- Deleting a saved card in Magento also deletes it at MONEI
-- Deleting a Magento customer also deletes the linked MONEI customer and its saved cards
+- Deleting a saved card in Magento also deletes it at MONEI (only cards saved after the customer link)
+- Deleting a Magento customer also deletes the linked MONEI customer and the cards saved under it
+- MONEI customer errors go to `var/log/monei.log` with the prefix `[MONEI Customers]`. If a MONEI customer delete fails, the log line gives the MONEI customer ID, account ID and mode. Delete that customer by hand in the MONEI Dashboard.
 
 ## Requirements
 

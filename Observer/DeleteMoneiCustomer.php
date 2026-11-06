@@ -49,10 +49,10 @@ class DeleteMoneiCustomer implements ObserverInterface
      */
     public function execute(Observer $observer): void
     {
-        $customerId = (int) $observer->getEvent()->getCustomer()->getId();
-
+        $customerId = null;
         // A throw here reaches the customer delete in the admin.
         try {
+            $customerId = (int) $observer->getEvent()->getCustomer()->getId();
             $this->customerService->deleteCustomer($customerId);
         } catch (\Throwable $e) {
             $this->logger->error('[MONEI Customers] Customer delete failed', [

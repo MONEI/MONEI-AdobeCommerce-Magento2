@@ -3,9 +3,11 @@
 namespace Monei\MoneiPayment\Test\Unit\Service\Checkout;
 
 use Magento\Checkout\Model\Session;
+use Magento\Customer\Api\Data\CustomerInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\Quote;
+use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Monei\Model\Payment;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
@@ -86,6 +88,11 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
     private Quote\Address $quoteAddressMock;
 
     /**
+     * @var CustomerServiceInterface|\PHPUnit\Framework\MockObject\MockObject
+     */
+    private CustomerServiceInterface $customerServiceMock;
+
+    /**
      * @var CreateLoggedMoneiPaymentInSite
      */
     private CreateLoggedMoneiPaymentInSite $createLoggedPaymentService;
@@ -108,6 +115,12 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
 
         $this->quoteAddressMock = $this->createMock(Quote\Address::class);
 
+        $this->customerServiceMock = $this->createMock(CustomerServiceInterface::class);
+        $storeMock = $this->createMock(StoreInterface::class);
+        $storeMock->method('getId')->willReturn(2);
+        $storeManagerMock = $this->createMock(StoreManagerInterface::class);
+        $storeManagerMock->method('getStore')->willReturn($storeMock);
+
         $this->createLoggedPaymentService = new CreateLoggedMoneiPaymentInSite(
             $this->loggerMock,
             $this->exceptionHandlerMock,
@@ -119,9 +132,43 @@ class CreateLoggedMoneiPaymentInSiteTest extends TestCase
             $this->moduleConfigMock,
             $this->createPaymentMock,
             $this->getPaymentMock,
-            $this->createMock(CustomerServiceInterface::class),
-            $this->createMock(StoreManagerInterface::class)
+            $this->customerServiceMock,
+            $storeManagerMock
         );
+    }
+
+    /**
+     * Bug: logged-in card payments are never linked, or the stale-customer retry cannot clear
+     * the mapping because platform_customer_id is missing.
+     */
+    public function testLoggedInPaymentSendsTheLinkedCustomerId(): void
+    {
+        $customerMock = $this->createMock(CustomerInterface::class);
+        $customerMock->method('getEmail')->willReturn('buyer@example.com');
+        $customerMock->method('getFirstname')->willReturn('Jane');
+        $customerMock->method('getLastname')->willReturn('Roe');
+        $this->checkoutSessionMock->method('getQuote')->willReturn($this->quoteMock);
+        $this->quoteMock->method('getId')->willReturn('123456');
+        $this->quoteMock->method('getCustomerId')->willReturn(7);
+        $this->quoteMock->method('getCustomer')->willReturn($customerMock);
+        $this->quoteMock->method('getBillingAddress')->willReturn($this->quoteAddressMock);
+        $this->quoteMock->method('getShippingAddress')->willReturn($this->quoteAddressMock);
+        $this->quoteAddressMock->method('getTelephone')->willReturn('600111222');
+
+        $this->customerServiceMock
+            ->expects($this->once())
+            ->method('getOrCreateCustomerId')
+            ->with(7, 2, 'buyer@example.com', 'Jane Roe', '600111222')
+            ->willReturn('cus_123');
+
+        $this->createPaymentMock
+            ->expects($this->once())
+            ->method('execute')
+            ->with($this->callback(fn (array $data) => ($data['customer_id'] ?? null) === 'cus_123'
+                && ($data['platform_customer_id'] ?? null) === 7))
+            ->willReturn($this->createMock(Payment::class));
+
+        $this->createLoggedPaymentService->execute('123456', 'buyer@example.com');
     }
 
     /**

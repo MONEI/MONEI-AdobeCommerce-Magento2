@@ -40,7 +40,7 @@ interface CustomerServiceInterface
      * @param int $customerId Magento customer ID
      * @param int $storeId Store whose MONEI account and mode apply
      * @param string $staleCustomerId MONEI customer ID that no longer exists
-     * @return void
+     * @return void Never throws
      */
     public function forgetCustomerId(int $customerId, int $storeId, string $staleCustomerId): void;
 

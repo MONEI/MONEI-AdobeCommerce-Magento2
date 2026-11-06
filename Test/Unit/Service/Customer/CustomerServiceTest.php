@@ -148,6 +148,17 @@ class CustomerServiceTest extends TestCase
     }
 
     /**
+     * Contract test 3. Bug: an empty ID is stored and reused forever, so the buyer is never linked.
+     */
+    public function testCreateWithoutIdStoresNothing(): void
+    {
+        $this->customersApiMock->method('create')->willReturn(new Customer());
+        $this->resourceMock->expects($this->never())->method('saveRow');
+
+        $this->assertNull($this->getOrCreate(5));
+    }
+
+    /**
      * Contract test 4. Bug: live payments fail with a test customer ID.
      */
     public function testLiveModeNeverReturnsTestModeId(): void
@@ -159,6 +170,7 @@ class CustomerServiceTest extends TestCase
         );
         $this->customersApiMock->method('create')->willReturn(new Customer(['id' => 'cus_live']));
         $this->resourceMock->expects($this->once())->method('saveRow')->with(5, 'acc_1', 'live', 'cus_live');
+        $this->customersApiMock->expects($this->never())->method('delete');
 
         $this->assertSame('cus_live', $this->getOrCreate(5));
     }
@@ -182,7 +194,7 @@ class CustomerServiceTest extends TestCase
     }
 
     /**
-     * Bug: all Express guests are mapped to one MONEI customer with platformCustomerId "0".
+     * Bug: all buyers without a customer ID are mapped to one MONEI customer with platformCustomerId "0".
      */
     public function testZeroCustomerIdMakesNoCreateCall(): void
     {
@@ -240,7 +252,7 @@ class CustomerServiceTest extends TestCase
         $this->assertNull($this->getOrCreate(5));
     }
 
-    public function saveStoresNothingProvider(): array
+    public static function saveStoresNothingProvider(): array
     {
         return [
             'empty re-read after a conflict' => [new DuplicateException('Duplicate entry')],
@@ -296,6 +308,35 @@ class CustomerServiceTest extends TestCase
     }
 
     /**
+     * Contract test 6 (mapping cleared). Bug: the stale ID stays mapped, so every later payment
+     * fails once and retries.
+     */
+    public function testForgetCustomerIdRemovesTheStaleMapping(): void
+    {
+        $this->resourceMock->expects($this->once())->method('deleteRow')->with(5, 'acc_1', 'test', 'cus_stale');
+
+        $this->service->forgetCustomerId(5, self::STORE_ID, 'cus_stale');
+    }
+
+    /**
+     * Bug: an outage on a card delete leaves the card live at MONEI with no error-level record
+     * of the token to delete by hand.
+     */
+    public function testDeletePaymentMethodOtherErrorLogsErrorWithToken(): void
+    {
+        $this->resourceMock->method('getMoneiCustomerId')->willReturn('cus_stored');
+        $this->customersApiMock->method('deletePaymentMethod')
+            ->willThrowException(new ApiException('[500] Internal Server Error', 500));
+        $this->loggerMock->expects($this->once())->method('error')->with(
+            $this->stringContains('[MONEI Customers]'),
+            $this->callback(fn (array $context) => $context['monei_customer_id'] === 'cus_stored'
+                && $context['payment_token'] === 'tok_1')
+        );
+
+        $this->service->deletePaymentMethod(5, self::STORE_ID, 'tok_1');
+    }
+
+    /**
      * Contract test 11. Bug: every card delete of an unlinked buyer calls MONEI with an empty customer ID
      * and logs an error.
      */
@@ -329,9 +370,11 @@ class CustomerServiceTest extends TestCase
             }
         );
         $errorIds = [];
+        $errorMessages = [];
         $this->loggerMock->method('error')->willReturnCallback(
-            function (string $message, array $context) use (&$errorIds) {
+            function (string $message, array $context) use (&$errorIds, &$errorMessages) {
                 $errorIds[] = $context['monei_customer_id'];
+                $errorMessages[] = $message;
             }
         );
 
@@ -340,6 +383,8 @@ class CustomerServiceTest extends TestCase
         $this->assertSame([['pk_test', 'cus_test'], ['pk_live', 'cus_live']], $this->deletes);
         $this->assertSame([[5, 'acc_1', 'live', 'cus_live']], $removedRows);
         $this->assertSame(['cus_test', 'cus_old'], $errorIds);
+        // Support must not chase a MONEI customer that is already gone.
+        $this->assertStringContainsString('MONEI customer deleted', $errorMessages[0]);
     }
 
     private function getOrCreate(int $customerId): ?string

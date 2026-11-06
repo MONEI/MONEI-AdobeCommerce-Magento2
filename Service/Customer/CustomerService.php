@@ -100,6 +100,9 @@ class CustomerService implements CustomerServiceInterface
             $request = $this->buildCreateRequest($customerId, $email, $name, $phone);
             $moneiCustomerId = (string) $this->apiClient->getMoneiSdk($storeId)
                 ->customers->create($request)->getId();
+            if ($moneiCustomerId === '') {
+                throw new \UnexpectedValueException('MONEI returned no customer ID');
+            }
 
             try {
                 $storedId = $this->saveMapping($customerId, $accountId, $mode, $moneiCustomerId);
@@ -155,7 +158,7 @@ class CustomerService implements CustomerServiceInterface
      */
     public function deletePaymentMethod(int $customerId, int $storeId, string $paymentToken): void
     {
-        $context = ['customer_id' => $customerId, 'store_id' => $storeId];
+        $context = ['customer_id' => $customerId, 'store_id' => $storeId, 'payment_token' => $paymentToken];
         try {
             $scope = $this->resolveScope($customerId, $storeId);
             if ($scope === null) {
@@ -203,11 +206,11 @@ class CustomerService implements CustomerServiceInterface
         }
 
         // Resolved inside the row catch, so a config failure is logged with each row's IDs.
-        $keyPairs = null;
+        $apiKeys = null;
         foreach ($rows as $row) {
             try {
-                $keyPairs ??= $this->getConfiguredKeyPairs();
-                $this->deleteMappedCustomer($customerId, $row, $keyPairs);
+                $apiKeys ??= $this->getConfiguredApiKeys();
+                $this->deleteMappedCustomer($customerId, $row, $apiKeys);
             } catch (\Throwable $e) {
                 $this->logger->error(self::LOG_PREFIX . 'Customer delete failed, row kept', [
                     'customer_id' => $customerId,
@@ -221,31 +224,26 @@ class CustomerService implements CustomerServiceInterface
     }
 
     /**
-     * Collect the configured (account ID, mode, API key) of every scope, admin store included.
+     * Collect the configured API key of every account ID and mode, admin store included.
      *
-     * @return array<int, array{0: string, 1: string, 2: string}>
+     * @return array<string, array<string, string>> API key by account ID, then mode
      */
-    private function getConfiguredKeyPairs(): array
+    private function getConfiguredApiKeys(): array
     {
-        $pairs = [];
+        $apiKeys = [];
         foreach ($this->storeManager->getStores(true) as $store) {
             $storeId = (int) $store->getId();
-            $pairs[] = [
-                $this->moduleConfig->getTestAccountId($storeId),
-                'test',
-                $this->moduleConfig->getTestApiKey($storeId),
-            ];
-            $pairs[] = [
-                $this->moduleConfig->getProductionAccountId($storeId),
-                'live',
-                $this->moduleConfig->getProductionApiKey($storeId),
-            ];
+            $testApiKey = $this->moduleConfig->getTestApiKey($storeId);
+            if ($testApiKey !== '') {
+                $apiKeys[$this->moduleConfig->getTestAccountId($storeId)]['test'] ??= $testApiKey;
+            }
+            $liveApiKey = $this->moduleConfig->getProductionApiKey($storeId);
+            if ($liveApiKey !== '') {
+                $apiKeys[$this->moduleConfig->getProductionAccountId($storeId)]['live'] ??= $liveApiKey;
+            }
         }
 
-        return array_values(array_filter(
-            $pairs,
-            static fn (array $pair): bool => $pair[0] !== '' && $pair[2] !== ''
-        ));
+        return $apiKeys;
     }
 
     /**
@@ -253,10 +251,10 @@ class CustomerService implements CustomerServiceInterface
      *
      * @param int $customerId
      * @param array $row
-     * @param array $keyPairs List of [account ID, mode, API key]
+     * @param array $apiKeys API key by account ID, then mode
      * @return void
      */
-    private function deleteMappedCustomer(int $customerId, array $row, array $keyPairs): void
+    private function deleteMappedCustomer(int $customerId, array $row, array $apiKeys): void
     {
         $accountId = (string) $row['account_id'];
         $mode = (string) $row['mode'];
@@ -268,13 +266,7 @@ class CustomerService implements CustomerServiceInterface
         ];
 
         // Test and live can share one account ID, so the mode must match too.
-        $apiKey = null;
-        foreach ($keyPairs as [$pairAccountId, $pairMode, $pairApiKey]) {
-            if ($pairAccountId === $accountId && $pairMode === $mode) {
-                $apiKey = $pairApiKey;
-                break;
-            }
-        }
+        $apiKey = $apiKeys[$accountId][$mode] ?? null;
         if ($apiKey === null) {
             $this->logger->error(self::LOG_PREFIX . 'No API key for mapped customer, row kept', $context);
 
@@ -283,17 +275,24 @@ class CustomerService implements CustomerServiceInterface
 
         try {
             $this->apiClient->createSdkForApiKey($apiKey)->customers->delete($context['monei_customer_id']);
-        } catch (\Throwable $e) {
-            $context['error'] = $e->getMessage();
-            if (!$e instanceof ApiException || $e->getCode() !== 404) {
-                $this->logger->error(self::LOG_PREFIX . 'Customer delete failed, row kept', $context);
-
-                return;
+        } catch (ApiException $e) {
+            if ($e->getCode() !== 404) {
+                throw $e;
             }
-            $this->logger->debug(self::LOG_PREFIX . 'Customer already deleted at MONEI', $context);
+            $this->logger->debug(
+                self::LOG_PREFIX . 'Customer already deleted at MONEI',
+                $context + ['error' => $e->getMessage()]
+            );
         }
 
-        $this->resource->deleteRow($customerId, $accountId, $mode, $context['monei_customer_id']);
+        try {
+            $this->resource->deleteRow($customerId, $accountId, $mode, $context['monei_customer_id']);
+        } catch (\Throwable $e) {
+            $this->logger->error(
+                self::LOG_PREFIX . 'MONEI customer deleted, row removal failed',
+                $context + ['error' => $e->getMessage()]
+            );
+        }
     }
 
     /**
@@ -305,7 +304,7 @@ class CustomerService implements CustomerServiceInterface
      */
     private function resolveScope(int $customerId, int $storeId): ?array
     {
-        // Express checkout turns a guest's null customer ID into 0.
+        // (int) of a missing customer ID is 0: without this check, all such buyers share one MONEI customer.
         if ($customerId < 1) {
             $this->logger->debug(self::LOG_PREFIX . 'No customer ID, not linked', ['store_id' => $storeId]);
 

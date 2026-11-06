@@ -97,7 +97,7 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - Every delete error log line holds the MONEI customer ID, the account ID and the mode. `monei_customer` has no FK, so a kept row survives the customer delete; the log line is the record for manual cleanup.
 - Every customer code path catches `\Throwable` (not only `ApiException`).
 - `deleteCustomer` row with no matching key: **error** log, keep the row, go on with the next row.
-- Stale customer on create-payment: `forgetCustomerId(…, staleId)`, `offsetSet('customer_id', null)` (never `offsetUnset`: the serializer calls every getter and warns on a missing key), retry once. Match (v7, check c): `ApiException` code 404 AND response body `message` exactly `Customer not found`. Any other create-payment error is rethrown unchanged.
+- Stale customer on create-payment: one **error** log line (stale MONEI customer ID, Magento customer ID, store ID), `forgetCustomerId(…, staleId)`, `offsetSet('customer_id', null)` (never `offsetUnset`: the serializer calls every getter and warns on a missing key), retry once. Match (v7, check c): `ApiException` code 404 AND response body `message` exactly `Customer not found`. Any other create-payment error is rethrown unchanged.
 
 ### Known limits (not fixed here)
 - The existing `MoneiApiClient::getMoneiSdk()` builds every store client on the shared default `Configuration`. Two stores with different keys in one request share the last key. This is a bug that exists today and is out of scope.
@@ -266,7 +266,7 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - [x] run `composer test:unit` - must pass before Task 12
 
 ### Task 12: Verify acceptance criteria
-- [x] ➕ live test finding: the stale-customer retry in `CreatePayment` logs nothing. Log one warning with `[MONEI Customers]`, the stale MONEI customer ID, the Magento customer ID and the store ID before the retry. Bug: support cannot see why a buyer got a new MONEI customer. Extend contract test 6's retry case to require that log call.
+- [x] ➕ live test finding: the stale-customer retry in `CreatePayment` logs nothing. Log one line at error level (the default log level drops warnings) with `[MONEI Customers]`, the stale MONEI customer ID, the Magento customer ID and the store ID before the retry. Bug: support cannot see why a buyer got a new MONEI customer. Extend contract test 6's retry case to require that log call.
 - [x] verify every contract item maps to code, including tests 1–12 (13 is n/a)
 - [x] ➕ contract test 6 part "a newer ID is kept" had no test: `MoneiCustomerTest` requires `deleteRow` to match `monei_customer_id`. Bug: a stale-customer retry deletes the newer ID another request stored, and the next payment creates a second MONEI customer. (Overrides the Task 1 "no SQL test" note for this one condition: the contract requires it.)
 - [x] run the full suite: `composer test:unit`
@@ -279,9 +279,8 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 *Items requiring manual intervention or external systems - no checkboxes, informational only*
 
 **Contract**
-- Sandbox checks a and c–i are owned by the WooCommerce thread. Results arrive as contract v7. Copy v7 over `docs/plans/20261105-monei-customers-api-contract.md` unchanged, then do Tasks 9–11.
-- v7 check f (does a customer delete remove its tokens) may add per-method deletes to `deleteCustomer` (Task 4). Check h (local vs E.164 phone) may change the phone rule (Task 3). Reopen those tasks with ➕ items if v7 says so. Check g does not apply: Magento has no zero-amount add-card payment.
-- v7 check i (does every payment method accept `customerId` at create) may require Task 6 to leave `customer_id` out for some methods. `Redirect` serves every redirect method; `ExpressCheckout` serves Apple Pay / Google Pay. Reopen Task 6 with ➕ items if v7 says so.
+- Contract v7 is in `docs/plans/20261105-monei-customers-api-contract.md`. Tasks 9–11 are done.
+- v7 check f: a customer delete revokes its tokens, so `deleteCustomer` needs no extra step. Check h: no phone filter. Check i: no payment method exclusions. Check g does not apply: Magento has no zero-amount add-card payment.
 - A Magento item that cannot follow the contract goes to the WooCommerce thread, not a local change.
 
 **Manual verification**

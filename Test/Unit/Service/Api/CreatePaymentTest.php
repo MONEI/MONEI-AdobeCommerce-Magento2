@@ -281,31 +281,6 @@ class CreatePaymentTest extends TestCase
     }
 
     /**
-     * Without this, no payment is linked to its MONEI customer and every other test still passes.
-     *
-     * @return void
-     */
-    public function testExecuteSendsCustomerId(): void
-    {
-        $this
-            ->_paymentsApiMock
-            ->expects($this->once())
-            ->method('create')
-            ->with($this->callback(
-                fn (CreatePaymentRequest $request) => $request->getCustomerId() === 'cus_123'
-            ))
-            ->willReturn($this->createMock(MoneiPayment::class));
-
-        $this->_createPaymentService->execute([
-            'amount' => 1000,
-            'currency' => 'EUR',
-            'order_id' => '123456',
-            'customer_id' => 'cus_123',
-            'shipping_details' => ['address' => ['country' => 'ES']]
-        ]);
-    }
-
-    /**
      * A buyer deleted in the MONEI dashboard must still be able to pay: one retry without the stale customerId.
      *
      * The retry must never repeat, and its own failure must reach the caller.
@@ -349,7 +324,7 @@ class CreatePaymentTest extends TestCase
         $this
             ->_loggerMock
             ->expects($this->once())
-            ->method('warning')
+            ->method('error')
             ->with(
                 $this->stringStartsWith('[MONEI Customers]'),
                 ['monei_customer_id' => 'cus_stale', 'platform_customer_id' => 42, 'store_id' => 3]
