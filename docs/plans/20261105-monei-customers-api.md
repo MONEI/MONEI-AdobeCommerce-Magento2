@@ -273,7 +273,7 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - [x] run `composer analyze` and `composer cs:lint`
 
 ### Task 13: [Final] Update documentation
-- [ ] update `README.md` if it lists features: logged-in payments link to a MONEI customer; a customer delete deletes it at MONEI; a saved-card delete deletes it at MONEI (only with Task 9 done)
+- [x] update `README.md` if it lists features: logged-in payments link to a MONEI customer; a customer delete deletes it at MONEI; a saved-card delete deletes it at MONEI (only with Task 9 done)
 
 ## Post-Completion
 *Items requiring manual intervention or external systems - no checkboxes, informational only*
