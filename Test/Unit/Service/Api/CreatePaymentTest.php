@@ -309,7 +309,7 @@ class CreatePaymentTest extends TestCase
                     throw $this->staleCustomerError();
                 }
                 $this->assertNull($request->getCustomerId());
-                $this->assertObjectNotHasProperty('customerId', ObjectSerializer::sanitizeForSerialization($request));
+                $this->assertFalse(property_exists(ObjectSerializer::sanitizeForSerialization($request), 'customerId'));
                 if ($retryFails) {
                     throw $retryError;
                 }
