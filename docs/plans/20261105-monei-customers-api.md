@@ -266,6 +266,7 @@ Walk `StoreManager::getStores(true)`. For each store, collect (`getTestAccountId
 - [x] run `composer test:unit` - must pass before Task 12
 
 ### Task 12: Verify acceptance criteria
+- [ ] ➕ live test finding: the stale-customer retry in `CreatePayment` logs nothing. Log one warning with `[MONEI Customers]`, the stale MONEI customer ID, the Magento customer ID and the store ID before the retry. Bug: support cannot see why a buyer got a new MONEI customer. Extend contract test 6's retry case to require that log call.
 - [ ] verify every contract item maps to code, including tests 1–12 (13 is n/a)
 - [ ] run the full suite: `composer test:unit`
 - [ ] run `composer analyze` and `composer cs:lint`
