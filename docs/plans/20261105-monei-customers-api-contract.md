@@ -1,4 +1,4 @@
-# MONEI Customers API: cross-platform contract (v8)
+# MONEI Customers API: cross-platform contract (v8.1)
 
 One behavior for the WooCommerce, Magento 2 and PrestaShop plugins. Each plugin
 plan copies this file without changes. A change to the contract goes through
@@ -9,6 +9,7 @@ SDK: `monei/monei-php-sdk` 2.13.0, `$client->customers`.
 
 ## Changelog
 
+- v8.1: the delete hook reads the mappings, and the create re-check reads the delete marker, from the database, not from a cache loaded earlier in the request (WooCommerce review: `wp_delete_user` loads the user meta cache before `delete_user`; `get_option` can answer from a cached absence).
 - v8: a mapping saved for a platform customer that is deleted meanwhile is cleaned up (Magento external review). New Errors row "Platform customer deleted during create", Mapping rule and test 14.
 - v7: sandbox results (WooCommerce and Magento threads, 2026-11-06). New rule: `deleteCustomer` skips a customer whose active platform subscription charges a MONEI sequence (check e). The stale-customer match is HTTP 404 and message `Customer not found` (check c). The add-card payment carries `customerId` (check g). No phone filter (check h). Every method accepts `customerId` (check i). New test 13.
 - v6.1: `deleteCustomer` step 1 logs a row with no match at error level (it said warning, against the Errors table). The re-read after a lost mapping race must bypass any cache.
@@ -82,6 +83,8 @@ not change.
 
 It needs no current scope, so admin, REST and cron deletes work.
 
+The delete hook reads the mappings from the database, never from a cache that the platform filled before the hook ran (WooCommerce: `wp_delete_user` loads the user meta cache first, so the hook calls `wp_cache_delete( $user_id, 'user_meta' )`). A mapping that a create saved in the meantime is only in the database.
+
 Guests have no `platformCustomerId`. The caller does not call the service for a guest.
 
 ## Mapping
@@ -104,7 +107,7 @@ Saving a new mapping must detect a mapping that another request stored first
 After a successful save, check that the platform customer is not being deleted. A delete that runs while the create waits for MONEI reads no mapping, so nothing else deletes the new customer, and its PII outlives the erasure.
 
 - Magento, PrestaShop: after the insert commits, read with a fresh query whether the platform customer still exists. This needs no open transaction around the insert.
-- WooCommerce: `wp_delete_user` fires `delete_user` before it deletes the user meta and the user row, so the user still exists while the hook runs. The delete hooks write a marker (option `monei_customer_deleting_{user_id}`, not autoloaded) **before** they read the meta. After the insert, the create path reads the marker and the user row, both without the request cache. A marker or a missing user means the delete is under way.
+- WooCommerce: `wp_delete_user` fires `delete_user` before it deletes the user meta and the user row, so the user still exists while the hook runs. The delete hooks write a marker (option `monei_customer_deleting_{user_id}`, not autoloaded) **before** they read the meta. After the insert, the create path reads the marker and the user row with direct SQL. `get_option()` can answer from a cached absence (`notoptions`) and miss the marker. A marker or a missing user means the delete is under way.
 
 Either the delete hook reads the new row and deletes the customer, or the row was written after that read, so the re-check sees the marker or the missing customer. If both act, one side gets 404, which is handled.
 
