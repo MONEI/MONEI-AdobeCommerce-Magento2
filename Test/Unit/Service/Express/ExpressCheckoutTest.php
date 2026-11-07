@@ -18,6 +18,8 @@ use Monei\MoneiPayment\Api\Config\MoneiExpressCheckoutConfigInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
+use Magento\Quote\Api\Data\ShippingAssignmentInterface;
+use Magento\Quote\Api\Data\ShippingInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\Quote\Address;
 use Magento\Quote\Model\Quote\Address\Rate;
@@ -143,7 +145,7 @@ class ExpressCheckoutTest extends TestCase
             ->getMockBuilder(Quote::class)
             ->disableOriginalConstructor()
             ->addMethods(['setTotalsCollectedFlag', 'getBaseGrandTotal', 'getBaseCurrencyCode'])
-            ->onlyMethods(['getId', 'hasItems', 'isVirtual', 'getShippingAddress', 'collectTotals'])
+            ->onlyMethods(['getId', 'hasItems', 'isVirtual', 'getShippingAddress', 'collectTotals', 'getExtensionAttributes'])
             ->getMock();
         $quote->method('getId')->willReturn(1);
         $quote->method('hasItems')->willReturn(true);
@@ -265,6 +267,38 @@ class ExpressCheckoutTest extends TestCase
 
         $this->assertSame(ExpressCheckout::RESULT_SUCCESS, $result['result']);
         $this->assertSame(3000, $result['amount']);
+    }
+
+    /**
+     * Saving the quote applies the method held in its shipping assignment. A stale
+     * one there gave a 5.00 Flat Rate order the Free Shipping method code.
+     *
+     * @return void
+     */
+    public function testChosenOptionAlsoReplacesTheMethodInTheShippingAssignment(): void
+    {
+        $quote = $this->makeQuote([['code' => 'flatrate_flatrate', 'price' => 5.0]], 30.00);
+        $this->_sessionMock->method('getQuote')->willReturn($quote);
+
+        $shipping = $this->createMock(ShippingInterface::class);
+        $shipping->expects($this->once())->method('setMethod')->with('flatrate_flatrate');
+        $assignment = $this->createMock(ShippingAssignmentInterface::class);
+        $assignment->method('getShipping')->willReturn($shipping);
+        $quote->method('getExtensionAttributes')->willReturn(new class ([$assignment]) {
+            private array $assignments;
+
+            public function __construct(array $assignments)
+            {
+                $this->assignments = $assignments;
+            }
+
+            public function getShippingAssignments(): array
+            {
+                return $this->assignments;
+            }
+        });
+
+        $this->_service->selectShippingOption('{}', 'flatrate_flatrate');
     }
 
     /**
