@@ -106,6 +106,11 @@ class ExpressCheckout implements ExpressCheckoutInterface
     private StoreManagerInterface $storeManager;
 
     /**
+     * @var ExpressSessionId
+     */
+    private ExpressSessionId $expressSessionId;
+
+    /**
      * @param CartRepositoryInterface         $quoteRepository   Repository for accessing quotes
      * @param Logger                          $logger            Logger for tracking operations
      * @param SetExpressAddressesOnQuote      $setAddresses      Maps wallet addresses onto the quote
@@ -118,6 +123,7 @@ class ExpressCheckout implements ExpressCheckoutInterface
      * @param MoneiExpressCheckoutConfigInterface $expressConfig Express checkout configuration
      * @param CustomerServiceInterface        $customerService   Links logged-in buyers to a MONEI customer
      * @param StoreManagerInterface           $storeManager      Store manager
+     * @param ExpressSessionId                $expressSessionId  Session id the express token was made with
      */
     public function __construct(
         CartRepositoryInterface $quoteRepository,
@@ -131,7 +137,8 @@ class ExpressCheckout implements ExpressCheckoutInterface
         EventManager $eventManager,
         MoneiExpressCheckoutConfigInterface $expressConfig,
         CustomerServiceInterface $customerService,
-        StoreManagerInterface $storeManager
+        StoreManagerInterface $storeManager,
+        ExpressSessionId $expressSessionId
     ) {
         $this->quoteRepository = $quoteRepository;
         $this->logger = $logger;
@@ -145,6 +152,7 @@ class ExpressCheckout implements ExpressCheckoutInterface
         $this->expressConfig = $expressConfig;
         $this->customerService = $customerService;
         $this->storeManager = $storeManager;
+        $this->expressSessionId = $expressSessionId;
     }
 
     /**
@@ -334,6 +342,9 @@ class ExpressCheckout implements ExpressCheckoutInterface
             // The MONEI payment only completes with the method the order is
             // placed under, so a token from another source cannot confirm it.
             'allowed_payment_methods' => Monei::PAYMENT_METHOD_MAP[$methodCode],
+            // The token was made with this id, and the confirm runs from the store,
+            // not the shopper's browser: without it MONEI refuses the token (E156).
+            'session_id' => $this->expressSessionId->get(),
         ];
 
         if ($quote->getCustomerId()) {

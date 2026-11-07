@@ -240,7 +240,8 @@ class CreatePaymentTest extends TestCase
             'allowed_payment_methods' => ['card', 'paypal'],
             'transaction_type' => PaymentTransactionType::AUTH,
             'description' => 'Test payment',
-            'metadata' => ['custom_field' => 'custom_value']
+            'metadata' => ['custom_field' => 'custom_value'],
+            'session_id' => 'sess_abc'
         ];
 
         // Configure URL Builder
@@ -268,6 +269,8 @@ class CreatePaymentTest extends TestCase
             ->_paymentsApiMock
             ->expects($this->once())
             ->method('create')
+            // An express token made with a session id is refused unless the payment has it too.
+            ->with($this->callback(fn ($request) => $request->getSessionId() === 'sess_abc'))
             ->willReturn($mockPayment);
 
         // Execute the service

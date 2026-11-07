@@ -25,6 +25,13 @@
       </argument>
     </arguments>
   </type>
+  <type name="Magento\Customer\CustomerData\SectionPoolInterface">
+    <arguments>
+      <argument name="sectionSourceMap" xsi:type="array">
+        <item name="monei-express" xsi:type="string">Monei\MoneiPayment\CustomerData\ExpressSession</item>
+      </argument>
+    </arguments>
+  </type>
   <type name="Magento\Vault\Model\Ui\TokensConfigProvider">
     <arguments>
       <argument name="tokenUiComponentProviders" xsi:type="array">

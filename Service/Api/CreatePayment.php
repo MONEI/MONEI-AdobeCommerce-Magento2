@@ -203,6 +203,10 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
             }
         }
 
+        if (isset($data['session_id'])) {
+            $paymentRequest->setSessionId($data['session_id']);
+        }
+
         // Set payment token if available
         if (isset($data['payment_token'])) {
             $paymentRequest->setPaymentToken($data['payment_token']);

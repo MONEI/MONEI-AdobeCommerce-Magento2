@@ -346,7 +346,52 @@ define([
       components.push(instance);
     }
 
-    mount('monei-express-wallet', monei.PaymentRequest);
+    var destroyed = false;
+
+    /**
+     * Without a session id no wallet can complete, so the shortcut leaves the page
+     * instead of loading forever.
+     */
+    function hideShortcut() {
+      $(container).closest('.monei-express-shortcut').removeClass('is-loading').addClass('is-unavailable');
+    }
+
+    /**
+     * Mount the wallets with the session id the server will create the payment
+     * with. Without it MONEI ties the token to this browser, and the store's own
+     * confirm call is refused.
+     *
+     * @param {String} sessionId
+     */
+    function mountWallets(sessionId) {
+      if (destroyed) {
+        return;
+      }
+
+      props.sessionId = sessionId;
+      mount('monei-express-wallet', monei.PaymentRequest);
+
+      if (config.paypal) {
+        // PayPal takes the same shipping callbacks and returns the same result
+        // shape; its token places a PayPal order server side.
+        mount('monei-express-paypal', monei.PayPal);
+      }
+    }
+
+    // Always from the server: a copy kept in local storage can outlive the PHP
+    // session, and place-order would then create the payment with a new id.
+    customerData
+      .reload(['monei-express'], false)
+      .done(function () {
+        var sessionId = customerData.get('monei-express')().sessionId;
+
+        if (sessionId) {
+          mountWallets(sessionId);
+        } else {
+          hideShortcut();
+        }
+      })
+      .fail(hideShortcut);
 
     // The quantity typed changes what the sheet opens with.
     if (productForm() && config.productAmount) {
@@ -361,14 +406,9 @@ define([
       });
     }
 
-    if (config.paypal) {
-      // PayPal takes the same shipping callbacks and returns the same result
-      // shape; its token places a PayPal order server side.
-      mount('monei-express-paypal', monei.PayPal);
-    }
-
     return {
       destroy: function () {
+        destroyed = true;
         components.forEach(function (instance) {
           if (instance && instance.destroy) {
             try {
