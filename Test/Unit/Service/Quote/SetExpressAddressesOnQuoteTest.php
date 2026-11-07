@@ -177,6 +177,48 @@ class SetExpressAddressesOnQuoteTest extends TestCase
     }
 
     /**
+     * PayPal returns the payer with only a country. Keeping that as the billing
+     * address made Magento refuse every PayPal express order for missing street,
+     * city and postcode.
+     *
+     * @return void
+     */
+    public function testCountryOnlyPaypalPayerTakesTheShippingAddressButKeepsItsName(): void
+    {
+        $quote = $this->makeQuote();
+        $payer = ['name' => 'Payer Person', 'email' => 'payer@example.com', 'address' => ['country' => 'ES']];
+        $shipping = $this->walletAddress([
+            'name' => 'Qa Guest',
+            'address' => ['line1' => 'Calle Mayor 1', 'city' => 'Malaga', 'zip' => '29001'],
+        ]);
+
+        $this->_service->execute($quote, $payer, $shipping);
+
+        $this->assertSame(['Calle Mayor 1'], $this->_captured['billing']['street']);
+        $this->assertSame('Malaga', $this->_captured['billing']['city']);
+        $this->assertSame('29001', $this->_captured['billing']['postcode']);
+        $this->assertSame('Payer', $this->_captured['billing']['firstname']);
+        $this->assertSame('payer@example.com', $this->_captured['billing']['email']);
+    }
+
+    /**
+     * A billing street without a country cannot be validated; the shipping
+     * address must still replace it.
+     *
+     * @return void
+     */
+    public function testBillingWithAStreetButNoCountryTakesTheShippingAddress(): void
+    {
+        $quote = $this->makeQuote();
+        $billing = ['name' => 'Payer Person', 'address' => ['line1' => 'Somewhere 2']];
+
+        $this->_service->execute($quote, $billing, $this->walletAddress());
+
+        $this->assertSame('ES', $this->_captured['billing']['country_id']);
+        $this->assertSame(['Calle Gran Via 1'], $this->_captured['billing']['street']);
+    }
+
+    /**
      * A virtual cart has no shipping address to set.
      *
      * @return void
