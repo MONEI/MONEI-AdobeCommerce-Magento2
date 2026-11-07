@@ -539,6 +539,9 @@ class PaymentProcessorAdditionalTest extends TestCase
             ->method('unlockOrder')
             ->with($orderId);
 
+        $this->orderFactory->method('create')->willReturn($this->orderMock);
+        $this->orderMock->method('getId')->willReturn(1);
+
         // Call the method
         $result = $this->paymentProcessor->processPaymentById($this->orderMock, $paymentId);
 
