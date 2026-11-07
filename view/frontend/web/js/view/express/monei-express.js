@@ -370,13 +370,11 @@ define([
       }
     }
 
-    if (customerData.get('monei-express')().sessionId) {
+    // Always from the server: a copy kept in local storage can outlive the PHP
+    // session, and place-order would then create the payment with a new id.
+    customerData.reload(['monei-express'], false).done(function () {
       mountWallets(customerData.get('monei-express')().sessionId);
-    } else {
-      customerData.reload(['monei-express'], false).done(function () {
-        mountWallets(customerData.get('monei-express')().sessionId);
-      });
-    }
+    });
 
     // The quantity typed changes what the sheet opens with.
     if (productForm() && config.productAmount) {
