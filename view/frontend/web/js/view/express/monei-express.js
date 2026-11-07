@@ -349,6 +349,14 @@ define([
     var destroyed = false;
 
     /**
+     * Without a session id no wallet can complete, so the shortcut leaves the page
+     * instead of loading forever.
+     */
+    function hideShortcut() {
+      $(container).closest('.monei-express-shortcut').removeClass('is-loading').addClass('is-unavailable');
+    }
+
+    /**
      * Mount the wallets with the session id the server will create the payment
      * with. Without it MONEI ties the token to this browser, and the store's own
      * confirm call is refused.
@@ -356,7 +364,7 @@ define([
      * @param {String} sessionId
      */
     function mountWallets(sessionId) {
-      if (destroyed || !sessionId) {
+      if (destroyed) {
         return;
       }
 
@@ -372,9 +380,18 @@ define([
 
     // Always from the server: a copy kept in local storage can outlive the PHP
     // session, and place-order would then create the payment with a new id.
-    customerData.reload(['monei-express'], false).done(function () {
-      mountWallets(customerData.get('monei-express')().sessionId);
-    });
+    customerData
+      .reload(['monei-express'], false)
+      .done(function () {
+        var sessionId = customerData.get('monei-express')().sessionId;
+
+        if (sessionId) {
+          mountWallets(sessionId);
+        } else {
+          hideShortcut();
+        }
+      })
+      .fail(hideShortcut);
 
     // The quantity typed changes what the sheet opens with.
     if (productForm() && config.productAmount) {
