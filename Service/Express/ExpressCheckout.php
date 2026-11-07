@@ -653,6 +653,14 @@ class ExpressCheckout implements ExpressCheckoutInterface
         $shippingAddress->collectShippingRates();
         $shippingAddress->setShippingMethod($optionId);
 
+        // The quote carries the method it was loaded with in its shipping assignment,
+        // and saving it applies that method again. Left stale, the order keeps the
+        // chosen option's price under the previous option's method code.
+        $extension = $quote->getExtensionAttributes();
+        foreach (($extension ? $extension->getShippingAssignments() : null) ?? [] as $assignment) {
+            $assignment->getShipping()->setMethod($optionId);
+        }
+
         $this->recollectTotals($quote);
     }
 
