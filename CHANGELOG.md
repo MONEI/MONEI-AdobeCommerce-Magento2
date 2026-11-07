@@ -1,5 +1,9 @@
 # Changelog
 
+## <small>2.5.2 (2026-11-07)</small>
+
+- fix: place PayPal express orders whose payer has only a country (#99) ([655c85b](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/655c85b)), closes [#99](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/99)
+
 ## <small>2.5.1 (2026-11-07)</small>
 
 - fix: keep paid order totals when the webhook and the redirect arrive together (#98) ([91b4e1c](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/91b4e1c)), closes [#98](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/98)
