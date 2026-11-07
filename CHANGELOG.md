@@ -1,5 +1,9 @@
 # Changelog
 
+## <small>2.5.3 (2026-11-07)</small>
+
+- fix: charge the express shipping option the shopper picks (#100) ([e4f445f](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/e4f445f)), closes [#100](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/100)
+
 ## <small>2.5.2 (2026-11-07)</small>
 
 - fix: place PayPal express orders whose payer has only a country (#99) ([655c85b](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/655c85b)), closes [#99](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/99)
