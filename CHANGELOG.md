@@ -1,5 +1,9 @@
 # Changelog
 
+## <small>2.5.4 (2026-11-07)</small>
+
+- fix: let MONEI confirm express payments from the store (#101) ([fc3de67](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/fc3de67)), closes [#101](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/101)
+
 ## <small>2.5.3 (2026-11-07)</small>
 
 - fix: charge the express shipping option the shopper picks (#100) ([e4f445f](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/e4f445f)), closes [#100](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/100)
