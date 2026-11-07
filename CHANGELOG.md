@@ -1,5 +1,9 @@
 # Changelog
 
+## <small>2.5.1 (2026-11-07)</small>
+
+- fix: keep paid order totals when the webhook and the redirect arrive together (#98) ([91b4e1c](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/91b4e1c)), closes [#98](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/98)
+
 ## 2.5.0 (2026-11-06)
 
 - feat: link buyers to MONEI customers and erase them with the Magento customer (#97) ([b42554e](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/b42554e)), closes [#97](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/97)
