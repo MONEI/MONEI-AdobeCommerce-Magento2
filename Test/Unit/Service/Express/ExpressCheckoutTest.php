@@ -27,6 +27,7 @@ use Monei\MoneiPayment\Api\Service\ConfirmPaymentInterface;
 use Monei\MoneiPayment\Api\Service\CreatePaymentInterface;
 use Monei\MoneiPayment\Api\Service\Customer\CustomerServiceInterface;
 use Monei\MoneiPayment\Service\Express\ExpressCheckout;
+use Monei\MoneiPayment\Service\Express\ExpressSessionId;
 use Monei\MoneiPayment\Service\Logger;
 use Monei\MoneiPayment\Service\Quote\GetAddressDetailsByQuoteAddress;
 use Monei\MoneiPayment\Service\Quote\SetExpressAddressesOnQuote;
@@ -78,6 +79,8 @@ class ExpressCheckoutTest extends TestCase
         $storeMock->method('getId')->willReturn(2);
         $storeManagerMock = $this->createMock(StoreManagerInterface::class);
         $storeManagerMock->method('getStore')->willReturn($storeMock);
+        $expressSessionIdMock = $this->createMock(ExpressSessionId::class);
+        $expressSessionIdMock->method('get')->willReturn('sess_abc');
         $this->_service = new ExpressCheckout(
             $this->_quoteRepositoryMock,
             $this->createMock(Logger::class),
@@ -90,7 +93,8 @@ class ExpressCheckoutTest extends TestCase
             $this->createMock(EventManager::class),
             $this->_expressConfigMock,
             $this->_customerServiceMock,
-            $storeManagerMock
+            $storeManagerMock,
+            $expressSessionIdMock
         );
     }
 
@@ -407,7 +411,8 @@ class ExpressCheckoutTest extends TestCase
     /**
      * The MONEI customer holds the account's email, not the wallet's, and the payment carries
      * platform_customer_id so the stale-customer retry can clear the mapping. The address
-     * placeholder phone never reaches the MONEI customer.
+     * placeholder phone never reaches the MONEI customer. The payment also carries the
+     * session id the express token was made with, or MONEI refuses the token (E156).
      *
      * @dataProvider phoneProvider
      * @return void
@@ -466,7 +471,8 @@ class ExpressCheckoutTest extends TestCase
             ->expects($this->once())
             ->method('execute')
             ->with($this->callback(fn (array $data) => ($data['customer_id'] ?? null) === 'cus_123'
-                && ($data['platform_customer_id'] ?? null) === 42))
+                && ($data['platform_customer_id'] ?? null) === 42
+                && ($data['session_id'] ?? null) === 'sess_abc'))
             // Stops placeOrder here: the rest of the order flow is not under test.
             ->willThrowException(new \DomainException('stop'));
         $this->expectException(\DomainException::class);

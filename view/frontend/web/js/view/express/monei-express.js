@@ -346,7 +346,37 @@ define([
       components.push(instance);
     }
 
-    mount('monei-express-wallet', monei.PaymentRequest);
+    var destroyed = false;
+
+    /**
+     * Mount the wallets with the session id the server will create the payment
+     * with. Without it MONEI ties the token to this browser, and the store's own
+     * confirm call is refused.
+     *
+     * @param {String} sessionId
+     */
+    function mountWallets(sessionId) {
+      if (destroyed || !sessionId) {
+        return;
+      }
+
+      props.sessionId = sessionId;
+      mount('monei-express-wallet', monei.PaymentRequest);
+
+      if (config.paypal) {
+        // PayPal takes the same shipping callbacks and returns the same result
+        // shape; its token places a PayPal order server side.
+        mount('monei-express-paypal', monei.PayPal);
+      }
+    }
+
+    if (customerData.get('monei-express')().sessionId) {
+      mountWallets(customerData.get('monei-express')().sessionId);
+    } else {
+      customerData.reload(['monei-express'], false).done(function () {
+        mountWallets(customerData.get('monei-express')().sessionId);
+      });
+    }
 
     // The quantity typed changes what the sheet opens with.
     if (productForm() && config.productAmount) {
@@ -361,14 +391,9 @@ define([
       });
     }
 
-    if (config.paypal) {
-      // PayPal takes the same shipping callbacks and returns the same result
-      // shape; its token places a PayPal order server side.
-      mount('monei-express-paypal', monei.PayPal);
-    }
-
     return {
       destroy: function () {
+        destroyed = true;
         components.forEach(function (instance) {
           if (instance && instance.destroy) {
             try {
