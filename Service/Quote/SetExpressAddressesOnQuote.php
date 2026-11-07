@@ -48,8 +48,11 @@ class SetExpressAddressesOnQuote
             $shipping = $billing;
         }
 
-        if (empty($billing) || empty($billing['address']['country'] ?? null)) {
-            $billing = $shipping;
+        // PayPal returns the payer's country and nothing else of the address, so a
+        // billing side without a street takes the shipping address but keeps the
+        // payer's own name, email and phone.
+        if (empty($billing['address']['line1'] ?? null)) {
+            $billing = ['address' => $shipping['address'] ?? []] + $billing + $shipping;
         }
 
         $billingData = $this->toMagentoAddress($billing);
