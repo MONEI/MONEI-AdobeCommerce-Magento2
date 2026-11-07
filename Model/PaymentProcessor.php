@@ -292,7 +292,7 @@ class PaymentProcessor implements PaymentProcessorInterface
             }
 
             try {
-                return $this->doProcessPayment($order, $payment, $incrementId);
+                return $this->doProcessPayment($this->reloadOrder($order), $payment, $incrementId);
             } finally {
                 // Always release the lock
                 $this->lockManager->unlockOrder($incrementId);
@@ -307,6 +307,23 @@ class PaymentProcessor implements PaymentProcessorInterface
 
             return false;
         }
+    }
+
+    /**
+     * Read the order again after the lock is held
+     *
+     * The callback and the customer redirect process the same payment at the same time.
+     * The caller loaded the order before it waited for the lock, so its copy predates the
+     * other request's commit, and saving it would write the old invoiced and paid totals back.
+     *
+     * @param OrderInterface $order
+     * @return OrderInterface
+     */
+    private function reloadOrder(OrderInterface $order): OrderInterface
+    {
+        $fresh = $this->orderFactory->create()->loadByIncrementId($order->getIncrementId());
+
+        return $fresh && $fresh->getId() ? $fresh : $order;
     }
 
     /**

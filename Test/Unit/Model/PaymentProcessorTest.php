@@ -218,7 +218,7 @@ class PaymentProcessorTest extends TestCase
         // Mock the order and basic methods
         $this
             ->order
-            ->expects($this->once())
+            ->expects($this->atLeastOnce())
             ->method('loadByIncrementId')
             ->with($orderId)
             ->willReturn($this->order);
@@ -416,7 +416,7 @@ class PaymentProcessorTest extends TestCase
 
         $this
             ->order
-            ->expects($this->once())
+            ->expects($this->atLeastOnce())
             ->method('loadByIncrementId')
             ->with($orderId)
             ->willReturn($this->order);
@@ -525,7 +525,7 @@ class PaymentProcessorTest extends TestCase
 
         $this
             ->order
-            ->expects($this->once())
+            ->expects($this->atLeastOnce())
             ->method('loadByIncrementId')
             ->with($orderId)
             ->willThrowException(new \Exception($errorMessage));
@@ -552,7 +552,7 @@ class PaymentProcessorTest extends TestCase
 
         $this
             ->order
-            ->expects($this->once())
+            ->expects($this->atLeastOnce())
             ->method('loadByIncrementId')
             ->with($orderId)
             ->willReturn($this->order);
@@ -590,7 +590,7 @@ class PaymentProcessorTest extends TestCase
         // Set up loadByIncrementId behavior
         $this
             ->order
-            ->expects($this->once())
+            ->expects($this->atLeastOnce())
             ->method('loadByIncrementId')
             ->with($orderId)
             ->willReturn($this->order);
@@ -664,7 +664,7 @@ class PaymentProcessorTest extends TestCase
         // Set up loadByIncrementId behavior
         $this
             ->order
-            ->expects($this->once())
+            ->expects($this->atLeastOnce())
             ->method('loadByIncrementId')
             ->with($orderId)
             ->willReturn($this->order);
@@ -738,7 +738,7 @@ class PaymentProcessorTest extends TestCase
         // Set up loadByIncrementId behavior
         $this
             ->order
-            ->expects($this->once())
+            ->expects($this->atLeastOnce())
             ->method('loadByIncrementId')
             ->with($orderId)
             ->willReturn($this->order);
@@ -883,6 +883,56 @@ class PaymentProcessorTest extends TestCase
         $this->order->expects($this->once())->method('setState')->with(Order::STATE_CANCELED);
 
         $this->processPaymentDto($this->createPaymentDto('pay_auth', Status::EXPIRED, 1000, 'EUR'));
+    }
+
+    /**
+     * Bug: the callback and the redirect processed one payment at the same time. The second
+     * request had loaded the order before it waited for the lock, then saved that copy, so the
+     * order lost its invoiced and paid totals and refunds were refused.
+     */
+    public function testRequestWaitingForTheLockDoesNotSaveItsStaleOrder(): void
+    {
+        $stale = $this->createMock(Order::class);
+        $stale->method('loadByIncrementId')->willReturn($stale);
+        $stale->method('getId')->willReturn(1);
+        $stale->method('getEntityId')->willReturn(1);
+        $stale->method('getIncrementId')->willReturn('000000001');
+        $stale->method('getState')->willReturn(Order::STATE_NEW);
+        $stale->method('getBaseGrandTotal')->willReturn(10.00);
+        $stale->method('getBaseCurrencyCode')->willReturn('EUR');
+
+        $committed = $this->createMock(Order::class);
+        $committed->method('loadByIncrementId')->willReturn($committed);
+        $committed->method('getId')->willReturn(1);
+        $committed->method('getIncrementId')->willReturn('000000001');
+        $committed->method('getState')->willReturn(Order::STATE_PROCESSING);
+
+        $orderFactory = $this->createMock(OrderFactory::class);
+        $orderFactory->method('create')->willReturnOnConsecutiveCalls($stale, $committed);
+        $this->lockManager->method('lockOrder')->willReturn(true);
+        $this->invoiceService->expects($this->never())->method('processInvoice');
+        $this->orderRepository->expects($this->never())->method('save');
+
+        $payment = $this->createPaymentDto('pay_123', Status::SUCCEEDED, 1000, 'EUR');
+        $this->paymentDtoFactory->method('createFromArray')->willReturn($payment);
+
+        $processor = new PaymentProcessor(
+            $this->orderRepository,
+            $this->invoiceService,
+            $this->lockManager,
+            $this->logger,
+            $this->moneiApiClient,
+            $this->moduleConfig,
+            $this->orderSender,
+            $this->searchCriteriaBuilder,
+            $this->getPaymentInterface,
+            $orderFactory,
+            $this->createVaultPayment,
+            $this->paymentDtoFactory,
+            new PaymentAmountMatcher()
+        );
+
+        $this->assertTrue($processor->process('000000001', 'pay_123', ['id' => 'pay_123'])->isSuccessful());
     }
 
     private function givenLockedOrder(
