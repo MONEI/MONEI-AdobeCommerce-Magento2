@@ -200,6 +200,10 @@ class ExpressCheckout implements ExpressCheckoutInterface
         $this->applyShippingMethod($quote, $options[0]['id']);
         $options[0]['selected'] = true;
 
+        // An option change arrives without an address and reloads the quote, so the
+        // address must be stored here or that option is priced with no rates.
+        $this->quoteRepository->save($quote);
+
         return [
             'result' => self::RESULT_SUCCESS,
             'shippingOptions' => $options,

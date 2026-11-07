@@ -178,6 +178,23 @@ class ExpressCheckoutTest extends TestCase
     }
 
     /**
+     * The option change request reloads the quote and carries no address. Without
+     * this save the address was lost, the chosen option had no rate, and the wallet
+     * kept the old total, so place-order refused every paid shipping option.
+     *
+     * @return void
+     */
+    public function testGetShippingOptionsStoresTheAddressForTheOptionChange(): void
+    {
+        $quote = $this->makeQuote([['code' => 'flatrate_flatrate', 'price' => 5.0]], 30.00);
+        $this->_sessionMock->method('getQuote')->willReturn($quote);
+
+        $this->_quoteRepositoryMock->expects($this->once())->method('save')->with($quote);
+
+        $this->_service->getShippingOptions(json_encode(['country' => 'ES']));
+    }
+
+    /**
      * The option id has to round-trip to setShippingMethod, so it must be the
      * carrier rate code rather than a label or an index.
      *
