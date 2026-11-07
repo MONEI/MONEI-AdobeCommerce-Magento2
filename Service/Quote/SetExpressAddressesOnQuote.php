@@ -49,9 +49,9 @@ class SetExpressAddressesOnQuote
         }
 
         // PayPal returns the payer's country and nothing else of the address, so a
-        // billing side without a street takes the shipping address but keeps the
+        // billing side without a street or country takes the shipping address but keeps the
         // payer's own name, email and phone.
-        if (empty($billing['address']['line1'] ?? null)) {
+        if (empty($billing['address']['line1'] ?? null) || empty($billing['address']['country'] ?? null)) {
             $billing = ['address' => $shipping['address'] ?? []] + $billing + $shipping;
         }
 

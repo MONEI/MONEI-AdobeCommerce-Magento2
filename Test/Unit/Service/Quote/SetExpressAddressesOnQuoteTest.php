@@ -202,6 +202,23 @@ class SetExpressAddressesOnQuoteTest extends TestCase
     }
 
     /**
+     * A billing street without a country cannot be validated; the shipping
+     * address must still replace it.
+     *
+     * @return void
+     */
+    public function testBillingWithAStreetButNoCountryTakesTheShippingAddress(): void
+    {
+        $quote = $this->makeQuote();
+        $billing = ['name' => 'Payer Person', 'address' => ['line1' => 'Somewhere 2']];
+
+        $this->_service->execute($quote, $billing, $this->walletAddress());
+
+        $this->assertSame('ES', $this->_captured['billing']['country_id']);
+        $this->assertSame(['Calle Gran Via 1'], $this->_captured['billing']['street']);
+    }
+
+    /**
      * A virtual cart has no shipping address to set.
      *
      * @return void
