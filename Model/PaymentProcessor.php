@@ -292,7 +292,18 @@ class PaymentProcessor implements PaymentProcessorInterface
             }
 
             try {
-                return $this->doProcessPayment($this->reloadOrder($order), $payment, $incrementId);
+                $freshOrder = $this->reloadOrder($order);
+                if (null === $freshOrder) {
+                    $this->logger->error(sprintf(
+                        '[Payment] Order %s not found when reloaded inside the lock, payment %s',
+                        $incrementId,
+                        $paymentId
+                    ));
+
+                    return false;
+                }
+
+                return $this->doProcessPayment($freshOrder, $payment, $incrementId);
             } finally {
                 // Always release the lock
                 $this->lockManager->unlockOrder($incrementId);
@@ -317,13 +328,16 @@ class PaymentProcessor implements PaymentProcessorInterface
      * other request's commit, and saving it would write the old invoiced and paid totals back.
      *
      * @param OrderInterface $order
-     * @return OrderInterface
+     * @return OrderInterface|null Null when the order row is gone
      */
-    private function reloadOrder(OrderInterface $order): OrderInterface
+    private function reloadOrder(OrderInterface $order): ?OrderInterface
     {
-        $fresh = $this->orderFactory->create()->loadByIncrementId($order->getIncrementId());
+        $fresh = $this->orderFactory->create();
+        // OrderRepository::get() can return its cached instance; this read must reach the database.
+        // @phpstan-ignore-next-line
+        $fresh->load($order->getEntityId());
 
-        return $fresh && $fresh->getId() ? $fresh : $order;
+        return $fresh->getId() ? $fresh : null;
     }
 
     /**

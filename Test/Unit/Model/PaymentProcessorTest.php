@@ -218,7 +218,7 @@ class PaymentProcessorTest extends TestCase
         // Mock the order and basic methods
         $this
             ->order
-            ->expects($this->atLeastOnce())
+            ->expects($this->once())
             ->method('loadByIncrementId')
             ->with($orderId)
             ->willReturn($this->order);
@@ -416,7 +416,7 @@ class PaymentProcessorTest extends TestCase
 
         $this
             ->order
-            ->expects($this->atLeastOnce())
+            ->expects($this->once())
             ->method('loadByIncrementId')
             ->with($orderId)
             ->willReturn($this->order);
@@ -525,7 +525,7 @@ class PaymentProcessorTest extends TestCase
 
         $this
             ->order
-            ->expects($this->atLeastOnce())
+            ->expects($this->once())
             ->method('loadByIncrementId')
             ->with($orderId)
             ->willThrowException(new \Exception($errorMessage));
@@ -552,7 +552,7 @@ class PaymentProcessorTest extends TestCase
 
         $this
             ->order
-            ->expects($this->atLeastOnce())
+            ->expects($this->once())
             ->method('loadByIncrementId')
             ->with($orderId)
             ->willReturn($this->order);
@@ -590,7 +590,7 @@ class PaymentProcessorTest extends TestCase
         // Set up loadByIncrementId behavior
         $this
             ->order
-            ->expects($this->atLeastOnce())
+            ->expects($this->once())
             ->method('loadByIncrementId')
             ->with($orderId)
             ->willReturn($this->order);
@@ -664,7 +664,7 @@ class PaymentProcessorTest extends TestCase
         // Set up loadByIncrementId behavior
         $this
             ->order
-            ->expects($this->atLeastOnce())
+            ->expects($this->once())
             ->method('loadByIncrementId')
             ->with($orderId)
             ->willReturn($this->order);
@@ -738,7 +738,7 @@ class PaymentProcessorTest extends TestCase
         // Set up loadByIncrementId behavior
         $this
             ->order
-            ->expects($this->atLeastOnce())
+            ->expects($this->once())
             ->method('loadByIncrementId')
             ->with($orderId)
             ->willReturn($this->order);
@@ -889,6 +889,9 @@ class PaymentProcessorTest extends TestCase
      * Bug: the callback and the redirect processed one payment at the same time. The second
      * request had loaded the order before it waited for the lock, then saved that copy, so the
      * order lost its invoiced and paid totals and refunds were refused.
+     *
+     * The factory hands out the committed order only once the lock is held, so a read made
+     * before the lock still sees the stale one.
      */
     public function testRequestWaitingForTheLockDoesNotSaveItsStaleOrder(): void
     {
@@ -902,18 +905,57 @@ class PaymentProcessorTest extends TestCase
         $stale->method('getBaseCurrencyCode')->willReturn('EUR');
 
         $committed = $this->createMock(Order::class);
-        $committed->method('loadByIncrementId')->willReturn($committed);
         $committed->method('getId')->willReturn(1);
         $committed->method('getIncrementId')->willReturn('000000001');
         $committed->method('getState')->willReturn(Order::STATE_PROCESSING);
 
+        $locked = false;
+        $this->lockManager->method('lockOrder')->willReturnCallback(function () use (&$locked): bool {
+            $locked = true;
+
+            return true;
+        });
         $orderFactory = $this->createMock(OrderFactory::class);
-        $orderFactory->method('create')->willReturnOnConsecutiveCalls($stale, $committed);
-        $this->lockManager->method('lockOrder')->willReturn(true);
+        $orderFactory->method('create')->willReturnCallback(function () use (&$locked, $stale, $committed) {
+            return $locked ? $committed : $stale;
+        });
         $this->invoiceService->expects($this->never())->method('processInvoice');
         $this->orderRepository->expects($this->never())->method('save');
 
-        $payment = $this->createPaymentDto('pay_123', Status::SUCCEEDED, 1000, 'EUR');
+        $result = $this->processWithOrderFactory($orderFactory, Status::SUCCEEDED);
+
+        $this->assertTrue($result->isSuccessful());
+    }
+
+    /**
+     * Going on with the stale copy is what wrote the NULL totals back, so a reload that finds
+     * no row must stop instead.
+     */
+    public function testOrderMissingOnReloadIsNotProcessedFromTheStaleCopy(): void
+    {
+        $stale = $this->createMock(Order::class);
+        $stale->method('loadByIncrementId')->willReturn($stale);
+        $stale->method('getId')->willReturnOnConsecutiveCalls(1, null);
+        $stale->method('getEntityId')->willReturn(1);
+        $stale->method('getIncrementId')->willReturn('000000001');
+        $stale->method('getState')->willReturn(Order::STATE_NEW);
+
+        $orderFactory = $this->createMock(OrderFactory::class);
+        $orderFactory->method('create')->willReturn($stale);
+        $this->lockManager->method('lockOrder')->willReturn(true);
+        $this->logger->expects($this->once())->method('error')
+            ->with($this->stringContains('not found when reloaded inside the lock'));
+        $this->invoiceService->expects($this->never())->method('processInvoice');
+        $this->orderRepository->expects($this->never())->method('save');
+
+        $result = $this->processWithOrderFactory($orderFactory, Status::SUCCEEDED);
+
+        $this->assertFalse($result->isSuccessful());
+    }
+
+    private function processWithOrderFactory(OrderFactory $orderFactory, string $status): PaymentProcessingResultInterface
+    {
+        $payment = $this->createPaymentDto('pay_123', $status, 1000, 'EUR');
         $this->paymentDtoFactory->method('createFromArray')->willReturn($payment);
 
         $processor = new PaymentProcessor(
@@ -932,7 +974,7 @@ class PaymentProcessorTest extends TestCase
             new PaymentAmountMatcher()
         );
 
-        $this->assertTrue($processor->process('000000001', 'pay_123', ['id' => 'pay_123'])->isSuccessful());
+        return $processor->process('000000001', 'pay_123', ['id' => 'pay_123']);
     }
 
     private function givenLockedOrder(

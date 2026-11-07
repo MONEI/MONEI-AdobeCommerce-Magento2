@@ -520,7 +520,7 @@ class PaymentProcessorAdditionalTest extends TestCase
         // Setup order
         $this
             ->orderMock
-            ->expects($this->atLeastOnce())
+            ->expects($this->once())
             ->method('getIncrementId')
             ->willReturn($orderId);
 
@@ -540,6 +540,7 @@ class PaymentProcessorAdditionalTest extends TestCase
             ->with($orderId);
 
         $this->orderFactory->method('create')->willReturn($this->orderMock);
+        $this->orderMock->method('getId')->willReturn(1);
 
         // Call the method
         $result = $this->paymentProcessor->processPaymentById($this->orderMock, $paymentId);
