@@ -195,6 +195,8 @@ class CallbackVerifierTest extends VerifierTestCase
             'FAILED, AUTHORIZED (retry)' => ['FAILED', 'canceled', false, 'AUTHORIZED', true],
             'EXPIRED, SUCCEEDED' => ['EXPIRED', 'canceled', false, 'SUCCEEDED', true],
             'CANCELED, SUCCEEDED' => ['CANCELED', 'canceled', false, 'SUCCEEDED', true],
+            'FAILED again' => ['FAILED', 'canceled', false, 'FAILED', false],
+            'CANCELED again' => ['CANCELED', 'canceled', false, 'CANCELED', false],
             'none, processing without invoice (AUTHORIZED), AUTHORIZED' => [null, 'processing', false, 'AUTHORIZED', false],
             'none, processing without invoice (AUTHORIZED), SUCCEEDED' => [null, 'processing', false, 'SUCCEEDED', true],
             'none, complete invoiced order (SUCCEEDED), SUCCEEDED again' => [null, 'complete', true, 'SUCCEEDED', false],

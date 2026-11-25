@@ -50,12 +50,13 @@ class CallbackVerifier
     private const WINDOW = 60;
     /** The stored statuses of a payment that paid or holds the order: another payment id is not fetched. */
     private const SETTLED = ['AUTHORIZED', 'SUCCEEDED', 'PAID_OUT'];
-    /** The fetched statuses that move each stored status forward ('' = none stored). Any other pair changes nothing. */
+    /** The fetched statuses that move each stored status forward ('' = none stored). Any other pair, the same
+     * status included, changes nothing. */
     private const FORWARD = [
         '' => ['AUTHORIZED', 'SUCCEEDED', 'FAILED', 'CANCELED'],
         'PENDING' => ['AUTHORIZED', 'SUCCEEDED', 'FAILED', 'CANCELED'],
-        'FAILED' => ['AUTHORIZED', 'SUCCEEDED', 'FAILED', 'CANCELED'],
-        'CANCELED' => ['AUTHORIZED', 'SUCCEEDED', 'FAILED', 'CANCELED'],
+        'FAILED' => ['AUTHORIZED', 'SUCCEEDED', 'CANCELED'],
+        'CANCELED' => ['AUTHORIZED', 'SUCCEEDED', 'FAILED'],
         'EXPIRED' => ['AUTHORIZED', 'SUCCEEDED', 'FAILED', 'CANCELED'],
         'AUTHORIZED' => ['SUCCEEDED', 'CANCELED'],
         'SUCCEEDED' => ['PAID_OUT'],
@@ -215,7 +216,7 @@ class CallbackVerifier
         $status = (string) ($fetched['status'] ?? '');
         $stored = $this->effectiveStatus($order, $storedId);
         if (!in_array($status, self::FORWARD[$stored] ?? [], true)) {
-            return self::refused(200, 'transition ' . ($stored === '' ? 'none' : $stored) . ' to ' . $status);
+            return self::refused(200, 'notForward');
         }
         if ($order->hasInvoices() && in_array($status, ['FAILED', 'CANCELED'], true)) {
             return self::refused(200, 'paid');
