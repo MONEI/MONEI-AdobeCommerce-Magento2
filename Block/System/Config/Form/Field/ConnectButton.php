@@ -17,7 +17,6 @@ use Magento\Framework\Data\Form\Element\AbstractElement;
 use Magento\Framework\Data\Form\Element\Renderer\RendererInterface;
 use Magento\Framework\Data\Form\FormKey;
 use Magento\Framework\View\Helper\SecureHtmlRenderer;
-use Monei\MoneiPayment\Model\Config\Backend\ApiKey;
 use Monei\MoneiPayment\Model\Config\Backend\CredentialValue;
 use Monei\MoneiPayment\Service\Connect\CallbackUrl;
 use Monei\MoneiPayment\Service\Connect\ConnectService;
@@ -88,19 +87,23 @@ class ConnectButton extends AbstractBlock implements RendererInterface
 
         $canConnect = $this->callbackUrl->redirectUri($scope, $scopeId) !== null;
 
-        $html = $this->resultHtml($scope, $scopeId)
-            . $this->loadedHtml($keys + ['mode' => $this->connectService->mode($scope, $scopeId)]);
+        $html = $this->resultHtml($scope, $scopeId) . $this->loadedHtml($keys);
         if ($canConnect && (strpos($keys['live'], 'pk_') === 0 || strpos($keys['test'], 'pk_') === 0)) {
             $html .= $this->messageHtml(
                 'warning',
                 (string) __('Connect with MONEI to stop storing your account API key.')
             );
         }
-        if ($keys['live'] !== '') {
-            $html .= $this->noteHtml((string) __('Production key in use: %1', ApiKey::mask($keys['live'])));
+        foreach (['test' => __('Test'), 'live' => __('Live')] as $mode => $label) {
+            if ($keys[$mode] !== '') {
+                $html .= $this->noteHtml((string) __('Key in use (%1): ending in %2', $label, substr($keys[$mode], -4)));
+            }
         }
-        if ($keys['test'] !== '') {
-            $html .= $this->noteHtml((string) __('Test key in use: %1', ApiKey::mask($keys['test'])));
+        if ($keys['live'] !== '' || $keys['test'] !== '') {
+            $html .= '<p class="note"><a href="' . $this->_escaper->escapeUrl(ConnectService::DASHBOARD_KEYS_URL)
+                . '" target="_blank" rel="noopener noreferrer">'
+                . $this->_escaper->escapeHtml((string) __('Manage and revoke API keys in the MONEI Dashboard'))
+                . '</a></p>';
         }
 
         $scopeFields = ['website' => (string) $website, 'store' => (string) $store];
@@ -123,11 +126,6 @@ class ConnectButton extends AbstractBlock implements RendererInterface
                 'if (!confirm(' . $confirm . ')) { return; } '
                     . $this->postScript($this->getUrl('monei/connect/disconnect'), $scopeFields, false)
             );
-            $html .= '<p class="note">' . $this->_escaper->escapeHtml(
-                (string) __('The keys stay active until you revoke them in the MONEI Dashboard:')
-            ) . ' <a href="' . $this->_escaper->escapeUrl(ConnectService::DASHBOARD_KEYS_URL)
-                . '" target="_blank" rel="noopener noreferrer">'
-                . $this->_escaper->escapeHtml(ConnectService::DASHBOARD_KEYS_URL) . '</a></p>';
         }
 
         return \sprintf(
@@ -163,10 +161,10 @@ class ConnectButton extends AbstractBlock implements RendererInterface
     }
 
     /**
-     * Render the fingerprint of each value in use, posted with the config form: CredentialValue uses it to tell a
-     * save of this page from a save of a page loaded before a Connect or a Disconnect
+     * Render the fingerprint of each mode's key in use, posted with the config form: CredentialValue uses it to tell
+     * a save of this page from a save of a page loaded before a Connect or a Disconnect
      *
-     * @param array{live: string, test: string, mode: string} $values
+     * @param array{live: string, test: string} $values
      * @return string
      */
     private function loadedHtml(array $values): string

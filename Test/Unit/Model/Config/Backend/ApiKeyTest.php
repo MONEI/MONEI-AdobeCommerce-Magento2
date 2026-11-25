@@ -9,29 +9,39 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Event\ManagerInterface;
+use Magento\Framework\Message\ManagerInterface as MessageManager;
+use Magento\Framework\Message\MessageInterface;
 use Magento\Framework\Model\ActionValidator\RemoveAction;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
 use Magento\Framework\Registry;
+use Monei\MoneiPayment\Model\Config\Backend\AccountId;
 use Monei\MoneiPayment\Model\Config\Backend\ApiKey;
 use Monei\MoneiPayment\Model\Config\Backend\CredentialValue;
+use Monei\MoneiPayment\Registry\AccountId as RegistryAccountId;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The backend models of the fields that Connect and Disconnect also write: the API keys (ApiKey) and the mode
- * (CredentialValue).
+ * The backend models of the fields that Connect and Disconnect also change: the API keys (ApiKey), the account IDs
+ * (AccountId) and the mode (CredentialValue).
  *
  * Every test names the bug it catches.
  */
 class ApiKeyTest extends TestCase
 {
-    /** @var array[] Arguments of each config writer save */
-    private array $saves = [];
+    private const TEST_KEY = 'payment/monei/test_api_key';
+    private const LIVE_KEY = 'payment/monei/production_api_key';
+
+    /** @var array[] Arguments of each config writer call, with the method name first */
+    private array $writes = [];
+
+    /** @var string[] Texts of the warnings added */
+    private array $warnings = [];
 
     /**
-     * A field at website 2, posted with $posted, while $inUse is the value in use there
+     * A field at website 2, posted with $posted, with $inUse the config values in use there (by path)
      */
-    private function model(string $inUse, string $posted, ?array $loaded, string $path = 'payment/monei/test_api_key')
+    private function model(string $path, string $posted, array $inUse, ?array $loaded): CredentialValue
     {
         $context = $this->createMock(Context::class);
         $context->method('getEventDispatcher')->willReturn($this->createMock(ManagerInterface::class));
@@ -39,19 +49,36 @@ class ApiKeyTest extends TestCase
         $validator->method('isAllowed')->willReturn(true);
         $context->method('getActionValidator')->willReturn($validator);
         $config = $this->createMock(ScopeConfigInterface::class);
-        $config->method('getValue')->willReturn($inUse);
-        $writer = $this->createMock(WriterInterface::class);
-        $writer->method('save')->willReturnCallback(function (...$args) {
-            $this->saves[] = $args;
+        $config->method('getValue')->willReturnCallback(function ($configPath) use ($inUse) {
+            return $inUse[$configPath] ?? null;
         });
-        $writer->expects($this->never())->method('delete');
+        $writer = $this->createMock(WriterInterface::class);
+        foreach (['save', 'delete'] as $method) {
+            $writer->method($method)->willReturnCallback(function (...$args) use ($method) {
+                $this->writes[] = array_merge([$method], $args);
+            });
+        }
         $request = $this->createMock(RequestInterface::class);
         $request->method('getParam')->with(CredentialValue::LOADED_PARAM)->willReturn($loaded);
-        $parents = [$context, $this->createMock(Registry::class), $config, $this->createMock(TypeListInterface::class), $request];
+        $messages = $this->createMock(MessageManager::class);
+        $messages->method('createMessage')->with(MessageInterface::TYPE_WARNING)->willReturnCallback(function () {
+            $message = $this->createMock(MessageInterface::class);
+            $message->method('setText')->willReturnCallback(function ($text) use ($message) {
+                $this->warnings[] = $text;
+                return $message;
+            });
+            return $message;
+        });
+        $parents = [$context, $this->createMock(Registry::class), $config, $this->createMock(TypeListInterface::class),
+            $request, $messages];
         $resource = $this->createMock(AbstractDb::class);
-        $model = $path === 'payment/monei/mode'
-            ? new CredentialValue(...array_merge($parents, [$resource]))
-            : new ApiKey(...array_merge($parents, [$writer, $resource]));
+        if ($path === 'payment/monei/mode') {
+            $model = new CredentialValue(...array_merge($parents, [$resource]));
+        } elseif (strpos($path, 'account_id') !== false) {
+            $model = new AccountId(...array_merge($parents, [$this->createMock(RegistryAccountId::class), $writer, $resource]));
+        } else {
+            $model = new ApiKey(...array_merge($parents, [$writer, $resource]));
+        }
         $model->setPath($path);
         $model->setScope('websites');
         $model->setScopeId(2);
@@ -63,9 +90,8 @@ class ApiKeyTest extends TestCase
 
     /**
      * Bug: after a manual key change, v2 callbacks still verify with the secret of the replaced key; the secret is
-     * deleted (the scope then inherits a parent's secret) or cleared at another scope; or the other mode loses its
-     * secret; or a save that leaves the key alone, or posts it masked or empty, drops the secret of a connected
-     * mode, or writes the mask as the key.
+     * deleted (the scope then inherits a parent's secret) or cleared at another scope; or a save that leaves the
+     * key alone, or posts it empty (the field never shows a scoped key), drops the secret of a connected mode.
      *
      * @dataProvider savedKeys
      */
@@ -73,109 +99,106 @@ class ApiKeyTest extends TestCase
         string $inUse,
         string $posted,
         string $saved,
-        array $expectedSaves
+        array $expectedWrites
     ): void {
-        $model = $this->model($inUse, $posted, null);
+        $model = $this->model(self::TEST_KEY, $posted, [self::TEST_KEY => $inUse], null);
 
         $model->beforeSave();
         $model->afterSave();
 
-        $this->assertSame([$saved, $expectedSaves], [$model->getValue(), $this->saves]);
+        $this->assertSame([$saved, $expectedWrites], [$model->getValue(), $this->writes]);
     }
 
     public function savedKeys(): array
     {
-        $cleared = [['payment/monei/test_signing_secret', '', 'websites', 2]];
+        $cleared = [['save', 'payment/monei/test_signing_secret', '', 'websites', 2]];
 
         return [
             'changed' => ['pk_test_old', 'mk_test_new', 'mk_test_new', $cleared],
             'unchanged' => ['mk_test_new', 'mk_test_new', 'mk_test_new', []],
-            'masked' => ['mk_test_new', '•••• _new', 'mk_test_new', []],
             'empty, connected' => ['mk_test_new', '', 'mk_test_new', []],
             'empty, manual' => ['pk_test_old', '', '', $cleared],
         ];
     }
 
     /**
-     * Bug: the settings page shows the full scoped key, which then sits in the admin HTML; or a manual key the
-     * merchant must read back is masked.
+     * Bug: "Use Default" on a key leaves the scope's own signing secret, which then pairs with the inherited key of
+     * another connect; or a delete skipped as stale still deletes the secret.
      *
-     * @dataProvider loadedKeys
+     * @dataProvider keyDeletes
      */
-    public function testTheFormShowsAScopedKeyMasked(string $stored, string $shown): void
+    public function testUseDefaultOnAKeyDeletesTheScopesSecret(string $loadedKey, ?int $deletedId, array $expectedWrites): void
     {
-        $model = $this->model('', $stored, null);
+        $model = $this->model(self::TEST_KEY, '', [self::TEST_KEY => 'mk_test_new'], ['test' => CredentialValue::fingerprint($loadedKey)]);
 
-        $model->afterLoad();
+        $model->beforeDelete();
+        $model->afterDelete();
 
-        $this->assertSame($shown, $model->getValue());
+        $this->assertSame([$deletedId, $expectedWrites], [$model->getId(), $this->writes]);
     }
 
-    public function loadedKeys(): array
+    public function keyDeletes(): array
     {
         return [
-            'scoped' => ['mk_test_0123456789abcdef', '•••• cdef'],
-            'manual' => ['pk_test_manual', 'pk_test_manual'],
+            'page loaded after the connect' => ['mk_test_new', 31, [['delete', 'payment/monei/test_signing_secret', 'websites', 2]]],
+            'page loaded before the connect (inherited key)' => ['pk_test_inherited', null, []],
         ];
     }
 
     /**
      * Bug: a save of the settings page loaded before a Connect or a Disconnect (Connect opens in a new tab) writes
-     * the old key or mode back, so the store loses the connect, or a disconnected store gets its old keys back, or
-     * a test-only store returns to production mode; or the guard blocks a deliberate change. No save runs no
-     * afterSave, so a refused save keeps the secret.
+     * a mode's old key, account ID or the mode back, so the store loses the connect, a disconnected store gets its
+     * old keys back, or checkout sends one account's ID with another account's key; or a change of one mode blocks
+     * the other mode's fields; or the guard blocks a deliberate change. No save runs no afterSave, so the secret
+     * stays.
      *
      * @dataProvider pageSaves
      */
-    public function testOnlyAPageThatLoadedTheValueInUseReplacesIt(
+    public function testOnlyAPageThatLoadedTheKeysInUseChangesTheirFields(
         string $path,
-        string $inUse,
-        string $posted,
+        array $inUse,
         ?array $loaded,
         bool $saved
     ): void {
-        $model = $this->model($inUse, $posted, $loaded, $path);
+        $model = $this->model($path, 'posted', $inUse, $loaded);
 
         $model->beforeSave();
 
         $this->assertSame($saved, $model->isSaveAllowed());
+        if (!$saved) {
+            // AccountId also copies the value to monei/account_id_storage.
+            $this->assertSame([], $this->writes);
+        }
     }
 
     public function pageSaves(): array
     {
-        $key = 'payment/monei/test_api_key';
-        $mode = 'payment/monei/mode';
+        $beforeTestConnect = ['test' => CredentialValue::fingerprint('pk_test_old'), 'live' => CredentialValue::fingerprint('pk_live')];
+        $afterTestConnect = [self::TEST_KEY => 'mk_test_new', self::LIVE_KEY => 'pk_live'];
 
         return [
-            'key, page loaded before a connect' => [$key, 'mk_test_new', 'pk_test_old', ['test' => CredentialValue::fingerprint('pk_test_old')], false],
-            'key, page loaded before a disconnect' => [$key, '', 'pk_test_old', ['test' => CredentialValue::fingerprint('pk_test_old')], false],
-            'mode, page loaded before a connect' => [$mode, '1', '2', ['mode' => CredentialValue::fingerprint('2')], false],
-            'key, page loaded after the connect' => [$key, 'mk_test_new', 'pk_test_typed', ['test' => CredentialValue::fingerprint('mk_test_new')], true],
-            'mode, page loaded after the connect' => [$mode, '1', '2', ['mode' => CredentialValue::fingerprint('1')], true],
-            'no page (config:set)' => [$key, 'mk_test_new', 'pk_test_typed', null, true],
+            'test key, page loaded before a Test connect' => [self::TEST_KEY, $afterTestConnect, $beforeTestConnect, false],
+            'test account id, page loaded before a Test connect' => ['payment/monei/test_account_id', $afterTestConnect, $beforeTestConnect, false],
+            'mode, page loaded before a Test connect' => ['payment/monei/mode', $afterTestConnect, $beforeTestConnect, false],
+            'live account id, page loaded before a Test connect' => ['payment/monei/production_account_id', $afterTestConnect, $beforeTestConnect, true],
+            'test key, page loaded before a Disconnect' => [self::TEST_KEY, [self::LIVE_KEY => 'pk_live'], $beforeTestConnect, false],
+            'test key, page loaded after the connect' => [self::TEST_KEY, $afterTestConnect, ['test' => CredentialValue::fingerprint('mk_test_new')], true],
+            'no page (config:set)' => [self::TEST_KEY, $afterTestConnect, null, true],
         ];
     }
 
     /**
-     * Bug: a page loaded while the scope inherited its key posts "Use Default" checked; its save deletes the key
-     * that a connect wrote at the scope since then.
-     *
-     * @dataProvider pageDeletes
+     * Bug: a skipped field is dropped silently, so the merchant thinks the old keys were saved.
      */
-    public function testOnlyAPageThatLoadedTheValueInUseDeletesIt(string $loadedKey, ?int $deletedId): void
+    public function testASkippedFieldWarnsToReloadThePage(): void
     {
-        $model = $this->model('mk_test_new', '', ['test' => CredentialValue::fingerprint($loadedKey)]);
+        $model = $this->model(self::TEST_KEY, 'pk_test_old', [self::TEST_KEY => 'mk_test_new'], ['test' => CredentialValue::fingerprint('pk_test_old')]);
 
-        $model->beforeDelete();
+        $model->beforeSave();
 
-        $this->assertSame($deletedId, $model->getId());
-    }
-
-    public function pageDeletes(): array
-    {
-        return [
-            'page loaded before the connect' => ['pk_test_inherited', null],
-            'page loaded after the connect' => ['mk_test_new', 31],
-        ];
+        $this->assertSame(
+            ['The MONEI keys changed in another tab, so the key fields were not saved. Reload this page.'],
+            $this->warnings
+        );
     }
 }

@@ -80,7 +80,6 @@
           showInStore="1"
         >
           <label>Test Account Id</label>
-          <validate>required-entry</validate>
           <backend_model>Monei\MoneiPayment\Model\Config\Backend\AccountId</backend_model>
           <depends>
             <field id="mode">1</field>
@@ -96,7 +95,6 @@
           showInStore="1"
         >
           <label>Production Account Id</label>
-          <validate>required-entry</validate>
           <backend_model>Monei\MoneiPayment\Model\Config\Backend\AccountId</backend_model>
           <depends>
             <field id="mode">2</field>
@@ -112,7 +110,7 @@
           showInStore="1"
         >
           <label>Test Api Key</label>
-          <validate>required-entry</validate>
+          <frontend_model>Monei\MoneiPayment\Block\System\Config\Form\Field\ApiKeyField</frontend_model>
           <backend_model>Monei\MoneiPayment\Model\Config\Backend\ApiKey</backend_model>
           <depends>
             <field id="mode">1</field>
@@ -128,7 +126,7 @@
           showInStore="1"
         >
           <label>Production Api Key</label>
-          <validate>required-entry</validate>
+          <frontend_model>Monei\MoneiPayment\Block\System\Config\Form\Field\ApiKeyField</frontend_model>
           <backend_model>Monei\MoneiPayment\Model\Config\Backend\ApiKey</backend_model>
           <depends>
             <field id="mode">2</field>

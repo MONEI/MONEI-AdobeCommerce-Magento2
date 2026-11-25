@@ -237,18 +237,6 @@ class ConnectService
     }
 
     /**
-     * Get the mode setting in use at a scope
-     *
-     * @param string $scope
-     * @param int $scopeId
-     * @return string
-     */
-    public function mode(string $scope, int $scopeId): string
-    {
-        return $this->read('payment/monei/mode', $scope, $scopeId);
-    }
-
-    /**
      * Get the modes whose key in use at a scope is a scoped key (mk_) from a connect
      *
      * @param string $scope

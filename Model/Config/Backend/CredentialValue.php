@@ -16,29 +16,40 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Value;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Data\Collection\AbstractDb;
+use Magento\Framework\Message\ManagerInterface as MessageManager;
+use Magento\Framework\Message\MessageInterface;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Registry;
-use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
+use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface as ModuleConfig;
+use Monei\MoneiPayment\Service\Connect\ConnectService;
 
 /**
- * A config field that Connect and Disconnect also write: the mode and the API keys.
+ * A config field that Connect and Disconnect also change: the API keys, the account IDs and the mode.
  *
  * Connect opens in a new tab, so the settings page loaded before a Connect or a Disconnect still posts the old
- * values. The page posts the fingerprint of each value it loaded (ConnectButton); a save or a "Use Default" of a
- * field whose value changed since then keeps the value now in use.
+ * values. The page posts the fingerprint of each mode's key in use (ConnectButton). When a mode's key changed since
+ * then, a save or a "Use Default" keeps that mode's key and account ID, and the mode field, and the page shows a
+ * warning.
  */
 class CredentialValue extends Value
 {
-    /** The request parameter of the fingerprints, by name (live, test, mode). */
+    /** The request parameter of the fingerprints, by mode (live, test). */
     public const LOADED_PARAM = 'monei_loaded_keys';
 
-    /** The fingerprint name of each field path. */
-    public const NAMES = [
-        MoneiPaymentModuleConfigInterface::TEST_API_KEY => 'test',
-        MoneiPaymentModuleConfigInterface::PRODUCTION_API_KEY => 'live',
-        MoneiPaymentModuleConfigInterface::MODE => 'mode',
+    /** The modes whose key guards each field path. */
+    public const MODES = [
+        ModuleConfig::TEST_API_KEY => ['test'],
+        ModuleConfig::TEST_ACCOUNT_ID => ['test'],
+        ModuleConfig::PRODUCTION_API_KEY => ['live'],
+        ModuleConfig::PRODUCTION_ACCOUNT_ID => ['live'],
+        ModuleConfig::MODE => ['live', 'test'],
     ];
+
+    /**
+     * @var bool Whether this save or delete was skipped as stale
+     */
+    protected bool $skipped = false;
 
     /**
      * @var RequestInterface
@@ -46,11 +57,17 @@ class CredentialValue extends Value
     private RequestInterface $request;
 
     /**
+     * @var MessageManager
+     */
+    private MessageManager $messageManager;
+
+    /**
      * @param Context $context
      * @param Registry $registry
      * @param ScopeConfigInterface $config
      * @param TypeListInterface $cacheTypeList
      * @param RequestInterface $request
+     * @param MessageManager $messageManager
      * @param AbstractResource|null $resource
      * @param AbstractDb|null $resourceCollection
      * @param array $data
@@ -61,27 +78,29 @@ class CredentialValue extends Value
         ScopeConfigInterface $config,
         TypeListInterface $cacheTypeList,
         RequestInterface $request,
+        MessageManager $messageManager,
         ?AbstractResource $resource = null,
         ?AbstractDb $resourceCollection = null,
         array $data = []
     ) {
         $this->request = $request;
+        $this->messageManager = $messageManager;
         parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);
     }
 
     /**
-     * Get the fingerprint of a value, which the settings page posts for the value it loaded
+     * Get the fingerprint of a key, which the settings page posts for the key it loaded
      *
-     * @param string $value
+     * @param string $key
      * @return string
      */
-    public static function fingerprint(string $value): string
+    public static function fingerprint(string $key): string
     {
-        return substr(hash('sha256', $value), 0, 16);
+        return hash('sha256', $key);
     }
 
     /**
-     * Skip the save when the page loaded another value than the value now in use
+     * Skip the save when a guarding mode's key changed since the page loaded
      *
      * @return $this
      */
@@ -90,14 +109,15 @@ class CredentialValue extends Value
         if ($this->isStale()) {
             // No save runs no afterSave either.
             $this->_dataSaveAllowed = false;
+            $this->skip();
         }
 
         return parent::beforeSave();
     }
 
     /**
-     * Skip the delete ("Use Default" or "Use Website" checked) when the page loaded another value than the value
-     * now in use: a page loaded while the scope inherited the value posts the checked box
+     * Skip the delete ("Use Default" or "Use Website" checked) when a guarding mode's key changed since the page
+     * loaded: a page loaded while the scope inherited the value posts the checked box
      *
      * @return $this
      */
@@ -106,21 +126,46 @@ class CredentialValue extends Value
         if ($this->isStale()) {
             // The resource model deletes the row of this id: none matches.
             $this->setId(null);
+            $this->skip();
         }
 
         return parent::beforeDelete();
     }
 
     /**
-     * Check whether the settings page loaded another value than the value now in use
+     * Check whether a mode that guards this field has another key in use than the page loaded
      *
      * @return bool
      */
     private function isStale(): bool
     {
-        $name = self::NAMES[$this->getPath()] ?? null;
         $loaded = (array) $this->request->getParam(self::LOADED_PARAM);
+        foreach (self::MODES[$this->getPath()] ?? [] as $mode) {
+            $inUse = (string) $this->_config->getValue(
+                ConnectService::path($mode, 'api_key'),
+                $this->getScope() ?: ScopeConfigInterface::SCOPE_TYPE_DEFAULT,
+                $this->getScopeCode()
+            );
+            if (isset($loaded[$mode]) && $loaded[$mode] !== self::fingerprint($inUse)) {
+                return true;
+            }
+        }
 
-        return $name !== null && isset($loaded[$name]) && $loaded[$name] !== self::fingerprint($this->getOldValue());
+        return false;
+    }
+
+    /**
+     * Mark this field as skipped and warn once per request
+     *
+     * @return void
+     */
+    private function skip(): void
+    {
+        $this->skipped = true;
+        $this->messageManager->addUniqueMessages([
+            $this->messageManager->createMessage(MessageInterface::TYPE_WARNING)->setText(
+                (string) __('The MONEI keys changed in another tab, so the key fields were not saved. Reload this page.')
+            ),
+        ]);
     }
 }

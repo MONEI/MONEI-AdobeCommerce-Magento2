@@ -16,6 +16,7 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Data\Collection\AbstractDb;
+use Magento\Framework\Message\ManagerInterface as MessageManager;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Registry;
@@ -24,13 +25,12 @@ use Monei\MoneiPayment\Service\Connect\ConnectService;
 /**
  * Backend model of the API key fields.
  *
- * - The page never shows a scoped key (mk_): only "•••• <last 4>". An empty or masked submit keeps the key in use.
- * - A manual change of a key clears the signing secret of its mode, which belongs to the old key.
+ * - The page never shows a scoped key (mk_, see ApiKeyField): an empty submit of a mode with a scoped key keeps it.
+ * - A manual change of a key clears the signing secret of its mode, which belongs to the old key. "Use Default"
+ *   deletes the scope's secret with the key, so the inherited key comes with its own secret.
  */
 class ApiKey extends CredentialValue
 {
-    private const MASK = '••••';
-
     /**
      * @var WriterInterface
      */
@@ -42,6 +42,7 @@ class ApiKey extends CredentialValue
      * @param ScopeConfigInterface $config
      * @param TypeListInterface $cacheTypeList
      * @param RequestInterface $request
+     * @param MessageManager $messageManager
      * @param WriterInterface $configWriter
      * @param AbstractResource|null $resource
      * @param AbstractDb|null $resourceCollection
@@ -53,50 +54,35 @@ class ApiKey extends CredentialValue
         ScopeConfigInterface $config,
         TypeListInterface $cacheTypeList,
         RequestInterface $request,
+        MessageManager $messageManager,
         WriterInterface $configWriter,
         ?AbstractResource $resource = null,
         ?AbstractDb $resourceCollection = null,
         array $data = []
     ) {
         $this->configWriter = $configWriter;
-        parent::__construct($context, $registry, $config, $cacheTypeList, $request, $resource, $resourceCollection, $data);
+        parent::__construct(
+            $context,
+            $registry,
+            $config,
+            $cacheTypeList,
+            $request,
+            $messageManager,
+            $resource,
+            $resourceCollection,
+            $data
+        );
     }
 
     /**
-     * Get the masked form of a key
-     *
-     * @param string $key
-     * @return string
-     */
-    public static function mask(string $key): string
-    {
-        return self::MASK . ' ' . substr($key, -4);
-    }
-
-    /**
-     * Show a scoped key masked
-     *
-     * @return $this
-     */
-    public function afterLoad()
-    {
-        if (strpos((string) $this->getValue(), 'mk_') === 0) {
-            $this->setValue(self::mask((string) $this->getValue()));
-        }
-
-        return parent::afterLoad();
-    }
-
-    /**
-     * Keep the key in use on a masked submit, or on an empty submit of a scoped key
+     * Keep the scoped key in use on an empty submit
      *
      * @return $this
      */
     public function beforeSave()
     {
-        $value = (string) $this->getValue();
         $inUse = $this->getOldValue();
-        if (strpos($value, self::MASK) === 0 || ($value === '' && strpos($inUse, 'mk_') === 0)) {
+        if ((string) $this->getValue() === '' && strpos($inUse, 'mk_') === 0) {
             $this->setValue($inUse);
         }
 
@@ -112,16 +98,34 @@ class ApiKey extends CredentialValue
      */
     public function afterSave()
     {
-        $mode = self::NAMES[$this->getPath()] ?? null;
-        if (in_array($mode, ['live', 'test'], true) && $this->isValueChanged()) {
-            $this->configWriter->save(
-                ConnectService::path($mode, 'signing_secret'),
-                '',
-                $this->getScope(),
-                (int) $this->getScopeId()
-            );
+        if ($this->isValueChanged()) {
+            $this->configWriter->save($this->secretPath(), '', $this->getScope(), (int) $this->getScopeId());
         }
 
         return parent::afterSave();
+    }
+
+    /**
+     * Delete the scope's signing secret with the key: a stale local secret must not pair with the inherited key
+     *
+     * @return $this
+     */
+    public function afterDelete()
+    {
+        if (!$this->skipped) {
+            $this->configWriter->delete($this->secretPath(), $this->getScope(), (int) $this->getScopeId());
+        }
+
+        return parent::afterDelete();
+    }
+
+    /**
+     * Get the signing secret path of the key's mode
+     *
+     * @return string
+     */
+    private function secretPath(): string
+    {
+        return ConnectService::path(self::MODES[$this->getPath()][0], 'signing_secret');
     }
 }

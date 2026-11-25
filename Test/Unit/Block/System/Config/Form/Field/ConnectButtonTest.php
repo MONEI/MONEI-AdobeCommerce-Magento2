@@ -61,7 +61,6 @@ class ConnectButtonTest extends TestCase
 
         $service = $this->createMock(ConnectService::class);
         $service->method('apiKeys')->willReturn(['live' => 'pk_live_manual', 'test' => 'mk_test_0123456789abcdef']);
-        $service->method('mode')->willReturn('2');
         $secureRenderer = $this->createMock(SecureHtmlRenderer::class);
         $secureRenderer->method('renderEventListenerAsTag')->willReturn('<script></script>');
         $element = $this->createMock(AbstractElement::class);
@@ -84,7 +83,7 @@ class ConnectButtonTest extends TestCase
                 strpos($html, 'to stop storing your account API key') !== false,
             ]
         );
-        foreach (['live' => 'pk_live_manual', 'test' => 'mk_test_0123456789abcdef', 'mode' => '2'] as $name => $value) {
+        foreach (['live' => 'pk_live_manual', 'test' => 'mk_test_0123456789abcdef'] as $name => $value) {
             $this->assertStringContainsString(
                 'name="monei_loaded_keys[' . $name . ']" value="' . CredentialValue::fingerprint($value) . '"',
                 $html
@@ -92,7 +91,7 @@ class ConnectButtonTest extends TestCase
         }
         $this->assertSame(
             [false, true],
-            [strpos($html, 'mk_test_0123456789abcdef') !== false, strpos($html, '•••• cdef') !== false]
+            [strpos($html, 'mk_test_0123456789abcdef') !== false, strpos($html, 'Key in use (Test): ending in cdef') !== false]
         );
     }
 

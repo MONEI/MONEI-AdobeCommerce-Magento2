@@ -11,6 +11,8 @@ use Magento\Framework\Url;
 use Monei\MoneiPayment\Block\System\Config\Form\Field\ConnectButton;
 use Monei\MoneiPayment\Controller\Adminhtml\Connect\Disconnect;
 use Monei\MoneiPayment\Controller\Adminhtml\Connect\Start;
+use Monei\MoneiPayment\Block\System\Config\Form\Field\ApiKeyField;
+use Monei\MoneiPayment\Model\Config\Backend\AccountId;
 use Monei\MoneiPayment\Model\Config\Backend\ApiKey;
 use Monei\MoneiPayment\Model\Config\Backend\CredentialValue;
 use Monei\MoneiPayment\Service\Connect\CallbackUrl;
@@ -75,21 +77,32 @@ class ConnectWiringTest extends TestCase
 
     /**
      * Bug: a key field saves without the ApiKey model, so a manual key change keeps the signing secret of the
-     * replaced key, and the page shows the full scoped key; or the mode saves without CredentialValue, so a page
-     * loaded before a connect puts a test-only store back in production mode.
+     * replaced key, and the page shows the full scoped key; or the account IDs or the mode save without the stale
+     * guard, so a page loaded before a connect writes them back.
      */
     public function testTheKeyAndModeFieldsUseTheirBackendModels(): void
     {
         $xml = simplexml_load_file(self::ROOT . '/etc/adminhtml/system.xml');
         $models = [];
-        foreach (['test_api_key', 'production_api_key', 'mode'] as $id) {
-            $models[$id] = (string) ($xml->xpath("//group[@id='monei']/field[@id='$id']/backend_model")[0] ?? '');
+        foreach (['test_api_key', 'production_api_key', 'test_account_id', 'production_account_id', 'mode'] as $id) {
+            $field = "//group[@id='monei']/field[@id='$id']";
+            $models[$id] = [
+                (string) ($xml->xpath("$field/backend_model")[0] ?? ''),
+                (string) ($xml->xpath("$field/frontend_model")[0] ?? ''),
+            ];
         }
 
         $this->assertSame(
-            ['test_api_key' => ApiKey::class, 'production_api_key' => ApiKey::class, 'mode' => CredentialValue::class],
+            [
+                'test_api_key' => [ApiKey::class, ApiKeyField::class],
+                'production_api_key' => [ApiKey::class, ApiKeyField::class],
+                'test_account_id' => [AccountId::class, ''],
+                'production_account_id' => [AccountId::class, ''],
+                'mode' => [CredentialValue::class, ''],
+            ],
             $models
         );
+        $this->assertTrue(is_subclass_of(AccountId::class, CredentialValue::class));
     }
 
     /**
