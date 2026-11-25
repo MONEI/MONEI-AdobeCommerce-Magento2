@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.6.0 (2026-11-25)
+
+* feat: connect with MONEI (#103) ([8fac376](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/8fac376)), closes [#103](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/103)
+
 ## <small>2.5.5 (2026-11-07)</small>
 
 - fix: keep the express shipping method the shopper picks on the order (#102) ([b463389](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/b463389)), closes [#102](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/102)
