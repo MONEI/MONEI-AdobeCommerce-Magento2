@@ -134,6 +134,19 @@ class CallbackTest extends VerifierTestCase
     }
 
     /**
+     * Bug: an error while the order is processed answers 2xx, so MONEI never retries and the order stays open.
+     */
+    public function testAProcessingErrorAnswers500(): void
+    {
+        $controller = $this->controller(self::body($this->remote), null);
+        $this->paymentProcessor->method('process')->willThrowException(new \RuntimeException('database gone'));
+
+        $controller->execute();
+
+        $this->assertSame([500], $this->codes);
+    }
+
+    /**
      * Bug: a failed fetch answers 200, so MONEI never retries and the order stays open.
      */
     public function testAFailedFetchAnswers503(): void
