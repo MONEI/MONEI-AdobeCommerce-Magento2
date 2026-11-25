@@ -24,6 +24,7 @@ use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
 use Monei\MoneiPayment\Api\Data\PaymentInfoInterface;
 use Monei\MoneiPayment\Model\Config\Source\Mode;
 use Monei\MoneiPayment\Model\Payment\Monei;
+use Monei\MoneiPayment\Service\Api\CreatePayment;
 use Monei\MoneiPayment\Service\Api\FetchedPayments;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\ObjectSerializer;
@@ -272,6 +273,13 @@ class CallbackVerifier
         }
         if ((string) ($fetched['orderId'] ?? '') !== $orderId) {
             return self::refused(200, 'orderId');
+        }
+        // Store views can share a scoped key and an increment ID: a payment of another store view (its metadata
+        // says which; payments made before this check carry none) must not settle this order.
+        $metadata = (array) ($fetched['metadata'] ?? []);
+        if (isset($metadata[CreatePayment::STORE_METADATA])
+            && (string) $metadata[CreatePayment::STORE_METADATA] !== (string) $order->getStoreId()) {
+            return self::refused(200, 'store');
         }
         if (($fetched['livemode'] ?? null) !== ($storeMode === 'live')) {
             return self::refused(200, 'livemode');

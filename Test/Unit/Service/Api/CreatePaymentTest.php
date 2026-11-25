@@ -205,6 +205,32 @@ class CreatePaymentTest extends TestCase
     }
 
     /**
+     * Bug: a payment carries no Magento store view, so the callback verifier cannot refuse a payment of another
+     * store view with the same increment ID; or the store view replaces the caller's metadata.
+     */
+    public function testThePaymentNamesItsStoreViewInItsMetadata(): void
+    {
+        $this->_urlBuilderMock->method('getUrl')->willReturn('https://example.com/monei/payment/x');
+        $this->_paymentsApiMock->expects($this->once())->method('create')
+            ->willReturnCallback(function ($request) {
+                $this->assertSame(
+                    ['custom_field' => 'custom_value', 'magento_store_id' => '3'],
+                    (array) $request->getMetadata()
+                );
+                return $this->createMock(MoneiPayment::class);
+            });
+
+        $this->_createPaymentService->execute([
+            'amount' => 1000,
+            'currency' => 'EUR',
+            'order_id' => '123456',
+            'customer' => ['email' => 'test@example.com'],
+            'shipping_details' => ['address' => ['city' => 'Test City', 'country' => 'ES', 'line1' => 'Test Street 123', 'postal_code' => '12345']],
+            'metadata' => ['custom_field' => 'custom_value'],
+        ]);
+    }
+
+    /**
      * Test with all parameters
      *
      * @return void

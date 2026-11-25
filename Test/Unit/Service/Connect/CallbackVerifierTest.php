@@ -120,6 +120,31 @@ class CallbackVerifierTest extends VerifierTestCase
     }
 
     /**
+     * Bug: a payment of another store view (store views share a scoped key and can share an increment ID and an
+     * amount) settles this store view's order; or a payment made before the store metadata existed is refused.
+     *
+     * @dataProvider paymentStores
+     */
+    public function testAFetchedPaymentOfAnotherStoreViewChangesNothing(?string $metadataStore, bool $processed): void
+    {
+        $this->remote = self::paymentFields('SUCCEEDED')
+            + ($metadataStore === null ? [] : ['metadata' => ['magento_store_id' => $metadataStore]]);
+
+        $decision = $this->verifier()->verify(self::body(self::paymentFields('SUCCEEDED')), null);
+
+        $this->assertSame([200, $processed], [$decision['status'], $decision['payment'] !== null]);
+    }
+
+    public function paymentStores(): array
+    {
+        return [
+            'the order\'s store view' => ['1', true],
+            'another store view' => ['2', false],
+            'no store metadata (an older payment)' => [null, true],
+        ];
+    }
+
+    /**
      * Bug: the fetch path drops a payment whose amount differs from the order, so the payment processor never holds
      * the order for review, as it does for a signed payment.
      */

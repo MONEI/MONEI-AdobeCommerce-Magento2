@@ -40,6 +40,12 @@ use Monei\MoneiClient;
 class CreatePayment extends AbstractApiService implements CreatePaymentInterface
 {
     /**
+     * The payment metadata key of the Magento store view that created the payment. The callback verifier refuses
+     * a fetched payment of another store view: increment IDs repeat across stores.
+     */
+    public const STORE_METADATA = 'magento_store_id';
+
+    /**
      * Required parameters for payment creation
      *
      * @var array
@@ -244,10 +250,9 @@ class CreatePayment extends AbstractApiService implements CreatePaymentInterface
             $paymentRequest->setDescription($data['description']);
         }
 
-        // Set metadata if available
-        if (isset($data['metadata']) && is_array($data['metadata'])) {
-            $paymentRequest->setMetadata($data['metadata']);
-        }
+        $metadata = isset($data['metadata']) && is_array($data['metadata']) ? $data['metadata'] : [];
+        $metadata[self::STORE_METADATA] = (string) $this->storeManager->getStore()->getId();
+        $paymentRequest->setMetadata($metadata);
 
         return $paymentRequest;
     }
