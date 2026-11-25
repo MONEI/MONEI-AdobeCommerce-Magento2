@@ -336,7 +336,7 @@ class CallbackVerifier
     }
 
     /**
-     * Count a fetch attempt: at most 5 a minute per order and 60 a minute per store
+     * Count a fetch attempt: at most 5 a minute per order and 60 a minute for the installation
      *
      * @param string $orderId The order's entity ID
      * @return bool

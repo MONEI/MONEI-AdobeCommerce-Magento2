@@ -134,7 +134,7 @@ class ConnectButton extends AbstractBlock implements RendererInterface
 
         if ($allLocked) {
             $html .= '<p>' . $this->_escaper->escapeHtml((string) __(
-                'The MONEI keys of this scope are set in env.php or an environment variable, so Connect with MONEI cannot change them.'
+                'The MONEI keys of this scope are set in env.php, config.php or an environment variable, so Connect with MONEI cannot change them.'
             )) . '</p>';
         } elseif (!$canConnect) {
             $html .= '<p>' . $this->_escaper->escapeHtml((string) __('Use manual keys. Connect with MONEI needs a public HTTPS address for this shop.')) . '</p>';

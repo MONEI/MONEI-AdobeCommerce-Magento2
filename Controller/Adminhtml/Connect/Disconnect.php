@@ -68,10 +68,15 @@ class Disconnect extends Action implements HttpPostActionInterface
                 ['section' => 'payment']
             );
         }
-        $this->connectService->disconnect(...$scopeOfRequest);
-        $this->messageManager->addSuccessMessage(
-            __('MONEI disconnected. The keys stay active until you revoke them in the MONEI Dashboard.')
-        );
+        $result = $this->connectService->disconnect(...$scopeOfRequest);
+        if ($result['cleared']) {
+            $this->messageManager->addSuccessMessage(
+                __('MONEI disconnected. The keys stay active until you revoke them in the MONEI Dashboard.')
+            );
+        }
+        foreach ($result['locked'] as $mode) {
+            $this->messageManager->addWarningMessage(ConnectService::message($mode, 'locked'));
+        }
 
         return $this->resultRedirectFactory->create()->setPath(
             'adminhtml/system_config/edit',

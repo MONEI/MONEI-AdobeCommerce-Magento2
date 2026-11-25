@@ -145,7 +145,7 @@ class ConnectButtonTest extends TestCase
     }
 
     /**
-     * Bug: a scope whose keys env.php or an environment variable sets offers Connect and Disconnect, which write
+     * Bug: a scope whose keys env.php, config.php or an environment variable sets offers Connect and Disconnect, which write
      * values that never take effect.
      */
     public function testLockedKeysOfferNeitherConnectNorDisconnect(): void
@@ -157,7 +157,7 @@ class ConnectButtonTest extends TestCase
             [
                 strpos($html, 'id="monei-connect-button"') !== false,
                 strpos($html, 'id="monei-disconnect-button"') !== false,
-                strpos($html, 'are set in env.php or an environment variable') !== false,
+                strpos($html, 'are set in env.php, config.php or an environment variable') !== false,
             ]
         );
     }

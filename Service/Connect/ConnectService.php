@@ -215,9 +215,10 @@ class ConnectService
      *
      * @param string $scope
      * @param int $scopeId
-     * @return void
+     * @return array{cleared: string[], locked: string[]} The connected modes cleared, and those left because the
+     *     deployment configuration sets them
      */
-    public function disconnect(string $scope, int $scopeId): void
+    public function disconnect(string $scope, int $scopeId): array
     {
         // A pending connect of this scope would write the credentials back. Other scopes' connects go on.
         foreach ($this->flags->codesWithPrefix(self::STATE_PREFIX) as $code) {
@@ -226,13 +227,17 @@ class ConnectService
                 $this->flags->delete($code);
             }
         }
-        $locked = $this->lockedModes($scope, $scopeId);
-        foreach (array_diff($this->connectedModes($scope, $scopeId), $locked) as $mode) {
+        $connected = $this->connectedModes($scope, $scopeId);
+        $locked = array_values(array_intersect($connected, $this->lockedModes($scope, $scopeId)));
+        $cleared = array_values(array_diff($connected, $locked));
+        foreach ($cleared as $mode) {
             foreach (self::FIELDS as $field) {
                 $this->configWriter->save(self::path($mode, $field), '', $scope, $scopeId);
             }
         }
         $this->flush();
+
+        return ['cleared' => $cleared, 'locked' => $locked];
     }
 
     /**
@@ -366,7 +371,7 @@ class ConnectService
             'temporarily_unavailable' => __('MONEI is not available now. Try again later.'),
             'keyRejected' => __('The new key did not work, so the current credentials stay in use.'),
             'locked' => __(
-                'The keys of this mode are set in env.php or an environment variable, so Connect with MONEI cannot change them.'
+                'The keys of this mode are set in env.php, config.php or an environment variable, so Connect with MONEI cannot change them.'
             ),
             'cap' => __('Your MONEI account has too many API keys. Revoke unused keys in the MONEI Dashboard, then connect again.'),
             'not_approved' => __('Live keys come after MONEI approves your account.'),

@@ -42,7 +42,8 @@ class DisconnectTest extends TestCase
         $context->method('getResultRedirectFactory')->willReturn($redirectFactory);
         $context->method('getMessageManager')->willReturn($this->createMock(ManagerInterface::class));
         $service = $this->createMock(ConnectService::class);
-        $service->expects($this->once())->method('disconnect')->with('stores', 3);
+        $service->expects($this->once())->method('disconnect')->with('stores', 3)
+            ->willReturn(['cleared' => ['live'], 'locked' => []]);
         $website = $this->createMock(Website::class);
         $website->method('getId')->willReturn(1);
         $store = $this->createMock(Store::class);
@@ -78,5 +79,32 @@ class DisconnectTest extends TestCase
         $storeManager->method('getStore')->willThrowException(new \Magento\Framework\Exception\NoSuchEntityException());
 
         (new Disconnect($context, $service, new CallbackUrl($this->createMock(Url::class), $storeManager)))->execute();
+    }
+
+    /**
+     * Bug: a Disconnect that leaves a mode set by env.php, config.php or an environment variable says "MONEI
+     * disconnected", while that key stays in use.
+     */
+    public function testALockedModeIsReportedNotCalledDisconnected(): void
+    {
+        $request = $this->createMock(RequestInterface::class);
+        $request->method('getParam')->willReturnMap([['website', null, ''], ['store', null, '']]);
+        $redirect = $this->createMock(Redirect::class);
+        $redirect->method('setPath')->willReturnSelf();
+        $redirectFactory = $this->createMock(RedirectFactory::class);
+        $redirectFactory->method('create')->willReturn($redirect);
+        $messages = $this->createMock(ManagerInterface::class);
+        $messages->expects($this->never())->method('addSuccessMessage');
+        $messages->expects($this->once())->method('addWarningMessage')->with(
+            'Live: The keys of this mode are set in env.php, config.php or an environment variable, so Connect with MONEI cannot change them.'
+        );
+        $context = $this->createMock(Context::class);
+        $context->method('getRequest')->willReturn($request);
+        $context->method('getResultRedirectFactory')->willReturn($redirectFactory);
+        $context->method('getMessageManager')->willReturn($messages);
+        $service = $this->createMock(ConnectService::class);
+        $service->method('disconnect')->with('default', 0)->willReturn(['cleared' => [], 'locked' => ['live']]);
+
+        (new Disconnect($context, $service, new CallbackUrl($this->createMock(Url::class), $this->createMock(StoreManagerInterface::class))))->execute();
     }
 }

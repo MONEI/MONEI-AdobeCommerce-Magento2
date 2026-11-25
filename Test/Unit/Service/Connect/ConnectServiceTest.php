@@ -628,9 +628,10 @@ class ConnectServiceTest extends TestCase
         $this->exchangeAnswer = ['live' => self::keys('live', 'acc-live'), 'test' => self::keys('test', 'acc-test-new')];
 
         $result = $this->service($store)->complete(self::STATE, 'the-code');
-        $this->service(new MemoryFlagStore())->disconnect('websites', 1);
+        $disconnected = $this->service(new MemoryFlagStore())->disconnect('websites', 1);
 
         $this->assertSame([['live', 'locked']], self::codes($result));
+        $this->assertSame(['cleared' => ['test'], 'locked' => ['live']], $disconnected);
         $this->assertSame(['mk_live_old', ''], [$this->config[self::SCOPE . 'production_api_key'], $this->config[self::SCOPE . 'test_api_key']]);
     }
 }

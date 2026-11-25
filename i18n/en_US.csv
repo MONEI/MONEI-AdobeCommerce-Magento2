@@ -310,5 +310,5 @@ Description,Description
 "Use manual keys. Connect with MONEI needs a public HTTPS address for this shop.","Use manual keys. Connect with MONEI needs a public HTTPS address for this shop."
 "Enter API keys manually","Enter API keys manually"
 "Dismiss","Dismiss"
-"The keys of this mode are set in env.php or an environment variable, so Connect with MONEI cannot change them.","The keys of this mode are set in env.php or an environment variable, so Connect with MONEI cannot change them."
-"The MONEI keys of this scope are set in env.php or an environment variable, so Connect with MONEI cannot change them.","The MONEI keys of this scope are set in env.php or an environment variable, so Connect with MONEI cannot change them."
+"The keys of this mode are set in env.php, config.php or an environment variable, so Connect with MONEI cannot change them.","The keys of this mode are set in env.php, config.php or an environment variable, so Connect with MONEI cannot change them."
+"The MONEI keys of this scope are set in env.php, config.php or an environment variable, so Connect with MONEI cannot change them.","The MONEI keys of this scope are set in env.php, config.php or an environment variable, so Connect with MONEI cannot change them."
