@@ -1001,6 +1001,31 @@ class PaymentProcessorTest extends TestCase
         $this->assertSame('SUCCEEDED', $saved);
     }
 
+    /**
+     * Bug: a callback resolved to one store's order changes another store's order with the same increment id
+     * (increment ids repeat across stores), or one whose increment id is not the payment's.
+     *
+     * @dataProvider resolvedOrders
+     */
+    public function testAResolvedOrderIsLoadedByEntityIdNotByIncrementId(string $incrementId, bool $found): void
+    {
+        $this->order->expects($this->never())->method('loadByIncrementId');
+        $this->order->expects($this->once())->method('load')->with(42)->willReturnSelf();
+        $this->order->method('getId')->willReturn(42);
+        $this->order->method('getIncrementId')->willReturn($incrementId);
+        $this->paymentDtoFactory->method('createFromArray')
+            ->willReturn($this->createPaymentDto('pay_1', Status::PENDING, 1000, 'EUR'));
+
+        $result = $this->paymentProcessor->process('000000001', 'pay_1', ['id' => 'pay_1'], 42);
+
+        $this->assertSame($found, $result->getStatusCode() !== PaymentErrorCodeInterface::ERROR_NOT_FOUND);
+    }
+
+    public function resolvedOrders(): array
+    {
+        return ['the payment\'s order' => ['000000001', true], 'another increment id' => ['000000002', false]];
+    }
+
     private function givenLockedOrder(
         string $incrementId,
         float $baseGrandTotal,

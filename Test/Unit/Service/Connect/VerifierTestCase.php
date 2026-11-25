@@ -160,6 +160,7 @@ abstract class VerifierTestCase extends TestCase
     private function order(array $data): Order
     {
         $order = $this->createMock(Order::class);
+        $order->method('getId')->willReturn($data['entityId'] ?? 7);
         $order->method('getData')->with('monei_payment_id')->willReturn($data['paymentId'] ?? null);
         $order->method('getState')->willReturn($data['state'] ?? 'new');
         $order->method('hasInvoices')->willReturn($data['paid'] ?? false);

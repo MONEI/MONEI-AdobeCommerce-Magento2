@@ -138,8 +138,9 @@ class CallbackVerifier
      *
      * @param string $body Raw request body
      * @param string|null $signature MONEI-Signature header, null when absent
-     * @return array{status: int, payment: array|null, reason: string} The payment to process, in the body's
-     *     camelCase shape, or null with the HTTP status to answer: 400 a malformed body or another payment of a
+     * @return array{status: int, payment: array|null, reason: string, order: int|null} The payment to process, in
+     *     the body's camelCase shape, with the entity ID of the order it may change, or null with the HTTP status to
+     *     answer: 400 a malformed body or another payment of a
      *     settled order, 401 a bad signature, 503 a failed fetch or no fetch quota (MONEI retries), 200 a payment
      *     that must not change the order.
      */
@@ -168,7 +169,7 @@ class CallbackVerifier
             : '';
 
         if ($secret !== '' && $signature !== null && self::signatureValid($body, $signature, '', $secret)) {
-            return $this->signed($body, $mode, $storeMode);
+            return $this->signed($body, $mode, $storeMode, $order);
         }
         if (strpos($key, 'mk_') === 0) {
             return $this->fetched($data, $signature, $key, $order, $storeMode);
@@ -178,7 +179,7 @@ class CallbackVerifier
             return self::refused(401, 'signature');
         }
 
-        return $this->signed($body, $mode, $storeMode);
+        return $this->signed($body, $mode, $storeMode, $order);
     }
 
     /**
@@ -188,15 +189,16 @@ class CallbackVerifier
      * @param string $body
      * @param string $mode The mode whose key or secret proved the body
      * @param string $storeMode The mode of the order's store
-     * @return array{status: int, payment: array|null, reason: string}
+     * @param Order $order
+     * @return array{status: int, payment: array|null, reason: string, order: int|null}
      */
-    private function signed(string $body, string $mode, string $storeMode): array
+    private function signed(string $body, string $mode, string $storeMode, Order $order): array
     {
         if ($mode !== $storeMode) {
             return self::refused(200, 'livemode');
         }
 
-        return self::accepted((array) json_decode($body));
+        return self::accepted((array) json_decode($body), $order);
     }
 
     /**
@@ -232,7 +234,7 @@ class CallbackVerifier
      * @param string $key
      * @param Order $order
      * @param string $storeMode The mode of the order's store
-     * @return array{status: int, payment: array|null, reason: string}
+     * @return array{status: int, payment: array|null, reason: string, order: int|null}
      */
     private function fetched(array $data, ?string $signature, string $key, Order $order, string $storeMode): array
     {
@@ -284,7 +286,7 @@ class CallbackVerifier
 
         $this->fetchedPayments->add($payment);
 
-        return self::accepted($fetched);
+        return self::accepted($fetched, $order);
     }
 
     /**
@@ -417,11 +419,12 @@ class CallbackVerifier
      * Get an accepted decision
      *
      * @param array $payment
-     * @return array{status: int, payment: array, reason: string}
+     * @param Order $order
+     * @return array{status: int, payment: array, reason: string, order: int}
      */
-    private static function accepted(array $payment): array
+    private static function accepted(array $payment, Order $order): array
     {
-        return ['status' => 200, 'payment' => $payment, 'reason' => 'ok'];
+        return ['status' => 200, 'payment' => $payment, 'reason' => 'ok', 'order' => (int) $order->getId()];
     }
 
     /**
@@ -429,10 +432,10 @@ class CallbackVerifier
      *
      * @param int $status
      * @param string $reason
-     * @return array{status: int, payment: null, reason: string}
+     * @return array{status: int, payment: null, reason: string, order: null}
      */
     private static function refused(int $status, string $reason): array
     {
-        return ['status' => $status, 'payment' => null, 'reason' => $reason];
+        return ['status' => $status, 'payment' => null, 'reason' => $reason, 'order' => null];
     }
 }

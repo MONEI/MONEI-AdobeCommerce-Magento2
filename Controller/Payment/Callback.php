@@ -165,7 +165,8 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
                     $result = $this->paymentProcessor->process(
                         $paymentDTO->getOrderId(),
                         $paymentDTO->getId(),
-                        $paymentDTO->getRawData()
+                        $paymentDTO->getRawData(),
+                        $decision['order']
                     );
 
                     $this->logger->debug('[Callback] Payment processing result', [

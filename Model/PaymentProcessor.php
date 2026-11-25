@@ -155,11 +155,17 @@ class PaymentProcessor implements PaymentProcessorInterface
     /**
      * @inheritdoc
      */
-    public function process(string $orderId, string $paymentId, array $paymentData): PaymentProcessingResultInterface
-    {
+    public function process(
+        string $orderId,
+        string $paymentId,
+        array $paymentData,
+        ?int $orderEntityId = null
+    ): PaymentProcessingResultInterface {
         try {
-            // Load the order
-            $order = $this->getOrderByIncrementId($orderId);
+            // Increment IDs repeat across stores: an order the caller resolved is never looked up again.
+            $order = $orderEntityId !== null
+                ? $this->getOrderByEntityId($orderEntityId, $orderId)
+                : $this->getOrderByIncrementId($orderId);
             if (!$order) {
                 return PaymentProcessingResult::createError(
                     'UNKNOWN',
@@ -945,6 +951,22 @@ class PaymentProcessor implements PaymentProcessorInterface
             // Also set payment ID directly on the order to maintain compatibility with Block/Info/Monei.php
             $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID, $payment->getId());
         }
+    }
+
+    /**
+     * Get an order by entity ID, when its increment ID is the one of the payment
+     *
+     * @param int $entityId
+     * @param string $incrementId
+     * @return OrderInterface|null
+     */
+    private function getOrderByEntityId(int $entityId, string $incrementId): ?OrderInterface
+    {
+        $order = $this->orderFactory->create();
+        // @phpstan-ignore-next-line
+        $order->load($entityId);
+
+        return $order->getId() && (string) $order->getIncrementId() === $incrementId ? $order : null;
     }
 
     /**

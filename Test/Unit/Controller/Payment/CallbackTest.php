@@ -67,8 +67,9 @@ class CallbackTest extends VerifierTestCase
 
     /**
      * Bug: the handler processes the request body, not the payment MONEI answers, so a forged body settles the
-     * order; or the fetched payment never reaches the processor; or processing it (the order email, the vault
-     * token) fetches it again through GetPayment.
+     * order; or the fetched payment never reaches the processor; or the processor looks the increment id up again
+     * across all stores instead of changing the order the verifier checked; or processing it (the order email, the
+     * vault token) fetches it again through GetPayment.
      */
     public function testAFetchedSucceededPaymentReachesTheProcessor(): void
     {
@@ -79,10 +80,12 @@ class CallbackTest extends VerifierTestCase
         $result = $this->createMock(PaymentProcessingResultInterface::class);
         $result->method('isSuccess')->willReturn(true);
         $this->paymentProcessor->expects($this->once())->method('process')
-            ->willReturnCallback(function (string $orderId, string $paymentId, array $payment) use ($result) {
+            ->willReturnCallback(function (string $orderId, string $paymentId, array $payment, ?int $entityId) use (
+                $result
+            ) {
                 $this->assertSame(
-                    ['000000101', self::ID, 'SUCCEEDED', 'Transaction approved'],
-                    [$orderId, $paymentId, $payment['status'], $payment['statusMessage']]
+                    ['000000101', self::ID, 'SUCCEEDED', 'Transaction approved', 7],
+                    [$orderId, $paymentId, $payment['status'], $payment['statusMessage'], $entityId]
                 );
                 $apiClient = $this->createMock(MoneiApiClient::class);
                 $apiClient->expects($this->never())->method('getMoneiSdk');
