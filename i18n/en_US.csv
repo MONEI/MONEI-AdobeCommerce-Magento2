@@ -289,7 +289,6 @@ Description,Description
 "The connect code is not valid or expired. Start again from the MONEI settings.","The connect code is not valid or expired. Start again from the MONEI settings."
 "The keys stay active until you revoke them in the MONEI Dashboard:","The keys stay active until you revoke them in the MONEI Dashboard:"
 "The new key did not work, so the current credentials stay in use.","The new key did not work, so the current credentials stay in use."
-"MONEI did not answer, so the current credentials stay in use. Try again.","MONEI did not answer, so the current credentials stay in use. Try again."
 "This connect link expired. Start again from the MONEI settings.","This connect link expired. Start again from the MONEI settings."
 "This connect link is not valid or was already used. Start again from the MONEI settings.","This connect link is not valid or was already used. Start again from the MONEI settings."
 "This MONEI account cannot get a key for this mode.","This MONEI account cannot get a key for this mode."

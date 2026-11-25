@@ -313,7 +313,6 @@ class ConnectService
             'invalid_grant' => __('The connect code is not valid or expired. Start again from the MONEI settings.'),
             'temporarily_unavailable' => __('MONEI is not available now. Try again later.'),
             'keyRejected' => __('The new key did not work, so the current credentials stay in use.'),
-            'noAnswer' => __('MONEI did not answer, so the current credentials stay in use. Try again.'),
             'cap' => __('Your MONEI account has too many API keys. Revoke unused keys in the MONEI Dashboard, then connect again.'),
             'not_approved' => __('Live keys come after MONEI approves your account. The store stays in test mode.'),
             'blocked' => __('MONEI refused a key for this account.'),
@@ -365,7 +364,8 @@ class ConnectService
             // /allowed-payment-methods answers 400 for a mode without an enabled provider: a 200 or a 400 proves the
             // key. Any other answer proves nothing, so the current credentials stay.
             if ($status !== 200 && $status !== 400) {
-                $problems[] = ['mode' => $mode, 'code' => in_array($status, [401, 403], true) ? 'keyRejected' : 'noAnswer'];
+                $code = in_array($status, [401, 403], true) ? 'keyRejected' : 'temporarily_unavailable';
+                $problems[] = ['mode' => $mode, 'code' => $code];
                 continue;
             }
             $this->configWriter->save(self::path($mode, 'account_id'), $keys['accountId'], $scope, $scopeId);

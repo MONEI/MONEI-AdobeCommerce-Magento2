@@ -349,9 +349,9 @@ class ConnectServiceTest extends TestCase
             '400 proves the key' => [400, $new, []],
             '401' => [401, $kept, [['test', 'keyRejected']]],
             '403' => [403, $kept, [['test', 'keyRejected']]],
-            '429' => [429, $kept, [['test', 'noAnswer']]],
-            '500' => [500, $kept, [['test', 'noAnswer']]],
-            'no answer' => [0, $kept, [['test', 'noAnswer']]],
+            '429' => [429, $kept, [['test', 'temporarily_unavailable']]],
+            '500' => [500, $kept, [['test', 'temporarily_unavailable']]],
+            'no answer' => [0, $kept, [['test', 'temporarily_unavailable']]],
         ];
     }
 
