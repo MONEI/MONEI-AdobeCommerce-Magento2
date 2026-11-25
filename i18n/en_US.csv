@@ -303,5 +303,6 @@ Description,Description
 "Live","Live"
 "Test","Test"
 "Go to MONEI settings","Go to MONEI settings"
+"Return to the MONEI settings in your admin panel.","Return to the MONEI settings in your admin panel."
 "You can also close this tab and reload the settings page.","You can also close this tab and reload the settings page."
 "Your MONEI account has too many API keys. Revoke unused keys in the MONEI Dashboard, then connect again.","Your MONEI account has too many API keys. Revoke unused keys in the MONEI Dashboard, then connect again."

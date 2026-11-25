@@ -57,7 +57,8 @@ class ConnectTest extends TestCase
     }
 
     /**
-     * Bug: a forged state gets a 200 page, or the page sends the code of its URL to another site in a Referer.
+     * Bug: a forged state gets a 200 page, or the page sends the code of its URL to another site in a Referer, or
+     * shows anyone the admin URL that a custom admin path hides.
      */
     public function testAForgedStateGets400WithNoReferrerAndNoExchange(): void
     {
@@ -92,9 +93,15 @@ class ConnectTest extends TestCase
             $this->createMock(Logger::class)
         );
 
+        $contents = '';
+        $raw->method('setContents')->willReturnCallback(function ($html) use (&$contents, $raw) {
+            $contents = $html;
+            return $raw;
+        });
+
         (new Connect($request, $rawFactory, $service, $this->resultPage(), $this->createMock(Logger::class)))->execute();
 
-        $this->assertSame([400], $codes);
+        $this->assertSame([400, false], [$codes[0] ?? null, strpos($contents, 'backoffice') !== false]);
         $this->assertSame(
             ['no-referrer', 'no-store, no-cache, must-revalidate, max-age=0'],
             [$headers['Referrer-Policy'] ?? null, $headers['Cache-Control'] ?? null]

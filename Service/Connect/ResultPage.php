@@ -22,6 +22,9 @@ use Magento\Framework\View\Asset\Repository;
  *
  * Colors, radii and shadows come from the MONEI brand tokens. Nothing loads from another host: the logo is the
  * module's own file and the font is the system font.
+ *
+ * The route is public, and a custom admin path hides the admin: only a page whose single-use state was valid
+ * links to it.
  */
 class ResultPage
 {
@@ -101,9 +104,14 @@ class ResultPage
             $lines .= $this->lineHtml(false, ConnectService::message($problem['mode'] ?? null, (string) $problem['code']));
         }
         $statusIcon = $ok ? self::ICON_OK : '<path d="M12 8v5M12 16.5v.01"/><circle cx="12" cy="12" r="9"/>';
-        $hint = $refused ? '' : '<p class="hint">'
-            . $this->escaper->escapeHtml((string) __('You can also close this tab and reload the settings page.'))
-            . '</p>';
+        $next = $refused
+            ? '<p class="hint">' . $this->escaper->escapeHtml((string) __('Return to the MONEI settings in your admin panel.'))
+                . '</p>'
+            : '<a class="button" href="' . $this->escaper->escapeUrl($this->adminUrl()) . '">'
+                . $this->escaper->escapeHtml((string) __('Go to MONEI settings')) . '</a>'
+                . '<p class="hint">'
+                . $this->escaper->escapeHtml((string) __('You can also close this tab and reload the settings page.'))
+                . '</p>';
 
         return '<!DOCTYPE html>'
             . '<html lang="' . $this->escaper->escapeHtmlAttr(str_replace('_', '-', $this->localeResolver->getLocale())) . '">'
@@ -117,9 +125,7 @@ class ResultPage
             . ' stroke-linecap="round" stroke-linejoin="round">' . $statusIcon . '</svg></div>'
             . '<h1>' . $this->escaper->escapeHtml($title) . '</h1>'
             . ($lines === '' ? '' : '<ul class="lines">' . $lines . '</ul>')
-            . '<a class="button" href="' . $this->escaper->escapeUrl($this->adminUrl()) . '">'
-            . $this->escaper->escapeHtml((string) __('Go to MONEI settings')) . '</a>'
-            . $hint
+            . $next
             . '</main></body></html>';
     }
 
