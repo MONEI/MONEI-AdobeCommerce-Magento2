@@ -22,9 +22,16 @@ interface PaymentProcessorInterface
      * @param string $orderId Order increment ID
      * @param string $paymentId MONEI payment ID
      * @param array $paymentData Payment data from MONEI
+     * @param int|null $orderEntityId The order a caller already resolved (a callback: in the request's website);
+     *     else the order is found by increment ID
      * @return PaymentProcessingResultInterface
      */
-    public function process(string $orderId, string $paymentId, array $paymentData): PaymentProcessingResultInterface;
+    public function process(
+        string $orderId,
+        string $paymentId,
+        array $paymentData,
+        ?int $orderEntityId = null
+    ): PaymentProcessingResultInterface;
 
     /**
      * Check if a payment is currently being processed

@@ -33,6 +33,7 @@ MONEI Payments for Adobe Commerce (Magento 2) allows you to seamlessly integrate
 - Customizable payment experience to match your store's design
 - Integration with the official MONEI PHP SDK for reliable API communication
 - Automatic Apple Pay domain verification through configuration settings
+- Connect with MONEI: the store gets its own scoped API key and signing secret, per configuration scope, without copying keys by hand
 - Payments of logged-in customers link to a MONEI customer
 - Deleting a saved card in Magento also deletes it at MONEI (only cards saved after the customer link)
 - Deleting a Magento customer also deletes the linked MONEI customer and the cards saved under it
@@ -43,7 +44,7 @@ MONEI Payments for Adobe Commerce (Magento 2) allows you to seamlessly integrate
 - PHP: ^8.1.0
 - Magento: >=2.4.4 (Support for Magento 2.4.0-2.4.3 release line ended on November 28, 2022) ([Adobe Commerce Release Versions](https://experienceleague.adobe.com/en/docs/commerce-operations/release/versions))
 - MONEI Account ([Sign up here](https://monei.com/signup))
-- MONEI PHP SDK: ^2.13 (automatically installed with Composer)
+- MONEI PHP SDK: ^2.16 (automatically installed with Composer)
 
 ## Installation
 
@@ -81,7 +82,7 @@ Go to your Adobe Commerce (Magento 2) root directory.
 3. Install the MONEI PHP SDK:
 
 ```bash
-composer require monei/monei-php-sdk:^2.13
+composer require monei/monei-php-sdk:^2.16
 ```
 
 4. Go to your Adobe Commerce (Magento 2) root directory and run:
@@ -132,3 +133,11 @@ When testing your integration:
 
 - Use your [test mode](https://docs.monei.com/docs/testing) API Key from [MONEI Dashboard → Settings → API Access](https://dashboard.monei.com/settings/api)
 - Check the status of test payments in your [MONEI Dashboard → Payments](https://dashboard.monei.com/payments) (in test mode)
+
+### Connect with MONEI
+
+In **Stores → Configuration → Sales → Payment Methods → MONEI**, pick the scope and click **Connect with MONEI**. Sign in to MONEI in the new tab and approve. The store then uses its own scoped key (`mk_`) and verifies callbacks with its signing secret. **Disconnect** clears the connected credentials of that scope and keeps manual keys; revoke the old keys in [MONEI Dashboard → Settings → API Access](https://dashboard.monei.com/settings/api).
+
+The button needs an `https` store URL that MONEI accepts. Otherwise the page shows "Use manual keys", and the manual key fields work as before.
+
+For development, point the module at another broker with the `MONEI_CONNECT_BASE_URL` environment variable (or a PHP constant of that name). The broker accepts only a public `https` callback URL, so a local store needs a tunnel.

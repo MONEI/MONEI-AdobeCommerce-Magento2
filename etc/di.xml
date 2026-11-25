@@ -697,7 +697,6 @@
       <argument name="logger" xsi:type="object">Monei\MoneiPayment\Service\Logger</argument>
       <argument name="resultJsonFactory" xsi:type="object">Magento\Framework\Controller\Result\JsonFactory</argument>
       <argument name="paymentProcessor" xsi:type="object">Monei\MoneiPayment\Api\PaymentProcessorInterface</argument>
-      <argument name="apiClient" xsi:type="object">Monei\MoneiPayment\Model\Api\MoneiApiClient</argument>
       <argument name="orderRepository" xsi:type="object">Magento\Sales\Api\OrderRepositoryInterface</argument>
     </arguments>
   </type>

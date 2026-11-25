@@ -121,12 +121,11 @@ class GetPaymentMethodsTest extends TestCase
 
         $paymentMethodsMock = $this->createMock(PaymentMethods::class);
 
-        // Expect account ID to be set on MoneiClient
+        // MONEI refuses a scoped (mk_) key that sends MONEI-Account-ID, and setAccountId sticks on the cached client
         $this
             ->moneiClientMock
-            ->expects($this->once())
-            ->method('setAccountId')
-            ->with($accountId);
+            ->expects($this->never())
+            ->method('setAccountId');
 
         // Expect payment methods to be fetched
         $this
@@ -167,12 +166,11 @@ class GetPaymentMethodsTest extends TestCase
             ->with(null)
             ->willReturn($configAccountId);
 
-        // Expect account ID to be set on MoneiClient
+        // MONEI refuses a scoped (mk_) key that sends MONEI-Account-ID, and setAccountId sticks on the cached client
         $this
             ->moneiClientMock
-            ->expects($this->once())
-            ->method('setAccountId')
-            ->with($configAccountId);
+            ->expects($this->never())
+            ->method('setAccountId');
 
         // Expect payment methods to be fetched
         $this

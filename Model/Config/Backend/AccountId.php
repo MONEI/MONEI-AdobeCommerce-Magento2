@@ -14,17 +14,19 @@ namespace Monei\MoneiPayment\Model\Config\Backend;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\App\Config\Value;
+use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Data\Collection\AbstractDb;
+use Magento\Framework\Message\ManagerInterface as MessageManager;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Registry;
 use Monei\MoneiPayment\Registry\AccountId as RegistryAccountId;
 
 /**
- * Backend model for handling MONEI account ID configuration.
+ * Backend model for handling MONEI account ID configuration. A page loaded before a Connect or a Disconnect does
+ * not write its account ID back (CredentialValue).
  */
-class AccountId extends Value
+class AccountId extends CredentialValue
 {
     /**
      * Registry for storing account ID.
@@ -52,6 +54,8 @@ class AccountId extends Value
      * @param Registry $registry
      * @param ScopeConfigInterface $config
      * @param TypeListInterface $cacheTypeList
+     * @param RequestInterface $request
+     * @param MessageManager $messageManager
      * @param RegistryAccountId $registryAccountId
      * @param WriterInterface $configWriter
      * @param AbstractResource|null $resource
@@ -63,6 +67,8 @@ class AccountId extends Value
         Registry $registry,
         ScopeConfigInterface $config,
         TypeListInterface $cacheTypeList,
+        RequestInterface $request,
+        MessageManager $messageManager,
         RegistryAccountId $registryAccountId,
         WriterInterface $configWriter,
         ?AbstractResource $resource = null,
@@ -72,7 +78,17 @@ class AccountId extends Value
         $this->registryAccountId = $registryAccountId;
         $this->configWriter = $configWriter;
         $this->registry = $registry;
-        parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);
+        parent::__construct(
+            $context,
+            $registry,
+            $config,
+            $cacheTypeList,
+            $request,
+            $messageManager,
+            $resource,
+            $resourceCollection,
+            $data
+        );
     }
 
     /**
@@ -82,7 +98,8 @@ class AccountId extends Value
      */
     public function beforeSave(): AccountId
     {
-        if ($this->getValue()) {
+        parent::beforeSave();
+        if ($this->isSaveAllowed() && $this->getValue()) {
             $this->registryAccountId->set($this->getValue());
 
             // Store the value in a more persistent way than the registry
@@ -94,7 +111,7 @@ class AccountId extends Value
             );
         }
 
-        return parent::beforeSave();
+        return $this;
     }
 
     /**

@@ -105,6 +105,8 @@ class AccountIdTest extends TestCase
             $this->registryMock,
             $this->configMock,
             $this->cacheTypeListMock,
+            $this->createMock(\Magento\Framework\App\RequestInterface::class),
+            $this->createMock(\Magento\Framework\Message\ManagerInterface::class),
             $this->registryAccountIdMock,
             $this->configWriterMock,
             $this->resourceMock,

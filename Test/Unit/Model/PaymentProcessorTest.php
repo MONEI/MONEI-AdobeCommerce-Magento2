@@ -977,11 +977,61 @@ class PaymentProcessorTest extends TestCase
         return $processor->process('000000001', 'pay_123', ['id' => 'pay_123']);
     }
 
+    /**
+     * Bug: a settled order keeps no MONEI status, so the forward check of unsigned callbacks takes a replay of
+     * the same payment for a first one; or the status is not saved with the settled order.
+     */
+    public function testASettledPaymentStoresItsMoneiStatusWithTheOrder(): void
+    {
+        $payment = $this->createMock(OrderPaymentInterface::class);
+        $stored = [];
+        $payment->method('setAdditionalInformation')->willReturnCallback(function ($key, $value) use (&$stored, $payment) {
+            $stored[$key] = $value;
+            return $payment;
+        });
+        $this->givenLockedOrder('000000001', 10.00, 'EUR', Order::STATE_NEW, $payment);
+        $saved = null;
+        $this->orderRepository->method('save')->willReturnCallback(function ($order) use (&$stored, &$saved) {
+            $saved = $stored['monei_payment_status'] ?? null;
+            return $order;
+        });
+
+        $this->processPaymentDto($this->createPaymentDto('pay_1', Status::SUCCEEDED, 1000, 'EUR'));
+
+        $this->assertSame('SUCCEEDED', $saved);
+    }
+
+    /**
+     * Bug: a callback resolved to one store's order changes another store's order with the same increment id
+     * (increment ids repeat across stores), or one whose increment id is not the payment's.
+     *
+     * @dataProvider resolvedOrders
+     */
+    public function testAResolvedOrderIsLoadedByEntityIdNotByIncrementId(string $incrementId, bool $found): void
+    {
+        $this->order->expects($this->never())->method('loadByIncrementId');
+        $this->order->expects($this->once())->method('load')->with(42)->willReturnSelf();
+        $this->order->method('getId')->willReturn(42);
+        $this->order->method('getIncrementId')->willReturn($incrementId);
+        $this->paymentDtoFactory->method('createFromArray')
+            ->willReturn($this->createPaymentDto('pay_1', Status::PENDING, 1000, 'EUR'));
+
+        $result = $this->paymentProcessor->process('000000001', 'pay_1', ['id' => 'pay_1'], 42);
+
+        $this->assertSame($found, $result->getStatusCode() !== PaymentErrorCodeInterface::ERROR_NOT_FOUND);
+    }
+
+    public function resolvedOrders(): array
+    {
+        return ['the payment\'s order' => ['000000001', true], 'another increment id' => ['000000002', false]];
+    }
+
     private function givenLockedOrder(
         string $incrementId,
         float $baseGrandTotal,
         string $baseCurrency,
-        string $state = Order::STATE_NEW
+        string $state = Order::STATE_NEW,
+        ?OrderPaymentInterface $payment = null
     ): void {
         $this->order->method('loadByIncrementId')->with($incrementId)->willReturn($this->order);
         $this->order->method('getId')->willReturn(1);
@@ -989,7 +1039,7 @@ class PaymentProcessorTest extends TestCase
         $this->order->method('getState')->willReturn($state);
         $this->order->method('getBaseGrandTotal')->willReturn($baseGrandTotal);
         $this->order->method('getBaseCurrencyCode')->willReturn($baseCurrency);
-        $this->order->method('getPayment')->willReturn($this->createMock(OrderPaymentInterface::class));
+        $this->order->method('getPayment')->willReturn($payment ?? $this->createMock(OrderPaymentInterface::class));
         $this->lockManager->method('lockOrder')->willReturn(true);
     }
 

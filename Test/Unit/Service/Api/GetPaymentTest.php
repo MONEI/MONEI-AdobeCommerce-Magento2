@@ -15,6 +15,7 @@ use Magento\Framework\Exception\LocalizedException;
 use Monei\Api\PaymentsApi;
 use Monei\Model\Payment as MoneiPayment;
 use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
+use Monei\MoneiPayment\Service\Api\FetchedPayments;
 use Monei\MoneiPayment\Service\Api\GetPayment;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\Logger;
@@ -99,7 +100,8 @@ class GetPaymentTest extends TestCase
         $this->_getPaymentService = new GetPayment(
             $this->_loggerMock,
             $this->_exceptionHandlerMock,
-            $this->_apiClientMock
+            $this->_apiClientMock,
+            new FetchedPayments()
         );
     }
 

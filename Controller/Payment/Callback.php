@@ -23,8 +23,8 @@ use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Monei\MoneiPayment\Api\PaymentProcessorInterface;
 use Monei\MoneiPayment\Controller\Payment\InvalidPaymentDataException;
-use Monei\MoneiPayment\Model\Api\MoneiApiClient;
 use Monei\MoneiPayment\Model\Data\PaymentDTOFactory;
+use Monei\MoneiPayment\Service\Connect\CallbackVerifier;
 use Monei\MoneiPayment\Service\Logger;
 use Exception;
 
@@ -33,11 +33,6 @@ use Exception;
  */
 class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
 {
-    /**
-     * @var string
-     */
-    private string $errorMessage = '';
-
     /**
      * @var Logger
      */
@@ -54,9 +49,9 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     private PaymentProcessorInterface $paymentProcessor;
 
     /**
-     * @var MoneiApiClient
+     * @var CallbackVerifier
      */
-    private MoneiApiClient $apiClient;
+    private CallbackVerifier $callbackVerifier;
 
     /**
      * @var OrderRepositoryInterface
@@ -74,11 +69,6 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
     private HttpResponse $response;
 
     /**
-     * @var object|null
-     */
-    private $verifiedPayment = null;
-
-    /**
      * @var PaymentDTOFactory
      */
     private PaymentDTOFactory $paymentDtoFactory;
@@ -92,7 +82,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
      * @param Logger $logger
      * @param JsonFactory $resultJsonFactory
      * @param PaymentProcessorInterface $paymentProcessor
-     * @param MoneiApiClient $apiClient
+     * @param CallbackVerifier $callbackVerifier
      * @param OrderRepositoryInterface $orderRepository
      * @param HttpRequest $request
      * @param HttpResponse $response
@@ -103,7 +93,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         Logger $logger,
         JsonFactory $resultJsonFactory,
         PaymentProcessorInterface $paymentProcessor,
-        MoneiApiClient $apiClient,
+        CallbackVerifier $callbackVerifier,
         OrderRepositoryInterface $orderRepository,
         HttpRequest $request,
         HttpResponse $response,
@@ -113,7 +103,7 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
         $this->logger = $logger;
         $this->resultJsonFactory = $resultJsonFactory;
         $this->paymentProcessor = $paymentProcessor;
-        $this->apiClient = $apiClient;
+        $this->callbackVerifier = $callbackVerifier;
         $this->orderRepository = $orderRepository;
         $this->request = $request;
         $this->response = $response;
@@ -140,11 +130,14 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
             $this->logger->debug('[Callback] =============================================');
             $this->logger->debug('[Callback] Payment callback received');
 
-            // Process the verified payment from validateForCsrf
-            if ($this->verifiedPayment) {
-                // Convert Payment object to array
-                $paymentData = (array) $this->verifiedPayment;
+            $signature = $this->request->getHeader('MONEI-Signature');
+            $decision = $this->callbackVerifier->verify(
+                (string) $this->request->getContent(),
+                is_string($signature) && $signature !== '' ? $signature : null
+            );
+            $paymentData = $decision['payment'];
 
+            if ($paymentData !== null) {
                 $this->logger->debug('[Callback] Processing payment', [
                     'payment_id' => $paymentData['id'] ?? 'unknown',
                     'order_id' => $paymentData['orderId'] ?? 'unknown',
@@ -172,7 +165,8 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
                     $result = $this->paymentProcessor->process(
                         $paymentDTO->getOrderId(),
                         $paymentDTO->getId(),
-                        $paymentDTO->getRawData()
+                        $paymentDTO->getRawData(),
+                        $decision['order']
                     );
 
                     $this->logger->debug('[Callback] Payment processing result', [
@@ -196,12 +190,15 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
 
                     return $response->setData(['error' => 'Error processing payment data: ' . $e->getMessage()]);
                 }
+            } elseif ($decision['status'] === 200) {
+                // A payment that must not change the order: 200, so MONEI does not retry.
+                $this->logger->warning('[Callback] Payment not processed: ' . $decision['reason']);
             } else {
-                $this->logger->error('[Callback] Invalid signature or payment data');
+                $this->logger->error('[Callback] Callback refused: ' . $decision['reason']);
                 $response = $this->resultJsonFactory->create();
-                $response->setHttpResponseCode(401);
+                $response->setHttpResponseCode($decision['status']);
 
-                return $response->setData(['error' => 'Invalid signature']);
+                return $response->setData(['error' => 'Callback refused']);
             }
 
             return $this->resultJsonFactory->create()->setData(['received' => true]);
@@ -222,44 +219,18 @@ class Callback implements CsrfAwareActionInterface, HttpPostActionInterface
      */
     public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
     {
-        $this->response->setHttpResponseCode(403);
-        $this->response->setReasonPhrase($this->errorMessage);
-
-        return new InvalidRequestException($this->response);
+        return null;
     }
 
     /**
-     * @inheritDoc
+     * The callback has no form key. execute() checks it with CallbackVerifier, which can answer 400, 401 or 503;
+     * a refusal here could only answer 403.
+     *
+     * @param RequestInterface $request
+     * @return bool|null
      */
     public function validateForCsrf(RequestInterface $request): ?bool
     {
-        try {
-            $body = $request->getContent();
-            $signatureHeader = $request->getHeader('MONEI-Signature');
-
-            if (empty($signatureHeader)) {
-                $this->errorMessage = 'Missing signature header';
-                $this->logger->critical('[Callback CSRF] Missing signature header');
-
-                return false;
-            }
-
-            $signature = $signatureHeader;
-
-            // Verify signature and store the result for later use in execute()
-            $this->verifiedPayment = $this->apiClient->getMoneiSdk()->verifySignature($body, $signature);
-            $isValid = !empty($this->verifiedPayment);
-
-            if (!$isValid) {
-                $this->errorMessage = 'Invalid signature';
-            }
-
-            return $isValid;
-        } catch (Exception $e) {
-            $this->errorMessage = $e->getMessage();
-            $this->logger->critical('[Callback CSRF] ' . $e->getMessage());
-
-            return false;
-        }
+        return true;
     }
 }

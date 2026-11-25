@@ -52,6 +52,10 @@
           </comment>
           <source_model>Monei\MoneiPayment\Model\Config\Source\LogLevel</source_model>
         </field>
+        <field id="connect" translate="label" sortOrder="27" showInDefault="1" showInWebsite="1" showInStore="1">
+          <label>Connect with MONEI</label>
+          <frontend_model>Monei\MoneiPayment\Block\System\Config\Form\Field\ConnectButton</frontend_model>
+        </field>
         <field
           id="mode"
           translate="label comment"
@@ -64,6 +68,7 @@
           <label>Mode</label>
           <comment>To define if we are going to connect with production or testing WS environment</comment>
           <source_model>Monei\MoneiPayment\Model\Config\Source\Mode</source_model>
+          <backend_model>Monei\MoneiPayment\Model\Config\Backend\CredentialValue</backend_model>
         </field>
         <field
           id="test_account_id"
@@ -75,7 +80,6 @@
           showInStore="1"
         >
           <label>Test Account Id</label>
-          <validate>required-entry</validate>
           <backend_model>Monei\MoneiPayment\Model\Config\Backend\AccountId</backend_model>
           <depends>
             <field id="mode">1</field>
@@ -91,7 +95,6 @@
           showInStore="1"
         >
           <label>Production Account Id</label>
-          <validate>required-entry</validate>
           <backend_model>Monei\MoneiPayment\Model\Config\Backend\AccountId</backend_model>
           <depends>
             <field id="mode">2</field>
@@ -107,7 +110,8 @@
           showInStore="1"
         >
           <label>Test Api Key</label>
-          <validate>required-entry</validate>
+          <frontend_model>Monei\MoneiPayment\Block\System\Config\Form\Field\ApiKeyField</frontend_model>
+          <backend_model>Monei\MoneiPayment\Model\Config\Backend\ApiKey</backend_model>
           <depends>
             <field id="mode">1</field>
           </depends>
@@ -122,7 +126,8 @@
           showInStore="1"
         >
           <label>Production Api Key</label>
-          <validate>required-entry</validate>
+          <frontend_model>Monei\MoneiPayment\Block\System\Config\Form\Field\ApiKeyField</frontend_model>
+          <backend_model>Monei\MoneiPayment\Model\Config\Backend\ApiKey</backend_model>
           <depends>
             <field id="mode">2</field>
           </depends>

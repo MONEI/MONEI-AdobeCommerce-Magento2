@@ -1,481 +1,165 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Monei\MoneiPayment\Test\Unit\Controller\Payment;
 
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Request\Http as HttpRequest;
-use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\Response\Http as HttpResponse;
-use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Monei\MoneiPayment\Api\PaymentProcessingResultInterface;
 use Monei\MoneiPayment\Api\PaymentProcessorInterface;
 use Monei\MoneiPayment\Controller\Payment\Callback;
-use Monei\MoneiPayment\Model\Api\MoneiApiClient;
-use Monei\MoneiPayment\Model\Data\PaymentDTO;
 use Monei\MoneiPayment\Model\Data\PaymentDTOFactory;
+use Monei\MoneiPayment\Model\Service\StatusCodeHandler;
+use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
+use Monei\MoneiPayment\Service\Api\GetPayment;
+use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\Logger;
-use Monei\MoneiClient;
-use PHPUnit\Framework\TestCase;
+use Monei\MoneiPayment\Test\Unit\Service\Connect\VerifierTestCase;
+use PHPUnit\Framework\MockObject\MockObject;
 
 /**
- * Test for the CSRF protection methods in the Callback controller
+ * The payment callback: it processes only the payment that CallbackVerifier returns, and answers its status.
+ *
+ * Every test names the bug it catches.
  */
-class CallbackTest extends TestCase
+class CallbackTest extends VerifierTestCase
 {
-    /**
-     * @var Callback
-     */
-    private $callbackController;
+    /** @var PaymentProcessorInterface|MockObject */
+    private $paymentProcessor;
+
+    /** @var int[] HTTP codes the controller set */
+    private array $codes = [];
+
+    private function controller(string $body, ?string $signature): Callback
+    {
+        $request = $this->createMock(HttpRequest::class);
+        $request->method('getContent')->willReturn($body);
+        $request->method('getHeader')->with('MONEI-Signature')->willReturn($signature ?? false);
+
+        $json = $this->createMock(Json::class);
+        $json->method('setHttpResponseCode')->willReturnCallback(function (int $code) use ($json) {
+            $this->codes[] = $code;
+            return $json;
+        });
+        $json->method('setData')->willReturnSelf();
+        $jsonFactory = $this->createMock(JsonFactory::class);
+        $jsonFactory->method('create')->willReturn($json);
+
+        $this->paymentProcessor = $this->createMock(PaymentProcessorInterface::class);
+
+        return new Callback(
+            $this->createMock(Logger::class),
+            $jsonFactory,
+            $this->paymentProcessor,
+            $this->verifier(),
+            $this->createMock(OrderRepositoryInterface::class),
+            $request,
+            $this->createMock(HttpResponse::class),
+            new PaymentDTOFactory(new StatusCodeHandler()),
+            $this->createMock(ScopeConfigInterface::class)
+        );
+    }
 
     /**
-     * @var Logger|\PHPUnit\Framework\MockObject\MockObject
+     * Bug: the handler processes the request body, not the payment MONEI answers, so a forged body settles the
+     * order; or the fetched payment never reaches the processor; or the processor looks the increment id up again
+     * across all stores instead of changing the order the verifier checked; or processing it (the order email, the
+     * vault token) fetches it again through GetPayment.
      */
-    private $loggerMock;
+    public function testAFetchedSucceededPaymentReachesTheProcessor(): void
+    {
+        $controller = $this->controller(
+            self::body(self::paymentFields('SUCCEEDED', ['statusMessage' => 'from the body'])),
+            null
+        );
+        $result = $this->createMock(PaymentProcessingResultInterface::class);
+        $result->method('isSuccess')->willReturn(true);
+        $this->paymentProcessor->expects($this->once())->method('process')
+            ->willReturnCallback(function (string $orderId, string $paymentId, array $payment, ?int $entityId) use (
+                $result
+            ) {
+                $this->assertSame(
+                    ['000000101', self::ID, 'SUCCEEDED', 'Transaction approved', 7],
+                    [$orderId, $paymentId, $payment['status'], $payment['statusMessage'], $entityId]
+                );
+                $apiClient = $this->createMock(MoneiApiClient::class);
+                $apiClient->expects($this->never())->method('getMoneiSdk');
+                $getPayment = new GetPayment(
+                    $this->createMock(Logger::class),
+                    $this->createMock(ApiExceptionHandler::class),
+                    $apiClient,
+                    $this->fetchedPayments
+                );
+                $this->assertSame('SUCCEEDED', $getPayment->execute($paymentId)->getStatus());
+                return $result;
+            });
+
+        $controller->execute();
+
+        $this->assertSame([], $this->codes);
+        $this->assertCount(1, $this->fetches);
+    }
 
     /**
-     * @var JsonFactory|\PHPUnit\Framework\MockObject\MockObject
-     */
-    private $jsonFactoryMock;
-
-    /**
-     * @var PaymentProcessorInterface|\PHPUnit\Framework\MockObject\MockObject
-     */
-    private $paymentProcessorMock;
-
-    /**
-     * @var MoneiApiClient|\PHPUnit\Framework\MockObject\MockObject
-     */
-    private $apiClientMock;
-
-    /**
-     * @var OrderRepositoryInterface|\PHPUnit\Framework\MockObject\MockObject
-     */
-    private $orderRepositoryMock;
-
-    /**
-     * @var HttpRequest|\PHPUnit\Framework\MockObject\MockObject
-     */
-    private $requestMock;
-
-    /**
-     * @var HttpResponse|\PHPUnit\Framework\MockObject\MockObject
-     */
-    private $responseMock;
-
-    /**
-     * @var PaymentDTOFactory|\PHPUnit\Framework\MockObject\MockObject
-     */
-    private $paymentDtoFactoryMock;
-
-    /**
-     * @var \Magento\Framework\App\Config\ScopeConfigInterface|\PHPUnit\Framework\MockObject\MockObject
-     */
-    private $configMock;
-
-    /**
-     * @var Json|\PHPUnit\Framework\MockObject\MockObject
-     */
-    private $jsonResponseMock;
-
-    /**
-     * @var \Monei\MoneiClient|\PHPUnit\Framework\MockObject\MockObject
-     */
-    private $moneiSdkMock;
-
-    /**
-     * @var PaymentDTO|\PHPUnit\Framework\MockObject\MockObject
-     */
-    private $paymentDtoMock;
-
-    /**
-     * @var PaymentProcessingResultInterface|\PHPUnit\Framework\MockObject\MockObject
-     */
-    private $processingResultMock;
-
-    /**
-     * Set up test environment
+     * Bug: a payment that must not change the order is refused in validateForCsrf, which can only answer 403, so
+     * MONEI retries for days; or it reaches the processor (an unsigned replay of a settled payment reopens the
+     * order the merchant canceled).
      *
-     * @return void
+     * @dataProvider paymentsThatMustNotChangeTheOrder
      */
-    protected function setUp(): void
+    public function testAPaymentThatMustNotChangeTheOrderAnswers200AndIsNotProcessed(array $remote, array $order): void
     {
-        $this->loggerMock = $this->createMock(Logger::class);
-        $this->jsonFactoryMock = $this->createMock(JsonFactory::class);
-        $this->paymentProcessorMock = $this->createMock(PaymentProcessorInterface::class);
-        $this->apiClientMock = $this->createMock(MoneiApiClient::class);
-        $this->orderRepositoryMock = $this->createMock(OrderRepositoryInterface::class);
-        $this->requestMock = $this->createMock(HttpRequest::class);
-        $this->responseMock = $this->createMock(HttpResponse::class);
-        $this->paymentDtoFactoryMock = $this->createMock(PaymentDTOFactory::class);
-        $this->configMock = $this->createMock(\Magento\Framework\App\Config\ScopeConfigInterface::class);
-        $this->jsonResponseMock = $this->createMock(Json::class);
-        $this->moneiSdkMock = $this->createMock(\Monei\MoneiClient::class);
-        $this->paymentDtoMock = $this->createMock(PaymentDTO::class);
-        $this->processingResultMock = $this->createMock(PaymentProcessingResultInterface::class);
+        $this->remote = $remote;
+        $this->orders['000000101'] = $order + $this->orders['000000101'];
+        $controller = $this->controller(self::body(self::paymentFields('SUCCEEDED')), null);
+        $this->paymentProcessor->expects($this->never())->method('process');
 
-        $this->jsonFactoryMock->method('create')->willReturn($this->jsonResponseMock);
-        $this->apiClientMock->method('getMoneiSdk')->willReturn($this->moneiSdkMock);
+        $this->assertTrue($controller->validateForCsrf($this->createMock(HttpRequest::class)));
+        $controller->execute();
 
-        $this->callbackController = new Callback(
-            $this->loggerMock,
-            $this->jsonFactoryMock,
-            $this->paymentProcessorMock,
-            $this->apiClientMock,
-            $this->orderRepositoryMock,
-            $this->requestMock,
-            $this->responseMock,
-            $this->paymentDtoFactoryMock,
-            $this->configMock
-        );
+        $this->assertSame([], $this->codes);
+    }
+
+    public function paymentsThatMustNotChangeTheOrder(): array
+    {
+        return [
+            'forged SUCCEEDED, MONEI says PENDING' => [self::paymentFields('PENDING'), []],
+            'stored SUCCEEDED, order canceled, MONEI says SUCCEEDED' => [
+                self::paymentFields('SUCCEEDED'),
+                ['state' => 'canceled', 'paymentId' => self::ID, 'storedStatus' => 'SUCCEEDED', 'paid' => true],
+            ],
+        ];
     }
 
     /**
-     * Test that the CSRF validation exception returns the expected type
+     * Bug: an error while the order is processed answers 2xx, so MONEI never retries and the order stays open.
      */
-    public function testCreateCsrfValidationException(): void
+    public function testAProcessingErrorAnswers500(): void
     {
-        $request = $this->createMock(RequestInterface::class);
-        $response = $this->createMock(HttpResponse::class);
+        $controller = $this->controller(self::body($this->remote), null);
+        $this->paymentProcessor->method('process')->willThrowException(new \RuntimeException('database gone'));
 
-        // Set expected HTTP code
-        $response
-            ->expects($this->once())
-            ->method('setHttpResponseCode')
-            ->with(403);
+        $controller->execute();
 
-        // Set reason phrase (empty string in our test)
-        $response
-            ->expects($this->once())
-            ->method('setReasonPhrase')
-            ->with('');
-
-        // Use the main test controller with modified response
-        $this->responseMock = $response;
-        $callback = new Callback(
-            $this->loggerMock,
-            $this->jsonFactoryMock,
-            $this->paymentProcessorMock,
-            $this->apiClientMock,
-            $this->orderRepositoryMock,
-            $this->requestMock,
-            $response,
-            $this->paymentDtoFactoryMock,
-            $this->configMock
-        );
-
-        // Get exception
-        $exception = $callback->createCsrfValidationException($request);
-
-        // Verify exception type
-        $this->assertInstanceOf(InvalidRequestException::class, $exception);
+        $this->assertSame([500], $this->codes);
     }
 
     /**
-     * Test CSRF validation with missing signature
+     * Bug: a failed fetch answers 200, so MONEI never retries and the order stays open.
      */
-    public function testValidateForCsrfWithMissingSignature(): void
+    public function testAFailedFetchAnswers503(): void
     {
-        $logger = $this->createMock(Logger::class);
-        $logger
-            ->expects($this->once())
-            ->method('critical')
-            ->with('[Callback CSRF] Missing signature header');
+        $this->fetchFails = true;
+        $controller = $this->controller(self::body($this->remote), null);
+        $this->paymentProcessor->expects($this->never())->method('process');
 
-        // Create controller for testing
-        $callback = new Callback(
-            $logger,
-            $this->createMock(JsonFactory::class),
-            $this->createMock(PaymentProcessorInterface::class),
-            $this->createMock(MoneiApiClient::class),
-            $this->createMock(OrderRepositoryInterface::class),
-            $this->createMockRequestWithContent('{}', null),
-            $this->createMock(HttpResponse::class),
-            $this->createMock(PaymentDTOFactory::class),
-            $this->createMock(\Magento\Framework\App\Config\ScopeConfigInterface::class)
-        );
+        $controller->execute();
 
-        // Execute validation and check result
-        $request = $this->createMockRequestWithContent('{}', null);
-        $result = $callback->validateForCsrf($request);
-        $this->assertFalse($result);
-    }
-
-    /**
-     * Test validate for CSRF with valid signature
-     */
-    public function testValidateForCsrfWithValidSignature(): void
-    {
-        // Use the same test payload format as MONEI PHP SDK
-        $timestamp = '1602604555';
-        $rawBody = '{"id":"3690bd3f7294db82fed08c7371bace32","amount":11700,"currency":"EUR","orderId":"000000001","status":"SUCCEEDED","message":"Transaction Approved"}';
-
-        // Generate signature in the same format as the SDK tests
-        $hmac = hash_hmac('SHA256', $timestamp . '.' . $rawBody, 'test_api_key');
-        $signature = "t={$timestamp},v1={$hmac}";
-
-        // Expected payment data (the Object that would be returned from verifySignature)
-        $paymentData = json_decode($rawBody);
-
-        // Create mock for MoneiSdk
-        $moneiSdkMock = $this
-            ->getMockBuilder(\Monei\MoneiClient::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        // Have the mock return a stdClass (simulating decoded payment data)
-        $moneiSdkMock
-            ->method('verifySignature')
-            ->with($this->anything(), $signature)
-            ->willReturn($paymentData);
-
-        // Create API client mock returning our SDK mock
-        $apiClientMock = $this->createMock(MoneiApiClient::class);
-        $apiClientMock->method('getMoneiSdk')->willReturn($moneiSdkMock);
-
-        // Create logger mock that allows multiple calls
-        $loggerMock = $this->createMock(Logger::class);
-
-        // Create request mock
-        $requestMock = $this->createMockRequestWithContent($rawBody, $signature);
-
-        // Create controller with our mocks
-        $controller = new Callback(
-            $loggerMock,
-            $this->createMock(JsonFactory::class),
-            $this->createMock(PaymentProcessorInterface::class),
-            $apiClientMock,
-            $this->createMock(OrderRepositoryInterface::class),
-            $requestMock,
-            $this->createMock(HttpResponse::class),
-            $this->createMock(PaymentDTOFactory::class),
-            $this->createMock(\Magento\Framework\App\Config\ScopeConfigInterface::class)
-        );
-
-        // Execute the validateForCsrf method
-        $result = $controller->validateForCsrf($requestMock);
-
-        // Assert result is true (valid signature)
-        $this->assertTrue($result);
-    }
-
-    /**
-     * Test validate for CSRF with missing header
-     */
-    public function testValidateForCsrfWithMissingHeader(): void
-    {
-        // Use a simple payload
-        $rawBody = '{"id":"test123","amount":10000}';
-
-        // Create logger mock that expects critical error to be logged for missing header
-        $loggerMock = $this->createMock(Logger::class);
-        $loggerMock
-            ->expects($this->once())
-            ->method('critical')
-            ->with('[Callback CSRF] Missing signature header');
-
-        // Create controller with a null signature
-        $controller = new Callback(
-            $loggerMock,
-            $this->createMock(JsonFactory::class),
-            $this->createMock(PaymentProcessorInterface::class),
-            $this->createMock(MoneiApiClient::class),
-            $this->createMock(OrderRepositoryInterface::class),
-            $this->createMockRequestWithContent($rawBody, null),
-            $this->createMock(HttpResponse::class),
-            $this->createMock(PaymentDTOFactory::class),
-            $this->createMock(\Magento\Framework\App\Config\ScopeConfigInterface::class)
-        );
-
-        // Execute the validateForCsrf method with our mocked request
-        $requestMock = $this->createMockRequestWithContent($rawBody, null);
-        $result = $controller->validateForCsrf($requestMock);
-
-        // Assert result is false (invalid due to missing header)
-        $this->assertFalse($result);
-    }
-
-    /**
-     * Test validate for CSRF with exception during validation
-     */
-    public function testValidateForCsrfWithException(): void
-    {
-        // Use a simple payload
-        $rawBody = '{"id":"test123","amount":10000}';
-        $signature = 'valid_signature';
-
-        // Create request mock
-        $requestMock = $this->createMockRequestWithContent($rawBody, $signature);
-
-        // Create moneiSdkMock to throw exception when verifying signature
-        $moneiSdkMock = $this
-            ->getMockBuilder(\Monei\MoneiClient::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $moneiSdkMock
-            ->method('verifySignature')
-            ->with($this->anything(), $signature)
-            ->willThrowException(new \Exception('Test exception during signature verification'));
-
-        // Create API client mock
-        $apiClientMock = $this->createMock(MoneiApiClient::class);
-        $apiClientMock->method('getMoneiSdk')->willReturn($moneiSdkMock);
-
-        // Create logger mock that expects critical error to be logged for exception
-        $loggerMock = $this->createMock(Logger::class);
-        $loggerMock
-            ->expects($this->once())
-            ->method('critical')
-            ->with($this->stringContains('[Callback CSRF] Test exception during signature verification'));
-
-        // Create controller with our mocks
-        $controller = new Callback(
-            $loggerMock,
-            $this->createMock(JsonFactory::class),
-            $this->createMock(PaymentProcessorInterface::class),
-            $apiClientMock,
-            $this->createMock(OrderRepositoryInterface::class),
-            $requestMock,
-            $this->createMock(HttpResponse::class),
-            $this->createMock(PaymentDTOFactory::class),
-            $this->createMock(\Magento\Framework\App\Config\ScopeConfigInterface::class)
-        );
-
-        // Execute the validateForCsrf method
-        $result = $controller->validateForCsrf($requestMock);
-
-        // Assert result is false (exception during validation)
-        $this->assertFalse($result);
-    }
-
-    /**
-     * Test execute with successful payment
-     */
-    public function testExecuteWithSuccessfulPayment(): void
-    {
-        // Use the same test payload format as MONEI PHP SDK
-        $timestamp = '1602604555';
-        $rawBody = '{"id":"3690bd3f7294db82fed08c7371bace32","amount":11700,"currency":"EUR","orderId":"000000001","status":"SUCCEEDED","message":"Transaction Approved"}';
-
-        // Generate signature in the same format as the SDK tests
-        $hmac = hash_hmac('SHA256', $timestamp . '.' . $rawBody, 'test_api_key');
-        $signature = "t={$timestamp},v1={$hmac}";
-
-        // Create request mock
-        $requestMock = $this->createMockRequestWithContent($rawBody, $signature);
-
-        // Expected payment data (the Object that would be returned from verifySignature)
-        $paymentData = json_decode($rawBody);
-
-        // Create a fully mocked instance for this test
-        $jsonResponseMock = $this->createMock(Json::class);
-        $jsonFactoryMock = $this->createMock(JsonFactory::class);
-        $jsonFactoryMock->method('create')->willReturn($jsonResponseMock);
-
-        // Setup result data for successful response - allow any parameters for setData
-        $jsonResponseMock
-            ->method('setData')
-            ->willReturnSelf();
-
-        // Also allow setHttpResponseCode to be called (for error cases)
-        $jsonResponseMock
-            ->method('setHttpResponseCode')
-            ->willReturnSelf();
-
-        // Create moneiSdkMock to return verified data
-        $moneiSdkMock = $this
-            ->getMockBuilder(\Monei\MoneiClient::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $moneiSdkMock
-            ->method('verifySignature')
-            ->with($this->anything(), $signature)
-            ->willReturn($paymentData);
-
-        // Create API client mock
-        $apiClientMock = $this->createMock(MoneiApiClient::class);
-        $apiClientMock->method('getMoneiSdk')->willReturn($moneiSdkMock);
-
-        // Create DTO mock and factory
-        $paymentDtoMock = $this->createMock(PaymentDTO::class);
-        $paymentDtoMock->method('getId')->willReturn($paymentData->id);
-        $paymentDtoMock->method('getOrderId')->willReturn($paymentData->orderId);
-        $paymentDtoMock->method('getStatus')->willReturn($paymentData->status);
-        $paymentDtoMock->method('getRawData')->willReturn((array) $paymentData);
-
-        $paymentDtoFactoryMock = $this->createMock(PaymentDTOFactory::class);
-        $paymentDtoFactoryMock
-            ->method('createFromArray')
-            ->with($this->isType('array'))
-            ->willReturn($paymentDtoMock);
-
-        // Create successful processing result
-        $processingResultMock = $this->createMock(PaymentProcessingResultInterface::class);
-        $processingResultMock->method('isSuccess')->willReturn(true);
-        $processingResultMock->method('getMessage')->willReturn('Payment processed successfully');
-
-        // Create payment processor mock
-        $paymentProcessorMock = $this->createMock(PaymentProcessorInterface::class);
-        $paymentProcessorMock
-            ->method('process')
-            ->with(
-                $this->equalTo($paymentData->orderId),
-                $this->equalTo($paymentData->id),
-                $this->isType('array')
-            )
-            ->willReturn($processingResultMock);
-
-        // Create logger mock that allows multiple calls
-        $loggerMock = $this->createMock(Logger::class);
-
-        // Create response mock
-        $responseMock = $this->createMock(HttpResponse::class);
-        $responseMock->method('setHeader')->willReturnSelf();
-
-        // Create controller with all our mocks
-        $controller = new Callback(
-            $loggerMock,
-            $jsonFactoryMock,
-            $paymentProcessorMock,
-            $apiClientMock,
-            $this->createMock(OrderRepositoryInterface::class),
-            $requestMock,
-            $responseMock,
-            $paymentDtoFactoryMock,
-            $this->createMock(\Magento\Framework\App\Config\ScopeConfigInterface::class)
-        );
-
-        // Execute controller
-        $result = $controller->execute();
-
-        // Assert returned the JSON response
-        $this->assertSame($jsonResponseMock, $result);
-    }
-
-    /**
-     * Test execute with payment DTO exception
-     */
-    public function testExecuteWithPaymentDtoException(): void
-    {
-        // Further test implementation...
-    }
-
-    /**
-     * Helper method to create a mocked request with content and signature
-     *
-     * @param string $content Request content
-     * @param string|null $signature MONEI-Signature header value
-     * @return RequestInterface The mocked request
-     */
-    private function createMockRequestWithContent(string $content, ?string $signature): RequestInterface
-    {
-        $requestMock = $this->createMock(HttpRequest::class);
-        $requestMock->method('getContent')->willReturn($content);
-        $requestMock
-            ->method('getHeader')
-            ->with('MONEI-Signature')
-            ->willReturn($signature);
-        return $requestMock;
+        $this->assertSame([503], $this->codes);
     }
 }
