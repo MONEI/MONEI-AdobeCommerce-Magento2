@@ -120,6 +120,36 @@ class CallbackVerifierTest extends VerifierTestCase
     }
 
     /**
+     * Bug: an unsigned body's store metadata picks another store view's order, and an older fetched payment (no
+     * store metadata) settles it; or a store metadata that is not a number is read as one.
+     *
+     * @dataProvider hintedBodies
+     */
+    public function testAnUnsignedStoreHintNeedsTheFetchedPaymentToAgree($hint, int $status, bool $processed): void
+    {
+        $this->orders = [
+            's1' => ['incrementId' => '000000101', 'storeId' => 1, 'paymentId' => '', 'entityId' => 7],
+            's2' => ['incrementId' => '000000101', 'storeId' => 2, 'paymentId' => '', 'entityId' => 8],
+        ];
+        $this->config['websites/1/payment/monei/test_api_key'] = self::KEY;
+
+        $decision = $this->verifier()->verify(
+            self::body(self::paymentFields('SUCCEEDED', ['metadata' => ['magento_store_id' => $hint]])),
+            null
+        );
+
+        $this->assertSame([$status, $processed], [$decision['status'], $decision['payment'] !== null]);
+    }
+
+    public function hintedBodies(): array
+    {
+        return [
+            'a hint the fetched payment does not confirm' => ['2', 200, false],
+            'not a number' => ['2abc', 400, false],
+        ];
+    }
+
+    /**
      * Bug: a payment of another store view (store views share a scoped key and can share an increment ID and an
      * amount) settles this store view's order; or a payment made before the store metadata existed is refused.
      *

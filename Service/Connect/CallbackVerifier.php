@@ -153,9 +153,12 @@ class CallbackVerifier
             return self::refused(400, 'format');
         }
         $metadata = (array) ($data['metadata'] ?? []);
-        $bodyStore = isset($metadata[CreatePayment::STORE_METADATA])
-            ? (int) $metadata[CreatePayment::STORE_METADATA]
-            : null;
+        $bodyStore = $metadata[CreatePayment::STORE_METADATA] ?? null;
+        if ($bodyStore !== null && !preg_match('/^[0-9]+\z/', (string) $bodyStore)) {
+            return self::refused(400, 'format');
+        }
+        // Unproven on the fetch path: there the fetched payment must name the same store view (fetched()).
+        $bodyStore = $bodyStore === null ? null : (int) $bodyStore;
         $order = $this->findOrder((string) $orderId, $bodyStore);
         // No retry changes this answer.
         if ($order === null) {
@@ -177,7 +180,7 @@ class CallbackVerifier
             return $this->signed($body, $mode, $storeMode, $order);
         }
         if (strpos($key, 'mk_') === 0) {
-            return $this->fetched($data, $signature, $key, $order, $storeMode);
+            return $this->fetched($data, $signature, $key, $order, $storeMode, $bodyStore !== null);
         }
         // An empty key gives an HMAC that anyone can make.
         if ($key === '' || $signature === null || !self::signatureValid($body, $signature, $key, null)) {
@@ -241,9 +244,17 @@ class CallbackVerifier
      * @param string $key
      * @param Order $order
      * @param string $storeMode The mode of the order's store
+     * @param bool $storeHinted Whether the body's store metadata chose the order
      * @return array{status: int, payment: array|null, reason: string, order: int|null}
      */
-    private function fetched(array $data, ?string $signature, string $key, Order $order, string $storeMode): array
+    private function fetched(
+        array $data,
+        ?string $signature,
+        string $key,
+        Order $order,
+        string $storeMode,
+        bool $storeHinted
+    ): array
     {
         $id = $data['id'] ?? null;
         if (($signature !== null && !self::headerParses($signature))
@@ -284,7 +295,8 @@ class CallbackVerifier
         // says which; payments made before this check carry none) must not settle this order.
         $metadata = (array) ($fetched['metadata'] ?? []);
         if (isset($metadata[CreatePayment::STORE_METADATA])
-            && (string) $metadata[CreatePayment::STORE_METADATA] !== (string) $order->getStoreId()) {
+            ? (string) $metadata[CreatePayment::STORE_METADATA] !== (string) $order->getStoreId()
+            : $storeHinted) {
             return self::refused(200, 'store');
         }
         if (($fetched['livemode'] ?? null) !== ($storeMode === 'live')) {
