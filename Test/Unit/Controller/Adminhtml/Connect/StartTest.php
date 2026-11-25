@@ -55,7 +55,7 @@ class StartTest extends TestCase
         $storeManager->method('getWebsite')->with(1)->willReturn($website);
         $url = $this->createMock(Url::class);
         $url->method('getUrl')
-            ->with('monei/payment/connect', ['_scope' => 5, '_nosid' => true, '_secure' => true])
+            ->with('monei/payment/connect', ['_scope' => 5, '_nosid' => true, '_forced_secure' => true])
             ->willReturn(self::CALLBACK);
 
         $redirect = $this->createMock(Redirect::class);

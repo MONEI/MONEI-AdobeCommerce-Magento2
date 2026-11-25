@@ -159,8 +159,9 @@ class CallbackVerifierTest extends VerifierTestCase
     /**
      * Bug: an unsigned replay of a settled payment changes the order again (a SUCCEEDED reopens the order the
      * merchant canceled); or a real later callback (a capture or void after AUTHORIZED, a payment after a canceled
-     * order) gets a silent 200, so MONEI never retries it; or a FAILED cancels a paid order. With no stored
-     * status, the order state the processor set stands for it.
+     * order) gets a silent 200, so MONEI never retries it; or a FAILED cancels a paid order; or a SUCCEEDED the
+     * processor saved before its invoice failed blocks the retry. With no stored status, the order state the
+     * processor set stands for it.
      *
      * @dataProvider transitions
      */
@@ -192,6 +193,7 @@ class CallbackVerifierTest extends VerifierTestCase
             'AUTHORIZED again' => ['AUTHORIZED', 'processing', false, 'AUTHORIZED', false],
             'SUCCEEDED, AUTHORIZED' => ['SUCCEEDED', 'processing', true, 'AUTHORIZED', false],
             'SUCCEEDED, PAID_OUT' => ['SUCCEEDED', 'processing', true, 'PAID_OUT', true],
+            'SUCCEEDED saved before its invoice failed, SUCCEEDED again' => ['SUCCEEDED', 'new', false, 'SUCCEEDED', true],
             'REFUNDED, SUCCEEDED' => ['REFUNDED', 'closed', true, 'SUCCEEDED', false],
             'FAILED, AUTHORIZED (retry)' => ['FAILED', 'canceled', false, 'AUTHORIZED', true],
             'EXPIRED, SUCCEEDED' => ['EXPIRED', 'canceled', false, 'SUCCEEDED', true],

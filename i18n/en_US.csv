@@ -275,7 +275,7 @@ Description,Description
 "Disconnect","Disconnect"
 "Disconnect MONEI from this scope?","Disconnect MONEI from this scope?"
 "Live: %1","Live: %1"
-"Live keys come after MONEI approves your account. The store stays in test mode.","Live keys come after MONEI approves your account. The store stays in test mode."
+"Live keys come after MONEI approves your account.","Live keys come after MONEI approves your account."
 "MONEI connected.","MONEI connected."
 "MONEI did not send a code. Nothing was changed.","MONEI did not send a code. Nothing was changed."
 "MONEI disconnected. The keys stay active until you revoke them in the MONEI Dashboard.","MONEI disconnected. The keys stay active until you revoke them in the MONEI Dashboard."

@@ -122,6 +122,21 @@ class ApiKeyTest extends TestCase
     }
 
     /**
+     * Bug: an inherited scoped key saved as the scope's own key (the box "Use Default" unchecked) keeps no secret,
+     * so a later connect of the parent scope pairs it with another secret.
+     */
+    public function testAnInheritedScopedKeyMadeLocalCopiesItsSecret(): void
+    {
+        $model = $this->model(self::TEST_KEY, '', [self::TEST_KEY => 'mk_test_parent', 'payment/monei/test_signing_secret' => 'mksec_parent'], null);
+        $model->setId(null);
+
+        $model->beforeSave();
+        $model->afterSave();
+
+        $this->assertSame([['save', 'payment/monei/test_signing_secret', 'mksec_parent', 'websites', 2]], $this->writes);
+    }
+
+    /**
      * Bug: "Use Default" on a key leaves the scope's own signing secret, which then pairs with the inherited key of
      * another connect; or a delete skipped as stale still deletes the secret.
      *

@@ -196,7 +196,7 @@ class ConnectService
             $this->afterSwitch($outcome['switched'], $scope, $scopeId, (string) $entry['redirectUri']);
         }
         // A front route cannot make a valid admin link: the settings page shows the result on its next load.
-        $this->flags->set(self::RESULT_FLAG, [
+        $this->flags->set(self::resultFlag($scope, $scopeId), [
             'scope' => $scope,
             'scopeId' => $scopeId,
             'switched' => array_keys($outcome['switched']),
@@ -312,13 +312,25 @@ class ConnectService
      */
     public function takeResult(string $scope, int $scopeId): ?array
     {
-        $result = $this->flags->get(self::RESULT_FLAG);
+        $result = $this->flags->get(self::resultFlag($scope, $scopeId));
         if (!is_array($result) || ($result['scope'] ?? null) !== $scope || ($result['scopeId'] ?? null) !== $scopeId) {
             return null;
         }
-        $this->flags->delete(self::RESULT_FLAG);
+        $this->flags->delete(self::resultFlag($scope, $scopeId));
 
         return ['switched' => (array) $result['switched'], 'problems' => (array) $result['problems']];
+    }
+
+    /**
+     * Get the flag code of a scope's connect result: one per scope, so one scope's result does not replace another's
+     *
+     * @param string $scope
+     * @param int $scopeId
+     * @return string
+     */
+    public static function resultFlag(string $scope, int $scopeId): string
+    {
+        return self::RESULT_FLAG . '_' . $scope . '_' . $scopeId;
     }
 
     /**
@@ -357,7 +369,7 @@ class ConnectService
                 'The keys of this mode are set in env.php or an environment variable, so Connect with MONEI cannot change them.'
             ),
             'cap' => __('Your MONEI account has too many API keys. Revoke unused keys in the MONEI Dashboard, then connect again.'),
-            'not_approved' => __('Live keys come after MONEI approves your account. The store stays in test mode.'),
+            'not_approved' => __('Live keys come after MONEI approves your account.'),
             'blocked' => __('MONEI refused a key for this account.'),
             'ineligible' => __('This MONEI account cannot get a key for this mode.'),
         ];

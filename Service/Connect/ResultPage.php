@@ -15,20 +15,20 @@ use Magento\Backend\App\Area\FrontNameResolver;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Escaper;
 use Magento\Framework\Locale\ResolverInterface;
-use Magento\Framework\View\Asset\Repository;
 
 /**
  * The page of the Connect with MONEI callback, a whole HTML document, as in the WooCommerce and PrestaShop plugins.
  *
  * Colors come from the MONEI Dashboard theme (primary, success, destructive, foreground, muted). Nothing loads from
- * another host: the logo is the module's own file and the font is the system font.
+ * another host: the logo is inline and the font is the system font.
  *
  * The route is public, and a custom admin path hides the admin: only a page whose single-use state was valid
  * links to it.
  */
 class ResultPage
 {
-    public const LOGO = 'Monei_MoneiPayment::img/monei-logo.svg';
+    /** The MONEI logo, inline: a static URL can be on a CDN, another host. */
+    private const LOGO = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nMTQxJyBoZWlnaHQ9JzMxJyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnPgogICAgPHBhdGggaWQ9J21vbmVpLWxvZ28nCiAgICAgICAgICBkPSdNLjguOWg4LjZsNyAxMS4zIDctMTEuM0gzMnYyOS4zaC04LjFWMTMuM2wtNy41IDExLjVoLS4yTDguOCAxMy40djE2LjdoLThWLjl6bTUxIDIyLjVjMS4xIDAgMi4xLS4yIDMuMS0uNi45LS40IDEuNy0xIDIuMy0xLjcuNi0uNyAxLjEtMS41IDEuNS0yLjUuNC0uOS41LTIgLjUtM3YtLjFjMC0xLjEtLjItMi4xLS41LTMtLjQtLjktLjktMS44LTEuNS0yLjUtLjctLjctMS41LTEuMy0yLjQtMS43LS45LS40LTEuOS0uNi0zLjEtLjYtMS4xIDAtMi4xLjItMyAuNi0uOS40LTEuNyAxLTIuMyAxLjctLjcuNy0xLjIgMS41LTEuNSAyLjUtLjMuOS0uNSAyLS41IDN2LjFjMCAxLjEuMiAyLjEuNSAzIC40LjkuOSAxLjggMS41IDIuNS43LjcgMS40IDEuMyAyLjQgMS43LjkuNCAxLjkuNiAzIC42em0tLjEgNy4zYy0yLjMgMC00LjMtLjQtNi4zLTEuMi0xLjktLjgtMy42LTEuOS01LTMuMi0xLjQtMS40LTIuNS0zLTMuMy00LjgtLjgtMS44LTEuMi0zLjgtMS4yLTUuOXYtLjFjMC0yLjEuNC00LjEgMS4yLTUuOS44LTEuOSAxLjktMy41IDMuMy00LjggMS40LTEuNCAzLjEtMi41IDUtMy4zIDEuOS0uOCA0LTEuMiA2LjMtMS4yUzU2IC43IDU4IDEuNWMxLjkuOCAzLjYgMS45IDUgMy4yIDEuNCAxLjQgMi41IDMgMy4zIDQuOC44IDEuOCAxLjIgMy44IDEuMiA1Ljl2LjFjMCAyLjEtLjQgNC4xLTEuMiA1LjktLjggMS45LTEuOSAzLjUtMy4zIDQuOC0xLjQgMS40LTMuMSAyLjUtNSAzLjMtMS45LjgtNCAxLjItNi4zIDEuMnpNNzEuOC45aDcuNmwxMiAxNS41Vi45aDh2MjkuM2gtNy4xbC0xMi41LTE2djE2aC04Vi45em0zMi44IDBoMjMuNXY2LjloLTE1LjV2NC40aDE0djYuNGgtMTR2NC42aDE1Ljd2Ni45aC0yMy43Vi45em0yOCAwaDguMXYyOS4zaC04LjFWLjl6JwogICAgICAgICAgZmlsbD0nIzAwYzFiMScgZmlsbC1ydWxlPSdub256ZXJvJy8+Cjwvc3ZnPgo=';
 
     private const ICON_OK = '<path d="M20 6 9 17l-5-5"/>';
 
@@ -48,11 +48,6 @@ class ResultPage
     private FrontNameResolver $frontNameResolver;
 
     /**
-     * @var Repository
-     */
-    private Repository $assetRepository;
-
-    /**
      * @var ResolverInterface
      */
     private ResolverInterface $localeResolver;
@@ -61,20 +56,17 @@ class ResultPage
      * @param Escaper $escaper
      * @param ScopeConfigInterface $scopeConfig
      * @param FrontNameResolver $frontNameResolver
-     * @param Repository $assetRepository
      * @param ResolverInterface $localeResolver
      */
     public function __construct(
         Escaper $escaper,
         ScopeConfigInterface $scopeConfig,
         FrontNameResolver $frontNameResolver,
-        Repository $assetRepository,
         ResolverInterface $localeResolver
     ) {
         $this->escaper = $escaper;
         $this->scopeConfig = $scopeConfig;
         $this->frontNameResolver = $frontNameResolver;
-        $this->assetRepository = $assetRepository;
         $this->localeResolver = $localeResolver;
     }
 
@@ -82,11 +74,13 @@ class ResultPage
      * Render the page of a connect result
      *
      * @param array $outcome The result of ConnectService::complete()
+     * @param bool $stateChecked Whether complete() checked the state (it did not when it threw)
      * @return string
      */
-    public function render(array $outcome): string
+    public function render(array $outcome, bool $stateChecked = true): string
     {
         $refused = ConnectService::isRefused($outcome);
+        $linkAdmin = $stateChecked && !$refused;
         $ok = (bool) $outcome['switched'];
         if ($ok) {
             $title = (string) __('MONEI is connected');
@@ -104,7 +98,7 @@ class ResultPage
             $lines .= $this->lineHtml(false, ConnectService::message($problem['mode'] ?? null, (string) $problem['code']));
         }
         $statusIcon = $ok ? self::ICON_OK : '<path d="M12 8v5M12 16.5v.01"/><circle cx="12" cy="12" r="9"/>';
-        $next = $refused
+        $next = !$linkAdmin
             ? '<p class="hint">' . $this->escaper->escapeHtml((string) __('Return to the MONEI settings in your admin panel.'))
                 . '</p>'
             : '<a class="button" href="' . $this->escaper->escapeUrl($this->adminUrl()) . '">'
@@ -119,7 +113,7 @@ class ResultPage
             . '<meta name="robots" content="noindex, nofollow">'
             . '<title>' . $this->escaper->escapeHtml($title) . ' · MONEI</title><style>' . self::CSS . '</style></head>'
             . '<body><main class="card" role="status">'
-            . '<img class="logo" src="' . $this->escaper->escapeUrl($this->logoUrl()) . '" alt="MONEI" width="110" height="24">'
+            . '<img class="logo" src="' . self::LOGO . '" alt="MONEI" width="110" height="24">'
             . '<div class="status' . ($ok ? '' : ' status--error') . '" aria-hidden="true">'
             . '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"'
             . ' stroke-linecap="round" stroke-linejoin="round">' . $statusIcon . '</svg></div>'
@@ -144,20 +138,6 @@ class ResultPage
         }
 
         return rtrim($base, '/') . '/' . $this->frontNameResolver->getFrontName() . '/';
-    }
-
-    /**
-     * Get the URL of the module's MONEI logo, or an empty string when the static file is unknown
-     *
-     * @return string
-     */
-    private function logoUrl(): string
-    {
-        try {
-            return $this->assetRepository->getUrl(self::LOGO);
-        } catch (\Exception $e) {
-            return '';
-        }
     }
 
     /**

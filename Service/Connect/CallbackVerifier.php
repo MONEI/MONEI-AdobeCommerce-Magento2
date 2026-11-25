@@ -301,6 +301,10 @@ class CallbackVerifier
     private function effectiveStatus(Order $order, string $storedId): string
     {
         $stored = $this->storedStatus($order, $storedId);
+        // The processor can save SUCCEEDED before its invoice: without one, a retry must still settle the order.
+        if ($stored === 'SUCCEEDED' && !$order->hasInvoices()) {
+            return '';
+        }
         if (is_string($stored) && $stored !== '') {
             return $stored;
         }

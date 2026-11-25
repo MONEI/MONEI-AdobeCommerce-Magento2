@@ -88,7 +88,9 @@ class Connect implements HttpGetActionInterface
                 is_string($state) ? $state : '',
                 is_string($code) ? $code : ''
             );
+            $stateChecked = true;
         } catch (Throwable $e) {
+            $stateChecked = false;
             // The class only: a message can hold the code.
             $this->logger->error('[Connect] Connect failed: ' . get_class($e));
             $outcome = ['switched' => [], 'problems' => [['mode' => null, 'code' => 'temporarily_unavailable']]];
@@ -99,7 +101,7 @@ class Connect implements HttpGetActionInterface
         $result->setHeader('Referrer-Policy', 'no-referrer', true);
         $result->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0', true);
         $result->setHeader('Content-Type', 'text/html; charset=UTF-8', true);
-        $result->setContents($this->resultPage->render($outcome));
+        $result->setContents($this->resultPage->render($outcome, $stateChecked));
 
         return $result;
     }

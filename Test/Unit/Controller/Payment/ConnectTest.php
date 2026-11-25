@@ -14,7 +14,6 @@ use Magento\Framework\Controller\Result\RawFactory;
 use Magento\Framework\Escaper;
 use Magento\Framework\Locale\ResolverInterface;
 use Magento\Framework\Stdlib\DateTime\DateTime;
-use Magento\Framework\View\Asset\Repository;
 use Monei\MoneiPayment\Controller\Payment\Connect;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\Connect\Broker;
@@ -48,13 +47,10 @@ class ConnectTest extends TestCase
         $config->method('getValue')->willReturnMap([['web/secure/base_url', 'default', null, 'https://shop.example/']]);
         $frontName = $this->createMock(FrontNameResolver::class);
         $frontName->method('getFrontName')->willReturn('backoffice');
-        $assets = $this->createMock(Repository::class);
-        $assets->method('getUrl')->with(ResultPage::LOGO)
-            ->willReturn('https://shop.example/static/frontend/Magento/luma/en_US/Monei_MoneiPayment/img/monei-logo.svg');
         $locale = $this->createMock(ResolverInterface::class);
         $locale->method('getLocale')->willReturn('en_US');
 
-        return new ResultPage($escaper, $config, $frontName, $assets, $locale);
+        return new ResultPage($escaper, $config, $frontName, $locale);
     }
 
     /**
@@ -113,7 +109,7 @@ class ConnectTest extends TestCase
     /**
      * Bug: the page drops the result of a mode, so the merchant does not know that Live failed; or its button links
      * to a front URL or an admin URL with a secret key that a front route cannot make; or it loads from another
-     * host.
+     * host (a static URL can be on a CDN, so the logo is inline).
      */
     public function testThePageShowsOneLinePerModeAndLinksToTheAdmin(): void
     {
@@ -126,7 +122,7 @@ class ConnectTest extends TestCase
         $this->assertSame(
             [
                 ['line--ok', 'Test: connected.'],
-                ['line--problem', 'Live: Live keys come after MONEI approves your account. The store stays in test mode.'],
+                ['line--problem', 'Live: Live keys come after MONEI approves your account.'],
             ],
             array_map(function ($line) {
                 return [$line[1], $line[2]];
@@ -135,11 +131,38 @@ class ConnectTest extends TestCase
         $this->assertStringContainsString('<a class="button" href="https://shop.example/backoffice/">', $html);
         preg_match_all('#(?:src|href)="([^"]+)"#', $html, $urls);
         $this->assertSame(
-            [
-                'https://shop.example/static/frontend/Magento/luma/en_US/Monei_MoneiPayment/img/monei-logo.svg',
-                'https://shop.example/backoffice/',
-            ],
-            $urls[1]
+            [true, 'https://shop.example/backoffice/'],
+            [strpos($urls[1][0], 'data:image/svg+xml;base64,') === 0, $urls[1][1]]
+        );
+        $this->assertCount(2, $urls[1]);
+    }
+
+    /**
+     * Bug: an error before the state is checked (the flag table fails) shows anyone the admin URL that a custom
+     * admin path hides.
+     */
+    public function testAFailureBeforeTheStateCheckShowsNoAdminLink(): void
+    {
+        $request = $this->createMock(RequestInterface::class);
+        $request->method('getParam')->willReturn('x');
+        $contents = '';
+        $raw = $this->createMock(Raw::class);
+        $raw->method('setHeader')->willReturnSelf();
+        $raw->method('setHttpResponseCode')->willReturnSelf();
+        $raw->method('setContents')->willReturnCallback(function ($html) use (&$contents, $raw) {
+            $contents = $html;
+            return $raw;
+        });
+        $rawFactory = $this->createMock(RawFactory::class);
+        $rawFactory->method('create')->willReturn($raw);
+        $service = $this->createMock(ConnectService::class);
+        $service->method('complete')->willThrowException(new \RuntimeException('flag table gone'));
+
+        (new Connect($request, $rawFactory, $service, $this->resultPage(), $this->createMock(Logger::class)))->execute();
+
+        $this->assertSame(
+            [true, false],
+            [strpos($contents, 'MONEI is not connected') !== false, strpos($contents, 'backoffice') !== false]
         );
     }
 }

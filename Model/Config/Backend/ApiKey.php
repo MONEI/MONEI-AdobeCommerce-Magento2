@@ -37,6 +37,11 @@ class ApiKey extends CredentialValue
     private WriterInterface $configWriter;
 
     /**
+     * @var bool Whether the scope had no key of its own before this save
+     */
+    private bool $wasInherited = false;
+
+    /**
      * @param Context $context
      * @param Registry $registry
      * @param ScopeConfigInterface $config
@@ -85,6 +90,7 @@ class ApiKey extends CredentialValue
         if ((string) $this->getValue() === '' && strpos($inUse, 'mk_') === 0) {
             $this->setValue($inUse);
         }
+        $this->wasInherited = !$this->getId();
 
         return parent::beforeSave();
     }
@@ -100,6 +106,17 @@ class ApiKey extends CredentialValue
     {
         if ($this->isValueChanged()) {
             $this->configWriter->save($this->secretPath(), '', $this->getScope(), (int) $this->getScopeId());
+        } elseif ($this->wasInherited && strpos((string) $this->getValue(), 'mk_') === 0) {
+            // The inherited scoped key becomes this scope's own: so does its secret, or a later connect of the parent
+            // scope pairs this key with another secret.
+            $secret = (string) $this->_config->getValue(
+                $this->secretPath(),
+                $this->getScope() ?: ScopeConfigInterface::SCOPE_TYPE_DEFAULT,
+                $this->getScopeCode()
+            );
+            if ($secret !== '') {
+                $this->configWriter->save($this->secretPath(), $secret, $this->getScope(), (int) $this->getScopeId());
+            }
         }
 
         return parent::afterSave();

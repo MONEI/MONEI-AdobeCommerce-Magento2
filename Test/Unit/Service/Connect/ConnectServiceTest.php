@@ -90,7 +90,9 @@ class ConnectServiceTest extends TestCase
 
     private function service(MemoryFlagStore $flags): ConnectService
     {
-        $broker = $this->getMockBuilder(Broker::class)->onlyMethods(['exchange'])->getMock();
+        $broker = $this->getMockBuilder(Broker::class)->onlyMethods(['exchange', 'baseUrl'])->getMock();
+        // Not the developer's MONEI_CONNECT_BASE_URL.
+        $broker->method('baseUrl')->willReturn('https://broker.example');
         $broker->method('exchange')->willReturnCallback(function (...$args) {
             $this->exchanges[] = $args;
             if ($this->exchangeAnswer instanceof ConnectException) {
@@ -256,7 +258,7 @@ class ConnectServiceTest extends TestCase
         $this->assertArrayNotHasKey($old, $store->flags);
         $this->assertArrayHasKey($young, $store->flags);
         $this->assertArrayHasKey('other_module_flag', $store->flags);
-        $this->assertStringStartsWith('https://oauth.monei.com/integrations/authorize?', $url);
+        $this->assertStringStartsWith('https://broker.example/integrations/authorize?', $url);
         parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
         $entry = $store->flags[ConnectService::STATE_PREFIX . $query['state']];
         $this->assertSame(
@@ -307,7 +309,7 @@ class ConnectServiceTest extends TestCase
         $this->assertSame(
             [
                 'Test: Your MONEI account has too many API keys. Revoke unused keys in the MONEI Dashboard, then connect again.',
-                'Live: Live keys come after MONEI approves your account. The store stays in test mode.',
+                'Live: Live keys come after MONEI approves your account.',
             ],
             [ConnectService::message('test', 'cap'), ConnectService::message('live', 'not_approved')]
         );
@@ -513,7 +515,27 @@ class ConnectServiceTest extends TestCase
         $this->assertSame('pk_test_default', $this->config['default/0/payment/monei/test_api_key']);
         $this->assertSame(
             ['scope' => 'stores', 'scopeId' => 4, 'switched' => ['test'], 'problems' => []],
-            $store->flags[ConnectService::RESULT_FLAG]
+            $store->flags[ConnectService::resultFlag('stores', 4)]
+        );
+    }
+
+    /**
+     * Bug: the connect result of one scope replaces another scope's result before that page reloads, so its
+     * merchant never sees whether the connect worked.
+     */
+    public function testEachScopeKeepsItsOwnResult(): void
+    {
+        $result = ['switched' => ['test'], 'problems' => []];
+        $store = new MemoryFlagStore([
+            ConnectService::resultFlag('websites', 1) => ['scope' => 'websites', 'scopeId' => 1] + $result,
+            ConnectService::resultFlag('websites', 2) => ['scope' => 'websites', 'scopeId' => 2, 'switched' => []]
+                + $result,
+        ]);
+        $service = $this->service($store);
+
+        $this->assertSame(
+            [$result, ['switched' => [], 'problems' => []], null],
+            [$service->takeResult('websites', 1), $service->takeResult('websites', 2), $service->takeResult('websites', 1)]
         );
     }
 

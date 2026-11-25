@@ -131,7 +131,7 @@ class CallbackTest extends VerifierTestCase
             'forged SUCCEEDED, MONEI says PENDING' => [self::paymentFields('PENDING'), []],
             'stored SUCCEEDED, order canceled, MONEI says SUCCEEDED' => [
                 self::paymentFields('SUCCEEDED'),
-                ['state' => 'canceled', 'paymentId' => self::ID, 'storedStatus' => 'SUCCEEDED'],
+                ['state' => 'canceled', 'paymentId' => self::ID, 'storedStatus' => 'SUCCEEDED', 'paid' => true],
             ],
         ];
     }

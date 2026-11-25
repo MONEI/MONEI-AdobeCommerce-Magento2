@@ -109,7 +109,11 @@ class CallbackUrl
             throw new LocalizedException(__('This scope has no store view.'));
         }
 
-        return $this->url->getUrl(self::ROUTE, ['_scope' => (int) $store->getId(), '_nosid' => true, '_secure' => true]);
+        // Forced: plain _secure follows "Use Secure URLs on Storefront"; the broker takes only https.
+        return $this->url->getUrl(
+            self::ROUTE,
+            ['_scope' => (int) $store->getId(), '_nosid' => true, '_forced_secure' => true]
+        );
     }
 
     /**
