@@ -13,6 +13,7 @@ namespace Monei\MoneiPayment\Block\System\Config\Form\Field;
 
 use Magento\Backend\Block\AbstractBlock;
 use Magento\Backend\Block\Context;
+use Magento\Backend\Model\Auth\Session;
 use Magento\Framework\Data\Form\Element\AbstractElement;
 use Magento\Framework\Data\Form\Element\Renderer\RendererInterface;
 use Magento\Framework\Data\Form\FormKey;
@@ -23,6 +24,8 @@ use Monei\MoneiPayment\Service\Connect\ConnectService;
 
 /**
  * The "Connect with MONEI" row of the payment configuration, for the scope being edited.
+ *
+ * Connect is the main flow: while it is possible, the manual key fields stay collapsed behind a link.
  *
  * The buttons are no submit buttons of the config form: Enter in a key field would press the first one. Each posts
  * its own form, built on click, with the backend form key and the scope.
@@ -50,11 +53,20 @@ class ConnectButton extends AbstractBlock implements RendererInterface
     private FormKey $formKey;
 
     /**
+     * @var Session
+     */
+    private Session $authSession;
+
+    /** The fields of the manual keys, by config field ID. */
+    private const MANUAL_FIELDS = ['test_account_id', 'test_api_key', 'production_account_id', 'production_api_key'];
+
+    /**
      * @param Context $context
      * @param CallbackUrl $callbackUrl
      * @param ConnectService $connectService
      * @param SecureHtmlRenderer $secureRenderer
      * @param FormKey $formKey
+     * @param Session $authSession
      * @param array $data
      */
     public function __construct(
@@ -63,12 +75,14 @@ class ConnectButton extends AbstractBlock implements RendererInterface
         ConnectService $connectService,
         SecureHtmlRenderer $secureRenderer,
         FormKey $formKey,
+        Session $authSession,
         array $data = []
     ) {
         $this->callbackUrl = $callbackUrl;
         $this->connectService = $connectService;
         $this->secureRenderer = $secureRenderer;
         $this->formKey = $formKey;
+        $this->authSession = $authSession;
         parent::__construct($context, $data);
     }
 
@@ -91,12 +105,18 @@ class ConnectButton extends AbstractBlock implements RendererInterface
 
         $canConnect = $this->callbackUrl->redirectUri($scope, $scopeId) !== null;
 
+        $scopeFields = ['website' => (string) $website, 'store' => (string) $store];
         $html = $this->resultHtml($scope, $scopeId) . $this->loadedHtml($keys);
-        if ($canConnect && (strpos($keys['live'], 'pk_') === 0 || strpos($keys['test'], 'pk_') === 0)) {
-            $html .= $this->messageHtml(
-                'warning',
+        $userId = (int) $this->authSession->getUser()?->getId();
+        if ($canConnect && (strpos($keys['live'], 'pk_') === 0 || strpos($keys['test'], 'pk_') === 0)
+            && !$this->connectService->isNoticeDismissed($userId)) {
+            $html .= '<div class="message message-warning">' . $this->_escaper->escapeHtml(
                 (string) __('Connect with MONEI to stop storing your account API key.')
-            );
+            ) . ' ' . $this->buttonHtml(
+                'monei-dismiss-notice',
+                (string) __('Dismiss'),
+                $this->postScript($this->getUrl('monei/connect/dismissNotice'), $scopeFields, false)
+            ) . '</div>';
         }
         foreach (['test' => __('Test'), 'live' => __('Live')] as $mode => $label) {
             if ($keys[$mode] !== '') {
@@ -110,11 +130,8 @@ class ConnectButton extends AbstractBlock implements RendererInterface
                 . '</a></p>';
         }
 
-        $scopeFields = ['website' => (string) $website, 'store' => (string) $store];
         if (!$canConnect) {
-            $html .= '<p>' . $this->_escaper->escapeHtml(
-                (string) __('Connect with MONEI is not available for the URL of this store. Use manual keys.')
-            ) . '</p>';
+            $html .= '<p>' . $this->_escaper->escapeHtml((string) __('Use manual keys. Connect with MONEI needs a public HTTPS address for this shop.')) . '</p>';
         } else {
             $html .= $this->buttonHtml(
                 'monei-connect-button',
@@ -131,6 +148,9 @@ class ConnectButton extends AbstractBlock implements RendererInterface
                     . $this->postScript($this->getUrl('monei/connect/disconnect'), $scopeFields, false)
             );
         }
+        if ($canConnect) {
+            $html .= $this->collapsedManualKeysHtml(substr((string) $element->getHtmlId(), 0, -strlen('connect')));
+        }
 
         return \sprintf(
             '<tr id="row_%s"><td class="label"><label>%s</label></td><td class="value">%s</td><td></td></tr>',
@@ -138,6 +158,36 @@ class ConnectButton extends AbstractBlock implements RendererInterface
             $this->_escaper->escapeHtml((string) $element->getLabel()),
             $html
         );
+    }
+
+    /**
+     * Render the "Enter API keys manually" link and collapse the manual key rows until it is clicked
+     *
+     * The rows come after this one, so a style with their IDs hides them, with !important: the dependence script of
+     * the Mode field shows and hides them with inline styles and must not open them.
+     *
+     * @param string $idPrefix The HTML ID prefix of the group's fields
+     * @return string
+     */
+    private function collapsedManualKeysHtml(string $idPrefix): string
+    {
+        $rows = implode(',', array_map(function (string $field) use ($idPrefix) {
+            return '#row_' . $idPrefix . $field;
+        }, self::MANUAL_FIELDS));
+
+        return $this->secureRenderer->renderTag(
+            'style',
+            ['id' => 'monei-manual-keys-collapsed'],
+            $rows . '{display:none !important}',
+            false
+        )
+            . ' <button type="button" class="action-link" id="monei-manual-keys">'
+            . $this->_escaper->escapeHtml((string) __('Enter API keys manually')) . '</button>'
+            . $this->secureRenderer->renderEventListenerAsTag(
+                'onclick',
+                'document.getElementById("monei-manual-keys-collapsed").remove(); this.remove();',
+                '#monei-manual-keys'
+            );
     }
 
     /**

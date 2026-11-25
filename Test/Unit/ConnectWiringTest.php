@@ -10,6 +10,7 @@ use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\Url;
 use Monei\MoneiPayment\Block\System\Config\Form\Field\ConnectButton;
 use Monei\MoneiPayment\Controller\Adminhtml\Connect\Disconnect;
+use Monei\MoneiPayment\Controller\Adminhtml\Connect\DismissNotice;
 use Monei\MoneiPayment\Controller\Adminhtml\Connect\Start;
 use Monei\MoneiPayment\Block\System\Config\Form\Field\ApiKeyField;
 use Monei\MoneiPayment\Model\Config\Backend\AccountId;
@@ -54,7 +55,7 @@ class ConnectWiringTest extends TestCase
 
     public function adminRoutes(): array
     {
-        return ['start' => [Start::class], 'disconnect' => [Disconnect::class]];
+        return ['start' => [Start::class], 'disconnect' => [Disconnect::class], 'dismiss notice' => [DismissNotice::class]];
     }
 
     /**

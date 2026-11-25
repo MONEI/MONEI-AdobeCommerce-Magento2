@@ -72,7 +72,7 @@ class Start extends Action implements HttpPostActionInterface
         $redirectUri = $this->callbackUrl->redirectUri($scope, $scopeId);
         if ($redirectUri === null) {
             $this->messageManager->addErrorMessage(
-                __('Connect with MONEI is not available for the URL of this store. Use manual keys.')
+                __('Use manual keys. Connect with MONEI needs a public HTTPS address for this shop.')
             );
 
             return $this->resultRedirectFactory->create()->setPath(

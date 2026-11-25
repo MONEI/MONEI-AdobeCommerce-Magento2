@@ -571,4 +571,17 @@ class ConnectServiceTest extends TestCase
         );
         $this->assertSame('pk_live_default', $this->config['default/0/payment/monei/production_api_key']);
     }
+
+    /**
+     * Bug: a dismissed invitation to connect comes back, or one admin's dismissal hides it from every admin.
+     */
+    public function testTheNoticeIsDismissedPerAdmin(): void
+    {
+        $service = $this->service(new MemoryFlagStore());
+
+        $service->dismissNotice(3);
+        $service->dismissNotice(3);
+
+        $this->assertSame([true, false], [$service->isNoticeDismissed(3), $service->isNoticeDismissed(4)]);
+    }
 }

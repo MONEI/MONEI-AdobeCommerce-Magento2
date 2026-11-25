@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Monei\MoneiPayment\Test\Unit\Block\System\Config\Form\Field;
 
 use Magento\Backend\Block\Context;
+use Magento\Backend\Model\Auth\Session;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Data\Form\Element\AbstractElement;
 use Magento\Framework\Data\Form\FormKey;
@@ -14,6 +15,7 @@ use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Helper\SecureHtmlRenderer;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\User\Model\User;
 use Monei\MoneiPayment\Block\System\Config\Form\Field\ConnectButton;
 use Monei\MoneiPayment\Model\Config\Backend\CredentialValue;
 use Monei\MoneiPayment\Service\Connect\CallbackUrl;
@@ -27,15 +29,7 @@ use PHPUnit\Framework\TestCase;
  */
 class ConnectButtonTest extends TestCase
 {
-    /**
-     * Bug: the button shows for a store whose callback URL the broker refuses for a reason the plugin can check,
-     * so the merchant meets a broker error page; or it never shows; or the notice asks a store that cannot connect
-     * to connect. The page also posts the fingerprint of each value in use, or CredentialValue cannot tell a page
-     * loaded before a connect. It never shows a scoped key in full.
-     *
-     * @dataProvider callbackUrls
-     */
-    public function testTheButtonShowsOnlyWhenTheBrokerTakesTheCallbackUrl(string $callback, bool $button): void
+    private function render(string $callback, bool $dismissed): string
     {
         $request = $this->createMock(RequestInterface::class);
         $request->method('getParam')->willReturnMap([['website', null, null], ['store', null, '2']]);
@@ -61,26 +55,58 @@ class ConnectButtonTest extends TestCase
 
         $service = $this->createMock(ConnectService::class);
         $service->method('apiKeys')->willReturn(['live' => 'pk_live_manual', 'test' => 'mk_test_0123456789abcdef']);
+        $service->method('isNoticeDismissed')->with(9)->willReturn($dismissed);
         $secureRenderer = $this->createMock(SecureHtmlRenderer::class);
         $secureRenderer->method('renderEventListenerAsTag')->willReturn('<script></script>');
+        $secureRenderer->method('renderTag')->willReturnCallback(function ($tag, $attributes, $content) {
+            return "<$tag>$content</$tag>";
+        });
         $element = $this->createMock(AbstractElement::class);
         $element->method('getHtmlId')->willReturn('payment_monei_connect');
+        $user = $this->createMock(User::class);
+        $user->method('getId')->willReturn(9);
+        $sessionBuilder = $this->getMockBuilder(Session::class)->disableOriginalConstructor();
+        $sessionBuilder = method_exists(Session::class, 'getUser')
+            ? $sessionBuilder->onlyMethods(['getUser'])
+            : $sessionBuilder->addMethods(['getUser']);
+        $session = $sessionBuilder->getMock();
+        $session->method('getUser')->willReturn($user);
 
         $block = new ConnectButton(
             $context,
             new CallbackUrl($frontendUrl, $storeManager),
             $service,
             $secureRenderer,
-            $this->createMock(FormKey::class)
+            $this->createMock(FormKey::class),
+            $session
         );
-        $html = $block->render($element);
+
+        return $block->render($element);
+    }
+
+    /**
+     * Bug: the button shows for a store whose callback URL the broker refuses for a reason the plugin can check,
+     * so the merchant meets a broker error page; or it never shows; or the notice asks a store that cannot connect
+     * to connect; or the manual key fields hide on a store that can only use them, or crowd a store that can
+     * connect. The page also posts the fingerprint of each mode's key, or CredentialValue cannot tell a page loaded
+     * before a connect. It never shows a scoped key in full.
+     *
+     * @dataProvider callbackUrls
+     */
+    public function testTheButtonShowsOnlyWhenTheBrokerTakesTheCallbackUrl(string $callback, bool $button): void
+    {
+        $html = $this->render($callback, false);
 
         $this->assertSame(
-            [$button, !$button, $button],
+            [$button, !$button, $button, $button],
             [
                 strpos($html, 'id="monei-connect-button"') !== false,
-                strpos($html, 'Use manual keys') !== false,
+                strpos($html, 'Use manual keys. Connect with MONEI needs a public HTTPS address for this shop.') !== false,
                 strpos($html, 'to stop storing your account API key') !== false,
+                strpos($html, '#row_payment_monei_test_account_id,#row_payment_monei_test_api_key,'
+                    . '#row_payment_monei_production_account_id,#row_payment_monei_production_api_key'
+                    . '{display:none !important}') !== false
+                    && strpos($html, 'Enter API keys manually') !== false,
             ]
         );
         foreach (['live' => 'pk_live_manual', 'test' => 'mk_test_0123456789abcdef'] as $name => $value) {
@@ -101,5 +127,18 @@ class ConnectButtonTest extends TestCase
             'two prefix segments' => ['https://shop.example/a/b/monei/payment/connect/', true],
             'three prefix segments' => ['https://shop.example/a/b/c/monei/payment/connect/', false],
         ];
+    }
+
+    /**
+     * Bug: an admin who dismissed the invitation to connect sees it on every visit.
+     */
+    public function testAnAdminWhoDismissedTheNoticeDoesNotSeeIt(): void
+    {
+        $html = $this->render('https://shop.example/monei/payment/connect/', true);
+
+        $this->assertSame(
+            [false, true],
+            [strpos($html, 'to stop storing your account API key') !== false, strpos($html, 'id="monei-connect-button"') !== false]
+        );
     }
 }

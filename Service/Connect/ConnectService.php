@@ -37,6 +37,8 @@ class ConnectService
     /** Seconds: the broker keeps its pending row 15 min, plus 60 s for its code. */
     public const STATE_TTL = 1200;
     public const DASHBOARD_KEYS_URL = 'https://dashboard.monei.com/settings/api';
+    /** The admin users who dismissed the invitation to connect. */
+    public const NOTICE_FLAG = 'monei_connect_notice_dismissed';
 
     /** The config field prefix of each mode that the broker returns. */
     private const MODES = ['live' => 'production', 'test' => 'test'];
@@ -237,6 +239,32 @@ class ConnectService
     }
 
     /**
+     * Check whether an admin user dismissed the invitation to connect
+     *
+     * @param int $userId
+     * @return bool
+     */
+    public function isNoticeDismissed(int $userId): bool
+    {
+        return in_array($userId, (array) $this->flags->get(self::NOTICE_FLAG), true);
+    }
+
+    /**
+     * Hide the invitation to connect from an admin user
+     *
+     * @param int $userId
+     * @return void
+     */
+    public function dismissNotice(int $userId): void
+    {
+        $userIds = (array) $this->flags->get(self::NOTICE_FLAG);
+        if (!in_array($userId, $userIds, true)) {
+            $userIds[] = $userId;
+            $this->flags->set(self::NOTICE_FLAG, $userIds);
+        }
+    }
+
+    /**
      * Get the modes whose key in use at a scope is a scoped key (mk_) from a connect
      *
      * @param string $scope
@@ -294,7 +322,7 @@ class ConnectService
             'expiredState' => __('This connect link expired. Start again from the MONEI settings.'),
             'otherAccount' => __('This scope uses another MONEI account. Disconnect first.'),
             'otherAccountManual' => __(
-                'The Production keys of this scope belong to another MONEI account. To connect this account, enter its Production Account Id and Api Key, save, and connect again.'
+                'The Live keys of this scope belong to another MONEI account. To connect this account, clear the Production Account Id and Production Api Key fields, save, and connect again.'
             ),
             'access_denied' => __('MONEI refused the connect. Nothing was changed.'),
             'invalid_grant' => __('The connect code is not valid or expired. Start again from the MONEI settings.'),
