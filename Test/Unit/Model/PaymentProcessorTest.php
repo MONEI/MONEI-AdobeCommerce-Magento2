@@ -977,11 +977,36 @@ class PaymentProcessorTest extends TestCase
         return $processor->process('000000001', 'pay_123', ['id' => 'pay_123']);
     }
 
+    /**
+     * Bug: a settled order keeps no MONEI status, so the forward check of unsigned callbacks takes a replay of
+     * the same payment for a first one; or the status is not saved with the settled order.
+     */
+    public function testASettledPaymentStoresItsMoneiStatusWithTheOrder(): void
+    {
+        $payment = $this->createMock(OrderPaymentInterface::class);
+        $stored = [];
+        $payment->method('setAdditionalInformation')->willReturnCallback(function ($key, $value) use (&$stored, $payment) {
+            $stored[$key] = $value;
+            return $payment;
+        });
+        $this->givenLockedOrder('000000001', 10.00, 'EUR', Order::STATE_NEW, $payment);
+        $saved = null;
+        $this->orderRepository->method('save')->willReturnCallback(function ($order) use (&$stored, &$saved) {
+            $saved = $stored['monei_payment_status'] ?? null;
+            return $order;
+        });
+
+        $this->processPaymentDto($this->createPaymentDto('pay_1', Status::SUCCEEDED, 1000, 'EUR'));
+
+        $this->assertSame('SUCCEEDED', $saved);
+    }
+
     private function givenLockedOrder(
         string $incrementId,
         float $baseGrandTotal,
         string $baseCurrency,
-        string $state = Order::STATE_NEW
+        string $state = Order::STATE_NEW,
+        ?OrderPaymentInterface $payment = null
     ): void {
         $this->order->method('loadByIncrementId')->with($incrementId)->willReturn($this->order);
         $this->order->method('getId')->willReturn(1);
@@ -989,7 +1014,7 @@ class PaymentProcessorTest extends TestCase
         $this->order->method('getState')->willReturn($state);
         $this->order->method('getBaseGrandTotal')->willReturn($baseGrandTotal);
         $this->order->method('getBaseCurrencyCode')->willReturn($baseCurrency);
-        $this->order->method('getPayment')->willReturn($this->createMock(OrderPaymentInterface::class));
+        $this->order->method('getPayment')->willReturn($payment ?? $this->createMock(OrderPaymentInterface::class));
         $this->lockManager->method('lockOrder')->willReturn(true);
     }
 

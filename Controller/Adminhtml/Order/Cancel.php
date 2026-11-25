@@ -18,6 +18,8 @@ use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Sales\Api\OrderManagementInterface;
+use Magento\Sales\Api\OrderRepositoryInterface;
+use Monei\MoneiPayment\Api\Data\PaymentInfoInterface;
 use Monei\MoneiPayment\Api\Service\CancelPaymentInterface;
 use Psr\Log\LoggerInterface;
 
@@ -49,6 +51,11 @@ class Cancel extends Action
     private $orderManagement;
 
     /**
+     * @var OrderRepositoryInterface
+     */
+    private $orderRepository;
+
+    /**
      * @var LoggerInterface
      */
     private $logger;
@@ -65,6 +72,7 @@ class Cancel extends Action
      * @param JsonFactory $resultJsonFactory
      * @param CancelPaymentInterface $cancelPaymentService
      * @param OrderManagementInterface $orderManagement
+     * @param OrderRepositoryInterface $orderRepository
      * @param LoggerInterface $logger
      * @param SerializerInterface $serializer
      */
@@ -73,6 +81,7 @@ class Cancel extends Action
         JsonFactory $resultJsonFactory,
         CancelPaymentInterface $cancelPaymentService,
         OrderManagementInterface $orderManagement,
+        OrderRepositoryInterface $orderRepository,
         LoggerInterface $logger,
         SerializerInterface $serializer
     ) {
@@ -80,6 +89,7 @@ class Cancel extends Action
         $this->resultJsonFactory = $resultJsonFactory;
         $this->cancelPaymentService = $cancelPaymentService;
         $this->orderManagement = $orderManagement;
+        $this->orderRepository = $orderRepository;
         $this->logger = $logger;
         $this->serializer = $serializer;
     }
@@ -163,6 +173,13 @@ class Cancel extends Action
             }
 
             try {
+                // Unsigned callbacks process only a forward move from this status: it must be MONEI's answer.
+                $order = $this->orderRepository->get((int) $params['order_id']);
+                $order->getPayment()->setAdditionalInformation(
+                    PaymentInfoInterface::PAYMENT_STATUS,
+                    (string) $response->getStatus()
+                );
+                $this->orderRepository->save($order);
                 $this->orderManagement->cancel($params['order_id']);
                 $this->messageManager->addSuccessMessage(__('The order has been successfully canceled.'));
             } catch (LocalizedException $e) {

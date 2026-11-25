@@ -27,6 +27,7 @@ use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
+use Magento\Sales\Model\Order\Payment as OrderPayment;
 use Monei\Model\Payment;
 use Monei\MoneiPayment\Api\Service\CancelPaymentInterface;
 use Monei\MoneiPayment\Controller\Adminhtml\Order\Cancel;
@@ -100,6 +101,11 @@ class CancelTest extends TestCase
     private $_orderRepositoryMock;
 
     /**
+     * @var OrderPayment|MockObject
+     */
+    private $_orderPaymentMock;
+
+    /**
      * Set up test environment
      *
      * @return void
@@ -118,6 +124,10 @@ class CancelTest extends TestCase
         $this->_resultJsonMock = $this->createMock(Json::class);
         $this->_formKeyValidatorMock = $this->createMock(Validator::class);
         $this->_orderRepositoryMock = $this->createMock(OrderRepositoryInterface::class);
+        $this->_orderPaymentMock = $this->createMock(OrderPayment::class);
+        $orderMock = $this->createMock(Order::class);
+        $orderMock->method('getPayment')->willReturn($this->_orderPaymentMock);
+        $this->_orderRepositoryMock->method('get')->willReturn($orderMock);
 
         $this->_contextMock = $this->createMock(Context::class);
         $this->_contextMock->method('getRequest')->willReturn($this->_requestMock);
@@ -133,6 +143,7 @@ class CancelTest extends TestCase
                 'resultJsonFactory' => $this->_resultJsonFactoryMock,
                 'cancelPaymentService' => $this->_cancelPaymentServiceMock,
                 'orderManagement' => $this->_orderManagementMock,
+                'orderRepository' => $this->_orderRepositoryMock,
                 'logger' => $this->_loggerMock,
                 'serializer' => $this->_serializerMock
             ]
@@ -172,6 +183,7 @@ class CancelTest extends TestCase
                 $this->_resultJsonFactoryMock,
                 $this->_cancelPaymentServiceMock,
                 $this->_orderManagementMock,
+                $this->_orderRepositoryMock,
                 $this->_loggerMock,
                 $this->_serializerMock
             ])
@@ -266,6 +278,7 @@ class CancelTest extends TestCase
                 $this->_resultJsonFactoryMock,
                 $this->_cancelPaymentServiceMock,
                 $this->_orderManagementMock,
+                $this->_orderRepositoryMock,
                 $this->_loggerMock,
                 $this->_serializerMock
             ])
@@ -288,6 +301,56 @@ class CancelTest extends TestCase
 
         $result = $this->_controller->execute();
         $this->assertInstanceOf(Json::class, $result);
+    }
+
+    /**
+     * Bug: the order keeps the stored status AUTHORIZED after MONEI voids the payment, so the forward check of
+     * unsigned callbacks reads a status MONEI no longer has; or the status is written after the order cancel, which
+     * a failure can skip.
+     */
+    public function testACanceledPaymentStoresTheMoneiStatusBeforeTheOrderCancel(): void
+    {
+        $this->_requestMock->method('getParams')->willReturn([
+            'payment_id' => 'pay_1',
+            'cancellation_reason' => 'requested_by_customer',
+            'order_id' => '7',
+        ]);
+        $canceled = $this->createMock(Payment::class);
+        $canceled->method('getStatus')->willReturn('CANCELED');
+        $this->_cancelPaymentServiceMock->method('execute')->willReturn($canceled);
+        $calls = [];
+        $this->_orderPaymentMock->expects($this->once())->method('setAdditionalInformation')
+            ->willReturnCallback(function (string $key, $value) use (&$calls) {
+                $calls[] = [$key, $value];
+                return $this->_orderPaymentMock;
+            });
+        $this->_orderRepositoryMock->expects($this->once())->method('save')
+            ->willReturnCallback(function ($order) use (&$calls) {
+                $calls[] = 'save';
+                return $order;
+            });
+        $this->_orderManagementMock->expects($this->once())->method('cancel')->with('7')
+            ->willReturnCallback(function () use (&$calls) {
+                $calls[] = 'cancel';
+                return true;
+            });
+        $this->_resultJsonMock->method('setData')->willReturnSelf();
+        $controller = $this->getMockBuilder(Cancel::class)
+            ->setConstructorArgs([
+                $this->_contextMock,
+                $this->_resultJsonFactoryMock,
+                $this->_cancelPaymentServiceMock,
+                $this->_orderManagementMock,
+                $this->_orderRepositoryMock,
+                $this->_loggerMock,
+                $this->_serializerMock
+            ])
+            ->onlyMethods(['getUrl'])
+            ->getMock();
+
+        $controller->execute();
+
+        $this->assertSame([['monei_payment_status', 'CANCELED'], 'save', 'cancel'], $calls);
     }
 
     /**
@@ -357,6 +420,7 @@ class CancelTest extends TestCase
                 $this->_resultJsonFactoryMock,
                 $this->_cancelPaymentServiceMock,
                 $this->_orderManagementMock,
+                $this->_orderRepositoryMock,
                 $this->_loggerMock,
                 $this->_serializerMock
             ])
@@ -454,6 +518,7 @@ class CancelTest extends TestCase
                 $this->_resultJsonFactoryMock,
                 $this->_cancelPaymentServiceMock,
                 $this->_orderManagementMock,
+                $this->_orderRepositoryMock,
                 $this->_loggerMock,
                 $this->_serializerMock
             ])
