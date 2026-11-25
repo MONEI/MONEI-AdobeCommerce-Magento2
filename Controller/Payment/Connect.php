@@ -15,8 +15,8 @@ use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\Raw;
 use Magento\Framework\Controller\Result\RawFactory;
-use Magento\Framework\Escaper;
 use Monei\MoneiPayment\Service\Connect\ConnectService;
+use Monei\MoneiPayment\Service\Connect\ResultPage;
 use Monei\MoneiPayment\Service\Logger;
 use Throwable;
 
@@ -44,9 +44,9 @@ class Connect implements HttpGetActionInterface
     private ConnectService $connectService;
 
     /**
-     * @var Escaper
+     * @var ResultPage
      */
-    private Escaper $escaper;
+    private ResultPage $resultPage;
 
     /**
      * @var Logger
@@ -57,20 +57,20 @@ class Connect implements HttpGetActionInterface
      * @param RequestInterface $request
      * @param RawFactory $rawFactory
      * @param ConnectService $connectService
-     * @param Escaper $escaper
+     * @param ResultPage $resultPage
      * @param Logger $logger
      */
     public function __construct(
         RequestInterface $request,
         RawFactory $rawFactory,
         ConnectService $connectService,
-        Escaper $escaper,
+        ResultPage $resultPage,
         Logger $logger
     ) {
         $this->request = $request;
         $this->rawFactory = $rawFactory;
         $this->connectService = $connectService;
-        $this->escaper = $escaper;
+        $this->resultPage = $resultPage;
         $this->logger = $logger;
     }
 
@@ -93,34 +93,13 @@ class Connect implements HttpGetActionInterface
             $this->logger->error('[Connect] Connect failed: ' . get_class($e));
             $outcome = ['switched' => [], 'problems' => [['mode' => null, 'code' => 'temporarily_unavailable']]];
         }
-        $refused = ConnectService::isRefused($outcome);
-
-        $messages = [];
-        if ($outcome['switched']) {
-            $messages[] = (string) __('MONEI connected.');
-        }
-        foreach ($outcome['problems'] as $problem) {
-            $messages[] = ConnectService::message($problem['mode'], $problem['code']);
-        }
-        if (!$refused) {
-            $messages[] = (string) __('You can close this tab.');
-        }
-        $title = $this->escaper->escapeHtml((string) __('Connect with MONEI'));
-        $body = '';
-        foreach ($messages as $message) {
-            $body .= '<p>' . $this->escaper->escapeHtml($message) . '</p>';
-        }
-
         $result = $this->rawFactory->create();
-        $result->setHttpResponseCode($refused ? 400 : 200);
+        $result->setHttpResponseCode(ConnectService::isRefused($outcome) ? 400 : 200);
         // The code is in this URL: it must never leave in a Referer.
         $result->setHeader('Referrer-Policy', 'no-referrer', true);
         $result->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0', true);
         $result->setHeader('Content-Type', 'text/html; charset=UTF-8', true);
-        $result->setContents(
-            '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="robots" content="noindex">'
-            . '<title>' . $title . '</title></head><body><h1>' . $title . '</h1>' . $body . '</body></html>'
-        );
+        $result->setContents($this->resultPage->render($outcome));
 
         return $result;
     }
