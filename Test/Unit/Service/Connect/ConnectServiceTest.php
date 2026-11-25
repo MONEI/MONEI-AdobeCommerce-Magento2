@@ -18,6 +18,8 @@ use Monei\MoneiPayment\Service\Connect\ConnectService;
 use Monei\MoneiPayment\Service\Connect\LockedCredentials;
 use Monei\MoneiPayment\Service\Logger;
 use PHPUnit\Framework\MockObject\MockObject;
+use Magento\Store\Model\Store;
+use Magento\Store\Model\StoreManagerInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -51,6 +53,9 @@ class ConnectServiceTest extends TestCase
 
     /** @var MoneiApiClient|MockObject */
     private $apiClient;
+
+    /** @var array[] Store views: [id, website id, secure base URL] (stores 1 and 2 in website 1, 3 in website 2) */
+    private array $stores = [[1, 1, 'https://shop.example/']];
 
     /** @var string[] Modes locked by the deployment configuration */
     private array $lockedModes = [];
@@ -102,6 +107,16 @@ class ConnectServiceTest extends TestCase
         });
         $dateTime = $this->createMock(DateTime::class);
         $dateTime->method('gmtTimestamp')->willReturn(self::NOW);
+        $storeManager = $this->createMock(StoreManagerInterface::class);
+        $storeManager->method('getStores')->willReturnCallback(function () {
+            return array_map(function (array $store) {
+                $model = $this->createMock(Store::class);
+                $model->method('getId')->willReturn($store[0]);
+                $model->method('getWebsiteId')->willReturn($store[1]);
+                $model->method('getBaseUrl')->willReturn($store[2]);
+                return $model;
+            }, $this->stores);
+        });
         $locked = $this->createMock(LockedCredentials::class);
         $locked->method('modes')->willReturnCallback(function () {
             return $this->lockedModes;
@@ -116,7 +131,8 @@ class ConnectServiceTest extends TestCase
             $broker,
             $dateTime,
             $this->createMock(Logger::class),
-            $locked
+            $locked,
+            $storeManager
         );
     }
 
@@ -567,6 +583,53 @@ class ConnectServiceTest extends TestCase
         $this->assertSame([['mk_live_new', 'shop.example'], ['mk_test_new', 'shop.example']], $this->applePay);
         $this->assertSame(['live', 'test'], array_keys($result['switched']));
         $this->assertSame('mk_test_new', $this->config[self::SCOPE . 'test_api_key']);
+    }
+
+    /**
+     * Bug: a first connect of website 1 (no keys anywhere yet) registers a store view of website 2, which keeps
+     * no key from this connect.
+     */
+    public function testApplePayRegistersOnlyTheDomainsOfTheConnectedWebsite(): void
+    {
+        $this->stores = [[1, 1, 'https://shop.example/'], [3, 2, 'https://outlet.example/']];
+        $this->config = ['default/0/payment/monei_google_apple/active' => '1'];
+        $store = new MemoryFlagStore([ConnectService::STATE_PREFIX . self::STATE => self::entry()]);
+        $this->exchangeAnswer = ['test' => self::keys('test', 'acc-test-new')];
+
+        $this->service($store)->complete(self::STATE, 'the-code');
+
+        $this->assertSame([['mk_test_new', 'shop.example']], $this->applePay);
+    }
+
+    /**
+     * Bug: a connect of the default scope registers only one store view's domain, so Apple Pay stays off on the
+     * other domains that take the new key; or it registers a domain whose store view keeps its own key, or has
+     * Apple Pay off.
+     */
+    public function testApplePayRegistersEveryDomainThatTakesTheNewKey(): void
+    {
+        $this->stores = [
+            [1, 1, 'https://shop.example/'],
+            [2, 1, 'https://shop.example/en/'],
+            [3, 2, 'https://outlet.example/'],
+            [4, 2, 'https://no-apple-pay.example/'],
+        ];
+        $this->config = [
+            'default/0/payment/monei_google_apple/active' => '1',
+            'stores/4/payment/monei_google_apple/active' => '0',
+            'websites/2/payment/monei/test_api_key' => 'pk_test_outlet',
+        ];
+        $store = new MemoryFlagStore([
+            ConnectService::STATE_PREFIX . self::STATE => self::entry(['scope' => 'default', 'scopeId' => 0]),
+        ]);
+        $this->exchangeAnswer = ['live' => self::keys('live', 'acc-live'), 'test' => self::keys('test', 'acc-test-new')];
+
+        $this->service($store)->complete(self::STATE, 'the-code');
+
+        $this->assertSame(
+            [['mk_live_new', 'shop.example'], ['mk_live_new', 'outlet.example'], ['mk_test_new', 'shop.example']],
+            $this->applePay
+        );
     }
 
     /**

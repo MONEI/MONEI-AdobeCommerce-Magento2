@@ -81,7 +81,8 @@ class StartTest extends TestCase
             new Broker(),
             $dateTime,
             $this->createMock(Logger::class),
-            $this->createMock(LockedCredentials::class)
+            $this->createMock(LockedCredentials::class),
+            $this->createMock(\Magento\Store\Model\StoreManagerInterface::class)
         );
 
         (new Start($context, $service, new CallbackUrl($url, $storeManager)))->execute();
@@ -123,7 +124,8 @@ class StartTest extends TestCase
             new Broker(),
             $this->createMock(DateTime::class),
             $this->createMock(Logger::class),
-            $this->createMock(LockedCredentials::class)
+            $this->createMock(LockedCredentials::class),
+            $this->createMock(\Magento\Store\Model\StoreManagerInterface::class)
         );
 
         (new Start($context, $service, new CallbackUrl($this->createMock(Url::class), $storeManager)))->execute();

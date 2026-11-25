@@ -15,6 +15,9 @@ use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\Stdlib\DateTime\DateTime;
+use Magento\Framework\UrlInterface;
+use Magento\Store\Model\ScopeInterface;
+use Magento\Store\Model\StoreManagerInterface;
 use Monei\ApiException;
 use Monei\ConnectException;
 use Monei\Model\RegisterApplePayDomainRequest;
@@ -91,6 +94,11 @@ class ConnectService
     private LockedCredentials $lockedCredentials;
 
     /**
+     * @var StoreManagerInterface
+     */
+    private StoreManagerInterface $storeManager;
+
+    /**
      * @param FlagStore $flags
      * @param ScopeConfigInterface $scopeConfig
      * @param WriterInterface $configWriter
@@ -100,6 +108,7 @@ class ConnectService
      * @param DateTime $dateTime
      * @param Logger $logger
      * @param LockedCredentials $lockedCredentials
+     * @param StoreManagerInterface $storeManager
      */
     public function __construct(
         FlagStore $flags,
@@ -110,7 +119,8 @@ class ConnectService
         Broker $broker,
         DateTime $dateTime,
         Logger $logger,
-        LockedCredentials $lockedCredentials
+        LockedCredentials $lockedCredentials,
+        StoreManagerInterface $storeManager
     ) {
         $this->flags = $flags;
         $this->scopeConfig = $scopeConfig;
@@ -121,6 +131,7 @@ class ConnectService
         $this->dateTime = $dateTime;
         $this->logger = $logger;
         $this->lockedCredentials = $lockedCredentials;
+        $this->storeManager = $storeManager;
     }
 
     /**
@@ -186,6 +197,8 @@ class ConnectService
         }
         $scope = (string) $entry['scope'];
         $scopeId = (int) $entry['scopeId'];
+        // Read before the switch writes: which store views take the new keys.
+        $applePayHosts = $this->applePayHosts($scope, $scopeId);
         try {
             $result = $this->broker->exchange($code, (string) $entry['verifier'], (string) $entry['redirectUri']);
             $outcome = $this->swap($result, $scope, $scopeId);
@@ -193,7 +206,7 @@ class ConnectService
             $outcome = self::failed($e->getError());
         }
         if ($outcome['switched']) {
-            $this->afterSwitch($outcome['switched'], $scope, $scopeId, (string) $entry['redirectUri']);
+            $this->afterSwitch($outcome['switched'], $applePayHosts);
         }
         // A front route cannot make a valid admin link: the settings page shows the result on its next load.
         $this->flags->set(self::resultFlag($scope, $scopeId), [
@@ -463,32 +476,57 @@ class ConnectService
     }
 
     /**
-     * Clean the config cache, reset the SDK cache and register the Apple Pay domain with each new key
+     * Get, by mode, the storefront hosts that take a connect's key at a scope: those of its store views with Apple
+     * Pay on that inherit the mode's key from the scope (a store view with its own key keeps it)
      *
-     * @param array<string, array> $switched
      * @param string $scope
      * @param int $scopeId
-     * @param string $redirectUri
+     * @return array<string, string[]>
+     */
+    private function applePayHosts(string $scope, int $scopeId): array
+    {
+        $hosts = ['live' => [], 'test' => []];
+        foreach ($this->storeManager->getStores() as $store) {
+            $storeId = (int) $store->getId();
+            if (($scope === ScopeInterface::SCOPE_WEBSITES && (int) $store->getWebsiteId() !== $scopeId)
+                || ($scope === ScopeInterface::SCOPE_STORES && $storeId !== $scopeId)
+                || !$this->read(MoneiGoogleApplePaymentModuleConfigInterface::IS_PAYMENT_ENABLED, 'stores', $storeId)) {
+                continue;
+            }
+            $host = (string) parse_url((string) $store->getBaseUrl(UrlInterface::URL_TYPE_WEB, true), PHP_URL_HOST);
+            foreach (array_keys(self::MODES) as $mode) {
+                $path = self::path($mode, 'api_key');
+                if ($host !== '' && $this->read($path, 'stores', $storeId) === $this->read($path, $scope, $scopeId)) {
+                    $hosts[$mode][$host] = true;
+                }
+            }
+        }
+
+        return array_map('array_keys', $hosts);
+    }
+
+    /**
+     * Clean the config cache, reset the SDK cache and register the Apple Pay domains of each new key
+     *
+     * @param array<string, array> $switched
+     * @param array<string, string[]> $applePayHosts The result of applePayHosts(), read before the switch
      * @return void
      */
-    private function afterSwitch(array $switched, string $scope, int $scopeId, string $redirectUri): void
+    private function afterSwitch(array $switched, array $applePayHosts): void
     {
         $this->flush();
-        if (!$this->read(MoneiGoogleApplePaymentModuleConfigInterface::IS_PAYMENT_ENABLED, $scope, $scopeId)) {
-            return;
-        }
-        // The callback URL is on the scope's storefront.
-        $domain = (string) parse_url($redirectUri, PHP_URL_HOST);
         foreach ($switched as $mode => $keys) {
-            try {
-                $this->apiClient->createSdkForApiKey($keys['apiKey'])->applePayDomain->register(
-                    new RegisterApplePayDomainRequest(['domain_name' => $domain])
-                );
-            } catch (Throwable $e) {
-                // The new key works: an Apple Pay error keeps the switch.
-                $this->logger->error(
-                    '[Connect] Apple Pay domain registration after connect failed (' . $mode . '): ' . get_class($e)
-                );
+            foreach ($applePayHosts[$mode] as $domain) {
+                try {
+                    $this->apiClient->createSdkForApiKey($keys['apiKey'])->applePayDomain->register(
+                        new RegisterApplePayDomainRequest(['domain_name' => $domain])
+                    );
+                } catch (Throwable $e) {
+                    // The new key works: an Apple Pay error keeps the switch.
+                    $this->logger->error(
+                        '[Connect] Apple Pay domain registration after connect failed (' . $mode . '): ' . get_class($e)
+                    );
+                }
             }
         }
     }
