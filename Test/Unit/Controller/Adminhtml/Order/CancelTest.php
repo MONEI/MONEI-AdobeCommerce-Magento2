@@ -262,7 +262,8 @@ class CancelTest extends TestCase
             ->_orderManagementMock
             ->expects($this->once())
             ->method('cancel')
-            ->with($orderId);
+            ->with($orderId)
+            ->willReturn(true);
 
         // Success message should be added
         $this
@@ -304,35 +305,37 @@ class CancelTest extends TestCase
     }
 
     /**
-     * Bug: the order keeps the stored status AUTHORIZED after MONEI voids the payment, so the forward check of
-     * unsigned callbacks reads a status MONEI no longer has; or the status is written after the order cancel, which
-     * a failure can skip.
+     * Bug: the order keeps the stored status AUTHORIZED after MONEI voids the payment and the order is canceled, so
+     * the forward check of unsigned callbacks reads a status MONEI no longer has; or the status is written although
+     * the local cancel failed, so MONEI's CANCELED callback no longer cancels the open order.
+     *
+     * @dataProvider localCancels
      */
-    public function testACanceledPaymentStoresTheMoneiStatusBeforeTheOrderCancel(): void
+    public function testTheMoneiStatusIsStoredOnlyAfterTheOrderCancel(bool $canceled, array $expectedCalls): void
     {
         $this->_requestMock->method('getParams')->willReturn([
             'payment_id' => 'pay_1',
             'cancellation_reason' => 'requested_by_customer',
             'order_id' => '7',
         ]);
-        $canceled = $this->createMock(Payment::class);
-        $canceled->method('getStatus')->willReturn('CANCELED');
-        $this->_cancelPaymentServiceMock->method('execute')->willReturn($canceled);
+        $moneiPayment = $this->createMock(Payment::class);
+        $moneiPayment->method('getStatus')->willReturn('CANCELED');
+        $this->_cancelPaymentServiceMock->method('execute')->willReturn($moneiPayment);
         $calls = [];
-        $this->_orderPaymentMock->expects($this->once())->method('setAdditionalInformation')
+        $this->_orderPaymentMock->method('setAdditionalInformation')
             ->willReturnCallback(function (string $key, $value) use (&$calls) {
                 $calls[] = [$key, $value];
                 return $this->_orderPaymentMock;
             });
-        $this->_orderRepositoryMock->expects($this->once())->method('save')
+        $this->_orderRepositoryMock->method('save')
             ->willReturnCallback(function ($order) use (&$calls) {
                 $calls[] = 'save';
                 return $order;
             });
         $this->_orderManagementMock->expects($this->once())->method('cancel')->with('7')
-            ->willReturnCallback(function () use (&$calls) {
+            ->willReturnCallback(function () use (&$calls, $canceled) {
                 $calls[] = 'cancel';
-                return true;
+                return $canceled;
             });
         $this->_resultJsonMock->method('setData')->willReturnSelf();
         $controller = $this->getMockBuilder(Cancel::class)
@@ -350,7 +353,15 @@ class CancelTest extends TestCase
 
         $controller->execute();
 
-        $this->assertSame([['monei_payment_status', 'CANCELED'], 'save', 'cancel'], $calls);
+        $this->assertSame($expectedCalls, $calls);
+    }
+
+    public function localCancels(): array
+    {
+        return [
+            'canceled' => [true, ['cancel', ['monei_payment_status', 'CANCELED'], 'save']],
+            'cancel refused' => [false, ['cancel']],
+        ];
     }
 
     /**

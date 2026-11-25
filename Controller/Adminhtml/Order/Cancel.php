@@ -173,14 +173,17 @@ class Cancel extends Action
             }
 
             try {
-                // Unsigned callbacks process only a forward move from this status: it must be MONEI's answer.
+                if (!$this->orderManagement->cancel($params['order_id'])) {
+                    throw new LocalizedException(__('The order cannot be canceled.'));
+                }
+                // Unsigned callbacks process only a forward move from this status, so it changes only with the
+                // order: an order left open keeps the old status, and MONEI's CANCELED callback still cancels it.
                 $order = $this->orderRepository->get((int) $params['order_id']);
                 $order->getPayment()->setAdditionalInformation(
                     PaymentInfoInterface::PAYMENT_STATUS,
                     (string) $response->getStatus()
                 );
                 $this->orderRepository->save($order);
-                $this->orderManagement->cancel($params['order_id']);
                 $this->messageManager->addSuccessMessage(__('The order has been successfully canceled.'));
             } catch (LocalizedException $e) {
                 $this->messageManager->addErrorMessage($e->getMessage());
