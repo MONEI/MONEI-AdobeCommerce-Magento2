@@ -977,24 +977,6 @@ class PaymentProcessorTest extends TestCase
         return $processor->process('000000001', 'pay_123', ['id' => 'pay_123']);
     }
 
-    /**
-     * Bug: the vault service fetches again the payment that the callback verifier fetched, so a callback makes two
-     * MONEI calls.
-     */
-    public function testTokenizationReusesTheFetchedPayment(): void
-    {
-        $this->givenLockedOrder('000000001', 10.00, 'EUR');
-        $this->order->method('getData')->willReturnMap([['save_monei_tokenization', null, true]]);
-        $fetched = $this->createMock(\Monei\Model\Payment::class);
-        $payment = $this->createPaymentDto('pay_1', Status::SUCCEEDED, 1000, 'EUR');
-        $payment->method('getRawData')->willReturn(['original_payment' => $fetched]);
-        $this->createVaultPayment->expects($this->once())->method('execute')
-            ->with('pay_1', $this->anything(), $this->identicalTo($fetched))
-            ->willReturn(true);
-
-        $this->processPaymentDto($payment);
-    }
-
     private function givenLockedOrder(
         string $incrementId,
         float $baseGrandTotal,

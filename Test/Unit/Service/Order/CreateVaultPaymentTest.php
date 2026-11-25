@@ -143,20 +143,6 @@ class CreateVaultPaymentTest extends TestCase
     /**
      * Test when payment method is not a card (should skip tokenization)
      */
-    /**
-     * Bug: the service fetches a payment that the caller already has, so a callback makes two MONEI calls.
-     */
-    public function testAGivenPaymentIsNotFetchedAgain(): void
-    {
-        $orderPaymentMock = $this->createMock(OrderPaymentInterface::class);
-        $orderPaymentMock->method('getMethod')->willReturn(Monei::CARD_CODE);
-        $moneiPaymentMock = $this->createMock(\Monei\Model\Payment::class);
-        $moneiPaymentMock->expects($this->once())->method('getPaymentToken')->willReturn('');
-        $this->getPaymentServiceMock->expects($this->never())->method('execute');
-
-        $this->assertFalse($this->createVaultPayment->execute('pay_1', $orderPaymentMock, $moneiPaymentMock));
-    }
-
     public function testExecuteWithNonCardPayment(): void
     {
         $moneiPaymentId = 'pay_123456789';

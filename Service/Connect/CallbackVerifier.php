@@ -24,6 +24,7 @@ use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
 use Monei\MoneiPayment\Api\Data\PaymentInfoInterface;
 use Monei\MoneiPayment\Model\Config\Source\Mode;
 use Monei\MoneiPayment\Model\Payment\Monei;
+use Monei\MoneiPayment\Service\Api\FetchedPayments;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\ObjectSerializer;
 use InvalidArgumentException;
@@ -37,7 +38,7 @@ use Throwable;
  *   store's key and checked against the order. So callbacks of orders made before the connect, after a rotation,
  *   or without v2 still settle, and a forged body changes nothing. It changes only a MONEI order that awaits
  *   payment, so it never reopens a canceled order. The payment processor checks the amount of the fetched payment,
- *   as of a signed one, and reuses the fetched model (original_payment), so it does not fetch again.
+ *   as of a signed one. GetPayment answers from the fetched model, so processing does not fetch again.
  * - Else (a manual pk_ key): v1 with that key.
  */
 class CallbackVerifier
@@ -90,12 +91,18 @@ class CallbackVerifier
     private DateTime $dateTime;
 
     /**
+     * @var FetchedPayments
+     */
+    private FetchedPayments $fetchedPayments;
+
+    /**
      * @param ScopeConfigInterface $scopeConfig
      * @param StoreManagerInterface $storeManager
      * @param OrderFactory $orderFactory
      * @param MoneiApiClient $apiClient
      * @param FlagStore $flags
      * @param DateTime $dateTime
+     * @param FetchedPayments $fetchedPayments
      */
     public function __construct(
         ScopeConfigInterface $scopeConfig,
@@ -103,7 +110,8 @@ class CallbackVerifier
         OrderFactory $orderFactory,
         MoneiApiClient $apiClient,
         FlagStore $flags,
-        DateTime $dateTime
+        DateTime $dateTime,
+        FetchedPayments $fetchedPayments
     ) {
         $this->scopeConfig = $scopeConfig;
         $this->storeManager = $storeManager;
@@ -111,6 +119,7 @@ class CallbackVerifier
         $this->apiClient = $apiClient;
         $this->flags = $flags;
         $this->dateTime = $dateTime;
+        $this->fetchedPayments = $fetchedPayments;
     }
 
     /**
@@ -119,9 +128,9 @@ class CallbackVerifier
      * @param string $body Raw request body
      * @param string|null $signature MONEI-Signature header, null when absent
      * @return array{status: int, payment: array|null, reason: string} The payment to process, in the body's
-     *     camelCase shape (a fetched payment adds its model as original_payment), or null with the HTTP status to
-     *     answer: 400 a malformed body or another payment of a settled order, 401 a bad signature, 503 a failed
-     *     fetch or no fetch quota (MONEI retries), 200 a payment that must not change the order.
+     *     camelCase shape, or null with the HTTP status to answer: 400 a malformed body or another payment of a
+     *     settled order, 401 a bad signature, 503 a failed fetch or no fetch quota (MONEI retries), 200 a payment
+     *     that must not change the order.
      */
     public function verify(string $body, ?string $signature): array
     {
@@ -188,8 +197,8 @@ class CallbackVerifier
         try {
             $payment = $this->apiClient->createSdkForApiKey($key)->payments->get($id);
         } catch (InvalidArgumentException $e) {
-            // The SDK's deserialize refuses a status it does not know. A retry gets the same answer.
-            return self::refused(200, 'status');
+            // The SDK's deserialize refuses a value it does not know (a new status). A retry gets the same answer.
+            return self::refused(200, 'unknown value: ' . $e->getMessage());
         } catch (Throwable $e) {
             return self::refused(503, 'fetch');
         }
@@ -209,7 +218,9 @@ class CallbackVerifier
             return self::refused(200, 'status');
         }
 
-        return self::accepted($fetched + ['original_payment' => $payment]);
+        $this->fetchedPayments->add($payment);
+
+        return self::accepted($fetched);
     }
 
     /**

@@ -25,15 +25,23 @@ use Monei\MoneiClient;
 class GetPayment extends AbstractApiService implements GetPaymentInterface
 {
     /**
+     * @var FetchedPayments
+     */
+    private FetchedPayments $fetchedPayments;
+
+    /**
      * @param Logger $logger Logger for tracking operations
      * @param ApiExceptionHandler $exceptionHandler Exception handler for MONEI API errors
      * @param MoneiApiClient $apiClient API client factory for MONEI SDK
+     * @param FetchedPayments $fetchedPayments Payments the callback verifier fetched in this request
      */
     public function __construct(
         Logger $logger,
         ApiExceptionHandler $exceptionHandler,
-        MoneiApiClient $apiClient
+        MoneiApiClient $apiClient,
+        FetchedPayments $fetchedPayments
     ) {
+        $this->fetchedPayments = $fetchedPayments;
         parent::__construct($logger, $exceptionHandler, $apiClient);
     }
 
@@ -51,6 +59,10 @@ class GetPayment extends AbstractApiService implements GetPaymentInterface
     {
         if (empty($payment_id)) {
             throw new LocalizedException(__('Payment ID is required to retrieve payment details'));
+        }
+        $fetched = $this->fetchedPayments->get($payment_id);
+        if ($fetched !== null) {
+            return $fetched;
         }
 
         // Create data array for logging

@@ -15,6 +15,9 @@ use Monei\MoneiPayment\Api\PaymentProcessorInterface;
 use Monei\MoneiPayment\Controller\Payment\Callback;
 use Monei\MoneiPayment\Model\Data\PaymentDTOFactory;
 use Monei\MoneiPayment\Model\Service\StatusCodeHandler;
+use Monei\MoneiPayment\Service\Api\ApiExceptionHandler;
+use Monei\MoneiPayment\Service\Api\GetPayment;
+use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\Logger;
 use Monei\MoneiPayment\Test\Unit\Service\Connect\VerifierTestCase;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -64,8 +67,8 @@ class CallbackTest extends VerifierTestCase
 
     /**
      * Bug: the handler processes the request body, not the payment MONEI answers, so a forged body settles the
-     * order; or the fetched payment never reaches the processor; or its model does not, so the processor fetches it
-     * again.
+     * order; or the fetched payment never reaches the processor; or processing it (the order email, the vault
+     * token) fetches it again through GetPayment.
      */
     public function testAFetchedSucceededPaymentReachesTheProcessor(): void
     {
@@ -78,10 +81,18 @@ class CallbackTest extends VerifierTestCase
         $this->paymentProcessor->expects($this->once())->method('process')
             ->willReturnCallback(function (string $orderId, string $paymentId, array $payment) use ($result) {
                 $this->assertSame(
-                    ['000000101', self::ID, 'SUCCEEDED', 'Transaction approved', self::ID],
-                    [$orderId, $paymentId, $payment['status'], $payment['statusMessage'],
-                        $payment['original_payment']->getId()]
+                    ['000000101', self::ID, 'SUCCEEDED', 'Transaction approved'],
+                    [$orderId, $paymentId, $payment['status'], $payment['statusMessage']]
                 );
+                $apiClient = $this->createMock(MoneiApiClient::class);
+                $apiClient->expects($this->never())->method('getMoneiSdk');
+                $getPayment = new GetPayment(
+                    $this->createMock(Logger::class),
+                    $this->createMock(ApiExceptionHandler::class),
+                    $apiClient,
+                    $this->fetchedPayments
+                );
+                $this->assertSame('SUCCEEDED', $getPayment->execute($paymentId)->getStatus());
                 return $result;
             });
 

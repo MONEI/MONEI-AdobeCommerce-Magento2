@@ -12,6 +12,7 @@ use Monei\MoneiPayment\Block\System\Config\Form\Field\ConnectButton;
 use Monei\MoneiPayment\Controller\Adminhtml\Connect\Disconnect;
 use Monei\MoneiPayment\Controller\Adminhtml\Connect\Start;
 use Monei\MoneiPayment\Model\Config\Backend\ApiKey;
+use Monei\MoneiPayment\Model\Config\Backend\CredentialValue;
 use Monei\MoneiPayment\Service\Connect\CallbackUrl;
 use PHPUnit\Framework\TestCase;
 use RecursiveDirectoryIterator;
@@ -74,17 +75,21 @@ class ConnectWiringTest extends TestCase
 
     /**
      * Bug: a key field saves without the ApiKey model, so a manual key change keeps the signing secret of the
-     * replaced key.
+     * replaced key, and the page shows the full scoped key; or the mode saves without CredentialValue, so a page
+     * loaded before a connect puts a test-only store back in production mode.
      */
-    public function testBothKeyFieldsUseTheApiKeyBackendModel(): void
+    public function testTheKeyAndModeFieldsUseTheirBackendModels(): void
     {
         $xml = simplexml_load_file(self::ROOT . '/etc/adminhtml/system.xml');
         $models = [];
-        foreach (['test_api_key', 'production_api_key'] as $id) {
-            $models[$id] = (string) $xml->xpath("//group[@id='monei']/field[@id='$id']/backend_model")[0];
+        foreach (['test_api_key', 'production_api_key', 'mode'] as $id) {
+            $models[$id] = (string) ($xml->xpath("//group[@id='monei']/field[@id='$id']/backend_model")[0] ?? '');
         }
 
-        $this->assertSame(['test_api_key' => ApiKey::class, 'production_api_key' => ApiKey::class], $models);
+        $this->assertSame(
+            ['test_api_key' => ApiKey::class, 'production_api_key' => ApiKey::class, 'mode' => CredentialValue::class],
+            $models
+        );
     }
 
     /**

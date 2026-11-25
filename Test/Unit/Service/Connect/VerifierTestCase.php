@@ -13,6 +13,7 @@ use Magento\Store\Model\StoreManagerInterface;
 use Monei\Api\PaymentsApi;
 use Monei\ApiException;
 use Monei\MoneiClient;
+use Monei\MoneiPayment\Service\Api\FetchedPayments;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\Connect\CallbackVerifier;
 use Monei\ObjectSerializer;
@@ -50,11 +51,14 @@ abstract class VerifierTestCase extends TestCase
 
     protected MemoryFlagStore $flags;
 
+    protected FetchedPayments $fetchedPayments;
+
     protected function setUp(): void
     {
         $this->orders = ['000000101' => ['paymentId' => '']];
         $this->remote = self::paymentFields('SUCCEEDED');
         $this->flags = new MemoryFlagStore();
+        $this->fetchedPayments = new FetchedPayments();
         $this->config = [
             self::STORE . 'mode' => '1',
             self::STORE . 'test_api_key' => self::KEY,
@@ -133,7 +137,8 @@ abstract class VerifierTestCase extends TestCase
             $orderFactory,
             $apiClient,
             $this->flags,
-            $dateTime
+            $dateTime,
+            $this->fetchedPayments
         );
     }
 

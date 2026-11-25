@@ -345,8 +345,10 @@ class ConnectService
             $problems[] = ['mode' => $mode, 'code' => $error];
         }
         $liveAccount = $this->read(self::path('live', 'account_id'), $scope, $scopeId);
-        // Open orders of the old account need its key, and a store split across two merchants is wrong.
-        if (isset($result['live']) && $liveAccount !== '' && $result['live']['accountId'] !== $liveAccount) {
+        // Open orders of the old account need its key, and a store split across two merchants is wrong. An account
+        // id without a key (a settings page saved after a Disconnect) protects nothing.
+        if (isset($result['live']) && $liveAccount !== '' && $result['live']['accountId'] !== $liveAccount
+            && $this->read(self::path('live', 'api_key'), $scope, $scopeId) !== '') {
             // Only a connected mode has a Disconnect button; manual keys must be replaced by hand.
             $connected = in_array('live', $this->connectedModes($scope, $scopeId), true);
             $problems[] = ['mode' => null, 'code' => $connected ? 'otherAccount' : 'otherAccountManual'];

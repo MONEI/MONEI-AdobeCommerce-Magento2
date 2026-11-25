@@ -435,6 +435,21 @@ class ConnectServiceTest extends TestCase
         $this->assertSame([], $this->clients);
     }
 
+    /**
+     * Bug: a Live account id left without its key (a settings page loaded before a Disconnect posts it back) blocks
+     * every connect of another account.
+     */
+    public function testALiveAccountIdWithoutAKeyDoesNotBlockAnotherAccount(): void
+    {
+        $this->config = [self::SCOPE . 'production_account_id' => 'acc-old', self::SCOPE . 'production_api_key' => ''];
+        $store = new MemoryFlagStore([ConnectService::STATE_PREFIX . self::STATE => self::entry()]);
+        $this->exchangeAnswer = ['live' => self::keys('live', 'acc-other')];
+
+        $result = $this->service($store)->complete(self::STATE, 'the-code');
+
+        $this->assertSame([[], 'mk_live_new'], [self::codes($result), $this->config[self::SCOPE . 'production_api_key']]);
+    }
+
     public function liveKeysOfAnotherAccount(): array
     {
         return [
