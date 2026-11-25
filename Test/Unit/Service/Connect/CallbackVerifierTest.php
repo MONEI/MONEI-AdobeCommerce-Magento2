@@ -89,14 +89,16 @@ class CallbackVerifierTest extends VerifierTestCase
 
     /**
      * Bug: a forged body or a fetched payment that does not belong to the order changes it. Each answers 200, so
-     * MONEI does not retry.
+     * MONEI does not retry. A status the SDK does not know throws inside payments->get(): a 503 there makes MONEI
+     * retry an answer that never changes. The mode is the one set at the order's store.
      *
      * @dataProvider paymentsThatChangeNothing
      */
-    public function testAFetchedPaymentThatDoesNotFitChangesNothing(array $remote, bool $paid): void
+    public function testAFetchedPaymentThatDoesNotFitChangesNothing(array $remote, array $order = []): void
     {
         $this->remote = $remote;
-        $this->orders['000000101']['paid'] = $paid;
+        $this->orders['000000101'] = $order + $this->orders['000000101'];
+        $this->config['store/2/payment/monei/mode'] = '2';
 
         $decision = $this->verifier()->verify(self::body(self::paymentFields('SUCCEEDED')), null);
 
@@ -107,11 +109,105 @@ class CallbackVerifierTest extends VerifierTestCase
     public function paymentsThatChangeNothing(): array
     {
         return [
-            'forged SUCCEEDED, MONEI says PENDING' => [self::paymentFields('PENDING'), false],
-            'FAILED for an order already paid' => [self::paymentFields('FAILED'), true],
-            'another orderId' => [self::paymentFields('SUCCEEDED', ['orderId' => '000000102']), false],
-            'the same orderId, another amount' => [self::paymentFields('SUCCEEDED', ['amount' => 1001]), false],
-            'another payment id' => [self::paymentFields('SUCCEEDED', ['id' => str_repeat('b', 32)]), false],
+            'forged SUCCEEDED, MONEI says PENDING' => [self::paymentFields('PENDING')],
+            'another orderId' => [self::paymentFields('SUCCEEDED', ['orderId' => '000000102'])],
+            'another payment id' => [self::paymentFields('SUCCEEDED', ['id' => str_repeat('b', 32)])],
+            'a status the SDK does not know' => [self::paymentFields('SETTLED_LATER')],
+            'a Live payment, the store in test mode' => [self::paymentFields('SUCCEEDED', ['livemode' => true])],
+            'a test payment, the order store in live mode' => [self::paymentFields('SUCCEEDED'), ['storeId' => 2]],
+        ];
+    }
+
+    /**
+     * Bug: the fetch path drops a payment whose amount differs from the order, so the payment processor never holds
+     * the order for review, as it does for a signed payment.
+     */
+    public function testAFetchedPaymentOfAnotherAmountReachesTheProcessor(): void
+    {
+        $this->remote = self::paymentFields('SUCCEEDED', ['amount' => 1001]);
+
+        $decision = $this->verifier()->verify(self::body(self::paymentFields('SUCCEEDED')), null);
+
+        $this->assertSame([200, 1001], [$decision['status'], $decision['payment']['amount']]);
+    }
+
+    /**
+     * Bug: an unsigned request changes an order that no longer awaits payment (it reopens a canceled order), or an
+     * order of another payment method; or it makes the store call MONEI. An error answer makes MONEI retry a
+     * callback that can never settle.
+     *
+     * @dataProvider ordersAFetchMustNotChange
+     */
+    public function testAnOrderAFetchMustNotChangeAnswers200WithNoFetch(string $orderId, array $order): void
+    {
+        $this->orders['000000101'] = $order + $this->orders['000000101'];
+
+        $decision = $this->verifier()->verify(self::body(self::paymentFields('SUCCEEDED', ['orderId' => $orderId])), null);
+
+        $this->assertSame([200, null], [$decision['status'], $decision['payment']]);
+        $this->assertSame([], $this->fetches);
+    }
+
+    public function ordersAFetchMustNotChange(): array
+    {
+        return [
+            'no order for the orderId' => ['999', []],
+            'a canceled order' => ['000000101', ['state' => 'canceled']],
+            'another payment method' => ['000000101', ['method' => 'checkmo']],
+        ];
+    }
+
+    /**
+     * Bug: an order on hold (an amount mismatch) or under payment review never settles from a fetch.
+     *
+     * @dataProvider statesThatAwaitPayment
+     */
+    public function testAnOrderThatAwaitsPaymentIsFetched(string $state): void
+    {
+        $this->orders['000000101']['state'] = $state;
+
+        $decision = $this->verifier()->verify(self::body($this->remote), null);
+
+        $this->assertSame([200, 'SUCCEEDED'], [$decision['status'], $decision['payment']['status']]);
+    }
+
+    public function statesThatAwaitPayment(): array
+    {
+        return [
+            'pending_payment' => ['pending_payment'],
+            'payment_review' => ['payment_review'],
+            'holded' => ['holded'],
+        ];
+    }
+
+    /**
+     * Bug: the payment of a retry is refused for good, so the paid order stays open; or a second payment is fetched
+     * for an order that a stored payment already paid or holds. An unknown stored status lets the fetch decide.
+     *
+     * @dataProvider storedPaymentStatuses
+     */
+    public function testABodyIdOtherThanTheStoredOneIsFetchedUnlessTheStoredPaymentSettled(
+        string $storedStatus,
+        string $storedStatusOf,
+        int $status,
+        int $fetches
+    ): void {
+        $this->orders['000000101'] += ['storedStatus' => $storedStatus, 'storedStatusOf' => $storedStatusOf];
+        $this->orders['000000101']['paymentId'] = str_repeat('a', 32);
+
+        $decision = $this->verifier()->verify(self::body($this->remote), null);
+
+        $this->assertSame([$status, $fetches], [$decision['status'], count($this->fetches)]);
+    }
+
+    public function storedPaymentStatuses(): array
+    {
+        return [
+            'PENDING' => ['PENDING', str_repeat('a', 32), 200, 1],
+            'AUTHORIZED' => ['AUTHORIZED', str_repeat('a', 32), 400, 0],
+            'SUCCEEDED' => ['SUCCEEDED', str_repeat('a', 32), 400, 0],
+            'PAID_OUT' => ['PAID_OUT', str_repeat('a', 32), 400, 0],
+            'SUCCEEDED, but of an older payment' => ['SUCCEEDED', str_repeat('c', 32), 200, 1],
         ];
     }
 
@@ -132,10 +228,8 @@ class CallbackVerifierTest extends VerifierTestCase
      *
      * @dataProvider bodiesRefusedBeforeAFetch
      */
-    public function testAFailedPreCheckAnswers400WithNoFetch(array $fields, ?string $signature, string $storedId): void
+    public function testAMalformedBodyAnswers400WithNoFetch(array $fields, ?string $signature): void
     {
-        $this->orders['000000101']['paymentId'] = $storedId;
-
         $decision = $this->verifier()->verify(self::body($fields), $signature);
 
         $this->assertSame(400, $decision['status']);
@@ -145,15 +239,14 @@ class CallbackVerifierTest extends VerifierTestCase
     public function bodiesRefusedBeforeAFetch(): array
     {
         return [
-            'id differs from the order monei_payment_id' => [self::paymentFields('SUCCEEDED'), null, str_repeat('c', 32)],
-            'no order for the orderId' => [self::paymentFields('SUCCEEDED', ['orderId' => '999']), null, ''],
-            'malformed id' => [self::paymentFields('SUCCEEDED', ['id' => '../payments']), null, ''],
-            'a header that does not parse' => [self::paymentFields('SUCCEEDED'), 'v1=abc', ''],
+            'malformed id' => [self::paymentFields('SUCCEEDED', ['id' => '../payments']), null],
+            'a header that does not parse' => [self::paymentFields('SUCCEEDED'), 'v1=abc'],
         ];
     }
 
     /**
-     * Bug: one order makes unbounded fetches, or the quota never frees up.
+     * Bug: one order makes unbounded fetches, or the quota never frees up, or a refusal answers 4xx, which MONEI does
+     * not retry, so the order stays open.
      */
     public function testTheOrderQuotaRefusesThe6thAttemptInAMinuteAndFreesAfter61S(): void
     {
@@ -165,7 +258,7 @@ class CallbackVerifierTest extends VerifierTestCase
         $this->now += 61;
         $statuses[] = $this->verifier()->verify($body, null)['status'];
 
-        $this->assertSame([200, 200, 200, 200, 200, 400, 200], $statuses);
+        $this->assertSame([200, 200, 200, 200, 200, 503, 200], $statuses);
         $this->assertCount(6, $this->fetches);
     }
 
@@ -175,7 +268,7 @@ class CallbackVerifierTest extends VerifierTestCase
     public function testTheStoreQuotaRefusesThe61stAttemptInAMinute(): void
     {
         for ($order = 1; $order <= 13; $order++) {
-            $this->orders["o$order"] = ['paymentId' => '', 'total' => 10.0, 'paid' => false];
+            $this->orders["o$order"] = ['paymentId' => ''];
         }
         $last = 0;
         for ($attempt = 0; $attempt < 61; $attempt++) {
@@ -184,7 +277,7 @@ class CallbackVerifierTest extends VerifierTestCase
             $last = $this->verifier()->verify($body, null)['status'];
         }
 
-        $this->assertSame(400, $last);
+        $this->assertSame(503, $last);
         $this->assertCount(60, $this->fetches);
     }
 

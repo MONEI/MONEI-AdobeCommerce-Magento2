@@ -15,6 +15,7 @@ use Magento\Framework\View\Helper\SecureHtmlRenderer;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 use Monei\MoneiPayment\Block\System\Config\Form\Field\ConnectButton;
+use Monei\MoneiPayment\Model\Config\Backend\CredentialValue;
 use Monei\MoneiPayment\Service\Connect\CallbackUrl;
 use Monei\MoneiPayment\Service\Connect\ConnectService;
 use PHPUnit\Framework\TestCase;
@@ -28,7 +29,9 @@ class ConnectButtonTest extends TestCase
 {
     /**
      * Bug: the button shows for a store whose callback URL the broker refuses for a reason the plugin can check,
-     * so the merchant meets a broker error page; or it never shows.
+     * so the merchant meets a broker error page; or it never shows; or the notice asks a store that cannot connect
+     * to connect. The page also posts the fingerprint of each value in use, or CredentialValue cannot tell a page
+     * loaded before a connect. It never shows a scoped key in full.
      *
      * @dataProvider callbackUrls
      */
@@ -57,7 +60,8 @@ class ConnectButtonTest extends TestCase
         $frontendUrl->method('getUrl')->willReturn($callback);
 
         $service = $this->createMock(ConnectService::class);
-        $service->method('apiKeys')->willReturn(['live' => '', 'test' => '']);
+        $service->method('apiKeys')->willReturn(['live' => 'pk_live_manual', 'test' => 'mk_test_0123456789abcdef']);
+        $service->method('mode')->willReturn('2');
         $secureRenderer = $this->createMock(SecureHtmlRenderer::class);
         $secureRenderer->method('renderEventListenerAsTag')->willReturn('<script></script>');
         $element = $this->createMock(AbstractElement::class);
@@ -73,8 +77,22 @@ class ConnectButtonTest extends TestCase
         $html = $block->render($element);
 
         $this->assertSame(
-            [$button, !$button],
-            [strpos($html, 'id="monei-connect-button"') !== false, strpos($html, 'Use manual keys') !== false]
+            [$button, !$button, $button],
+            [
+                strpos($html, 'id="monei-connect-button"') !== false,
+                strpos($html, 'Use manual keys') !== false,
+                strpos($html, 'to stop storing your account API key') !== false,
+            ]
+        );
+        foreach (['live' => 'pk_live_manual', 'test' => 'mk_test_0123456789abcdef', 'mode' => '2'] as $name => $value) {
+            $this->assertStringContainsString(
+                'name="monei_loaded_keys[' . $name . ']" value="' . CredentialValue::fingerprint($value) . '"',
+                $html
+            );
+        }
+        $this->assertSame(
+            [false, true],
+            [strpos($html, 'mk_test_0123456789abcdef') !== false, strpos($html, '•••• cdef') !== false]
         );
     }
 

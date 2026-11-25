@@ -64,7 +64,8 @@ class CallbackTest extends VerifierTestCase
 
     /**
      * Bug: the handler processes the request body, not the payment MONEI answers, so a forged body settles the
-     * order; or the fetched payment never reaches the processor.
+     * order; or the fetched payment never reaches the processor; or its model does not, so the processor fetches it
+     * again.
      */
     public function testAFetchedSucceededPaymentReachesTheProcessor(): void
     {
@@ -77,8 +78,9 @@ class CallbackTest extends VerifierTestCase
         $this->paymentProcessor->expects($this->once())->method('process')
             ->willReturnCallback(function (string $orderId, string $paymentId, array $payment) use ($result) {
                 $this->assertSame(
-                    ['000000101', self::ID, 'SUCCEEDED', 'Transaction approved'],
-                    [$orderId, $paymentId, $payment['status'], $payment['statusMessage']]
+                    ['000000101', self::ID, 'SUCCEEDED', 'Transaction approved', self::ID],
+                    [$orderId, $paymentId, $payment['status'], $payment['statusMessage'],
+                        $payment['original_payment']->getId()]
                 );
                 return $result;
             });
@@ -86,17 +88,19 @@ class CallbackTest extends VerifierTestCase
         $controller->execute();
 
         $this->assertSame([], $this->codes);
+        $this->assertCount(1, $this->fetches);
     }
 
     /**
      * Bug: a payment that must not change the order is refused in validateForCsrf, which can only answer 403, so
-     * MONEI retries for days; or it reaches the processor.
+     * MONEI retries for days; or it reaches the processor (an unsigned request reopens a canceled order).
      *
      * @dataProvider paymentsThatMustNotChangeTheOrder
      */
-    public function testAPaymentThatMustNotChangeTheOrderAnswers200AndIsNotProcessed(array $remote): void
+    public function testAPaymentThatMustNotChangeTheOrderAnswers200AndIsNotProcessed(array $remote, array $order): void
     {
         $this->remote = $remote;
+        $this->orders['000000101'] = $order + $this->orders['000000101'];
         $controller = $this->controller(self::body(self::paymentFields('SUCCEEDED')), null);
         $this->paymentProcessor->expects($this->never())->method('process');
 
@@ -109,8 +113,8 @@ class CallbackTest extends VerifierTestCase
     public function paymentsThatMustNotChangeTheOrder(): array
     {
         return [
-            'forged SUCCEEDED, MONEI says PENDING' => [self::paymentFields('PENDING')],
-            'the same order, another amount' => [self::paymentFields('SUCCEEDED', ['amount' => 1001])],
+            'forged SUCCEEDED, MONEI says PENDING' => [self::paymentFields('PENDING'), []],
+            'a canceled order, MONEI says SUCCEEDED' => [self::paymentFields('SUCCEEDED'), ['state' => 'canceled']],
         ];
     }
 

@@ -318,24 +318,26 @@ class ConnectServiceTest extends TestCase
     }
 
     /**
-     * Bug: a key the edge refuses replaces working credentials, or a 400 (a mode with no enabled provider) is
-     * taken for a refused key and blocks the connect.
+     * Bug: a key the edge refuses, or a key MONEI did not get to check (an outage, a rate limit), replaces working
+     * credentials; or a 400 (a mode with no enabled provider) is taken for a refused key and blocks the connect; or
+     * an outage tells the merchant the new key is bad.
      *
      * @dataProvider callAnswers
      */
-    public function testTheTestCallAnswerDecidesTheSwitch(int $status, array $expectedTest): void
+    public function testTheTestCallAnswerDecidesTheSwitch(int $status, array $expectedTest, array $expectedCodes): void
     {
         $store = $this->manualStore();
         $this->exchangeAnswer = ['test' => self::keys('test', 'acc-test-new')];
         $this->statuses = ['mk_test_new' => $status];
 
-        $this->service($store)->complete(self::STATE, 'the-code');
+        $result = $this->service($store)->complete(self::STATE, 'the-code');
 
         $credentials = $this->credentials();
         $this->assertSame(
             $expectedTest,
             [$credentials['test_account_id'], $credentials['test_api_key'], $credentials['test_signing_secret']]
         );
+        $this->assertSame($expectedCodes, self::codes($result));
     }
 
     public function callAnswers(): array
@@ -344,10 +346,12 @@ class ConnectServiceTest extends TestCase
         $kept = ['acc-test-old', 'pk_test_old', null];
 
         return [
-            '400 proves the key' => [400, $new],
-            '401' => [401, $kept],
-            '403' => [403, $kept],
-            'no answer' => [0, $kept],
+            '400 proves the key' => [400, $new, []],
+            '401' => [401, $kept, [['test', 'keyRejected']]],
+            '403' => [403, $kept, [['test', 'keyRejected']]],
+            '429' => [429, $kept, [['test', 'noAnswer']]],
+            '500' => [500, $kept, [['test', 'noAnswer']]],
+            'no answer' => [0, $kept, [['test', 'noAnswer']]],
         ];
     }
 
@@ -412,19 +416,31 @@ class ConnectServiceTest extends TestCase
 
     /**
      * Bug: a store is split across two MONEI accounts: open orders of the old Live account lose their key. The Test
-     * result is refused too, even proven.
+     * result is refused too, even proven. A store with manual Live keys has no Disconnect button, so its text must
+     * not say "Disconnect first".
+     *
+     * @dataProvider liveKeysOfAnotherAccount
      */
-    public function testAnotherLiveAccountSwitchesNeitherMode(): void
+    public function testAnotherLiveAccountSwitchesNeitherMode(string $liveKey, string $code): void
     {
         $store = $this->manualStore();
+        $this->config[self::SCOPE . 'production_api_key'] = $liveKey;
         $before = $this->credentials();
         $this->exchangeAnswer = ['live' => self::keys('live', 'acc-other'), 'test' => self::keys('test', 'acc-test-new')];
 
         $result = $this->service($store)->complete(self::STATE, 'the-code');
 
         $this->assertSame($before, $this->credentials());
-        $this->assertSame([[null, 'otherAccount']], self::codes($result));
+        $this->assertSame([[null, $code]], self::codes($result));
         $this->assertSame([], $this->clients);
+    }
+
+    public function liveKeysOfAnotherAccount(): array
+    {
+        return [
+            'connected' => ['mk_live_old', 'otherAccount'],
+            'manual' => ['pk_live_old', 'otherAccountManual'],
+        ];
     }
 
     /**
@@ -496,22 +512,33 @@ class ConnectServiceTest extends TestCase
 
     /**
      * Bug: a disconnect at a website deletes its rows, so the website inherits the default scope's credentials,
-     * possibly of another account; or leaves them in the config cache. The fake fails on any delete.
+     * possibly of another account; or leaves them in the config cache; or clears a mode with a manual key, which
+     * the merchant typed and cannot get back from a connect; or leaves a pending connect, whose callback writes the
+     * credentials back. The fake fails on any delete.
      */
-    public function testADisconnectAtAWebsiteWritesEmptyValuesThere(): void
+    public function testADisconnectAtAWebsiteWritesEmptyValuesOfTheConnectedModesThere(): void
     {
         $this->config = [
             'default/0/payment/monei/production_api_key' => 'pk_live_default',
             self::SCOPE . 'production_api_key' => 'mk_live_site',
             self::SCOPE . 'production_signing_secret' => 'mksec_live_site',
+            self::SCOPE . 'test_account_id' => 'acc-test',
+            self::SCOPE . 'test_api_key' => 'pk_test_site',
         ];
         $this->cacheTypeList->expects($this->once())->method('cleanType')->with('config');
 
-        $this->service(new MemoryFlagStore())->disconnect('websites', 1);
+        $flags = new MemoryFlagStore([
+            ConnectService::STATE_PREFIX . self::STATE => self::entry(),
+            ConnectService::STATE_PREFIX . 'other' => self::entry(['scope' => 'default', 'scopeId' => 0]),
+        ]);
+
+        $this->service($flags)->disconnect('websites', 1);
+
+        $this->assertSame([], $flags->codesWithPrefix(ConnectService::STATE_PREFIX));
 
         $this->assertSame(
             ['mode' => null, 'production_account_id' => '', 'production_api_key' => '', 'production_signing_secret' => '',
-                'test_account_id' => '', 'test_api_key' => '', 'test_signing_secret' => ''],
+                'test_account_id' => 'acc-test', 'test_api_key' => 'pk_test_site', 'test_signing_secret' => null],
             $this->credentials()
         );
         $this->assertSame('pk_live_default', $this->config['default/0/payment/monei/production_api_key']);

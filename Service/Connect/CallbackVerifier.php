@@ -13,6 +13,7 @@ namespace Monei\MoneiPayment\Service\Connect;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Stdlib\DateTime\DateTime;
+use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
@@ -20,8 +21,9 @@ use Monei\ApiException;
 use Monei\Configuration;
 use Monei\MoneiClient;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
+use Monei\MoneiPayment\Api\Data\PaymentInfoInterface;
 use Monei\MoneiPayment\Model\Config\Source\Mode;
-use Monei\MoneiPayment\Model\Service\PaymentAmountMatcher;
+use Monei\MoneiPayment\Model\Payment\Monei;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\ObjectSerializer;
 use InvalidArgumentException;
@@ -33,7 +35,9 @@ use Throwable;
  * - A v2 signature that verifies with the stored signing secret: the body's payment.
  * - Else, on a mode with a scoped key (mk_): the body gives only the payment id. The payment is fetched with the
  *   store's key and checked against the order. So callbacks of orders made before the connect, after a rotation,
- *   or without v2 still settle, and a forged body changes nothing.
+ *   or without v2 still settle, and a forged body changes nothing. It changes only a MONEI order that awaits
+ *   payment, so it never reopens a canceled order. The payment processor checks the amount of the fetched payment,
+ *   as of a signed one, and reuses the fetched model (original_payment), so it does not fetch again.
  * - Else (a manual pk_ key): v1 with that key.
  */
 class CallbackVerifier
@@ -45,6 +49,15 @@ class CallbackVerifier
     private const WINDOW = 60;
     /** The statuses MONEI sends callbacks for (payments-service handleCallback.ts). */
     private const PROCESSED = ['AUTHORIZED', 'SUCCEEDED', 'CANCELED', 'FAILED', 'PAID_OUT'];
+    /** The stored statuses of a payment that paid or holds the order: another payment id is not fetched. */
+    private const SETTLED = ['AUTHORIZED', 'SUCCEEDED', 'PAID_OUT'];
+    /** The order states that a fetched payment may change. */
+    private const AWAITING = [
+        Order::STATE_NEW,
+        Order::STATE_PENDING_PAYMENT,
+        Order::STATE_PAYMENT_REVIEW,
+        Order::STATE_HOLDED,
+    ];
 
     /**
      * @var ScopeConfigInterface
@@ -60,11 +73,6 @@ class CallbackVerifier
      * @var OrderFactory
      */
     private OrderFactory $orderFactory;
-
-    /**
-     * @var PaymentAmountMatcher
-     */
-    private PaymentAmountMatcher $amountMatcher;
 
     /**
      * @var MoneiApiClient
@@ -85,7 +93,6 @@ class CallbackVerifier
      * @param ScopeConfigInterface $scopeConfig
      * @param StoreManagerInterface $storeManager
      * @param OrderFactory $orderFactory
-     * @param PaymentAmountMatcher $amountMatcher
      * @param MoneiApiClient $apiClient
      * @param FlagStore $flags
      * @param DateTime $dateTime
@@ -94,7 +101,6 @@ class CallbackVerifier
         ScopeConfigInterface $scopeConfig,
         StoreManagerInterface $storeManager,
         OrderFactory $orderFactory,
-        PaymentAmountMatcher $amountMatcher,
         MoneiApiClient $apiClient,
         FlagStore $flags,
         DateTime $dateTime
@@ -102,7 +108,6 @@ class CallbackVerifier
         $this->scopeConfig = $scopeConfig;
         $this->storeManager = $storeManager;
         $this->orderFactory = $orderFactory;
-        $this->amountMatcher = $amountMatcher;
         $this->apiClient = $apiClient;
         $this->flags = $flags;
         $this->dateTime = $dateTime;
@@ -114,8 +119,9 @@ class CallbackVerifier
      * @param string $body Raw request body
      * @param string|null $signature MONEI-Signature header, null when absent
      * @return array{status: int, payment: array|null, reason: string} The payment to process, in the body's
-     *     camelCase shape, or null with the HTTP status to answer: 400 a failed pre-check, 401 a bad signature,
-     *     503 a failed fetch, 200 a payment that must not change the order.
+     *     camelCase shape (a fetched payment adds its model as original_payment), or null with the HTTP status to
+     *     answer: 400 a malformed body or another payment of a settled order, 401 a bad signature, 503 a failed
+     *     fetch or no fetch quota (MONEI retries), 200 a payment that must not change the order.
      */
     public function verify(string $body, ?string $signature): array
     {
@@ -161,51 +167,66 @@ class CallbackVerifier
         }
         $orderId = (string) $orderId;
         $order = $this->orderFactory->create()->loadByIncrementId($orderId);
+        // No retry changes these answers.
         if (!$order->getId()) {
-            return self::refused(400, 'order');
+            return self::refused(200, 'order');
+        }
+        if (!$order->getPayment() || !in_array($order->getPayment()->getMethod(), Monei::PAYMENT_METHODS_MONEI, true)) {
+            return self::refused(200, 'method');
+        }
+        if (!in_array($order->getState(), self::AWAITING, true)) {
+            return self::refused(200, 'orderState');
         }
         $storedId = (string) $order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID);
-        if ($storedId !== '' && $storedId !== $id) {
+        if ($storedId !== '' && $storedId !== $id
+            && in_array($this->storedStatus($order, $storedId), self::SETTLED, true)) {
             return self::refused(400, 'paymentId');
         }
         if (!$this->takeQuota($orderId)) {
-            return self::refused(400, 'quota');
+            return self::refused(503, 'quota');
         }
         try {
             $payment = $this->apiClient->createSdkForApiKey($key)->payments->get($id);
+        } catch (InvalidArgumentException $e) {
+            // The SDK's deserialize refuses a status it does not know. A retry gets the same answer.
+            return self::refused(200, 'status');
         } catch (Throwable $e) {
             return self::refused(503, 'fetch');
         }
-        try {
-            // The model keeps its data in a protected snake_case container; this gives the camelCase body shape.
-            $fetched = (array) ObjectSerializer::sanitizeForSerialization($payment);
-        } catch (InvalidArgumentException $e) {
-            // A status this SDK does not know.
-            return self::refused(200, 'status');
-        }
+        // The model keeps its data in a protected snake_case container; this gives the camelCase body shape.
+        $fetched = (array) ObjectSerializer::sanitizeForSerialization($payment);
         if (($fetched['id'] ?? null) !== $id) {
             return self::refused(200, 'id');
         }
         if ((string) ($fetched['orderId'] ?? '') !== $orderId) {
             return self::refused(200, 'orderId');
         }
-        if (!$this->amountMatcher->matches(
-            (int) ($fetched['amount'] ?? 0),
-            (string) ($fetched['currency'] ?? ''),
-            (float) $order->getBaseGrandTotal(),
-            (string) $order->getBaseCurrencyCode()
-        )) {
-            return self::refused(200, 'amount');
+        $storeMode = (int) $this->config('payment/monei/mode', (int) $order->getStoreId());
+        if (($fetched['livemode'] ?? null) !== ($storeMode !== Mode::MODE_TEST)) {
+            return self::refused(200, 'livemode');
         }
-        $status = $fetched['status'] ?? null;
-        if (!in_array($status, self::PROCESSED, true)) {
+        if (!in_array($fetched['status'] ?? null, self::PROCESSED, true)) {
             return self::refused(200, 'status');
         }
-        if ($order->hasInvoices() && in_array($status, ['FAILED', 'CANCELED'], true)) {
-            return self::refused(200, 'paid');
+
+        return self::accepted($fetched + ['original_payment' => $payment]);
+    }
+
+    /**
+     * Get the status of the order's stored payment that the processor last stored, or null when none is known
+     *
+     * @param Order $order
+     * @param string $storedId
+     * @return mixed
+     */
+    private function storedStatus(Order $order, string $storedId)
+    {
+        $payment = $order->getPayment();
+        if ((string) $payment->getAdditionalInformation(PaymentInfoInterface::PAYMENT_ID) !== $storedId) {
+            return null;
         }
 
-        return self::accepted($fetched);
+        return $payment->getAdditionalInformation(PaymentInfoInterface::PAYMENT_STATUS);
     }
 
     /**

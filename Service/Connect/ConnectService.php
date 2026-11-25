@@ -198,7 +198,8 @@ class ConnectService
     }
 
     /**
-     * Clear the credentials of both modes at a scope. The keys stay active at MONEI until the merchant revokes them.
+     * Clear the credentials of each connected mode at a scope. A mode with a manual key keeps it. The keys stay
+     * active at MONEI until the merchant revokes them.
      *
      * Empty values, never a delete: a delete lets the scope inherit the credentials of a parent scope, possibly of
      * another account.
@@ -209,7 +210,11 @@ class ConnectService
      */
     public function disconnect(string $scope, int $scopeId): void
     {
-        foreach (array_keys(self::MODES) as $mode) {
+        // A pending connect would write the credentials back.
+        foreach ($this->flags->codesWithPrefix(self::STATE_PREFIX) as $code) {
+            $this->flags->delete($code);
+        }
+        foreach ($this->connectedModes($scope, $scopeId) as $mode) {
             foreach (self::FIELDS as $field) {
                 $this->configWriter->save(self::path($mode, $field), '', $scope, $scopeId);
             }
@@ -233,23 +238,29 @@ class ConnectService
     }
 
     /**
-     * Check whether a mode of the scope has an account ID or an API key
+     * Get the mode setting in use at a scope
      *
      * @param string $scope
      * @param int $scopeId
-     * @return bool
+     * @return string
      */
-    public function hasCredentials(string $scope, int $scopeId): bool
+    public function mode(string $scope, int $scopeId): string
     {
-        foreach (array_keys(self::MODES) as $mode) {
-            foreach (['account_id', 'api_key'] as $field) {
-                if ($this->read(self::path($mode, $field), $scope, $scopeId) !== '') {
-                    return true;
-                }
-            }
-        }
+        return $this->read('payment/monei/mode', $scope, $scopeId);
+    }
 
-        return false;
+    /**
+     * Get the modes whose key in use at a scope is a scoped key (mk_) from a connect
+     *
+     * @param string $scope
+     * @param int $scopeId
+     * @return string[] live and/or test
+     */
+    public function connectedModes(string $scope, int $scopeId): array
+    {
+        return array_keys(array_filter($this->apiKeys($scope, $scopeId), function (string $key) {
+            return strpos($key, 'mk_') === 0;
+        }));
     }
 
     /**
@@ -295,10 +306,14 @@ class ConnectService
             'unknownState' => __('This connect link is not valid or was already used. Start again from the MONEI settings.'),
             'expiredState' => __('This connect link expired. Start again from the MONEI settings.'),
             'otherAccount' => __('This scope uses another MONEI account. Disconnect first.'),
+            'otherAccountManual' => __(
+                'The Production keys of this scope belong to another MONEI account. To connect this account, enter its Production Account Id and Api Key, save, and connect again.'
+            ),
             'access_denied' => __('MONEI refused the connect. Nothing was changed.'),
             'invalid_grant' => __('The connect code is not valid or expired. Start again from the MONEI settings.'),
             'temporarily_unavailable' => __('MONEI is not available now. Try again later.'),
             'keyRejected' => __('The new key did not work, so the current credentials stay in use.'),
+            'noAnswer' => __('MONEI did not answer, so the current credentials stay in use. Try again.'),
             'cap' => __('Your MONEI account has too many API keys. Revoke unused keys in the MONEI Dashboard, then connect again.'),
             'not_approved' => __('Live keys come after MONEI approves your account. The store stays in test mode.'),
             'blocked' => __('MONEI refused a key for this account.'),
@@ -332,7 +347,9 @@ class ConnectService
         $liveAccount = $this->read(self::path('live', 'account_id'), $scope, $scopeId);
         // Open orders of the old account need its key, and a store split across two merchants is wrong.
         if (isset($result['live']) && $liveAccount !== '' && $result['live']['accountId'] !== $liveAccount) {
-            $problems[] = ['mode' => null, 'code' => 'otherAccount'];
+            // Only a connected mode has a Disconnect button; manual keys must be replaced by hand.
+            $connected = in_array('live', $this->connectedModes($scope, $scopeId), true);
+            $problems[] = ['mode' => null, 'code' => $connected ? 'otherAccount' : 'otherAccountManual'];
 
             return ['switched' => [], 'problems' => $problems];
         }
@@ -342,10 +359,11 @@ class ConnectService
                 continue;
             }
             $keys = $result[$mode];
-            // /allowed-payment-methods answers 400 for a mode without an enabled provider: any answer but 401 or
-            // 403 proves the key.
-            if (in_array($this->probe($keys['apiKey']), [0, 401, 403], true)) {
-                $problems[] = ['mode' => $mode, 'code' => 'keyRejected'];
+            $status = $this->probe($keys['apiKey']);
+            // /allowed-payment-methods answers 400 for a mode without an enabled provider: a 200 or a 400 proves the
+            // key. Any other answer proves nothing, so the current credentials stay.
+            if ($status !== 200 && $status !== 400) {
+                $problems[] = ['mode' => $mode, 'code' => in_array($status, [401, 403], true) ? 'keyRejected' : 'noAnswer'];
                 continue;
             }
             $this->configWriter->save(self::path($mode, 'account_id'), $keys['accountId'], $scope, $scopeId);

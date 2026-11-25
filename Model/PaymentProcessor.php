@@ -934,9 +934,11 @@ class PaymentProcessor implements PaymentProcessorInterface
 
             // Check if we need to tokenize the payment
             if ($order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION)) {
+                $original = $payment->getRawData()['original_payment'] ?? null;
                 $vaultCreated = $this->createVaultPayment->execute(
                     $payment->getId(),
-                    $orderPayment
+                    $orderPayment,
+                    $original instanceof \Monei\Model\Payment ? $original : null
                 );
                 $order->setData(MoneiOrderInterface::ATTR_FIELD_MONEI_SAVE_TOKENIZATION, $vaultCreated);
                 $this->logger->debug('[Payment] Payment token creation ' . ($vaultCreated ? 'successful' : 'failed'));

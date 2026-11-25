@@ -68,6 +68,7 @@
           <label>Mode</label>
           <comment>To define if we are going to connect with production or testing WS environment</comment>
           <source_model>Monei\MoneiPayment\Model\Config\Source\Mode</source_model>
+          <backend_model>Monei\MoneiPayment\Model\Config\Backend\CredentialValue</backend_model>
         </field>
         <field
           id="test_account_id"

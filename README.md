@@ -136,7 +136,7 @@ When testing your integration:
 
 ### Connect with MONEI
 
-In **Stores → Configuration → Sales → Payment Methods → MONEI**, pick the scope and click **Connect with MONEI**. Sign in to MONEI in the new tab and approve. The store then uses its own scoped key (`mk_`) and verifies callbacks with its signing secret. **Disconnect** clears the credentials of that scope; revoke the old keys in [MONEI Dashboard → Settings → API Access](https://dashboard.monei.com/settings/api).
+In **Stores → Configuration → Sales → Payment Methods → MONEI**, pick the scope and click **Connect with MONEI**. Sign in to MONEI in the new tab and approve. The store then uses its own scoped key (`mk_`) and verifies callbacks with its signing secret. **Disconnect** clears the connected credentials of that scope and keeps manual keys; revoke the old keys in [MONEI Dashboard → Settings → API Access](https://dashboard.monei.com/settings/api).
 
 The button needs an `https` store URL that MONEI accepts. Otherwise the page shows "Use manual keys", and the manual key fields work as before.
 

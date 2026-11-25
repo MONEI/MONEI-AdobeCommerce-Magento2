@@ -6,20 +6,20 @@ namespace Monei\MoneiPayment\Test\Unit\Service\Connect;
 
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Sales\Model\Order;
+use Magento\Sales\Model\Order\Payment;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Monei\Api\PaymentsApi;
 use Monei\ApiException;
 use Monei\MoneiClient;
-use Monei\MoneiPayment\Model\Service\PaymentAmountMatcher;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\Connect\CallbackVerifier;
 use Monei\ObjectSerializer;
 use PHPUnit\Framework\TestCase;
 
 /**
- * A real CallbackVerifier on store 1, connected in test mode, with order 000000101 of 10.00 EUR.
+ * A real CallbackVerifier on store 1, connected in test mode, with order 000000101.
  *
  * The fetch returns a real Monei\Model\Payment, deserialized from a JSON answer the way the SDK does it, so the
  * camelCase shape of the fetch path is the SDK's, not a mock's.
@@ -35,7 +35,9 @@ abstract class VerifierTestCase extends TestCase
 
     protected int $now = 1700000000;
 
-    /** @var array<string, array{paymentId: string, total: float, paid: bool}> */
+    /** @var array<string, array{paymentId: string, state?: string, method?: string, storeId?: int,
+     *     storedStatus?: string, storedStatusOf?: string}> Defaults: state new, method monei_card, store 1. The last
+     *     payment status that the processor stored is of paymentId unless storedStatusOf names another */
     protected array $orders = [];
 
     /** @var array<string, mixed> Fields of the payment that MONEI answers */
@@ -50,7 +52,7 @@ abstract class VerifierTestCase extends TestCase
 
     protected function setUp(): void
     {
-        $this->orders = ['000000101' => ['paymentId' => '', 'total' => 10.0, 'paid' => false]];
+        $this->orders = ['000000101' => ['paymentId' => '']];
         $this->remote = self::paymentFields('SUCCEEDED');
         $this->flags = new MemoryFlagStore();
         $this->config = [
@@ -88,9 +90,15 @@ abstract class VerifierTestCase extends TestCase
                 $data = $this->orders[$incrementId] ?? null;
                 $order->method('getId')->willReturn($data ? 7 : null);
                 $order->method('getData')->with('monei_payment_id')->willReturn($data['paymentId'] ?? null);
-                $order->method('getBaseGrandTotal')->willReturn($data['total'] ?? null);
-                $order->method('getBaseCurrencyCode')->willReturn('EUR');
-                $order->method('hasInvoices')->willReturn($data['paid'] ?? false);
+                $order->method('getState')->willReturn($data['state'] ?? 'new');
+                $order->method('getStoreId')->willReturn($data['storeId'] ?? 1);
+                $payment = $this->createMock(Payment::class);
+                $payment->method('getMethod')->willReturn($data['method'] ?? 'monei_card');
+                $payment->method('getAdditionalInformation')->willReturnMap([
+                    ['monei_payment_id', $data['storedStatusOf'] ?? $data['paymentId'] ?? null],
+                    ['monei_payment_status', $data['storedStatus'] ?? null],
+                ]);
+                $order->method('getPayment')->willReturn($payment);
                 return $order;
             });
             return $order;
@@ -123,7 +131,6 @@ abstract class VerifierTestCase extends TestCase
             $this->fakeScopeConfig(),
             $storeManager,
             $orderFactory,
-            new PaymentAmountMatcher(),
             $apiClient,
             $this->flags,
             $dateTime

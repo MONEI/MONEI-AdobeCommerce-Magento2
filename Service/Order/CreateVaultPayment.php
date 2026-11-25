@@ -61,8 +61,9 @@ class CreateVaultPayment
      *
      * @param string $moneiPaymentId
      * @param OrderPaymentInterface $payment
+     * @param Payment|null $moneiPayment The payment when the caller already has it, else it is fetched
      */
-    public function execute(string $moneiPaymentId, OrderPaymentInterface &$payment): bool
+    public function execute(string $moneiPaymentId, OrderPaymentInterface &$payment, ?Payment $moneiPayment = null): bool
     {
         $this->logger->debug('[Vault] Starting tokenization process', [
             'payment_id' => $moneiPaymentId,
@@ -80,7 +81,7 @@ class CreateVaultPayment
 
         try {
             /** @var Payment $moneiPayment */
-            $moneiPayment = $this->getPayment->execute($moneiPaymentId);
+            $moneiPayment = $moneiPayment ?? $this->getPayment->execute($moneiPaymentId);
 
             $this->logger->debug('[Vault] Payment object retrieved', [
                 'payment_id' => $moneiPayment->getId(),

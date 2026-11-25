@@ -17,6 +17,8 @@ use Magento\Framework\Data\Form\Element\AbstractElement;
 use Magento\Framework\Data\Form\Element\Renderer\RendererInterface;
 use Magento\Framework\Data\Form\FormKey;
 use Magento\Framework\View\Helper\SecureHtmlRenderer;
+use Monei\MoneiPayment\Model\Config\Backend\ApiKey;
+use Monei\MoneiPayment\Model\Config\Backend\CredentialValue;
 use Monei\MoneiPayment\Service\Connect\CallbackUrl;
 use Monei\MoneiPayment\Service\Connect\ConnectService;
 
@@ -84,22 +86,25 @@ class ConnectButton extends AbstractBlock implements RendererInterface
         [$scope, $scopeId] = CallbackUrl::scopeOf($website, $store);
         $keys = $this->connectService->apiKeys($scope, $scopeId);
 
-        $html = $this->resultHtml($scope, $scopeId);
-        if (strpos($keys['live'], 'pk_') === 0 || strpos($keys['test'], 'pk_') === 0) {
+        $canConnect = $this->callbackUrl->redirectUri($scope, $scopeId) !== null;
+
+        $html = $this->resultHtml($scope, $scopeId)
+            . $this->loadedHtml($keys + ['mode' => $this->connectService->mode($scope, $scopeId)]);
+        if ($canConnect && (strpos($keys['live'], 'pk_') === 0 || strpos($keys['test'], 'pk_') === 0)) {
             $html .= $this->messageHtml(
                 'warning',
                 (string) __('Connect with MONEI to stop storing your account API key.')
             );
         }
         if ($keys['live'] !== '') {
-            $html .= $this->noteHtml((string) __('Production key in use: …%1', substr($keys['live'], -4)));
+            $html .= $this->noteHtml((string) __('Production key in use: %1', ApiKey::mask($keys['live'])));
         }
         if ($keys['test'] !== '') {
-            $html .= $this->noteHtml((string) __('Test key in use: …%1', substr($keys['test'], -4)));
+            $html .= $this->noteHtml((string) __('Test key in use: %1', ApiKey::mask($keys['test'])));
         }
 
         $scopeFields = ['website' => (string) $website, 'store' => (string) $store];
-        if ($this->callbackUrl->redirectUri($scope, $scopeId) === null) {
+        if (!$canConnect) {
             $html .= '<p>' . $this->_escaper->escapeHtml(
                 (string) __('Connect with MONEI is not available for the URL of this store. Use manual keys.')
             ) . '</p>';
@@ -110,7 +115,7 @@ class ConnectButton extends AbstractBlock implements RendererInterface
                 $this->postScript($this->getUrl('monei/connect/start'), $scopeFields, true)
             );
         }
-        if ($this->connectService->hasCredentials($scope, $scopeId)) {
+        if ($this->connectService->connectedModes($scope, $scopeId)) {
             $confirm = json_encode((string) __('Disconnect MONEI from this scope?'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
             $html .= ' ' . $this->buttonHtml(
                 'monei-disconnect-button',
@@ -152,6 +157,24 @@ class ConnectButton extends AbstractBlock implements RendererInterface
         }
         foreach ($result['problems'] as $problem) {
             $html .= $this->messageHtml('error', ConnectService::message($problem['mode'] ?? null, (string) $problem['code']));
+        }
+
+        return $html;
+    }
+
+    /**
+     * Render the fingerprint of each value in use, posted with the config form: CredentialValue uses it to tell a
+     * save of this page from a save of a page loaded before a Connect or a Disconnect
+     *
+     * @param array{live: string, test: string, mode: string} $values
+     * @return string
+     */
+    private function loadedHtml(array $values): string
+    {
+        $html = '';
+        foreach ($values as $name => $value) {
+            $html .= '<input type="hidden" name="' . CredentialValue::LOADED_PARAM . '[' . $name . ']" value="'
+                . CredentialValue::fingerprint($value) . '"/>';
         }
 
         return $html;
