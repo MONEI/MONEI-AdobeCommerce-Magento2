@@ -1,0 +1,66 @@
+<?php
+
+/**
+ * php version 8.1
+ * @author    Monei <support@monei.com>
+ * @copyright 2023 Monei
+ * @link      https://monei.com/
+ */
+
+declare(strict_types=1);
+
+namespace Monei\MoneiPayment\Controller\Adminhtml\Connect;
+
+use Magento\Backend\App\Action;
+use Magento\Backend\App\Action\Context;
+use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Framework\Controller\Result\Redirect;
+use Monei\MoneiPayment\Service\Connect\CallbackUrl;
+use Monei\MoneiPayment\Service\Connect\ConnectService;
+
+/**
+ * Clear the credentials of both modes at the config scope being edited.
+ *
+ * A forged disconnect would stop checkout and remove the Live account check of the next connect: the framework
+ * checks ADMIN_RESOURCE and the form key before execute().
+ */
+class Disconnect extends Action implements HttpPostActionInterface
+{
+    public const ADMIN_RESOURCE = 'Monei_MoneiPayment::config';
+
+    /**
+     * @var ConnectService
+     */
+    private ConnectService $connectService;
+
+    /**
+     * @param Context $context
+     * @param ConnectService $connectService
+     */
+    public function __construct(Context $context, ConnectService $connectService)
+    {
+        parent::__construct($context);
+        $this->connectService = $connectService;
+    }
+
+    /**
+     * Disconnect and go back to the payment configuration
+     *
+     * @return Redirect
+     */
+    public function execute(): Redirect
+    {
+        $website = $this->getRequest()->getParam('website');
+        $store = $this->getRequest()->getParam('store');
+        [$scope, $scopeId] = CallbackUrl::scopeOf($website, $store);
+        $this->connectService->disconnect($scope, $scopeId);
+        $this->messageManager->addSuccessMessage(
+            __('MONEI disconnected. The keys stay active until you revoke them in the MONEI Dashboard.')
+        );
+
+        return $this->resultRedirectFactory->create()->setPath(
+            'adminhtml/system_config/edit',
+            array_filter(['section' => 'payment', 'website' => $website, 'store' => $store])
+        );
+    }
+}

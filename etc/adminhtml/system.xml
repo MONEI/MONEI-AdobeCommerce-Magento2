@@ -52,6 +52,10 @@
           </comment>
           <source_model>Monei\MoneiPayment\Model\Config\Source\LogLevel</source_model>
         </field>
+        <field id="connect" translate="label" sortOrder="27" showInDefault="1" showInWebsite="1" showInStore="1">
+          <label>Connect with MONEI</label>
+          <frontend_model>Monei\MoneiPayment\Block\System\Config\Form\Field\ConnectButton</frontend_model>
+        </field>
         <field
           id="mode"
           translate="label comment"
@@ -108,6 +112,7 @@
         >
           <label>Test Api Key</label>
           <validate>required-entry</validate>
+          <backend_model>Monei\MoneiPayment\Model\Config\Backend\ApiKey</backend_model>
           <depends>
             <field id="mode">1</field>
           </depends>
@@ -123,6 +128,7 @@
         >
           <label>Production Api Key</label>
           <validate>required-entry</validate>
+          <backend_model>Monei\MoneiPayment\Model\Config\Backend\ApiKey</backend_model>
           <depends>
             <field id="mode">2</field>
           </depends>

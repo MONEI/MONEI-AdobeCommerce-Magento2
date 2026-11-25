@@ -109,12 +109,7 @@ class GetPaymentMethods extends AbstractApiService implements GetPaymentMethodsI
         $result = $this->executeMoneiSdkCall(
             'getPaymentMethods',
             function (MoneiClient $moneiSdk) use ($accountId) {
-                // When using Account ID, set it on the SDK
-                if (!empty($accountId)) {
-                    $moneiSdk->setAccountId($accountId);
-                }
-
-                // Get the payment methods
+                // No setAccountId: it sends MONEI-Account-ID, which MONEI refuses with a scoped (mk_) key.
                 return $moneiSdk->paymentMethods->get($accountId);
             },
             ['accountId' => $accountId]
