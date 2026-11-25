@@ -104,7 +104,8 @@ class CallbackTest extends VerifierTestCase
 
     /**
      * Bug: a payment that must not change the order is refused in validateForCsrf, which can only answer 403, so
-     * MONEI retries for days; or it reaches the processor (an unsigned request reopens a canceled order).
+     * MONEI retries for days; or it reaches the processor (an unsigned replay of a settled payment reopens the
+     * order the merchant canceled).
      *
      * @dataProvider paymentsThatMustNotChangeTheOrder
      */
@@ -125,7 +126,10 @@ class CallbackTest extends VerifierTestCase
     {
         return [
             'forged SUCCEEDED, MONEI says PENDING' => [self::paymentFields('PENDING'), []],
-            'a canceled order, MONEI says SUCCEEDED' => [self::paymentFields('SUCCEEDED'), ['state' => 'canceled']],
+            'stored SUCCEEDED, order canceled, MONEI says SUCCEEDED' => [
+                self::paymentFields('SUCCEEDED'),
+                ['state' => 'canceled', 'paymentId' => self::ID, 'storedStatus' => 'SUCCEEDED'],
+            ],
         ];
     }
 

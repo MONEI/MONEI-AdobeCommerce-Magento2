@@ -132,9 +132,8 @@ class CallbackVerifierTest extends VerifierTestCase
     }
 
     /**
-     * Bug: an unsigned request changes an order that no longer awaits payment (it reopens a canceled order), or an
-     * order of another payment method; or it makes the store call MONEI. An error answer makes MONEI retry a
-     * callback that can never settle.
+     * Bug: an unsigned request changes an order of another payment method, or makes the store call MONEI for an
+     * order it does not have. An error answer makes MONEI retry a callback that can never settle.
      *
      * @dataProvider ordersAFetchMustNotChange
      */
@@ -152,31 +151,55 @@ class CallbackVerifierTest extends VerifierTestCase
     {
         return [
             'no order for the orderId' => ['999', []],
-            'a canceled order' => ['000000101', ['state' => 'canceled']],
             'another payment method' => ['000000101', ['method' => 'checkmo']],
         ];
     }
 
     /**
-     * Bug: an order on hold (an amount mismatch) or under payment review never settles from a fetch.
+     * Bug: an unsigned replay of a settled payment changes the order again (a SUCCEEDED reopens the order the
+     * merchant canceled); or a real later callback (a capture or void after AUTHORIZED, a payment after a canceled
+     * order) gets a silent 200, so MONEI never retries it; or a FAILED cancels a paid order. With no stored
+     * status, the order state the processor set stands for it.
      *
-     * @dataProvider statesThatAwaitPayment
+     * @dataProvider transitions
      */
-    public function testAnOrderThatAwaitsPaymentIsFetched(string $state): void
-    {
-        $this->orders['000000101']['state'] = $state;
+    public function testOnlyAForwardMoveFromTheStoredStatusIsProcessed(
+        ?string $stored,
+        string $state,
+        bool $paid,
+        string $fetched,
+        bool $processed
+    ): void {
+        $this->orders['000000101'] = ['paymentId' => self::ID, 'state' => $state, 'paid' => $paid]
+            + ($stored === null ? [] : ['storedStatus' => $stored]);
+        $this->remote = self::paymentFields($fetched);
 
-        $decision = $this->verifier()->verify(self::body($this->remote), null);
+        $decision = $this->verifier()->verify(self::body(self::paymentFields($fetched)), null);
 
-        $this->assertSame([200, 'SUCCEEDED'], [$decision['status'], $decision['payment']['status']]);
+        $this->assertSame([200, $processed], [$decision['status'], $decision['payment'] !== null]);
+        $this->assertCount(1, $this->fetches);
     }
 
-    public function statesThatAwaitPayment(): array
+    public function transitions(): array
     {
         return [
-            'pending_payment' => ['pending_payment'],
-            'payment_review' => ['payment_review'],
-            'holded' => ['holded'],
+            'SUCCEEDED, canceled order, SUCCEEDED again' => ['SUCCEEDED', 'canceled', true, 'SUCCEEDED', false],
+            'none, canceled order, SUCCEEDED' => [null, 'canceled', false, 'SUCCEEDED', true],
+            'PENDING, canceled order, SUCCEEDED' => ['PENDING', 'canceled', false, 'SUCCEEDED', true],
+            'AUTHORIZED, SUCCEEDED (capture)' => ['AUTHORIZED', 'processing', false, 'SUCCEEDED', true],
+            'AUTHORIZED, CANCELED (void)' => ['AUTHORIZED', 'processing', false, 'CANCELED', true],
+            'AUTHORIZED again' => ['AUTHORIZED', 'processing', false, 'AUTHORIZED', false],
+            'SUCCEEDED, AUTHORIZED' => ['SUCCEEDED', 'processing', true, 'AUTHORIZED', false],
+            'SUCCEEDED, PAID_OUT' => ['SUCCEEDED', 'processing', true, 'PAID_OUT', true],
+            'REFUNDED, SUCCEEDED' => ['REFUNDED', 'closed', true, 'SUCCEEDED', false],
+            'FAILED, AUTHORIZED (retry)' => ['FAILED', 'canceled', false, 'AUTHORIZED', true],
+            'EXPIRED, SUCCEEDED' => ['EXPIRED', 'canceled', false, 'SUCCEEDED', true],
+            'CANCELED, SUCCEEDED' => ['CANCELED', 'canceled', false, 'SUCCEEDED', true],
+            'none, processing without invoice (AUTHORIZED), AUTHORIZED' => [null, 'processing', false, 'AUTHORIZED', false],
+            'none, processing without invoice (AUTHORIZED), SUCCEEDED' => [null, 'processing', false, 'SUCCEEDED', true],
+            'none, complete invoiced order (SUCCEEDED), SUCCEEDED again' => [null, 'complete', true, 'SUCCEEDED', false],
+            'none, new order, AUTHORIZED' => [null, 'new', false, 'AUTHORIZED', true],
+            'PENDING, invoiced order, FAILED' => ['PENDING', 'holded', true, 'FAILED', false],
         ];
     }
 

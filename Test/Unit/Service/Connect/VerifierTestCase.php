@@ -36,8 +36,9 @@ abstract class VerifierTestCase extends TestCase
 
     protected int $now = 1700000000;
 
-    /** @var array<string, array{paymentId: string, state?: string, method?: string, storeId?: int,
-     *     storedStatus?: string, storedStatusOf?: string}> Defaults: state new, method monei_card, store 1. The last
+    /** @var array<string, array{paymentId: string, state?: string, method?: string, storeId?: int, paid?: bool,
+     *     storedStatus?: string, storedStatusOf?: string}> Defaults: state new, method monei_card, store 1, no
+     *     invoice. The last
      *     payment status that the processor stored is of paymentId unless storedStatusOf names another */
     protected array $orders = [];
 
@@ -95,6 +96,7 @@ abstract class VerifierTestCase extends TestCase
                 $order->method('getId')->willReturn($data ? 7 : null);
                 $order->method('getData')->with('monei_payment_id')->willReturn($data['paymentId'] ?? null);
                 $order->method('getState')->willReturn($data['state'] ?? 'new');
+                $order->method('hasInvoices')->willReturn($data['paid'] ?? false);
                 $order->method('getStoreId')->willReturn($data['storeId'] ?? 1);
                 $payment = $this->createMock(Payment::class);
                 $payment->method('getMethod')->willReturn($data['method'] ?? 'monei_card');

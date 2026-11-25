@@ -36,8 +36,8 @@ use Throwable;
  * - A v2 signature that verifies with the stored signing secret: the body's payment.
  * - Else, on a mode with a scoped key (mk_): the body gives only the payment id. The payment is fetched with the
  *   store's key and checked against the order. So callbacks of orders made before the connect, after a rotation,
- *   or without v2 still settle, and a forged body changes nothing. It changes only a MONEI order that awaits
- *   payment, so it never reopens a canceled order. The payment processor checks the amount of the fetched payment,
+ *   or without v2 still settle, and a forged body changes nothing. Only a forward move from the status stored for
+ *   the order passes, so a replay of a settled payment never reopens a canceled order. The payment processor checks the amount of the fetched payment,
  *   as of a signed one. GetPayment answers from the fetched model, so processing does not fetch again.
  * - Else (a manual pk_ key): v1 with that key.
  */
@@ -48,16 +48,17 @@ class CallbackVerifier
     private const ORDER_QUOTA = 5;
     private const SHOP_QUOTA = 60;
     private const WINDOW = 60;
-    /** The statuses MONEI sends callbacks for (payments-service handleCallback.ts). */
-    private const PROCESSED = ['AUTHORIZED', 'SUCCEEDED', 'CANCELED', 'FAILED', 'PAID_OUT'];
     /** The stored statuses of a payment that paid or holds the order: another payment id is not fetched. */
     private const SETTLED = ['AUTHORIZED', 'SUCCEEDED', 'PAID_OUT'];
-    /** The order states that a fetched payment may change. */
-    private const AWAITING = [
-        Order::STATE_NEW,
-        Order::STATE_PENDING_PAYMENT,
-        Order::STATE_PAYMENT_REVIEW,
-        Order::STATE_HOLDED,
+    /** The fetched statuses that move each stored status forward ('' = none stored). Any other pair changes nothing. */
+    private const FORWARD = [
+        '' => ['AUTHORIZED', 'SUCCEEDED', 'FAILED', 'CANCELED'],
+        'PENDING' => ['AUTHORIZED', 'SUCCEEDED', 'FAILED', 'CANCELED'],
+        'FAILED' => ['AUTHORIZED', 'SUCCEEDED', 'FAILED', 'CANCELED'],
+        'CANCELED' => ['AUTHORIZED', 'SUCCEEDED', 'FAILED', 'CANCELED'],
+        'EXPIRED' => ['AUTHORIZED', 'SUCCEEDED', 'FAILED', 'CANCELED'],
+        'AUTHORIZED' => ['SUCCEEDED', 'CANCELED'],
+        'SUCCEEDED' => ['PAID_OUT'],
     ];
 
     /**
@@ -183,9 +184,6 @@ class CallbackVerifier
         if (!$order->getPayment() || !in_array($order->getPayment()->getMethod(), Monei::PAYMENT_METHODS_MONEI, true)) {
             return self::refused(200, 'method');
         }
-        if (!in_array($order->getState(), self::AWAITING, true)) {
-            return self::refused(200, 'orderState');
-        }
         $storedId = (string) $order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID);
         if ($storedId !== '' && $storedId !== $id
             && in_array($this->storedStatus($order, $storedId), self::SETTLED, true)) {
@@ -214,13 +212,40 @@ class CallbackVerifier
         if (($fetched['livemode'] ?? null) !== ($storeMode !== Mode::MODE_TEST)) {
             return self::refused(200, 'livemode');
         }
-        if (!in_array($fetched['status'] ?? null, self::PROCESSED, true)) {
-            return self::refused(200, 'status');
+        $status = (string) ($fetched['status'] ?? '');
+        $stored = $this->effectiveStatus($order, $storedId);
+        if (!in_array($status, self::FORWARD[$stored] ?? [], true)) {
+            return self::refused(200, 'transition ' . ($stored === '' ? 'none' : $stored) . ' to ' . $status);
+        }
+        if ($order->hasInvoices() && in_array($status, ['FAILED', 'CANCELED'], true)) {
+            return self::refused(200, 'paid');
         }
 
         $this->fetchedPayments->add($payment);
 
         return self::accepted($fetched);
+    }
+
+    /**
+     * Get the status stored for the order. With none stored: SUCCEEDED for an invoiced order in processing, complete
+     * or closed, AUTHORIZED for one without invoice (the processor sets processing on AUTHORIZED), else none ('').
+     *
+     * @param Order $order
+     * @param string $storedId
+     * @return string
+     */
+    private function effectiveStatus(Order $order, string $storedId): string
+    {
+        $stored = $this->storedStatus($order, $storedId);
+        if (is_string($stored) && $stored !== '') {
+            return $stored;
+        }
+        $settledStates = [Order::STATE_PROCESSING, Order::STATE_COMPLETE, Order::STATE_CLOSED];
+        if (!in_array($order->getState(), $settledStates, true)) {
+            return '';
+        }
+
+        return $order->hasInvoices() ? 'SUCCEEDED' : 'AUTHORIZED';
     }
 
     /**
