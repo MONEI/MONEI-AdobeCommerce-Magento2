@@ -11,6 +11,11 @@ use Magento\Framework\Controller\Result\RedirectFactory;
 use Magento\Framework\Message\ManagerInterface;
 use Monei\MoneiPayment\Controller\Adminhtml\Connect\Disconnect;
 use Monei\MoneiPayment\Service\Connect\ConnectService;
+use Magento\Framework\Url;
+use Magento\Store\Model\Store;
+use Magento\Store\Model\StoreManagerInterface;
+use Magento\Store\Model\Website;
+use Monei\MoneiPayment\Service\Connect\CallbackUrl;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -38,7 +43,40 @@ class DisconnectTest extends TestCase
         $context->method('getMessageManager')->willReturn($this->createMock(ManagerInterface::class));
         $service = $this->createMock(ConnectService::class);
         $service->expects($this->once())->method('disconnect')->with('stores', 3);
+        $website = $this->createMock(Website::class);
+        $website->method('getId')->willReturn(1);
+        $store = $this->createMock(Store::class);
+        $store->method('getId')->willReturn(3);
+        $store->method('getWebsiteId')->willReturn(1);
+        $storeManager = $this->createMock(StoreManagerInterface::class);
+        $storeManager->method('getWebsite')->willReturn($website);
+        $storeManager->method('getStore')->willReturn($store);
 
-        (new Disconnect($context, $service))->execute();
+        (new Disconnect($context, $service, new CallbackUrl($this->createMock(Url::class), $storeManager)))->execute();
+    }
+
+    /**
+     * Bug: a store parameter that names no store (or a store of another website) clears the default scope.
+     */
+    public function testAnUnknownScopeChangesNothing(): void
+    {
+        $request = $this->createMock(RequestInterface::class);
+        $request->method('getParam')->willReturnMap([['website', null, ''], ['store', null, 'nope']]);
+        $redirect = $this->createMock(Redirect::class);
+        $redirect->method('setPath')->willReturnSelf();
+        $redirectFactory = $this->createMock(RedirectFactory::class);
+        $redirectFactory->method('create')->willReturn($redirect);
+        $messages = $this->createMock(ManagerInterface::class);
+        $messages->expects($this->once())->method('addErrorMessage');
+        $context = $this->createMock(Context::class);
+        $context->method('getRequest')->willReturn($request);
+        $context->method('getResultRedirectFactory')->willReturn($redirectFactory);
+        $context->method('getMessageManager')->willReturn($messages);
+        $service = $this->createMock(ConnectService::class);
+        $service->expects($this->never())->method('disconnect');
+        $storeManager = $this->createMock(StoreManagerInterface::class);
+        $storeManager->method('getStore')->willThrowException(new \Magento\Framework\Exception\NoSuchEntityException());
+
+        (new Disconnect($context, $service, new CallbackUrl($this->createMock(Url::class), $storeManager)))->execute();
     }
 }

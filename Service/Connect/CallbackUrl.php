@@ -50,22 +50,42 @@ class CallbackUrl
     }
 
     /**
-     * Get the config scope of the website and store parameters of the admin config page
+     * Get the config scope of the website and store parameters of the admin config page, which Magento accepts as
+     * a code or an ID
      *
      * @param mixed $website
      * @param mixed $store
-     * @return array{0: string, 1: int} The scope type and id
+     * @return array{0: string, 1: int}|null The scope type and ID; null for an unknown scope, the admin scope, or
+     *     a store of another website
      */
-    public static function scopeOf($website, $store): array
+    public function scope($website, $store): ?array
     {
-        if (is_scalar($store) && (int) $store > 0) {
-            return [ScopeInterface::SCOPE_STORES, (int) $store];
-        }
-        if (is_scalar($website) && (int) $website > 0) {
-            return [ScopeInterface::SCOPE_WEBSITES, (int) $website];
-        }
+        try {
+            $websiteId = null;
+            if ($website !== null && $website !== '') {
+                $websiteId = is_scalar($website) ? (int) $this->storeManager->getWebsite($website)->getId() : 0;
+                if ($websiteId === 0) {
+                    return null;
+                }
+            }
+            if ($store === null || $store === '') {
+                return $websiteId === null
+                    ? [ScopeConfigInterface::SCOPE_TYPE_DEFAULT, 0]
+                    : [ScopeInterface::SCOPE_WEBSITES, $websiteId];
+            }
+            if (!is_scalar($store)) {
+                return null;
+            }
+            $storeModel = $this->storeManager->getStore($store);
+            $storeId = (int) $storeModel->getId();
+            if ($storeId === 0 || ($websiteId !== null && (int) $storeModel->getWebsiteId() !== $websiteId)) {
+                return null;
+            }
 
-        return [ScopeConfigInterface::SCOPE_TYPE_DEFAULT, 0];
+            return [ScopeInterface::SCOPE_STORES, $storeId];
+        } catch (LocalizedException $e) {
+            return null;
+        }
     }
 
     /**

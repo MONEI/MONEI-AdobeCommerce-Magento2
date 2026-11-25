@@ -307,3 +307,4 @@ Description,Description
 "Set by Connect with MONEI. Leave empty to keep this key.","Set by Connect with MONEI. Leave empty to keep this key."
 "Key in use (%1): ending in %2","Key in use (%1): ending in %2"
 "Manage and revoke API keys in the MONEI Dashboard","Manage and revoke API keys in the MONEI Dashboard"
+"This scope does not exist. Nothing was changed.","This scope does not exist. Nothing was changed."

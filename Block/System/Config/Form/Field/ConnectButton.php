@@ -82,7 +82,11 @@ class ConnectButton extends AbstractBlock implements RendererInterface
     {
         $website = $this->getRequest()->getParam('website');
         $store = $this->getRequest()->getParam('store');
-        [$scope, $scopeId] = CallbackUrl::scopeOf($website, $store);
+        $scopeOfRequest = $this->callbackUrl->scope($website, $store);
+        if ($scopeOfRequest === null) {
+            return '';
+        }
+        [$scope, $scopeId] = $scopeOfRequest;
         $keys = $this->connectService->apiKeys($scope, $scopeId);
 
         $canConnect = $this->callbackUrl->redirectUri($scope, $scopeId) !== null;

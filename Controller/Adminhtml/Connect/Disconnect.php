@@ -34,13 +34,20 @@ class Disconnect extends Action implements HttpPostActionInterface
     private ConnectService $connectService;
 
     /**
+     * @var CallbackUrl
+     */
+    private CallbackUrl $callbackUrl;
+
+    /**
      * @param Context $context
      * @param ConnectService $connectService
+     * @param CallbackUrl $callbackUrl
      */
-    public function __construct(Context $context, ConnectService $connectService)
+    public function __construct(Context $context, ConnectService $connectService, CallbackUrl $callbackUrl)
     {
         parent::__construct($context);
         $this->connectService = $connectService;
+        $this->callbackUrl = $callbackUrl;
     }
 
     /**
@@ -52,8 +59,16 @@ class Disconnect extends Action implements HttpPostActionInterface
     {
         $website = $this->getRequest()->getParam('website');
         $store = $this->getRequest()->getParam('store');
-        [$scope, $scopeId] = CallbackUrl::scopeOf($website, $store);
-        $this->connectService->disconnect($scope, $scopeId);
+        $scopeOfRequest = $this->callbackUrl->scope($website, $store);
+        if ($scopeOfRequest === null) {
+            $this->messageManager->addErrorMessage(__('This scope does not exist. Nothing was changed.'));
+
+            return $this->resultRedirectFactory->create()->setPath(
+                'adminhtml/system_config/edit',
+                ['section' => 'payment']
+            );
+        }
+        $this->connectService->disconnect(...$scopeOfRequest);
         $this->messageManager->addSuccessMessage(
             __('MONEI disconnected. The keys stay active until you revoke them in the MONEI Dashboard.')
         );

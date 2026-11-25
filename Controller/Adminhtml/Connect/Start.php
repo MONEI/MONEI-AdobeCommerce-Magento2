@@ -59,7 +59,16 @@ class Start extends Action implements HttpPostActionInterface
     {
         $website = $this->getRequest()->getParam('website');
         $store = $this->getRequest()->getParam('store');
-        [$scope, $scopeId] = CallbackUrl::scopeOf($website, $store);
+        $scopeOfRequest = $this->callbackUrl->scope($website, $store);
+        if ($scopeOfRequest === null) {
+            $this->messageManager->addErrorMessage(__('This scope does not exist. Nothing was changed.'));
+
+            return $this->resultRedirectFactory->create()->setPath(
+                'adminhtml/system_config/edit',
+                ['section' => 'payment']
+            );
+        }
+        [$scope, $scopeId] = $scopeOfRequest;
         $redirectUri = $this->callbackUrl->redirectUri($scope, $scopeId);
         if ($redirectUri === null) {
             $this->messageManager->addErrorMessage(

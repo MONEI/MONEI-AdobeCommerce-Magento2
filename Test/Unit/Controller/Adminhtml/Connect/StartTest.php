@@ -49,6 +49,7 @@ class StartTest extends TestCase
         $store->method('getId')->willReturn(5);
         $website = $this->createMock(Website::class);
         $website->method('getDefaultStore')->willReturn($store);
+        $website->method('getId')->willReturn(1);
         $storeManager = $this->createMock(StoreManagerInterface::class);
         $storeManager->method('getWebsite')->with(1)->willReturn($website);
         $url = $this->createMock(Url::class);
@@ -90,5 +91,40 @@ class StartTest extends TestCase
         );
         $entry = $flags->flags[ConnectService::STATE_PREFIX . $query['state']];
         $this->assertSame(['websites', 1, self::CALLBACK], [$entry['scope'], $entry['scopeId'], $entry['redirectUri']]);
+    }
+
+    /**
+     * Bug: a website parameter that names no website starts a connect of the default scope.
+     */
+    public function testAnUnknownScopeStoresNoState(): void
+    {
+        $request = $this->createMock(RequestInterface::class);
+        $request->method('getParam')->willReturnMap([['website', null, 'nope'], ['store', null, '']]);
+        $redirect = $this->createMock(Redirect::class);
+        $redirect->expects($this->never())->method('setUrl');
+        $redirect->method('setPath')->willReturnSelf();
+        $redirectFactory = $this->createMock(RedirectFactory::class);
+        $redirectFactory->method('create')->willReturn($redirect);
+        $context = $this->createMock(Context::class);
+        $context->method('getRequest')->willReturn($request);
+        $context->method('getResultRedirectFactory')->willReturn($redirectFactory);
+        $context->method('getMessageManager')->willReturn($this->createMock(\Magento\Framework\Message\ManagerInterface::class));
+        $storeManager = $this->createMock(StoreManagerInterface::class);
+        $storeManager->method('getWebsite')->willThrowException(new \Magento\Framework\Exception\NoSuchEntityException());
+        $flags = new MemoryFlagStore();
+        $service = new ConnectService(
+            $flags,
+            $this->createMock(ScopeConfigInterface::class),
+            $this->createMock(WriterInterface::class),
+            $this->createMock(TypeListInterface::class),
+            $this->createMock(MoneiApiClient::class),
+            new Broker(),
+            $this->createMock(DateTime::class),
+            $this->createMock(Logger::class)
+        );
+
+        (new Start($context, $service, new CallbackUrl($this->createMock(Url::class), $storeManager)))->execute();
+
+        $this->assertSame([], $flags->flags);
     }
 }
