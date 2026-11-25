@@ -8,8 +8,8 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
 
 /**
- * core_config_data in memory, keyed "<scope>/<scope id>/<path>". No scope inherits from another: a test sets each
- * value at the scope it reads.
+ * core_config_data in memory, keyed "<scope>/<scope id>/<path>". A store inherits from its website (stores 1 and 2
+ * are in website 1, store 3 in website 2), a website from the default scope.
  */
 trait ConfigFake
 {
@@ -27,7 +27,18 @@ trait ConfigFake
     {
         $scopeConfig = $this->createMock(ScopeConfigInterface::class);
         $scopeConfig->method('getValue')->willReturnCallback(function ($path, $scope = 'default', $code = null) {
-            return $this->config[$scope . '/' . (int) $code . '/' . $path] ?? null;
+            $chain = [$scope . '/' . (int) $code];
+            if (in_array($scope, ['store', 'stores'], true)) {
+                $chain[] = 'websites/' . ((int) $code === 3 ? 2 : 1);
+            }
+            $chain[] = 'default/0';
+            foreach ($chain as $scopeKey) {
+                if (array_key_exists($scopeKey . '/' . $path, $this->config)) {
+                    return $this->config[$scopeKey . '/' . $path];
+                }
+            }
+
+            return null;
         });
 
         return $scopeConfig;

@@ -14,7 +14,7 @@ namespace Monei\MoneiPayment\Service\Connect;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Sales\Model\Order;
-use Magento\Sales\Model\OrderFactory;
+use Magento\Sales\Model\ResourceModel\Order\CollectionFactory as OrderCollectionFactory;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Monei\ApiException;
@@ -33,13 +33,17 @@ use Throwable;
 /**
  * Decides which payment a MONEI callback may process.
  *
- * - A v2 signature that verifies with the stored signing secret: the body's payment.
- * - Else, on a mode with a scoped key (mk_): the body gives only the payment id. The payment is fetched with the
- *   store's key and checked against the order. So callbacks of orders made before the connect, after a rotation,
- *   or without v2 still settle, and a forged body changes nothing. Only a forward move from the status stored for
- *   the order passes, so a replay of a settled payment never reopens a canceled order. The payment processor checks the amount of the fetched payment,
- *   as of a signed one. GetPayment answers from the fetched model, so processing does not fetch again.
+ * The order of the body's orderId, in the request store's website, gives the store whose mode, key and secret
+ * count. Then:
+ * - A v2 signature that verifies with the signing secret of that store's scoped key (mk_): the body's payment.
+ * - Else, on a mode with a scoped key: the body gives only the payment id. The payment is fetched with the store's
+ *   key and checked against the order. So callbacks of orders made before the connect, after a rotation, or
+ *   without v2 still settle, and a forged body changes nothing. Only a forward move from the status stored for the
+ *   order passes, so a replay of a settled payment never reopens a canceled order. The payment processor checks
+ *   the amount, as of a signed payment. GetPayment answers from the fetched model, so processing does not fetch
+ *   again.
  * - Else (a manual pk_ key): v1 with that key.
+ * A signed body of the other mode changes nothing.
  */
 class CallbackVerifier
 {
@@ -73,9 +77,9 @@ class CallbackVerifier
     private StoreManagerInterface $storeManager;
 
     /**
-     * @var OrderFactory
+     * @var OrderCollectionFactory
      */
-    private OrderFactory $orderFactory;
+    private OrderCollectionFactory $orderCollectionFactory;
 
     /**
      * @var MoneiApiClient
@@ -100,7 +104,7 @@ class CallbackVerifier
     /**
      * @param ScopeConfigInterface $scopeConfig
      * @param StoreManagerInterface $storeManager
-     * @param OrderFactory $orderFactory
+     * @param OrderCollectionFactory $orderCollectionFactory
      * @param MoneiApiClient $apiClient
      * @param FlagStore $flags
      * @param DateTime $dateTime
@@ -109,7 +113,7 @@ class CallbackVerifier
     public function __construct(
         ScopeConfigInterface $scopeConfig,
         StoreManagerInterface $storeManager,
-        OrderFactory $orderFactory,
+        OrderCollectionFactory $orderCollectionFactory,
         MoneiApiClient $apiClient,
         FlagStore $flags,
         DateTime $dateTime,
@@ -117,7 +121,7 @@ class CallbackVerifier
     ) {
         $this->scopeConfig = $scopeConfig;
         $this->storeManager = $storeManager;
-        $this->orderFactory = $orderFactory;
+        $this->orderCollectionFactory = $orderCollectionFactory;
         $this->apiClient = $apiClient;
         $this->flags = $flags;
         $this->dateTime = $dateTime;
@@ -129,6 +133,11 @@ class CallbackVerifier
      *
      * @param string $body Raw request body
      * @param string|null $signature MONEI-Signature header, null when absent
+     * The order comes first: its store gives the mode, key and secret. Increment ids repeat across stores, so only
+     * the stores of the request store's website count, the request store first.
+     *
+     * @param string $body Raw request body
+     * @param string|null $signature MONEI-Signature header, null when absent
      * @return array{status: int, payment: array|null, reason: string} The payment to process, in the body's
      *     camelCase shape, or null with the HTTP status to answer: 400 a malformed body or another payment of a
      *     settled order, 401 a bad signature, 503 a failed fetch or no fetch quota (MONEI retries), 200 a payment
@@ -137,26 +146,82 @@ class CallbackVerifier
     public function verify(string $body, ?string $signature): array
     {
         $data = json_decode($body, true);
-        if (!is_array($data)) {
-            return self::refused(400, 'body');
+        $orderId = is_array($data) ? ($data['orderId'] ?? null) : null;
+        if (!(is_string($orderId) || is_int($orderId)) || (string) $orderId === '') {
+            return self::refused(400, 'format');
         }
-        $storeId = (int) $this->storeManager->getStore()->getId();
-        $mode = $this->modeOf($data, $storeId);
+        $order = $this->findOrder((string) $orderId);
+        // No retry changes this answer.
+        if ($order === null) {
+            return self::refused(200, 'order');
+        }
+        $storeId = (int) $order->getStoreId();
+        $storeMode = (int) $this->config('payment/monei/mode', $storeId) === Mode::MODE_TEST ? 'test' : 'live';
+        $mode = $storeMode;
+        if (isset($data['livemode']) && is_bool($data['livemode'])) {
+            $mode = $data['livemode'] ? 'live' : 'test';
+        }
         $key = $this->config(ConnectService::path($mode, 'api_key'), $storeId);
-        $secret = $this->config(ConnectService::path($mode, 'signing_secret'), $storeId);
+        // A secret belongs to the scoped key of its connect: one inherited next to a manual key is another account's.
+        $secret = strpos($key, 'mk_') === 0
+            ? $this->config(ConnectService::path($mode, 'signing_secret'), $storeId)
+            : '';
 
         if ($secret !== '' && $signature !== null && self::signatureValid($body, $signature, '', $secret)) {
-            return self::accepted((array) json_decode($body));
+            return $this->signed($body, $mode, $storeMode);
         }
         if (strpos($key, 'mk_') === 0) {
-            return $this->fetched($data, $signature, $key);
+            return $this->fetched($data, $signature, $key, $order, $storeMode);
         }
         // An empty key gives an HMAC that anyone can make.
         if ($key === '' || $signature === null || !self::signatureValid($body, $signature, $key, null)) {
             return self::refused(401, 'signature');
         }
 
+        return $this->signed($body, $mode, $storeMode);
+    }
+
+    /**
+     * Accept a signed body of the order store's mode. A signature of the other mode proves the body, not that it
+     * may change this order: a test payment must not settle a live order.
+     *
+     * @param string $body
+     * @param string $mode The mode whose key or secret proved the body
+     * @param string $storeMode The mode of the order's store
+     * @return array{status: int, payment: array|null, reason: string}
+     */
+    private function signed(string $body, string $mode, string $storeMode): array
+    {
+        if ($mode !== $storeMode) {
+            return self::refused(200, 'livemode');
+        }
+
         return self::accepted((array) json_decode($body));
+    }
+
+    /**
+     * Find the order of an increment id in the stores of the request store's website, the request store first
+     *
+     * @param string $incrementId
+     * @return Order|null
+     */
+    private function findOrder(string $incrementId): ?Order
+    {
+        $store = $this->storeManager->getStore();
+        $storeIds = array_map('intval', $this->storeManager->getWebsite($store->getWebsiteId())->getStoreIds());
+        $orders = $this->orderCollectionFactory->create()
+            ->addFieldToFilter('increment_id', $incrementId)
+            ->addFieldToFilter('store_id', ['in' => $storeIds])
+            ->getItems();
+        $found = null;
+        foreach ($orders as $order) {
+            if ((int) $order->getStoreId() === (int) $store->getId()) {
+                return $order;
+            }
+            $found = $found ?? $order;
+        }
+
+        return $found;
     }
 
     /**
@@ -165,23 +230,19 @@ class CallbackVerifier
      * @param array $data
      * @param string|null $signature
      * @param string $key
+     * @param Order $order
+     * @param string $storeMode The mode of the order's store
      * @return array{status: int, payment: array|null, reason: string}
      */
-    private function fetched(array $data, ?string $signature, string $key): array
+    private function fetched(array $data, ?string $signature, string $key, Order $order, string $storeMode): array
     {
         $id = $data['id'] ?? null;
-        $orderId = $data['orderId'] ?? null;
         if (($signature !== null && !self::headerParses($signature))
-            || !is_string($id) || !preg_match('/^[0-9a-f]{32,40}\z/i', $id)
-            || !(is_string($orderId) || is_int($orderId))) {
+            || !is_string($id) || !preg_match('/^[0-9a-f]{32,40}\z/i', $id)) {
             return self::refused(400, 'format');
         }
-        $orderId = (string) $orderId;
-        $order = $this->orderFactory->create()->loadByIncrementId($orderId);
-        // No retry changes these answers.
-        if (!$order->getId()) {
-            return self::refused(200, 'order');
-        }
+        $orderId = (string) $data['orderId'];
+        // No retry changes this answer.
         if (!$order->getPayment() || !in_array($order->getPayment()->getMethod(), Monei::PAYMENT_METHODS_MONEI, true)) {
             return self::refused(200, 'method');
         }
@@ -209,8 +270,7 @@ class CallbackVerifier
         if ((string) ($fetched['orderId'] ?? '') !== $orderId) {
             return self::refused(200, 'orderId');
         }
-        $storeMode = (int) $this->config('payment/monei/mode', (int) $order->getStoreId());
-        if (($fetched['livemode'] ?? null) !== ($storeMode !== Mode::MODE_TEST)) {
+        if (($fetched['livemode'] ?? null) !== ($storeMode === 'live')) {
             return self::refused(200, 'livemode');
         }
         $status = (string) ($fetched['status'] ?? '');
@@ -264,22 +324,6 @@ class CallbackVerifier
         }
 
         return $payment->getAdditionalInformation(PaymentInfoInterface::PAYMENT_STATUS);
-    }
-
-    /**
-     * Get the mode the callback names. Each mode verifies with its own key or secret.
-     *
-     * @param array $data
-     * @param int $storeId
-     * @return string live or test
-     */
-    private function modeOf(array $data, int $storeId): string
-    {
-        if (isset($data['livemode']) && is_bool($data['livemode'])) {
-            return $data['livemode'] ? 'live' : 'test';
-        }
-
-        return (int) $this->config('payment/monei/mode', $storeId) === Mode::MODE_TEST ? 'test' : 'live';
     }
 
     /**

@@ -99,6 +99,7 @@ class CallbackVerifierTest extends VerifierTestCase
         $this->remote = $remote;
         $this->orders['000000101'] = $order + $this->orders['000000101'];
         $this->config['store/2/payment/monei/mode'] = '2';
+        $this->config['store/2/payment/monei/test_api_key'] = self::KEY;
 
         $decision = $this->verifier()->verify(self::body(self::paymentFields('SUCCEEDED')), null);
 
@@ -338,21 +339,92 @@ class CallbackVerifierTest extends VerifierTestCase
     }
 
     /**
-     * Bug: a callback of the other mode is checked with the selected mode's key, so Live callbacks of a store in
-     * test mode fail. Each mode verifies with its own key.
+     * Bug: a signed callback of the other mode changes the order: a test payment (the merchant's own test key, the
+     * live order's increment id and amount) settles a live order. Each mode still verifies with its own key or
+     * secret, so the refusal answers 200 and MONEI does not retry.
+     *
+     * @dataProvider signaturesOfTheOtherMode
      */
-    public function testLivemodePicksTheKeyOfItsMode(): void
+    public function testASignedCallbackOfTheOtherModeChangesNothing(string $element, string $key): void
+    {
+        $this->config = [
+            self::STORE . 'mode' => '2',
+            self::STORE . 'production_api_key' => 'mk_live_key',
+            self::STORE . 'production_signing_secret' => 'mksec_live_secret',
+            self::STORE . 'test_api_key' => strpos($key, 'mksec_') === 0 ? self::KEY : $key,
+            self::STORE . 'test_signing_secret' => self::SECRET,
+        ];
+        $body = self::body(self::paymentFields('SUCCEEDED', ['livemode' => false]));
+
+        $decision = $this->verifier()->verify($body, self::sign($body, $element, $key));
+
+        $this->assertSame([200, null, 'livemode'], [$decision['status'], $decision['payment'], $decision['reason']]);
+        $this->assertSame([], $this->fetches);
+    }
+
+    public function signaturesOfTheOtherMode(): array
+    {
+        return [
+            'v2 with the test secret' => ['v2', self::SECRET],
+            'v1 with a manual test key' => ['v1', 'pk_test_manual'],
+        ];
+    }
+
+    /**
+     * Bug: the callback is matched to an order of another store with the same increment id (increment ids repeat
+     * across stores), or checked with the request store's credentials, so a payment of website A settles an order
+     * of website B, or a store with its own key fetches with another store's key and answers 503 for days.
+     */
+    public function testTheOrderOfTheRequestWebsiteGivesTheCredentials(): void
+    {
+        $this->orders = [
+            'store 2' => ['incrementId' => '000000101', 'storeId' => 2, 'paymentId' => ''],
+            'store 3, website 2' => ['incrementId' => '000000101', 'storeId' => 3, 'paymentId' => ''],
+            'only in store 2' => ['incrementId' => '000000201', 'storeId' => 2, 'paymentId' => ''],
+            'only in website 2' => ['incrementId' => '000000301', 'storeId' => 3, 'paymentId' => ''],
+        ];
+        $this->config['store/2/payment/monei/test_api_key'] = 'mk_test_store2';
+        $this->config['store/3/payment/monei/test_api_key'] = 'mk_test_store3';
+
+        $this->remote = self::paymentFields('SUCCEEDED', ['orderId' => '000000201']);
+        $store2 = $this->verifier()->verify(self::body($this->remote), null);
+        $otherWebsite = $this->verifier()->verify(self::body(self::paymentFields('SUCCEEDED', ['orderId' => '000000301'])), null);
+
+        $this->assertSame([200, 'SUCCEEDED'], [$store2['status'], $store2['payment']['status']]);
+        $this->assertSame([200, null, 'order'], [$otherWebsite['status'], $otherWebsite['payment'], $otherWebsite['reason']]);
+        $this->assertSame([['mk_test_store2', self::ID]], $this->fetches);
+    }
+
+    /**
+     * Bug: two orders with one increment id in the request store's website: the other store's order is changed.
+     */
+    public function testTheRequestStoresOrderComesFirst(): void
+    {
+        $this->orders = [
+            'store 2' => ['incrementId' => '000000101', 'storeId' => 2, 'paymentId' => '', 'method' => 'checkmo'],
+            'store 1' => ['incrementId' => '000000101', 'storeId' => 1, 'paymentId' => ''],
+        ];
+
+        $decision = $this->verifier()->verify(self::body($this->remote), null);
+
+        $this->assertSame([200, 'SUCCEEDED'], [$decision['status'], $decision['payment']['status'] ?? null]);
+    }
+
+    /**
+     * Bug: a scope with its own manual key inherits the signing secret of another scope's connect (another
+     * account): a v2 signed with that secret is accepted for this scope.
+     */
+    public function testASecretNextToAManualKeyIsNotUsed(): void
     {
         $this->config = [
             self::STORE . 'mode' => '1',
             self::STORE . 'test_api_key' => 'pk_test_manual',
-            self::STORE . 'production_api_key' => 'pk_live_manual',
+            'default/0/payment/monei/test_signing_secret' => self::SECRET,
         ];
-        $body = self::body(self::paymentFields('SUCCEEDED', ['livemode' => true]));
+        $body = self::body($this->remote);
 
-        $live = $this->verifier()->verify($body, self::sign($body, 'v1', 'pk_live_manual'));
-        $test = $this->verifier()->verify($body, self::sign($body, 'v1', 'pk_test_manual'));
+        $decision = $this->verifier()->verify($body, self::sign($body, 'v2', self::SECRET));
 
-        $this->assertSame([200, 401], [$live['status'], $test['status']]);
+        $this->assertSame(401, $decision['status']);
     }
 }
