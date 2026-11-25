@@ -400,18 +400,31 @@ class ConnectServiceTest extends TestCase
     }
 
     /**
-     * Bug: a store with no Live credentials stays in production mode after it gets only a Test key (not_approved),
-     * so every payment fails.
+     * Bug: a Test-only connect at a parent scope switches a live child scope to test mode: Default has no Live key
+     * and is in production mode, and a website with its own Live key inherits that mode. A connect never changes
+     * the mode: a store not in production mode is in test mode already (config.xml).
      */
-    public function testOnlyTestOnAStoreWithoutLiveTurnsTestModeOn(): void
+    public function testATestOnlyConnectNeverChangesTheMode(): void
     {
-        $this->config = [self::SCOPE . 'mode' => '2'];
-        $store = new MemoryFlagStore([ConnectService::STATE_PREFIX . self::STATE => self::entry()]);
+        $this->config = [
+            'default/0/payment/monei/mode' => '2',
+            self::SCOPE . 'production_api_key' => 'pk_live_site',
+        ];
+        $store = new MemoryFlagStore([
+            ConnectService::STATE_PREFIX . self::STATE => self::entry(['scope' => 'default', 'scopeId' => 0]),
+        ]);
         $this->exchangeAnswer = ['test' => self::keys('test', 'acc-test-new'), 'errors' => ['live' => 'not_approved']];
 
         $this->service($store)->complete(self::STATE, 'the-code');
 
-        $this->assertSame(['1', 'mk_test_new'], [$this->config[self::SCOPE . 'mode'], $this->config[self::SCOPE . 'test_api_key']]);
+        $this->assertSame(
+            ['2', '2', 'mk_test_new'],
+            [
+                $this->fakeScopeConfig()->getValue('payment/monei/mode'),
+                $this->fakeScopeConfig()->getValue('payment/monei/mode', 'websites', 1),
+                $this->config['default/0/payment/monei/test_api_key'],
+            ]
+        );
     }
 
     /**

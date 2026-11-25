@@ -19,7 +19,6 @@ use Monei\ApiException;
 use Monei\ConnectException;
 use Monei\Model\RegisterApplePayDomainRequest;
 use Monei\MoneiPayment\Api\Config\MoneiGoogleApplePaymentModuleConfigInterface;
-use Monei\MoneiPayment\Model\Config\Source\Mode;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\Logger;
 use Throwable;
@@ -372,11 +371,6 @@ class ConnectService
             $this->configWriter->save(self::path($mode, 'api_key'), $keys['apiKey'], $scope, $scopeId);
             $this->configWriter->save(self::path($mode, 'signing_secret'), $keys['signingSecret'], $scope, $scopeId);
             $switched[$mode] = $keys;
-        }
-        $liveKey = $switched['live']['apiKey'] ?? $this->read(self::path('live', 'api_key'), $scope, $scopeId);
-        // A live store is never switched to test mode.
-        if ($switched && $liveKey === '') {
-            $this->configWriter->save('payment/monei/mode', (string) Mode::MODE_TEST, $scope, $scopeId);
         }
 
         return ['switched' => $switched, 'problems' => $problems];
