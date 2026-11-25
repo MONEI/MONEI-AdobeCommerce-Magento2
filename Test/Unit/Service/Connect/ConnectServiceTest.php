@@ -541,8 +541,8 @@ class ConnectServiceTest extends TestCase
     /**
      * Bug: a disconnect at a website deletes its rows, so the website inherits the default scope's credentials,
      * possibly of another account; or leaves them in the config cache; or clears a mode with a manual key, which
-     * the merchant typed and cannot get back from a connect; or leaves a pending connect, whose callback writes the
-     * credentials back. The fake fails on any delete.
+     * the merchant typed and cannot get back from a connect; or leaves a pending connect of the scope, whose
+     * callback writes the credentials back, or drops another scope's pending connect. The fake fails on any delete.
      */
     public function testADisconnectAtAWebsiteWritesEmptyValuesOfTheConnectedModesThere(): void
     {
@@ -562,7 +562,7 @@ class ConnectServiceTest extends TestCase
 
         $this->service($flags)->disconnect('websites', 1);
 
-        $this->assertSame([], $flags->codesWithPrefix(ConnectService::STATE_PREFIX));
+        $this->assertSame([ConnectService::STATE_PREFIX . 'other'], $flags->codesWithPrefix(ConnectService::STATE_PREFIX));
 
         $this->assertSame(
             ['mode' => null, 'production_account_id' => '', 'production_api_key' => '', 'production_signing_secret' => '',

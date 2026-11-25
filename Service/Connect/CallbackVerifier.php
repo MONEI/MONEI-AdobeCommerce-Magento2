@@ -253,7 +253,8 @@ class CallbackVerifier
             && in_array($this->storedStatus($order, $storedId), self::SETTLED, true)) {
             return self::refused(400, 'paymentId');
         }
-        if (!$this->takeQuota($orderId)) {
+        // Increment IDs repeat across stores: the order quota counts the order itself.
+        if (!$this->takeQuota((string) $order->getId())) {
             return self::refused(503, 'quota');
         }
         try {
@@ -331,7 +332,7 @@ class CallbackVerifier
     /**
      * Count a fetch attempt: at most 5 a minute per order and 60 a minute per store
      *
-     * @param string $orderId
+     * @param string $orderId The order's entity ID
      * @return bool
      */
     private function takeQuota(string $orderId): bool

@@ -211,9 +211,12 @@ class ConnectService
      */
     public function disconnect(string $scope, int $scopeId): void
     {
-        // A pending connect would write the credentials back.
+        // A pending connect of this scope would write the credentials back. Other scopes' connects go on.
         foreach ($this->flags->codesWithPrefix(self::STATE_PREFIX) as $code) {
-            $this->flags->delete($code);
+            $entry = $this->flags->get($code);
+            if (is_array($entry) && ($entry['scope'] ?? null) === $scope && ($entry['scopeId'] ?? null) === $scopeId) {
+                $this->flags->delete($code);
+            }
         }
         foreach ($this->connectedModes($scope, $scopeId) as $mode) {
             foreach (self::FIELDS as $field) {

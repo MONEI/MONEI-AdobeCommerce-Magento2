@@ -39,6 +39,9 @@ abstract class VerifierTestCase extends TestCase
 
     protected int $now = 1700000000;
 
+    /** The store of the callback request: 1 or 2 (website 1) or 3 (website 2) */
+    protected int $requestStore = 1;
+
     /** @var array<string, array{paymentId: string, incrementId?: string, state?: string, method?: string, storeId?: int, paid?: bool,
      *     storedStatus?: string, storedStatusOf?: string}> Defaults: state new, method monei_card, store 1, no
      *     invoice. The last
@@ -89,8 +92,12 @@ abstract class VerifierTestCase extends TestCase
     protected function verifier(): CallbackVerifier
     {
         $store = $this->createMock(Store::class);
-        $store->method('getId')->willReturn(1);
-        $store->method('getWebsiteId')->willReturn(1);
+        $store->method('getId')->willReturnCallback(function () {
+            return $this->requestStore;
+        });
+        $store->method('getWebsiteId')->willReturnCallback(function () {
+            return $this->requestStore === 3 ? 2 : 1;
+        });
         $storeManager = $this->createMock(StoreManagerInterface::class);
         $storeManager->method('getStore')->willReturn($store);
         $storeManager->method('getWebsite')->willReturnCallback(function ($websiteId) {

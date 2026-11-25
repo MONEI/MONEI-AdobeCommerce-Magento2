@@ -289,12 +289,32 @@ class CallbackVerifierTest extends VerifierTestCase
     }
 
     /**
+     * Bug: the order quota counts by increment ID, which repeats across stores: callbacks for one store's order
+     * block another store's order with the same number.
+     */
+    public function testTheOrderQuotaCountsTheOrderNotItsIncrementId(): void
+    {
+        $this->orders = [
+            'website 1' => ['incrementId' => '000000101', 'storeId' => 1, 'paymentId' => '', 'entityId' => 7],
+            'website 2' => ['incrementId' => '000000101', 'storeId' => 3, 'paymentId' => '', 'entityId' => 8],
+        ];
+        $this->config['store/3/payment/monei/test_api_key'] = self::KEY;
+        $body = self::body($this->remote);
+        for ($i = 0; $i < 5; $i++) {
+            $this->verifier()->verify($body, null);
+        }
+        $this->requestStore = 3;
+
+        $this->assertSame(200, $this->verifier()->verify($body, null)['status']);
+    }
+
+    /**
      * Bug: many orders together make unbounded fetches.
      */
     public function testTheStoreQuotaRefusesThe61stAttemptInAMinute(): void
     {
         for ($order = 1; $order <= 13; $order++) {
-            $this->orders["o$order"] = ['paymentId' => ''];
+            $this->orders["o$order"] = ['paymentId' => '', 'entityId' => 100 + $order];
         }
         $last = 0;
         for ($attempt = 0; $attempt < 61; $attempt++) {
