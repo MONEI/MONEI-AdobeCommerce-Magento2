@@ -104,6 +104,8 @@ class ConnectButton extends AbstractBlock implements RendererInterface
         $keys = $this->connectService->apiKeys($scope, $scopeId);
 
         $canConnect = $this->callbackUrl->redirectUri($scope, $scopeId) !== null;
+        $locked = $this->connectService->lockedModes($scope, $scopeId);
+        $allLocked = count($locked) === 2;
 
         $scopeFields = ['website' => (string) $website, 'store' => (string) $store];
         $html = $this->resultHtml($scope, $scopeId) . $this->loadedHtml($keys);
@@ -130,7 +132,11 @@ class ConnectButton extends AbstractBlock implements RendererInterface
                 . '</a></p>';
         }
 
-        if (!$canConnect) {
+        if ($allLocked) {
+            $html .= '<p>' . $this->_escaper->escapeHtml((string) __(
+                'The MONEI keys of this scope are set in env.php or an environment variable, so Connect with MONEI cannot change them.'
+            )) . '</p>';
+        } elseif (!$canConnect) {
             $html .= '<p>' . $this->_escaper->escapeHtml((string) __('Use manual keys. Connect with MONEI needs a public HTTPS address for this shop.')) . '</p>';
         } else {
             $html .= $this->buttonHtml(
@@ -139,7 +145,7 @@ class ConnectButton extends AbstractBlock implements RendererInterface
                 $this->postScript($this->getUrl('monei/connect/start'), $scopeFields, true)
             );
         }
-        if ($this->connectService->connectedModes($scope, $scopeId)) {
+        if (array_diff($this->connectService->connectedModes($scope, $scopeId), $locked)) {
             $confirm = json_encode((string) __('Disconnect MONEI from this scope?'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
             $html .= ' ' . $this->buttonHtml(
                 'monei-disconnect-button',
@@ -148,7 +154,7 @@ class ConnectButton extends AbstractBlock implements RendererInterface
                     . $this->postScript($this->getUrl('monei/connect/disconnect'), $scopeFields, false)
             );
         }
-        if ($canConnect) {
+        if ($canConnect && !$allLocked) {
             $html .= $this->collapsedManualKeysHtml(substr((string) $element->getHtmlId(), 0, -strlen('connect')));
         }
 

@@ -19,6 +19,7 @@ use Monei\MoneiPayment\Controller\Payment\Connect;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\Connect\Broker;
 use Monei\MoneiPayment\Service\Connect\ConnectService;
+use Monei\MoneiPayment\Service\Connect\LockedCredentials;
 use Monei\MoneiPayment\Service\Connect\ResultPage;
 use Monei\MoneiPayment\Service\Logger;
 use Monei\MoneiPayment\Test\Unit\Service\Connect\MemoryFlagStore;
@@ -90,7 +91,8 @@ class ConnectTest extends TestCase
             $this->createMock(MoneiApiClient::class),
             $broker,
             $this->createMock(DateTime::class),
-            $this->createMock(Logger::class)
+            $this->createMock(Logger::class),
+            $this->createMock(LockedCredentials::class)
         );
 
         $contents = '';

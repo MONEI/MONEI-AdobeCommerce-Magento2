@@ -29,7 +29,7 @@ use PHPUnit\Framework\TestCase;
  */
 class ConnectButtonTest extends TestCase
 {
-    private function render(string $callback, bool $dismissed): string
+    private function render(string $callback, bool $dismissed, array $locked = []): string
     {
         $request = $this->createMock(RequestInterface::class);
         $request->method('getParam')->willReturnMap([['website', null, null], ['store', null, '2']]);
@@ -56,6 +56,8 @@ class ConnectButtonTest extends TestCase
         $service = $this->createMock(ConnectService::class);
         $service->method('apiKeys')->willReturn(['live' => 'pk_live_manual', 'test' => 'mk_test_0123456789abcdef']);
         $service->method('isNoticeDismissed')->with(9)->willReturn($dismissed);
+        $service->method('lockedModes')->willReturn($locked);
+        $service->method('connectedModes')->willReturn(['test']);
         $secureRenderer = $this->createMock(SecureHtmlRenderer::class);
         $secureRenderer->method('renderEventListenerAsTag')->willReturn('<script></script>');
         $secureRenderer->method('renderTag')->willReturnCallback(function ($tag, $attributes, $content) {
@@ -139,6 +141,24 @@ class ConnectButtonTest extends TestCase
         $this->assertSame(
             [false, true],
             [strpos($html, 'to stop storing your account API key') !== false, strpos($html, 'id="monei-connect-button"') !== false]
+        );
+    }
+
+    /**
+     * Bug: a scope whose keys env.php or an environment variable sets offers Connect and Disconnect, which write
+     * values that never take effect.
+     */
+    public function testLockedKeysOfferNeitherConnectNorDisconnect(): void
+    {
+        $html = $this->render('https://shop.example/monei/payment/connect/', false, ['live', 'test']);
+
+        $this->assertSame(
+            [false, false, true],
+            [
+                strpos($html, 'id="monei-connect-button"') !== false,
+                strpos($html, 'id="monei-disconnect-button"') !== false,
+                strpos($html, 'are set in env.php or an environment variable') !== false,
+            ]
         );
     }
 }

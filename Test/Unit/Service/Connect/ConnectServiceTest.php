@@ -15,6 +15,7 @@ use Monei\MoneiClient;
 use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\Connect\Broker;
 use Monei\MoneiPayment\Service\Connect\ConnectService;
+use Monei\MoneiPayment\Service\Connect\LockedCredentials;
 use Monei\MoneiPayment\Service\Logger;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -50,6 +51,9 @@ class ConnectServiceTest extends TestCase
 
     /** @var MoneiApiClient|MockObject */
     private $apiClient;
+
+    /** @var string[] Modes locked by the deployment configuration */
+    private array $lockedModes = [];
 
     /** @var TypeListInterface|MockObject */
     private $cacheTypeList;
@@ -96,6 +100,10 @@ class ConnectServiceTest extends TestCase
         });
         $dateTime = $this->createMock(DateTime::class);
         $dateTime->method('gmtTimestamp')->willReturn(self::NOW);
+        $locked = $this->createMock(LockedCredentials::class);
+        $locked->method('modes')->willReturnCallback(function () {
+            return $this->lockedModes;
+        });
 
         return new ConnectService(
             $flags,
@@ -105,7 +113,8 @@ class ConnectServiceTest extends TestCase
             $this->apiClient,
             $broker,
             $dateTime,
-            $this->createMock(Logger::class)
+            $this->createMock(Logger::class),
+            $locked
         );
     }
 
@@ -583,5 +592,23 @@ class ConnectServiceTest extends TestCase
         $service->dismissNotice(3);
 
         $this->assertSame([true, false], [$service->isNoticeDismissed(3), $service->isNoticeDismissed(4)]);
+    }
+
+    /**
+     * Bug: a connect or disconnect writes a mode whose credentials env.php or an environment variable sets: the
+     * write never takes effect, but the page says connected or disconnected.
+     */
+    public function testALockedModeIsNeitherConnectedNorDisconnected(): void
+    {
+        $this->lockedModes = ['live'];
+        $store = $this->manualStore();
+        $this->config[self::SCOPE . 'production_api_key'] = 'mk_live_old';
+        $this->exchangeAnswer = ['live' => self::keys('live', 'acc-live'), 'test' => self::keys('test', 'acc-test-new')];
+
+        $result = $this->service($store)->complete(self::STATE, 'the-code');
+        $this->service(new MemoryFlagStore())->disconnect('websites', 1);
+
+        $this->assertSame([['live', 'locked']], self::codes($result));
+        $this->assertSame(['mk_live_old', ''], [$this->config[self::SCOPE . 'production_api_key'], $this->config[self::SCOPE . 'test_api_key']]);
     }
 }

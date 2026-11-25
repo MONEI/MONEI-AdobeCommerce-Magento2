@@ -21,6 +21,7 @@ use Monei\MoneiPayment\Service\Api\MoneiApiClient;
 use Monei\MoneiPayment\Service\Connect\Broker;
 use Monei\MoneiPayment\Service\Connect\CallbackUrl;
 use Monei\MoneiPayment\Service\Connect\ConnectService;
+use Monei\MoneiPayment\Service\Connect\LockedCredentials;
 use Monei\MoneiPayment\Service\Logger;
 use Monei\MoneiPayment\Test\Unit\Service\Connect\MemoryFlagStore;
 use PHPUnit\Framework\TestCase;
@@ -79,7 +80,8 @@ class StartTest extends TestCase
             $this->createMock(MoneiApiClient::class),
             new Broker(),
             $dateTime,
-            $this->createMock(Logger::class)
+            $this->createMock(Logger::class),
+            $this->createMock(LockedCredentials::class)
         );
 
         (new Start($context, $service, new CallbackUrl($url, $storeManager)))->execute();
@@ -120,7 +122,8 @@ class StartTest extends TestCase
             $this->createMock(MoneiApiClient::class),
             new Broker(),
             $this->createMock(DateTime::class),
-            $this->createMock(Logger::class)
+            $this->createMock(Logger::class),
+            $this->createMock(LockedCredentials::class)
         );
 
         (new Start($context, $service, new CallbackUrl($this->createMock(Url::class), $storeManager)))->execute();

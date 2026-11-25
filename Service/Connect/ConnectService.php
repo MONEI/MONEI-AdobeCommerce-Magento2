@@ -86,6 +86,11 @@ class ConnectService
     private Logger $logger;
 
     /**
+     * @var LockedCredentials
+     */
+    private LockedCredentials $lockedCredentials;
+
+    /**
      * @param FlagStore $flags
      * @param ScopeConfigInterface $scopeConfig
      * @param WriterInterface $configWriter
@@ -94,6 +99,7 @@ class ConnectService
      * @param Broker $broker
      * @param DateTime $dateTime
      * @param Logger $logger
+     * @param LockedCredentials $lockedCredentials
      */
     public function __construct(
         FlagStore $flags,
@@ -103,7 +109,8 @@ class ConnectService
         MoneiApiClient $apiClient,
         Broker $broker,
         DateTime $dateTime,
-        Logger $logger
+        Logger $logger,
+        LockedCredentials $lockedCredentials
     ) {
         $this->flags = $flags;
         $this->scopeConfig = $scopeConfig;
@@ -113,6 +120,7 @@ class ConnectService
         $this->broker = $broker;
         $this->dateTime = $dateTime;
         $this->logger = $logger;
+        $this->lockedCredentials = $lockedCredentials;
     }
 
     /**
@@ -218,7 +226,8 @@ class ConnectService
                 $this->flags->delete($code);
             }
         }
-        foreach ($this->connectedModes($scope, $scopeId) as $mode) {
+        $locked = $this->lockedModes($scope, $scopeId);
+        foreach (array_diff($this->connectedModes($scope, $scopeId), $locked) as $mode) {
             foreach (self::FIELDS as $field) {
                 $this->configWriter->save(self::path($mode, $field), '', $scope, $scopeId);
             }
@@ -239,6 +248,19 @@ class ConnectService
             'live' => $this->read(self::path('live', 'api_key'), $scope, $scopeId),
             'test' => $this->read(self::path('test', 'api_key'), $scope, $scopeId),
         ];
+    }
+
+    /**
+     * Get the modes with a credential locked by env.php, config.php or an environment variable at a scope: Connect
+     * and Disconnect cannot change them
+     *
+     * @param string $scope
+     * @param int $scopeId
+     * @return string[] live and/or test
+     */
+    public function lockedModes(string $scope, int $scopeId): array
+    {
+        return $this->lockedCredentials->modes($scope, $scopeId);
     }
 
     /**
@@ -331,6 +353,9 @@ class ConnectService
             'invalid_grant' => __('The connect code is not valid or expired. Start again from the MONEI settings.'),
             'temporarily_unavailable' => __('MONEI is not available now. Try again later.'),
             'keyRejected' => __('The new key did not work, so the current credentials stay in use.'),
+            'locked' => __(
+                'The keys of this mode are set in env.php or an environment variable, so Connect with MONEI cannot change them.'
+            ),
             'cap' => __('Your MONEI account has too many API keys. Revoke unused keys in the MONEI Dashboard, then connect again.'),
             'not_approved' => __('Live keys come after MONEI approves your account. The store stays in test mode.'),
             'blocked' => __('MONEI refused a key for this account.'),
@@ -373,8 +398,14 @@ class ConnectService
             return ['switched' => [], 'problems' => $problems];
         }
         $switched = [];
+        $locked = $this->lockedModes($scope, $scopeId);
         foreach (array_keys(self::MODES) as $mode) {
             if (!isset($result[$mode])) {
+                continue;
+            }
+            // A write would not take effect, and the result would say connected.
+            if (in_array($mode, $locked, true)) {
+                $problems[] = ['mode' => $mode, 'code' => 'locked'];
                 continue;
             }
             $keys = $result[$mode];
