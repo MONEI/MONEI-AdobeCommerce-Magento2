@@ -459,6 +459,37 @@ class CallbackVerifierTest extends VerifierTestCase
     }
 
     /**
+     * Bug: store views share a callback URL (one base URL, no store code), so a signed callback of store view 2
+     * reaches store view 1 and settles store view 1's order with the same increment ID; or a payment of a store
+     * view without that order settles another store view's order.
+     *
+     * @dataProvider signedPaymentStores
+     */
+    public function testASignedPaymentSettlesTheOrderOfItsStoreView(array $orders, ?int $expectedOrder): void
+    {
+        $this->orders = $orders;
+        // A website connect: both store views inherit its key and secret.
+        $this->config['websites/1/payment/monei/test_api_key'] = self::KEY;
+        $this->config['websites/1/payment/monei/test_signing_secret'] = self::SECRET;
+        $body = self::body(self::paymentFields('SUCCEEDED', ['metadata' => ['magento_store_id' => '2']]));
+
+        $decision = $this->verifier()->verify($body, self::sign($body, 'v2', self::SECRET));
+
+        $this->assertSame($expectedOrder, $decision['order']);
+    }
+
+    public function signedPaymentStores(): array
+    {
+        $store1 = ['incrementId' => '000000101', 'storeId' => 1, 'paymentId' => '', 'entityId' => 7];
+        $store2 = ['incrementId' => '000000101', 'storeId' => 2, 'paymentId' => '', 'entityId' => 8];
+
+        return [
+            'both store views have the number' => [['s1' => $store1, 's2' => $store2], 8],
+            'only the request store view has it' => [['s1' => $store1], null],
+        ];
+    }
+
+    /**
      * Bug: a scope with its own manual key inherits the signing secret of another scope's connect (another
      * account): a v2 signed with that secret is accepted for this scope.
      */

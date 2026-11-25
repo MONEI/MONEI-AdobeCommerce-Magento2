@@ -152,7 +152,11 @@ class CallbackVerifier
         if (!(is_string($orderId) || is_int($orderId)) || (string) $orderId === '') {
             return self::refused(400, 'format');
         }
-        $order = $this->findOrder((string) $orderId);
+        $metadata = (array) ($data['metadata'] ?? []);
+        $bodyStore = isset($metadata[CreatePayment::STORE_METADATA])
+            ? (int) $metadata[CreatePayment::STORE_METADATA]
+            : null;
+        $order = $this->findOrder((string) $orderId, $bodyStore);
         // No retry changes this answer.
         if ($order === null) {
             return self::refused(200, 'order');
@@ -203,12 +207,14 @@ class CallbackVerifier
     }
 
     /**
-     * Find the order of an increment id in the stores of the request store's website, the request store first
+     * Find the order of an increment id in the stores of the request store's website: the order of the store view
+     * the payment names (store views can share a callback URL), else the request store's order first
      *
      * @param string $incrementId
+     * @param int|null $paymentStore The store view in the payment's metadata (CreatePayment::STORE_METADATA)
      * @return Order|null
      */
-    private function findOrder(string $incrementId): ?Order
+    private function findOrder(string $incrementId, ?int $paymentStore): ?Order
     {
         $store = $this->storeManager->getStore();
         $storeIds = array_map('intval', $this->storeManager->getWebsite($store->getWebsiteId())->getStoreIds());
@@ -218,13 +224,13 @@ class CallbackVerifier
             ->getItems();
         $found = null;
         foreach ($orders as $order) {
-            if ((int) $order->getStoreId() === (int) $store->getId()) {
+            if ((int) $order->getStoreId() === ($paymentStore ?? (int) $store->getId())) {
                 return $order;
             }
             $found = $found ?? $order;
         }
 
-        return $found;
+        return $paymentStore === null ? $found : null;
     }
 
     /**
