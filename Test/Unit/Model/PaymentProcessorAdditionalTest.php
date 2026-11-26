@@ -18,6 +18,8 @@ use Magento\Sales\Model\ResourceModel\Order\Status\History\Collection as History
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Monei\Model\Payment as MoneiPayment;
+use Monei\Api\PaymentsApi;
+use Monei\MoneiClient;
 use Monei\ObjectSerializer;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
@@ -511,8 +513,10 @@ class PaymentProcessorAdditionalTest extends TestCase
             ])),
             '\Monei\Model\Payment'
         );
-        $this->getPaymentInterface->expects($this->once())->method('execute')
-            ->with($paymentId, 3)->willReturn($fetched);
+        $client = $this->getMockBuilder(MoneiClient::class)->disableOriginalConstructor()->getMock();
+        $client->payments = $this->createMock(PaymentsApi::class);
+        $client->payments->expects($this->once())->method('get')->with($paymentId)->willReturn($fetched);
+        $this->moneiApiClient->expects($this->once())->method('getMoneiSdk')->with(3)->willReturn($client);
         $order = $this->createMock(Order::class);
         $order->method('getStoreId')->willReturn(3);
         $order->method('getIncrementId')->willReturn('000000123');

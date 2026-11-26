@@ -360,7 +360,7 @@ class PaymentProcessor implements PaymentProcessorInterface
         try {
             // The order's store: API keys are per scope, and a cron has no store of its own.
             $payment = $this->paymentDtoFactory->createFromPaymentObject(
-                $this->getPaymentInterface->execute($paymentId, (int) $order->getStoreId())
+                $this->moneiApiClient->getMoneiSdk((int) $order->getStoreId())->payments->get($paymentId)
             );
 
             // Process the payment

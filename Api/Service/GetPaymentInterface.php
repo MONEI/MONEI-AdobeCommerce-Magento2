@@ -22,8 +22,7 @@ interface GetPaymentInterface
      * Service execute method.
      *
      * @param string $paymentId
-     * @param int|null $storeId The store whose API key fetches it; the current store when null
      * @return Payment MONEI SDK Payment object
      */
-    public function execute(string $paymentId, ?int $storeId = null): Payment;
+    public function execute(string $paymentId): Payment;
 }
