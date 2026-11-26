@@ -2,554 +2,108 @@
 
 namespace Monei\MoneiPayment\Test\Unit\Cron;
 
-use Magento\Framework\Stdlib\DateTime\DateTime;
-use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Model\Order;
 use Magento\Sales\Model\ResourceModel\Order\Collection as OrderCollection;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory as OrderCollectionFactory;
-use Magento\Sales\Model\Order;
-use Magento\Sales\Model\OrderFactory;
+use Magento\Store\Model\Store;
+use Magento\Store\Model\StoreManagerInterface;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
-use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
-use Monei\MoneiPayment\Api\Service\CancelPaymentInterface;
 use Monei\MoneiPayment\Api\LockManagerInterface;
 use Monei\MoneiPayment\Cron\ProcessPendingOrders;
-use Monei\MoneiPayment\Model\Payment\Status;
 use Monei\MoneiPayment\Model\PaymentProcessor;
 use Monei\MoneiPayment\Service\Logger;
-use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * The hourly sync of authorized MONEI orders. Every test names the bug it catches.
+ */
 class ProcessPendingOrdersTest extends TestCase
 {
-    /**
-     * @var OrderCollectionFactory|MockObject
-     */
-    private $orderCollectionFactoryMock;
+    /** @var array<string, mixed> The filters the cron set on the order collection */
+    private array $filters = [];
 
-    /**
-     * @var OrderFactory|MockObject
-     */
-    private $orderFactoryMock;
-
-    /**
-     * @var PaymentProcessor|MockObject
-     */
-    private $paymentProcessorMock;
-
-    /**
-     * @var OrderRepositoryInterface|MockObject
-     */
-    private $orderRepositoryMock;
-
-    /**
-     * @var LockManagerInterface|MockObject
-     */
-    private $lockManagerMock;
-
-    /**
-     * @var DateTime|MockObject
-     */
-    private $dateMock;
-
-    /**
-     * @var CancelPaymentInterface|MockObject
-     */
-    private $cancelPaymentServiceMock;
-
-    /**
-     * @var MoneiPaymentModuleConfigInterface|MockObject
-     */
-    private $moduleConfigMock;
-
-    /**
-     * @var Logger|MockObject
-     */
-    private $loggerMock;
-
-    /**
-     * @var ProcessPendingOrders
-     */
-    private $cronJob;
-
-    /**
-     * @var OrderCollection|MockObject
-     */
-    private $orderCollectionMock;
-
-    /**
-     * @var Order|MockObject
-     */
-    private $orderMock;
-
-    protected function setUp(): void
+    private function cron(array $orders, PaymentProcessor $processor, LockManagerInterface $lockManager): ProcessPendingOrders
     {
-        $this->orderCollectionFactoryMock = $this->createMock(OrderCollectionFactory::class);
-        $this->orderFactoryMock = $this->createMock(OrderFactory::class);
-        $this->paymentProcessorMock = $this->createMock(PaymentProcessor::class);
-        $this->orderRepositoryMock = $this->createMock(OrderRepositoryInterface::class);
-        $this->lockManagerMock = $this->createMock(LockManagerInterface::class);
-        $this->dateMock = $this->createMock(DateTime::class);
-        $this->cancelPaymentServiceMock = $this->createMock(CancelPaymentInterface::class);
-        $this->moduleConfigMock = $this->createMock(MoneiPaymentModuleConfigInterface::class);
-        $this->loggerMock = $this->createMock(Logger::class);
+        $collection = $this->createMock(OrderCollection::class);
+        $collection->method('addFieldToFilter')->willReturnCallback(function ($field, $condition) use ($collection) {
+            $this->filters[$field] = $condition;
+            return $collection;
+        });
+        $collection->method('getSize')->willReturn(count($orders));
+        $collection->method('getIterator')->willReturn(new \ArrayIterator($orders));
+        $collectionFactory = $this->createMock(OrderCollectionFactory::class);
+        $collectionFactory->method('create')->willReturn($collection);
 
-        $this->orderCollectionMock = $this->createMock(OrderCollection::class);
-        $this->orderMock = $this->createMock(Order::class);
+        $moduleConfig = $this->createMock(MoneiPaymentModuleConfigInterface::class);
+        $moduleConfig->method('getPreAuthorizedStatus')->willReturnCallback(function (?int $storeId = null) {
+            return $storeId === 2 ? 'shop_authorized' : 'monei_authorized';
+        });
+        $stores = [];
+        foreach ([1, 2] as $id) {
+            $store = $this->createMock(Store::class);
+            $store->method('getId')->willReturn($id);
+            $stores[] = $store;
+        }
+        $storeManager = $this->createMock(StoreManagerInterface::class);
+        $storeManager->method('getStores')->willReturn($stores);
 
-        $this
-            ->orderCollectionFactoryMock
-            ->method('create')
-            ->willReturn($this->orderCollectionMock);
-
-        $this->cronJob = new ProcessPendingOrders(
-            $this->orderCollectionFactoryMock,
-            $this->orderFactoryMock,
-            $this->paymentProcessorMock,
-            $this->orderRepositoryMock,
-            $this->lockManagerMock,
-            $this->dateMock,
-            $this->cancelPaymentServiceMock,
-            $this->moduleConfigMock,
-            $this->loggerMock
+        return new ProcessPendingOrders(
+            $collectionFactory,
+            $processor,
+            $lockManager,
+            $moduleConfig,
+            $storeManager,
+            $this->createMock(Logger::class)
         );
     }
 
-    /**
-     * Test execute with no orders
-     */
-    public function testExecuteWithNoOrders(): void
+    private function order(string $incrementId, int $storeId = 1, string $status = 'monei_authorized'): Order
     {
-        $this
-            ->orderCollectionMock
-            ->method('addFieldToFilter')
-            ->willReturnSelf();
+        $order = $this->createMock(Order::class);
+        $order->method('getIncrementId')->willReturn($incrementId);
+        $order->method('getStoreId')->willReturn($storeId);
+        $order->method('getStatus')->willReturn($status);
+        $order->method('getData')->with('monei_payment_id')->willReturn('pay_' . $incrementId);
 
-        $this
-            ->orderCollectionMock
-            ->method('getSize')
-            ->willReturn(0);
-
-        $this
-            ->orderCollectionMock
-            ->method('getIterator')
-            ->willReturn(new \ArrayIterator([]));
-
-        $this
-            ->loggerMock
-            ->expects($this->exactly(3))
-            ->method('info')
-            ->withConsecutive(
-                ['[Cron] Starting to process pending Monei orders'],
-                ['[Cron] Found 0 pending orders to process'],
-                ['[Cron] Finished processing pending Monei orders']
-            );
-
-        $this->cronJob->execute();
+        return $order;
     }
 
     /**
-     * Test execute with order without payment ID
+     * Bug: the cron holds the order lock while processPaymentById() runs, and processPayment() takes the same lock:
+     * with a file or cache lock backend (Adobe Commerce Cloud) the second lock fails, so no order ever syncs. Or it
+     * syncs an order that a callback is processing now.
      */
-    public function testExecuteWithOrderWithoutPaymentId(): void
+    public function testEachUnlockedOrderIsSyncedWithoutAnOuterLock(): void
     {
-        $this
-            ->orderCollectionMock
-            ->method('addFieldToFilter')
-            ->willReturnSelf();
+        $free = $this->order('000000101');
+        $busy = $this->order('000000102');
+        $lockManager = $this->createMock(LockManagerInterface::class);
+        $lockManager->method('isOrderLocked')->willReturnCallback(function (string $incrementId) {
+            return $incrementId === '000000102';
+        });
+        $lockManager->expects($this->never())->method('lockOrder');
+        $lockManager->expects($this->never())->method('executeWithOrderLock');
+        $processor = $this->createMock(PaymentProcessor::class);
+        $processor->expects($this->once())->method('processPaymentById')->with($free, 'pay_000000101');
 
-        $this
-            ->orderCollectionMock
-            ->method('getSize')
-            ->willReturn(1);
-
-        $this
-            ->orderMock
-            ->method('getIncrementId')
-            ->willReturn('100000001');
-
-        $this
-            ->orderMock
-            ->method('getData')
-            ->with(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID)
-            ->willReturn(null);
-
-        $this
-            ->orderCollectionMock
-            ->method('getIterator')
-            ->willReturn(new \ArrayIterator([$this->orderMock]));
-
-        $this
-            ->loggerMock
-            ->expects($this->exactly(3))
-            ->method('info')
-            ->withConsecutive(
-                ['[Cron] Starting to process pending Monei orders'],
-                ['[Cron] Found 1 pending orders to process'],
-                ['[Cron] Finished processing pending Monei orders']
-            );
-
-        $this
-            ->loggerMock
-            ->expects($this->once())
-            ->method('warning')
-            ->with('[Cron] Order 100000001 has no payment ID');
-
-        $this->cronJob->execute();
+        $this->cron([$free, $busy], $processor, $lockManager)->execute();
     }
 
     /**
-     * Test execute with locked order
+     * Bug: the cron looks only for the default status monei_authorized, so the authorized orders of a store with
+     * its own Authorized Status never sync; or it syncs an order whose status is only another store's Authorized
+     * Status (in its own store that status can mean paid), and an expired payment cancels it.
      */
-    public function testExecuteWithLockedOrder(): void
+    public function testEachOrderIsSyncedOnlyInItsStoresAuthorizedStatus(): void
     {
-        $this
-            ->orderCollectionMock
-            ->method('addFieldToFilter')
-            ->willReturnSelf();
+        $ownStatus = $this->order('000000201', 2, 'shop_authorized');
+        $otherStoresStatus = $this->order('000000101', 1, 'shop_authorized');
+        $processor = $this->createMock(PaymentProcessor::class);
+        $processor->expects($this->once())->method('processPaymentById')->with($ownStatus, 'pay_000000201');
 
-        $this
-            ->orderCollectionMock
-            ->method('getSize')
-            ->willReturn(1);
+        $this->cron([$ownStatus, $otherStoresStatus], $processor, $this->createMock(LockManagerInterface::class))
+            ->execute();
 
-        $this
-            ->orderMock
-            ->method('getIncrementId')
-            ->willReturn('100000001');
-
-        $this
-            ->orderMock
-            ->method('getData')
-            ->with(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID)
-            ->willReturn('pay_123456789');
-
-        $this
-            ->orderCollectionMock
-            ->method('getIterator')
-            ->willReturn(new \ArrayIterator([$this->orderMock]));
-
-        $this
-            ->lockManagerMock
-            ->method('isOrderLocked')
-            ->with('100000001')
-            ->willReturn(true);
-
-        $this
-            ->loggerMock
-            ->expects($this->exactly(4))
-            ->method('info')
-            ->withConsecutive(
-                ['[Cron] Starting to process pending Monei orders'],
-                ['[Cron] Found 1 pending orders to process'],
-                ['[Cron] Order 100000001 is locked, skipping'],
-                ['[Cron] Finished processing pending Monei orders']
-            );
-
-        $this->cronJob->execute();
-    }
-
-    /**
-     * Test execute with old order that needs cancellation
-     */
-    public function testExecuteWithOrderThatNeedsCancellation(): void
-    {
-        $this
-            ->orderCollectionMock
-            ->method('addFieldToFilter')
-            ->willReturnSelf();
-
-        $this
-            ->orderCollectionMock
-            ->method('getSize')
-            ->willReturn(1);
-
-        $this
-            ->orderMock
-            ->method('getIncrementId')
-            ->willReturn('100000001');
-
-        $this
-            ->orderMock
-            ->method('getCreatedAt')
-            ->willReturn('2023-03-01 00:00:00');
-
-        $this
-            ->orderMock
-            ->method('getData')
-            ->with(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID)
-            ->willReturn('pay_123456789');
-
-        $this
-            ->orderCollectionMock
-            ->method('getIterator')
-            ->willReturn(new \ArrayIterator([$this->orderMock]));
-
-        $this
-            ->lockManagerMock
-            ->method('isOrderLocked')
-            ->with('100000001')
-            ->willReturn(false);
-
-        $this
-            ->lockManagerMock
-            ->method('executeWithOrderLock')
-            ->willReturnCallback(function ($orderId, $callback) {
-                return $callback();
-            });
-
-        $this
-            ->dateMock
-            ->method('date')
-            ->willReturn('2023-03-10 00:00:00');
-
-        $this
-            ->loggerMock
-            ->expects($this->exactly(5))
-            ->method('info')
-            ->withConsecutive(
-                ['[Cron] Starting to process pending Monei orders'],
-                ['[Cron] Found 1 pending orders to process'],
-                ['[Cron] Processing order 100000001 with payment ID pay_123456789'],
-                ['[Cron] Order 100000001 is 9 days old, canceling payment'],
-                ['[Cron] Finished processing pending Monei orders']
-            );
-
-        $this
-            ->cancelPaymentServiceMock
-            ->expects($this->once())
-            ->method('execute')
-            ->with([
-                'paymentId' => 'pay_123456789',
-                'cancellationReason' => 'abandoned',
-            ]);
-
-        $this
-            ->paymentProcessorMock
-            ->expects($this->once())
-            ->method('processPaymentById')
-            ->with($this->orderMock, 'pay_123456789');
-
-        $this->cronJob->execute();
-    }
-
-    /**
-     * Test execute with a normal order that needs processing
-     */
-    public function testExecuteWithOrderThatNeedsProcessing(): void
-    {
-        $this
-            ->orderCollectionMock
-            ->method('addFieldToFilter')
-            ->willReturnSelf();
-
-        $this
-            ->orderCollectionMock
-            ->method('getSize')
-            ->willReturn(1);
-
-        $this
-            ->orderMock
-            ->method('getIncrementId')
-            ->willReturn('100000001');
-
-        $this
-            ->orderMock
-            ->method('getCreatedAt')
-            ->willReturn('2023-03-08 00:00:00');
-
-        $this
-            ->orderMock
-            ->method('getData')
-            ->with(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID)
-            ->willReturn('pay_123456789');
-
-        $this
-            ->orderCollectionMock
-            ->method('getIterator')
-            ->willReturn(new \ArrayIterator([$this->orderMock]));
-
-        $this
-            ->lockManagerMock
-            ->method('isOrderLocked')
-            ->with('100000001')
-            ->willReturn(false);
-
-        $this
-            ->lockManagerMock
-            ->method('executeWithOrderLock')
-            ->willReturnCallback(function ($orderId, $callback) {
-                return $callback();
-            });
-
-        $this
-            ->dateMock
-            ->method('date')
-            ->willReturn('2023-03-10 00:00:00');
-
-        $this
-            ->loggerMock
-            ->expects($this->exactly(4))
-            ->method('info')
-            ->withConsecutive(
-                ['[Cron] Starting to process pending Monei orders'],
-                ['[Cron] Found 1 pending orders to process'],
-                ['[Cron] Processing order 100000001 with payment ID pay_123456789'],
-                ['[Cron] Finished processing pending Monei orders']
-            );
-
-        // This order is only 2 days old, so it shouldn't be canceled
-        $this
-            ->cancelPaymentServiceMock
-            ->expects($this->never())
-            ->method('execute');
-
-        $this
-            ->paymentProcessorMock
-            ->expects($this->once())
-            ->method('processPaymentById')
-            ->with($this->orderMock, 'pay_123456789');
-
-        $this->cronJob->execute();
-    }
-
-    /**
-     * Test execute with lock acquisition error
-     */
-    public function testExecuteWithLockAcquisitionError(): void
-    {
-        $this
-            ->orderCollectionMock
-            ->method('addFieldToFilter')
-            ->willReturnSelf();
-
-        $this
-            ->orderCollectionMock
-            ->method('getSize')
-            ->willReturn(1);
-
-        $this
-            ->orderMock
-            ->method('getIncrementId')
-            ->willReturn('100000001');
-
-        $this
-            ->orderMock
-            ->method('getData')
-            ->with(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID)
-            ->willReturn('pay_123456789');
-
-        $this
-            ->orderCollectionMock
-            ->method('getIterator')
-            ->willReturn(new \ArrayIterator([$this->orderMock]));
-
-        $this
-            ->lockManagerMock
-            ->method('isOrderLocked')
-            ->with('100000001')
-            ->willReturn(false);
-
-        $this
-            ->lockManagerMock
-            ->method('executeWithOrderLock')
-            ->willThrowException(new \Exception('Could not acquire lock'));
-
-        $this
-            ->loggerMock
-            ->expects($this->exactly(3))
-            ->method('info')
-            ->withConsecutive(
-                ['[Cron] Starting to process pending Monei orders'],
-                ['[Cron] Found 1 pending orders to process'],
-                ['[Cron] Finished processing pending Monei orders']
-            );
-
-        $this
-            ->loggerMock
-            ->expects($this->once())
-            ->method('error')
-            ->with('[Cron] Error acquiring lock for order 100000001: Could not acquire lock');
-
-        $this->cronJob->execute();
-    }
-
-    /**
-     * Test execute with payment processing error
-     */
-    public function testExecuteWithPaymentProcessingError(): void
-    {
-        $this
-            ->orderCollectionMock
-            ->method('addFieldToFilter')
-            ->willReturnSelf();
-
-        $this
-            ->orderCollectionMock
-            ->method('getSize')
-            ->willReturn(1);
-
-        $this
-            ->orderMock
-            ->method('getIncrementId')
-            ->willReturn('100000001');
-
-        $this
-            ->orderMock
-            ->method('getCreatedAt')
-            ->willReturn('2023-03-08 00:00:00');
-
-        $this
-            ->orderMock
-            ->method('getData')
-            ->with(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID)
-            ->willReturn('pay_123456789');
-
-        $this
-            ->orderCollectionMock
-            ->method('getIterator')
-            ->willReturn(new \ArrayIterator([$this->orderMock]));
-
-        $this
-            ->lockManagerMock
-            ->method('isOrderLocked')
-            ->with('100000001')
-            ->willReturn(false);
-
-        $this
-            ->dateMock
-            ->method('date')
-            ->willReturn('2023-03-10 00:00:00');
-
-        $this
-            ->lockManagerMock
-            ->method('executeWithOrderLock')
-            ->willReturnCallback(function ($orderId, $callback) {
-                return $callback();
-            });
-
-        $this
-            ->paymentProcessorMock
-            ->method('processPaymentById')
-            ->with($this->orderMock, 'pay_123456789')
-            ->willThrowException(new \Exception('API error'));
-
-        $this
-            ->loggerMock
-            ->expects($this->exactly(4))
-            ->method('info')
-            ->withConsecutive(
-                ['[Cron] Starting to process pending Monei orders'],
-                ['[Cron] Found 1 pending orders to process'],
-                ['[Cron] Processing order 100000001 with payment ID pay_123456789'],
-                ['[Cron] Finished processing pending Monei orders']
-            );
-
-        $this
-            ->loggerMock
-            ->expects($this->once())
-            ->method('error')
-            ->with('[Cron] Error processing payment for order 100000001: API error');
-
-        $this->cronJob->execute();
+        $this->assertSame(['in' => ['monei_authorized', 'shop_authorized']], $this->filters['status']);
     }
 }

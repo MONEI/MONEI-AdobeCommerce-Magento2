@@ -875,12 +875,17 @@ class PaymentProcessorTest extends TestCase
         ];
     }
 
+    /**
+     * Bug: an expired or failed payment only sets the canceled state, so Magento's cancel never runs: the items and
+     * their stock stay reserved, and the admin can no longer cancel the order to release them.
+     */
     public function testFailedStoredPaymentCancelsOrder(): void
     {
         $this->givenLockedOrder('000000001', 10.00, 'EUR', Order::STATE_PROCESSING);
         $this->order->method('hasInvoices')->willReturn(false);
         $this->order->method('getData')->willReturnMap([['monei_payment_id', null, 'pay_auth']]);
-        $this->order->expects($this->once())->method('setState')->with(Order::STATE_CANCELED);
+        $this->order->expects($this->once())->method('cancel');
+        $this->order->expects($this->never())->method('setState');
 
         $this->processPaymentDto($this->createPaymentDto('pay_auth', Status::EXPIRED, 1000, 'EUR'));
     }

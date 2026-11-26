@@ -358,14 +358,15 @@ class PaymentProcessor implements PaymentProcessorInterface
         string $paymentId
     ): bool {
         try {
-            // Get payment data using our own getPayment method
-            $paymentData = $this->getPayment($paymentId);
-
-            if (isset($paymentData['status']) && $paymentData['status'] === 'ERROR') {
-                throw new LocalizedException(__('Failed to fetch payment data: %1', $paymentData['error'] ?? 'Unknown error'));
+            // The order's store: API keys are per scope, and a cron has no store of its own.
+            $payment = $this->paymentDtoFactory->createFromPaymentObject(
+                $this->moneiApiClient->getMoneiSdk((int) $order->getStoreId())->payments->get($paymentId)
+            );
+            // The order is authorized already. This answer was fetched outside the order lock: a cancel callback
+            // in between would see the order reopened by handleAuthorizedPayment().
+            if ($payment->isAuthorized() || $payment->isPending()) {
+                return true;
             }
-
-            $payment = $this->paymentDtoFactory->createFromArray($paymentData);
 
             // Process the payment
             return $this->processPayment($order, $payment);
@@ -748,8 +749,10 @@ class PaymentProcessor implements PaymentProcessorInterface
 
             if (in_array($state, $allowedStatesToCancel)) {
                 $this->updatePaymentInformation($order, $payment);
-                $order->setState(Order::STATE_CANCELED);
-                $order->setStatus(Order::STATE_CANCELED);
+                // Magento's cancel releases the items and their stock. MONEI methods have no void command, so it
+                // calls no API.
+                /** @var Order $order */
+                $order->cancel();
                 $order->addCommentToStatusHistory($comment);
                 $this->orderRepository->save($order);
 
