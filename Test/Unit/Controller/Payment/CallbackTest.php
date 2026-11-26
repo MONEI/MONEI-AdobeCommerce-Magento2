@@ -106,6 +106,34 @@ class CallbackTest extends VerifierTestCase
     }
 
     /**
+     * Bug: a store with a manual pk_ key stops settling orders: the controller drops the MONEI-Signature header, or
+     * sends the manual store down the fetch path, so a valid v1 callback answers 401 and the order stays open.
+     */
+    public function testAValidV1CallbackOfAManualStoreReachesTheProcessor(): void
+    {
+        $this->config = [self::STORE . 'mode' => '1', self::STORE . 'test_api_key' => 'pk_test_manual'];
+        $body = self::body(self::paymentFields('SUCCEEDED'));
+        $controller = $this->controller($body, self::sign($body, 'v1', 'pk_test_manual'));
+        $result = $this->createMock(PaymentProcessingResultInterface::class);
+        $result->method('isSuccess')->willReturn(true);
+        $this->paymentProcessor->expects($this->once())->method('process')
+            ->willReturnCallback(function (string $orderId, string $paymentId, array $payment, ?int $entityId) use (
+                $result
+            ) {
+                $this->assertSame(
+                    ['000000101', self::ID, 'SUCCEEDED', 7],
+                    [$orderId, $paymentId, $payment['status'], $entityId]
+                );
+                return $result;
+            });
+
+        $controller->execute();
+
+        $this->assertSame([], $this->codes);
+        $this->assertSame([], $this->fetches);
+    }
+
+    /**
      * Bug: a payment that must not change the order is refused in validateForCsrf, which can only answer 403, so
      * MONEI retries for days; or it reaches the processor (an unsigned replay of a settled payment reopens the
      * order the merchant canceled).
