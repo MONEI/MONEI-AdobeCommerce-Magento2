@@ -744,8 +744,10 @@ class PaymentProcessor implements PaymentProcessorInterface
 
             if (in_array($state, $allowedStatesToCancel)) {
                 $this->updatePaymentInformation($order, $payment);
-                $order->setState(Order::STATE_CANCELED);
-                $order->setStatus(Order::STATE_CANCELED);
+                // Magento's cancel releases the items and their stock. MONEI methods have no void command, so it
+                // calls no API.
+                /** @var Order $order */
+                $order->cancel();
                 $order->addCommentToStatusHistory($comment);
                 $this->orderRepository->save($order);
 

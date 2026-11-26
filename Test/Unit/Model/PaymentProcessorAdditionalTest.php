@@ -525,7 +525,7 @@ class PaymentProcessorAdditionalTest extends TestCase
         $order->method('getData')->willReturnCallback(function ($key) use ($paymentId) {
             return $key === MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID ? $paymentId : null;
         });
-        $order->expects($this->once())->method('setState')->with(Order::STATE_CANCELED);
+        $order->expects($this->once())->method('cancel');
         $this->orderFactory->method('create')->willReturn($order);
         $this->lockManager->method('lockOrder')->willReturn(true);
         $this->orderRepository->expects($this->once())->method('save')->with($order);
@@ -926,15 +926,7 @@ class PaymentProcessorAdditionalTest extends TestCase
         $orderMock->method('getState')->willReturn(Order::STATE_NEW);
         $orderMock->method('getStoreId')->willReturn(1);
 
-        // Order should be set to canceled
-        $orderMock
-            ->expects($this->once())
-            ->method('setState')
-            ->with(Order::STATE_CANCELED);
-        $orderMock
-            ->expects($this->once())
-            ->method('setStatus')
-            ->with(Order::STATE_CANCELED);
+        $orderMock->expects($this->once())->method('cancel');
 
         // Handle the __() method used in the code
         $expectedComment = new \Magento\Framework\Phrase('Payment was canceled by the customer or the payment processor');
