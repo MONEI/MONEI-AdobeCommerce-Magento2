@@ -1,5 +1,10 @@
 # Changelog
 
+## <small>2.6.1 (2026-11-26)</small>
+
+* fix: let the pending-orders cron sync authorized orders with MONEI (#105) ([6eac806](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/6eac806)), closes [#105](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/105)
+* test: cover v1 callbacks of manual-key stores (#104) ([5566116](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/5566116)), closes [#104](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/104)
+
 ## 2.6.0 (2026-11-25)
 
 * feat: connect with MONEI (#103) ([8fac376](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/8fac376)), closes [#103](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/103)
