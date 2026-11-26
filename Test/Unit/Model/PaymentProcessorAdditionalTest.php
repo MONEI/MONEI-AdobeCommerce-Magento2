@@ -18,6 +18,7 @@ use Magento\Sales\Model\ResourceModel\Order\Status\History\Collection as History
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Monei\Model\Payment as MoneiPayment;
+use Monei\ObjectSerializer;
 use Monei\MoneiPayment\Api\Config\MoneiPaymentModuleConfigInterface;
 use Monei\MoneiPayment\Api\Data\OrderInterface as MoneiOrderInterface;
 use Monei\MoneiPayment\Api\Data\PaymentErrorCodeInterface;
@@ -32,6 +33,7 @@ use Monei\MoneiPayment\Model\Data\PaymentProcessingResult;
 use Monei\MoneiPayment\Model\Payment\Status;
 use Monei\MoneiPayment\Model\PaymentProcessor;
 use Monei\MoneiPayment\Model\Service\PaymentAmountMatcher;
+use Monei\MoneiPayment\Model\Service\StatusCodeHandler;
 use Monei\MoneiPayment\Service\Order\CreateVaultPayment;
 use Monei\MoneiPayment\Service\InvoiceService;
 use Monei\MoneiPayment\Service\Logger;
@@ -492,61 +494,54 @@ class PaymentProcessorAdditionalTest extends TestCase
     }
 
     /**
-     * Test processPaymentById with successful API call
+     * Bug: processPaymentById builds the payment from id, status and amount only, so every cron sync fails with
+     * "Missing required field: currency"; or it fetches with the current store's API key, not the order's store
+     * (keys are per scope since Connect, and a cron has no store), so the fetch fails for other websites.
      */
-    public function testProcessPaymentById(): void
+    public function testProcessPaymentByIdAppliesTheFetchedPaymentWithTheOrderStoresKey(): void
     {
-        $orderId = '000000123';
-        $paymentId = 'pay_123456';
+        $paymentId = 'af6029f80f5fc73a8ad2753eea0b1be0';
+        $fetched = ObjectSerializer::deserialize(
+            json_decode((string) json_encode([
+                'id' => $paymentId,
+                'orderId' => '000000123',
+                'amount' => 1000,
+                'currency' => 'EUR',
+                'status' => 'EXPIRED',
+            ])),
+            '\Monei\Model\Payment'
+        );
+        $this->getPaymentInterface->expects($this->once())->method('execute')
+            ->with($paymentId, 3)->willReturn($fetched);
+        $order = $this->createMock(Order::class);
+        $order->method('getStoreId')->willReturn(3);
+        $order->method('getIncrementId')->willReturn('000000123');
+        $order->method('getId')->willReturn(1);
+        $order->method('getState')->willReturn(Order::STATE_PROCESSING);
+        $order->method('getData')->willReturnCallback(function ($key) use ($paymentId) {
+            return $key === MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID ? $paymentId : null;
+        });
+        $order->expects($this->once())->method('setState')->with(Order::STATE_CANCELED);
+        $this->orderFactory->method('create')->willReturn($order);
+        $this->lockManager->method('lockOrder')->willReturn(true);
+        $this->orderRepository->expects($this->once())->method('save')->with($order);
+        $processor = new PaymentProcessor(
+            $this->orderRepository,
+            $this->invoiceService,
+            $this->lockManager,
+            $this->logger,
+            $this->moneiApiClient,
+            $this->moduleConfig,
+            $this->orderSender,
+            $this->searchCriteriaBuilder,
+            $this->getPaymentInterface,
+            $this->orderFactory,
+            $this->createVaultPayment,
+            new PaymentDTOFactory(new StatusCodeHandler()),
+            new PaymentAmountMatcher()
+        );
 
-        // Create a mock MoneiPayment object
-        $moneiPayment = $this->createMock(MoneiPayment::class);
-
-        // Setup getPayment to return a MoneiPayment object
-        $this
-            ->getPaymentInterface
-            ->expects($this->once())
-            ->method('execute')
-            ->with($paymentId)
-            ->willReturn($moneiPayment);
-
-        // Setup payment DTO
-        $this
-            ->paymentDtoFactory
-            ->expects($this->once())
-            ->method('createFromArray')
-            ->willReturn($this->paymentDtoMock);
-
-        // Setup order
-        $this
-            ->orderMock
-            ->expects($this->once())
-            ->method('getIncrementId')
-            ->willReturn($orderId);
-
-        // Setup lock manager
-        $this
-            ->lockManager
-            ->expects($this->once())
-            ->method('lockOrder')
-            ->with($orderId)
-            ->willReturn(true);
-
-        // Mock processPayment success
-        $this
-            ->lockManager
-            ->expects($this->once())
-            ->method('unlockOrder')
-            ->with($orderId);
-
-        $this->orderFactory->method('create')->willReturn($this->orderMock);
-        $this->orderMock->method('getId')->willReturn(1);
-
-        // Call the method
-        $result = $this->paymentProcessor->processPaymentById($this->orderMock, $paymentId);
-
-        // Should return true for successful processing
-        $this->assertTrue($result);
+        $this->assertTrue($processor->processPaymentById($order, $paymentId));
     }
 
     /**

@@ -51,11 +51,12 @@ class GetPayment extends AbstractApiService implements GetPaymentInterface
      * Retrieves payment details by ID from the Monei API using the official SDK.
      *
      * @param string $payment_id The ID of the payment to retrieve
+     * @param int|null $storeId The store whose API key fetches it; the current store when null
      *
      * @return Payment Response from the API with payment details as Payment object
      * @throws LocalizedException If the payment cannot be retrieved
      */
-    public function execute(string $payment_id): Payment
+    public function execute(string $payment_id, ?int $storeId = null): Payment
     {
         if (empty($payment_id)) {
             throw new LocalizedException(__('Payment ID is required to retrieve payment details'));
@@ -73,7 +74,8 @@ class GetPayment extends AbstractApiService implements GetPaymentInterface
             function (MoneiClient $moneiSdk) use ($payment_id) {
                 return $moneiSdk->payments->get($payment_id);
             },
-            $data
+            $data,
+            $storeId
         );
     }
 }

@@ -358,14 +358,10 @@ class PaymentProcessor implements PaymentProcessorInterface
         string $paymentId
     ): bool {
         try {
-            // Get payment data using our own getPayment method
-            $paymentData = $this->getPayment($paymentId);
-
-            if (isset($paymentData['status']) && $paymentData['status'] === 'ERROR') {
-                throw new LocalizedException(__('Failed to fetch payment data: %1', $paymentData['error'] ?? 'Unknown error'));
-            }
-
-            $payment = $this->paymentDtoFactory->createFromArray($paymentData);
+            // The order's store: API keys are per scope, and a cron has no store of its own.
+            $payment = $this->paymentDtoFactory->createFromPaymentObject(
+                $this->getPaymentInterface->execute($paymentId, (int) $order->getStoreId())
+            );
 
             // Process the payment
             return $this->processPayment($order, $payment);

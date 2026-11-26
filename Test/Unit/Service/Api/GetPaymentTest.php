@@ -139,6 +139,20 @@ class GetPaymentTest extends TestCase
     }
 
     /**
+     * Bug: the store ID is dropped, so a payment of another website is fetched with the current store's API key
+     * (keys are per scope since Connect) and the cron cannot sync it.
+     */
+    public function testExecuteFetchesWithTheGivenStoresKey(): void
+    {
+        $apiClient = $this->createMock(MoneiApiClient::class);
+        $apiClient->expects($this->once())->method('getMoneiSdk')->with(3)->willReturn($this->_moneiClientMock);
+        $this->_paymentsApiMock->method('get')->willReturn($this->createMock(MoneiPayment::class));
+        $service = new GetPayment($this->_loggerMock, $this->_exceptionHandlerMock, $apiClient, new FetchedPayments());
+
+        $service->execute('pay_123456', 3);
+    }
+
+    /**
      * Test with empty payment ID
      *
      * @return void
