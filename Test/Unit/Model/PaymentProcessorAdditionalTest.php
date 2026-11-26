@@ -549,6 +549,47 @@ class PaymentProcessorAdditionalTest extends TestCase
     }
 
     /**
+     * Bug: the cron applies an AUTHORIZED answer that it fetched outside the order lock: a cancel callback that ran
+     * in between canceled the order, and handleAuthorizedPayment() reopens it as authorized.
+     */
+    public function testProcessPaymentByIdLeavesTheOrderAloneWhenMoneiStillSaysAuthorized(): void
+    {
+        $fetched = ObjectSerializer::deserialize(
+            json_decode((string) json_encode([
+                'id' => 'af6029f80f5fc73a8ad2753eea0b1be0',
+                'orderId' => '000000123',
+                'amount' => 1000,
+                'currency' => 'EUR',
+                'status' => 'AUTHORIZED',
+            ])),
+            '\Monei\Model\Payment'
+        );
+        $client = $this->getMockBuilder(MoneiClient::class)->disableOriginalConstructor()->getMock();
+        $client->payments = $this->createMock(PaymentsApi::class);
+        $client->payments->method('get')->willReturn($fetched);
+        $this->moneiApiClient->method('getMoneiSdk')->willReturn($client);
+        $this->lockManager->expects($this->never())->method('lockOrder');
+        $this->orderRepository->expects($this->never())->method('save');
+        $processor = new PaymentProcessor(
+            $this->orderRepository,
+            $this->invoiceService,
+            $this->lockManager,
+            $this->logger,
+            $this->moneiApiClient,
+            $this->moduleConfig,
+            $this->orderSender,
+            $this->searchCriteriaBuilder,
+            $this->getPaymentInterface,
+            $this->orderFactory,
+            $this->createVaultPayment,
+            new PaymentDTOFactory(new StatusCodeHandler()),
+            new PaymentAmountMatcher()
+        );
+
+        $this->assertTrue($processor->processPaymentById($this->createMock(Order::class), 'af6029f80f5fc73a8ad2753eea0b1be0'));
+    }
+
+    /**
      * Test isProcessing method for concurrent processing detection
      */
     public function testProcessPaymentWithConcurrentProcessing(): void

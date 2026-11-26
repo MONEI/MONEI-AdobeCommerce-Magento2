@@ -362,6 +362,11 @@ class PaymentProcessor implements PaymentProcessorInterface
             $payment = $this->paymentDtoFactory->createFromPaymentObject(
                 $this->moneiApiClient->getMoneiSdk((int) $order->getStoreId())->payments->get($paymentId)
             );
+            // The order is authorized already. This answer was fetched outside the order lock: a cancel callback
+            // in between would see the order reopened by handleAuthorizedPayment().
+            if ($payment->isAuthorized() || $payment->isPending()) {
+                return true;
+            }
 
             // Process the payment
             return $this->processPayment($order, $payment);
