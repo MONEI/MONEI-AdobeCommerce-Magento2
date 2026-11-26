@@ -57,10 +57,12 @@ class ProcessPendingOrdersTest extends TestCase
         );
     }
 
-    private function order(string $incrementId): Order
+    private function order(string $incrementId, int $storeId = 1, string $status = 'monei_authorized'): Order
     {
         $order = $this->createMock(Order::class);
         $order->method('getIncrementId')->willReturn($incrementId);
+        $order->method('getStoreId')->willReturn($storeId);
+        $order->method('getStatus')->willReturn($status);
         $order->method('getData')->with('monei_payment_id')->willReturn('pay_' . $incrementId);
 
         return $order;
@@ -89,11 +91,17 @@ class ProcessPendingOrdersTest extends TestCase
 
     /**
      * Bug: the cron looks only for the default status monei_authorized, so the authorized orders of a store with
-     * its own Authorized Status never sync.
+     * its own Authorized Status never sync; or it syncs an order whose status is only another store's Authorized
+     * Status (in its own store that status can mean paid), and an expired payment cancels it.
      */
-    public function testTheAuthorizedStatusOfEveryStoreIsSynced(): void
+    public function testEachOrderIsSyncedOnlyInItsStoresAuthorizedStatus(): void
     {
-        $this->cron([], $this->createMock(PaymentProcessor::class), $this->createMock(LockManagerInterface::class))
+        $ownStatus = $this->order('000000201', 2, 'shop_authorized');
+        $otherStoresStatus = $this->order('000000101', 1, 'shop_authorized');
+        $processor = $this->createMock(PaymentProcessor::class);
+        $processor->expects($this->once())->method('processPaymentById')->with($ownStatus, 'pay_000000201');
+
+        $this->cron([$ownStatus, $otherStoresStatus], $processor, $this->createMock(LockManagerInterface::class))
             ->execute();
 
         $this->assertSame(['in' => ['monei_authorized', 'shop_authorized']], $this->filters['status']);

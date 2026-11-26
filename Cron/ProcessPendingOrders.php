@@ -93,7 +93,8 @@ class ProcessPendingOrders
 
         /** @var OrderCollection $collection */
         $collection = $this->orderCollectionFactory->create();
-        $collection->addFieldToFilter('status', ['in' => $this->authorizedStatuses()]);
+        $authorizedStatuses = $this->authorizedStatuses();
+        $collection->addFieldToFilter('status', ['in' => array_values(array_unique($authorizedStatuses))]);
         $collection->addFieldToFilter(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID, ['notnull' => true]);
 
         $this->logger->info(sprintf('[Cron] Found %d pending orders to process', $collection->getSize()));
@@ -101,7 +102,9 @@ class ProcessPendingOrders
         foreach ($collection as $order) {
             $incrementId = $order->getIncrementId();
             $paymentId = (string) $order->getData(MoneiOrderInterface::ATTR_FIELD_MONEI_PAYMENT_ID);
-            if ($paymentId === '') {
+            // The IN filter mixes the stores' statuses: another store's Authorized Status can mean "paid" here.
+            $storeStatus = $authorizedStatuses[(int) $order->getStoreId()] ?? $authorizedStatuses[0];
+            if ($paymentId === '' || $order->getStatus() !== $storeStatus) {
                 continue;
             }
             // A callback or a redirect is processing it now.
@@ -129,15 +132,15 @@ class ProcessPendingOrders
     /**
      * Get the Authorized Status of every store: the status an authorized order gets is a setting per store
      *
-     * @return string[]
+     * @return array<int, string> By store ID; 0 is the default scope
      */
     private function authorizedStatuses(): array
     {
-        $statuses = [$this->moduleConfig->getPreAuthorizedStatus()];
+        $statuses = [0 => $this->moduleConfig->getPreAuthorizedStatus()];
         foreach ($this->storeManager->getStores() as $store) {
-            $statuses[] = $this->moduleConfig->getPreAuthorizedStatus((int) $store->getId());
+            $statuses[(int) $store->getId()] = $this->moduleConfig->getPreAuthorizedStatus((int) $store->getId());
         }
 
-        return array_values(array_unique($statuses));
+        return $statuses;
     }
 }
