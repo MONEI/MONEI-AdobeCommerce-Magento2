@@ -404,6 +404,46 @@ class CallbackVerifierTest extends VerifierTestCase
     }
 
     /**
+     * Bug: one website's connect switches every store of the install to the fetch path: a store of website 1 that
+     * still uses the default manual pk_ key fetches with website 2's scoped key, or refuses its valid v1.
+     */
+    public function testAManualStoreBesideAConnectedWebsiteVerifiesV1(): void
+    {
+        $this->config = [
+            'default/0/payment/monei/mode' => '1',
+            'default/0/payment/monei/test_api_key' => 'pk_test_default',
+            'websites/2/payment/monei/test_api_key' => 'mk_test_site2',
+            'websites/2/payment/monei/test_signing_secret' => self::SECRET,
+        ];
+        $this->orders = ['store 2' => ['incrementId' => '000000101', 'storeId' => 2, 'paymentId' => '', 'entityId' => 8]];
+        $body = self::body($this->remote);
+
+        $decision = $this->verifier()->verify($body, self::sign($body, 'v1', 'pk_test_default'));
+
+        $this->assertSame([200, 'SUCCEEDED', 8], [$decision['status'], $decision['payment']['status'] ?? null, $decision['order']]);
+        $this->assertSame([], $this->fetches);
+    }
+
+    /**
+     * Bug: a signing secret left from an earlier connect, next to the manual pk_ key the merchant entered after it,
+     * makes the store expect v2 only: every v1 callback answers 401 and no order settles.
+     */
+    public function testAManualKeyWithALeftoverSecretVerifiesV1(): void
+    {
+        $this->config = [
+            self::STORE . 'mode' => '1',
+            self::STORE . 'test_api_key' => 'pk_test_manual',
+            self::STORE . 'test_signing_secret' => self::SECRET,
+        ];
+        $body = self::body($this->remote);
+
+        $decision = $this->verifier()->verify($body, self::sign($body, 'v1', 'pk_test_manual'));
+
+        $this->assertSame([200, 'SUCCEEDED'], [$decision['status'], $decision['payment']['status'] ?? null]);
+        $this->assertSame([], $this->fetches);
+    }
+
+    /**
      * Bug: a mode without a key accepts a v1 made with an empty key, which anyone can compute.
      */
     public function testAModeWithoutAKeyRefusesAV1OfTheEmptyKey(): void
