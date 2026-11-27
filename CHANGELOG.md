@@ -1,5 +1,9 @@
 # Changelog
 
+## <small>2.6.2 (2026-11-27)</small>
+
+* fix(deps): require monei-php-sdk 2.18.3 for Connect on MONEI's demo store (#106) ([a05186c](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/a05186c)), closes [#106](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/106)
+
 ## <small>2.6.1 (2026-11-26)</small>
 
 * fix: let the pending-orders cron sync authorized orders with MONEI (#105) ([6eac806](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/commit/6eac806)), closes [#105](https://github.com/MONEI/MONEI-AdobeCommerce-Magento2/issues/105)
