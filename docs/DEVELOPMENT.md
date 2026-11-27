@@ -27,7 +27,7 @@ cd MoneiPayment
 
 ```bash
 # Install MONEI SDK
-bin/composer require monei/monei-php-sdk:^2.16
+bin/composer require monei/monei-php-sdk:^2.18.3
 
 # Enable module and run setup
 bin/magento module:enable Monei_MoneiPayment

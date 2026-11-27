@@ -82,7 +82,7 @@ Go to your Adobe Commerce (Magento 2) root directory.
 3. Install the MONEI PHP SDK:
 
 ```bash
-composer require monei/monei-php-sdk:^2.16
+composer require monei/monei-php-sdk:^2.18.3
 ```
 
 4. Go to your Adobe Commerce (Magento 2) root directory and run:
